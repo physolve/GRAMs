@@ -1,0 +1,20 @@
+{
+    "files.associations": {
+        "qguiapplication": "cpp",
+        "qloggingcategory": "cpp",
+        "qfontdatabase": "cpp",
+        "qfile": "cpp",
+        "qsettings": "cpp",
+        "qtranslator": "cpp",
+        "qcommandlineparser": "cpp",
+        "qquickwindow": "cpp",
+        "cstdlib": "cpp",
+        "atomic": "cpp",
+        "memory": "cpp",
+        "qelapsedtimer": "cpp",
+        "iterator": "cpp",
+        "xhash": "cpp",
+        "xtree": "cpp",
+        "xutility": "cpp"
+    }
+}

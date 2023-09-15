@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<!-- Creator: CorelDRAW 2020 (64-Bit) -->
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="3001px" height="2044px" version="1.0" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 2345.2 1598.48"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+ xmlns:xodm="http://www.corel.com/coreldraw/odm/2003">
+ <defs>
+  <font id="FontID1" horiz-adv-x="683" font-variant="normal" style="fill-rule:nonzero" font-weight="400">
+	<font-face 
+		font-family="Verdana">
+		<font-face-src>
+			<font-face-name name="Verdana"/>
+		</font-face-src>
+	</font-face>
+   <missing-glyph><path d="M0 0z"/></missing-glyph>
+   <glyph unicode="И" horiz-adv-x="750" d="M652.073 0l-97.026 0 0 582.546 -358.514 -582.546 -98.5144 0 0 727.057 96.9906 0 0 -573.722 354.227 573.722 102.838 0 0 -727.057z"/>
+  </font>
+  <font id="FontID0" horiz-adv-x="722" font-variant="normal" style="fill-rule:nonzero" font-style="normal" font-weight="700">
+	<font-face 
+		font-family="Times">
+		<font-face-src>
+			<font-face-name name="Times Полужирный"/>
+		</font-face-src>
+	</font-face>
+   <missing-glyph><path d="M0 0z"/></missing-glyph>
+   <glyph unicode="S" horiz-adv-x="556" d="M470.034 678.084l4.99659 -221.055 -19.9864 0c-9.49707,55.3523 -32.6728,99.861 -69.6688,133.526 -37.1732,33.665 -77.1814,50.4975 -120.166,50.4975 -33.3461,0 -59.6756,-8.82377 -79.0241,-26.6485 -19.4903,-17.683 -29.1645,-38.1655 -29.1645,-61.1994 0,-14.6354 3.50825,-27.6407 10.3121,-39.1577 9.35532,-15.167 24.5223,-30.3339 45.5363,-45.3237 15.3087,-10.6665 50.6392,-29.8378 105.992,-57.195 77.6775,-37.9883 130.018,-73.9921 157.021,-107.834 26.8257,-33.8422 40.1854,-72.5038 40.1854,-116.162 0,-55.3523 -21.6873,-102.873 -64.8494,-142.704 -43.1621,-39.831 -98.0183,-59.8174 -164.533,-59.8174 -20.8369,0 -40.646,2.16165 -59.1441,6.30776 -18.6752,4.18155 -42.0281,12.1903 -70.0232,24.0262 -15.6631,6.48494 -28.4912,9.67425 -38.6616,9.67425 -8.50484,0 -17.3286,-3.3665 -26.8611,-9.85144 -9.49707,-6.66212 -17.1514,-16.6553 -22.9985,-30.1567l-16.9742 0 0 250.007 16.9742 0c14.3519,-70.1649 42.0281,-123.852 82.8513,-160.671 41.0004,-36.8543 85.013,-55.3523 132.357,-55.3523 36.4999,0 65.6644,9.99319 87.3164,29.8378 21.6873,19.8446 32.531,42.8431 32.531,69.3499 0,15.4859 -4.18155,30.6529 -12.5092,45.3237 -8.32766,14.6708 -20.8369,28.5266 -37.8465,41.8509 -17.0097,13.1825 -46.9892,30.3339 -90.0096,51.4897 -60.3489,29.5189 -103.653,54.8562 -130.018,75.6931 -26.1524,20.8369 -46.3159,44.1543 -60.4907,69.846 -14.1747,25.8335 -21.1558,54.1475 -21.1558,85.013 0,52.8363 19.3131,97.8411 58.1518,134.979 38.6616,37.1732 87.529,55.7067 146.531,55.7067 21.4747,0 42.3116,-2.51602 62.5106,-7.68979 15.3087,-4.00436 33.9839,-11.1626 55.9902,-21.6519 22.0063,-10.5247 37.3504,-15.6631 46.1742,-15.6631 8.50484,0 15.167,2.48058 19.9864,7.65436 4.85485,5.17378 9.49707,17.6475 13.6786,37.3504l14.9898 0z"/>
+  </font>
+  <style type="text/css">
+   <![CDATA[
+    @font-face { font-family:"Verdana";font-variant:normal;font-weight:normal;src:url("#FontID1") format(svg)}
+    @font-face { font-family:"Times";font-variant:normal;font-style:normal;font-weight:bold;src:url("#FontID0") format(svg)}
+    .str1 {stroke:#2642E0;stroke-width:15.02;stroke-miterlimit:22.9256}
+    .str3 {stroke:#090469;stroke-width:12.01;stroke-miterlimit:22.9256}
+    .str5 {stroke:#2642E0;stroke-width:3;stroke-miterlimit:22.9256}
+    .str2 {stroke:black;stroke-width:3.55;stroke-miterlimit:22.9256}
+    .str0 {stroke:#232323;stroke-width:3.55;stroke-miterlimit:22.9256}
+    .str4 {stroke:#2642E0;stroke-width:4.5;stroke-miterlimit:22.9256}
+    .fil1 {fill:none}
+    .fil3 {fill:#12E03B}
+    .fil4 {fill:#2642E0}
+    .fil0 {fill:#303030}
+    .fil2 {fill:#2642E0;fill-rule:nonzero}
+    .fnt1 {font-weight:normal;font-size:50.05px;font-family:'Verdana'}
+    .fnt0 {font-weight:bold;font-size:50.05px;font-family:'Times'}
+   ]]>
+  </style>
+ </defs>
+ <g id="Layer_x0020_2">
+  <metadata id="CorelCorpID_0Corel-Layer"/>
+  <rect class="fil0 str0" x="1.77" y="1.77" width="2341.65" height="1594.93"/>
+  <g id="_1855809411328">
+   <line class="fil1 str1" x1="1553.95" y1="612.93" x2="1553.67" y2= "537.35" />
+   <line class="fil1 str1" x1="580.33" y1="1371.51" x2="271.82" y2= "1371.51" />
+   <line class="fil1 str1" x1="924.52" y1="717.5" x2="1128.1" y2= "718.62" />
+   <line class="fil1 str1" x1="1424.67" y1="535.53" x2="1424.38" y2= "384.37" />
+   <line class="fil1 str1" x1="999" y1="1227.15" x2="999.88" y2= "1084.95" />
+   <line class="fil1 str1" x1="461.47" y1="1064.98" x2="462.36" y2= "922.77" />
+   <g>
+    <path class="fil2" d="M721.99 528.3l1170.8 0.02 0 15.01 -1170.8 -0.02 -7.51 -7.51 7.51 -7.5zm0 15.01l-7.51 0 0 -7.51 7.51 7.51zm7.51 -70.65l0 63.14 -15.02 0 0 -63.14 7.52 -7.5 7.5 7.5zm-7.5 -7.5l7.5 0.01 0 7.49 -7.5 -7.5zm-84.14 -0.18l84.14 0.18 -0.03 15.01 -84.14 -0.18 0.03 -15.01zm-52.84 7.4l61.37 -26.15 -0.8 1.64 -0.75 1.64 -0.69 1.64 -0.65 1.64 -0.59 1.64 -0.55 1.64 -0.49 1.64 -0.44 1.65 -0.38 1.64 -0.34 1.64 -0.29 1.64 -0.23 1.64 -0.19 1.64 -0.13 1.65 -0.08 1.64 -0.03 1.64 0.02 1.64 0.08 1.65 0.12 1.64 0.18 1.64 0.23 1.64 0.28 1.65 0.33 1.64 0.38 1.64 0.43 1.65 0.48 1.64 0.54 1.64 0.59 1.65 0.64 1.64 0.68 1.64 0.75 1.65 0.79 1.64 0 0 -61.26 -26.4z"/>
+   </g>
+   <line class="fil1 str1" x1="1553.67" y1="538.75" x2="1554.56" y2= "220.51" />
+   <polyline class="fil1 str1" points="1554.53,313.5 1776.92,312.52 1777.46,181.91 "/>
+   <line class="fil1 str1" x1="1694.51" y1="1225.34" x2="415.27" y2= "1226.51" />
+   <line class="fil1 str1" x1="656.43" y1="1223.63" x2="657.32" y2= "1059.45" />
+   <polyline class="fil1 str1" points="657.32,1059.45 352.27,1059.96 352.03,1202.6 "/>
+   <polyline class="fil1 str1" points="657.32,1059.45 858.86,1059.9 857.81,536.4 "/>
+   <polyline class="fil1 str1" points="565.81,800.08 776.61,796.65 776.4,538.75 "/>
+   <line class="fil1 str1" x1="777.95" y1="635.92" x2="563.96" y2= "636.56" />
+   <line class="fil1 str1" x1="776.55" y1="718.98" x2="562.55" y2= "719.62" />
+   <polyline class="fil1 str1" points="1338.67,975.06 917.9,975.06 917.9,384.92 "/>
+   <line class="fil1 str1" x1="924.52" y1="896.35" x2="1165.79" y2= "897.48" />
+   <line class="fil1 str1" x1="1027.69" y1="535.53" x2="1027.41" y2= "311.96" />
+   <line class="fil1 str1" x1="422.36" y1="1536.71" x2="422.74" y2= "1226.51" />
+   <line class="fil1 str1" x1="1192.33" y1="634.95" x2="1362.74" y2= "634.64" />
+   <polyline class="fil1 str1" points="1187.05,538.75 1186.42,717.21 1365.89,718.24 1366.12,536.7 "/>
+  </g>
+  <g>
+   <ellipse class="fil3 str2" cx="1773.73" cy="535.82" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="1553.96" cy="434.9" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="1674.11" cy="312.97" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="1276.27" cy="535.73" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="1276.27" cy="717.72" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="1276.27" cy="634.8" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="721.45" cy="636.09" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="721.45" cy="797.54" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="721.45" cy="719.15" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="721.45" cy="533.9" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="961.89" cy="896.57" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="961.89" cy="975.18" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="1027.56" cy="433.71" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="655.39" cy="1146.11" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="605.52" cy="1059.45" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="700.14" cy="1226.45" rx="25.53" ry="24.78"/>
+   <ellipse class="fil3 str2" cx="858.06" cy="933.72" rx="25.53" ry="24.78"/>
+  </g>
+  <g>
+   <g id="_1855809429280">
+    <line class="fil1 str3" x1="1684.13" y1="1272.51" x2="1684.13" y2= "1180.41" />
+    <line class="fil1 str3" x1="1665.6" y1="1272.56" x2="1665.6" y2= "1180.47" />
+   </g>
+   <g id="_1855809429232">
+    <line class="fil1 str3" x1="1684.5" y1="581.36" x2="1684.5" y2= "489.27" />
+    <line class="fil1 str3" x1="1665.98" y1="581.42" x2="1665.98" y2= "489.32" />
+   </g>
+  </g>
+  <g>
+   <circle class="fil0 str4" cx="352.21" cy="1166.74" r="53.97"/>
+   <line class="fil1 str5" x1="317.41" y1="1125.49" x2="331.77" y2= "1216.7" />
+   <line class="fil1 str5" x1="387.01" y1="1125.49" x2="372.65" y2= "1216.7" />
+   <circle class="fil1 str5" cx="352.21" cy="1166.74" r="18.91"/>
+  </g>
+  <g>
+   <circle class="fil0 str4" cx="422.38" cy="1482.96" r="53.97"/>
+   <line class="fil1 str5" x1="387.58" y1="1441.71" x2="401.94" y2= "1532.92" />
+   <line class="fil1 str5" x1="457.18" y1="1441.71" x2="442.83" y2= "1532.92" />
+   <circle class="fil1 str5" cx="422.38" cy="1482.96" r="18.91"/>
+  </g>
+  <g>
+   <circle class="fil0 str4" cx="280.88" cy="1371.51" r="53.97"/>
+   <rect class="fil1 str5" x="244.61" y="1335.24" width="72.53" height="72.53"/>
+   <text x="265.81" y="1389.71"  class="fil4 fnt0">S</text>
+  </g>
+  <g>
+   <g id="_1855809431824">
+    <g>
+     <path class="fil2" d="M655.68 713.53l-8.17 -16.34 16.35 0 -8.18 16.34zm2.25 -28.5l0 12.37 -4.5 0 0 -12.37 4.5 0z"/>
+    </g>
+    <g>
+     <path class="fil2" d="M655.68 724.3l8.18 16.35 -16.35 0 8.17 -16.35zm-2.25 28.5l0 -12.37 4.5 0 0 12.37 -4.5 0z"/>
+    </g>
+   </g>
+   <g>
+    <g>
+     <path class="fil2" d="M656.17 630.33l-8.17 -16.35 16.35 0 -8.18 16.35zm2.26 -28.51l0 12.38 -4.51 0 0 -12.38 4.51 0z"/>
+    </g>
+    <g>
+     <path class="fil2" d="M656.17 641.1l8.18 16.34 -16.35 0 8.17 -16.34zm-2.25 28.5l0 -12.37 4.51 0 0 12.37 -4.51 0z"/>
+    </g>
+   </g>
+   <g>
+    <g>
+     <path class="fil2" d="M655.94 793.5l-8.17 -16.35 16.35 0 -8.18 16.35zm2.26 -28.51l0 12.38 -4.51 0 0 -12.38 4.51 0z"/>
+    </g>
+    <g>
+     <path class="fil2" d="M655.94 804.27l8.18 16.34 -16.35 0 8.17 -16.34zm-2.25 28.5l0 -12.37 4.51 0 0 12.37 -4.51 0z"/>
+    </g>
+   </g>
+   <g>
+    <g>
+     <path class="fil2" d="M1335.03 631.45l-8.17 -16.35 16.35 0 -8.18 16.35zm2.26 -28.5l0 12.37 -4.51 0 0 -12.37 4.51 0z"/>
+    </g>
+    <g>
+     <path class="fil2" d="M1335.03 642.22l8.18 16.34 -16.35 0 8.17 -16.34zm-2.25 28.5l0 -12.37 4.51 0 0 12.37 -4.51 0z"/>
+    </g>
+   </g>
+   <g>
+    <g>
+     <path class="fil2" d="M1333.63 530.23l-8.18 -16.34 16.35 0 -8.17 16.34zm2.25 -28.5l0 12.37 -4.51 0 0 -12.37 4.51 0z"/>
+    </g>
+    <g>
+     <path class="fil2" d="M1333.63 541l8.17 16.35 -16.35 0 8.18 -16.35zm-2.26 28.51l0 -12.38 4.51 0 0 12.38 -4.51 0z"/>
+    </g>
+   </g>
+  </g>
+  <g transform="matrix(1.59328 0 0 1 -1857.84 -521.808)">
+   <text x="1500.5" y="1012.52"  class="fil4 fnt1">И</text>
+  </g>
+ </g>
+</svg>

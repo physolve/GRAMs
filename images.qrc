@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/MyApplication">
+        <file>fonts/LoveLetter.TTF</file>
+        <file>fonts/Momоt___.ttf</file>
+        <file>pictures/GRAMsMimic.svg</file>
+    </qresource>
+</RCC>
