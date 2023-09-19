@@ -63,8 +63,6 @@ class MyData : public QObject
     void setStartCfg(const QVariantList& startCfg);
     void setCfgLength(int cfgLength);
 
-
-
     //SIGNALS
     signals:
     void dataChanged(const QVariantList& data);
@@ -81,5 +79,4 @@ class MyData : public QObject
 
     QVariantList  m_startCfg;
     int           m_cfgLength = {0};
-
 };

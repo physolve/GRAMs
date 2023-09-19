@@ -9,7 +9,7 @@
 
 MyData::MyData()
 {
-  //toDo...
+  qDebug() << "I have been created";
 }
 
 bool MyData::fileExists(QString path) {
