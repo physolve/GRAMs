@@ -3,5 +3,6 @@
         <file>fonts/LoveLetter.TTF</file>
         <file>fonts/Momоt___.ttf</file>
         <file>pictures/GRAMsMimic.svg</file>
+        <file>profile/GRAMsPfp.json</file>
     </qresource>
 </RCC>

@@ -51,6 +51,9 @@ Window {
             var datamodel = JSON.parse(datastore)
             for (var i = 0; i < datamodel.length; ++i) dataModel.append(datamodel[i])
         }
+
+        fillControllers()
+
     }
     MouseArea {
         anchors.fill: parent
@@ -125,23 +128,20 @@ Window {
                 horizontalAlignment: Text.AlignHCenter
                 Layout.alignment: Qt.AlignHCenter
             }
-            Row {
+            RowLayout {
                 Layout.alignment: Qt.AlignHCenter
-                width: parent.width
+                //width: parent.width
                 visible: true
                 ComboBox {
                     id: comboBoxTest
-                    model: [
-                        "",
-                        "GRAM 350",
-                        "GRAM 50",
-                        "Прорыв",
-                        "Проницаемость"
-                    ]
+                    width: 100
+                    //implicitContentWidthPolicy: ComboBox.WidestText
+                    model: dataSource.profileNames
                     onActivated: {
                         chosenTestModel.text = comboBoxTest.currentText
                     }
                     Layout.alignment: Qt.AlignHCenter
+                    Component.onCompleted: chosenTestModel.text = comboBoxTest.currentText
                 }
                 Label{
                     id: chosenTestModel
@@ -194,23 +194,13 @@ Window {
                 columns: implicitW < parent.width ? -1 : parent.width / columnImplicitWidth
                 rowSpacing: 4
                 columnSpacing: 4
-                anchors.horizontalCenter: parent.horizontalCenter
+                Layout.alignment: Qt.AlignHCenter
                 property int columnImplicitWidth: children[0].implicitWidth + columnSpacing
-                property int implicitW: repeater.count * columnImplicitWidth
-                ObjectModel {
+                property int implicitW: itemModel.count * columnImplicitWidth
+                ObjectModel { // fill using frofile + profileList
                         id: itemModel
-                        Rectangle{
-                            id: customPlus
-                            implicitWidth: 120
-                            implicitHeight: 120
-                            color: "transparent"
-                            border.color : "steelblue" 
-                            border.width : 8
-                        }
-                        Rectangle { height: 30; width: 80; color: "green" }
-                        Rectangle { height: 30; width: 80; color: "blue" }
                 }
-                Repeater {
+                Repeater { 
                     model: itemModel
                 }
             }
@@ -258,8 +248,42 @@ Window {
         testMap["startCfg"] = cfgTest
         jsonData.saveJson(testMap)
     }
-
     ListModel {
         id: jsonTestModel
+    }
+    Component{
+        id: rectTest1
+        Rectangle {
+            id: customPlus
+            implicitWidth: 120
+            implicitHeight: 120
+            color: "transparent"
+            border.color : "steelblue" 
+            border.width : 8
+        }
+    }
+    Component{
+        id: rectTest2
+        Rectangle { height: 30; width: 80; color: "green" }
+    }
+    Component{
+        id: rectTest3
+        Rectangle { height: 30; width: 80; color: "blue" }
+    }
+    function fillControllers(){
+        let rectObj1 = rectTest1.createObject();
+        let rectObj2 = rectTest2.createObject();
+        let rectObj3 = rectTest3.createObject();
+        itemModel.append(rectObj1)
+        itemModel.append(rectObj2)
+        itemModel.append(rectObj3)
+        
+        let asr =  dataSource.profileJson
+        console.log(JSON.stringify(asr, null, 4))
+        for (const [key, value] of Object.entries(asr)) {
+            console.log(`${key}: ${value}`);
+            // use here keys from profileNames in order
+            // fill the rectObj1 somehow, create insides and line settings
+        }
     }
 }

@@ -27,7 +27,7 @@ add_subdirectory(modules/Style)
 # endif()
 
 #TODO: add resources file
-qt_add_resources(IMAGE_RESOURCES images.qrc)
+qt_add_resources(IMAGE_RESOURCES resources.qrc)
 
 file(GLOB CPP_SOURCES src/*.cpp)
 file(GLOB HPP_SOURCES src/*.h)

@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.settings
 import QtQuick.Dialogs
-import Style
+//import Style
 
 ApplicationWindow {
     id: main
@@ -84,5 +84,4 @@ ApplicationWindow {
             }
         }
     }
-
 }

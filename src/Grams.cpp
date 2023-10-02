@@ -66,5 +66,6 @@ void Grams::initGUI(){
     m_engine.rootContext()->setContextProperty("dataSource", &dataSource);
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
+    
     m_engine.load(url);
 }
