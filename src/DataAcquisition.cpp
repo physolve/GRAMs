@@ -43,8 +43,9 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     file.close();
     QJsonDocument document   =   { QJsonDocument::fromJson(rawData.toUtf8()) };
     QJsonObject jsonObject = document.object();
-    QVariantMap deviceMap;
-    if(advantechDeviceCheck(deviceMap));
+    if(advantechDeviceCheck(m_connectedDevices)){
+        // create rectangle in qml using map
+    };
     // try to send to qml GRAM keys
     // TO CREATE PROFILE combo box
     QMap<int, QString> m;
@@ -73,7 +74,7 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
     for(int i = 0; i < allSupportedDevices->getCount(); i++){
         DeviceTreeNode const &node = allSupportedDevices->getItem(i);
         qDebug("%d, %ls", node.DeviceNumber, node.Description);
-        advantechDeviceMap.insert(QString::fromWCharArray(node.Description),(int)node.DeviceNumber);
+        advantechDeviceMap.insert(QString::fromWCharArray(node.Description),(int)node.DeviceNumber); // подумай насчет номера в Map, тут только advantech номера
     }
     startCheckInstance->Dispose();
     allSupportedDevices->Dispose();
