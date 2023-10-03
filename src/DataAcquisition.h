@@ -29,4 +29,5 @@ private:
 
     QStringList m_profileNames;
 
+    bool advantechDeviceCheck(QVariantMap& advantechDeviceMap) const; 
 };

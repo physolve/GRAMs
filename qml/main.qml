@@ -51,7 +51,8 @@ ApplicationWindow {
     }
 
     onClosing: {
-       cfgWindow.saveSetUp()
+       //cfgWindow.saveSetUp()
+       console.log("save setup function")
     }
 
     header: TabBar {

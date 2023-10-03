@@ -30,18 +30,7 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     // сначала определяешь все, что подключено
     // а потом сверяешь с тем, что в профиле
 
-    /*ADVANTECH Controller Initialization*/
-    QVariantMap advantechDevices;
-    auto startCheckInstance = InstantDoCtrl::Create();
-    auto allSupportedDevices = startCheckInstance->getSupportedDevices();
-    for(int i = 0; i < allSupportedDevices->getCount(); i++){
-        DeviceTreeNode const &node = allSupportedDevices->getItem(i);
-		qDebug("%d, %ls", node.DeviceNumber, node.Description);
-        advantechDevices.insert(QString::fromWCharArray(node.Description),(int)node.DeviceNumber);
-    }
-    startCheckInstance->Dispose();
-	allSupportedDevices->Dispose();
-    /*ADVANTECH Controller Initialization*/
+    
     // fill the Map using the same properties as name and profile
     // like: current device : [{name_controller},{}]
     // later compare the maps to approve working state
@@ -54,13 +43,54 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     file.close();
     QJsonDocument document   =   { QJsonDocument::fromJson(rawData.toUtf8()) };
     QJsonObject jsonObject = document.object();
-    
+    QVariantMap deviceMap;
+    if(advantechDeviceCheck(deviceMap));
     // try to send to qml GRAM keys
     // TO CREATE PROFILE combo box
     QMap<int, QString> m;
     for(auto s : jsonObject.keys()) m[jsonObject[s].toObject()["profileId"].toInt()] = s;
     m_profileNames = QStringList(m.values());
     m_profileJson = jsonObject.toVariantMap();
+}
+
+bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) const{
+    /*ADVANTECH Controller Initialization*/
+    //QVariantMap advantechDevices;
+    try{
+        FARPROC fn = GetProcAddress(DNL_Instance(), "AdxDaqNaviLibInitialize");
+        if(fn == NULL) return false;
+    }catch(std::exception & e){
+        return false;
+    } // работает
+
+    // static HMODULE instance = NULL;
+    //   if (instance == NULL) { 
+    //      instance = LoadLibrary(TEXT("biodaq.dll")); 
+    // } попробуй
+
+    try{
+        auto startCheckInstance = InstantDoCtrl::Create();
+        auto allSupportedDevices = startCheckInstance->getSupportedDevices();
+        if (allSupportedDevices->getCount() == 0)
+        {
+            qDebug() << "No advantech devices connected";
+            return false;
+        }
+        for(int i = 0; i < allSupportedDevices->getCount(); i++){
+            DeviceTreeNode const &node = allSupportedDevices->getItem(i);
+            qDebug("%d, %ls", node.DeviceNumber, node.Description);
+            advantechDeviceMap.insert(QString::fromWCharArray(node.Description),(int)node.DeviceNumber);
+        }
+        startCheckInstance->Dispose();
+        allSupportedDevices->Dispose();
+        return true;
+    }
+    catch(...){
+        qDebug() << "No advantech driver installed";
+        return false;
+    }
+    
+    /*ADVANTECH Controller Initialization*/
 }
 
 QVariantMap DataAcquisition::profileJson() const

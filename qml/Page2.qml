@@ -54,30 +54,15 @@ Page {
         Rectangle {
             implicitHeight: 200
             color: "lightgreen"
-            Row {
-                    id: root
-                    width: parent.width
-                    height: parent.height-rect1.height
-                    spacing: 2
-                    anchors.top: rect1.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
+            LineChart {
+                    id: lineChart
+                    width: parent.width/2;  
+                    //height: parent.height // resize
 
-                    LineChart {
-                        id: lineChart
-                        width: root.width/2;  height: root.height // resize
-
-                        title:  'Pendulum Position versus Time'
-                        yLabel: 'position (degrees)'
-                        xLabel: 'time (s)'
-                        color:  'red'
-                    }
-                    // CustomPlotItem {
-                    //     id: customPlot
-                    //     width: root.width/2;  height: root.height // resize
-
-                    //     Component.onCompleted: initCustomPlot(-1)
-                    // }
+                    title:  'Pendulum Position versus Time'
+                    yLabel: 'position (degrees)'
+                    xLabel: 'time (s)'
+                    color:  'red'
             }
         }
         Rectangle {

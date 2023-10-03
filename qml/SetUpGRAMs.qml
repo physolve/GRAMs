@@ -9,7 +9,7 @@ Window {
     visible: true
     onClosing: {
         winld.active = false
-        console.log("cfgWinow closed")
+        console.log("cfgWindow closed")
     }
     color: "#292929"
     Material.theme: Material.Dark
@@ -26,31 +26,31 @@ Window {
         id: jsonData;
     }
 
-    property var dataTest: {}
-    property var cfgTest: {}
+    // property var dataTest: {}
+    // property var cfgTest: {}
 
     Component.onCompleted: {
-        if (datastore) {
-            jsonData.parse("data.json"); // работает
-            if(jsonData.result) {
-                for(var i = 0; i < jsonData.length; i++) {
-                    var obj = jsonData.data[i];
-                    // try append obj to jsonData
-                    jsonTestModel.append({
-                        id: obj.id,
-                        name: obj.name,
-                        family: obj.family
-                    })
-                }
-            } else {
-                console.warn("Any data has not found by enable status!")
-            }
-            dataTest = jsonData.data
-            cfgTest = jsonData.cfg
-            dataModel.clear()
-            var datamodel = JSON.parse(datastore)
-            for (var i = 0; i < datamodel.length; ++i) dataModel.append(datamodel[i])
-        }
+        // if (datastore) {
+        //     jsonData.parse("data.json"); // работает
+        //     if(jsonData.result) {
+        //         for(var i = 0; i < jsonData.length; i++) {
+        //             var obj = jsonData.data[i];
+        //             // try append obj to jsonData
+        //             jsonTestModel.append({
+        //                 id: obj.id,
+        //                 name: obj.name,
+        //                 family: obj.family
+        //             })
+        //         }
+        //     } else {
+        //         console.warn("Any data has not found by enable status!")
+        //     }
+        //     dataTest = jsonData.data
+        //     cfgTest = jsonData.cfg
+        //     dataModel.clear()
+        //     var datamodel = JSON.parse(datastore)
+        //     for (var i = 0; i < datamodel.length; ++i) dataModel.append(datamodel[i])
+        // }
 
         fillControllers()
 
@@ -163,8 +163,8 @@ Window {
                     //console.log("Data: " + jsonData.cfg)
                     //var jsonObject = JSON.parse(jsonData.cfg)
                     //console.log("Parsed: " + jsonObject)
-                    //jsonObject[0].start = jsonBtn1.checked
-                    cfgTest[0].start = jsonBtn1.checked // with additional save after all
+                    //jsonObject[0].start = jsonBtn1.checked // used to open pages in main
+                    //cfgTest[0].start = jsonBtn1.checked // with additional save after all
                     
                     // var jsonObject = jsonData.cfg
                     // jsonObject[0].start = jsonBtn1.checked
@@ -177,7 +177,7 @@ Window {
                 id: jsonBtn2
                 text: qsTr("JSON test 2")
                 onToggled: {
-                    cfgTest[1].start = jsonBtn2.checked
+                    //cfgTest[1].start = jsonBtn2.checked // used to open pages in main
                 }
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -185,7 +185,7 @@ Window {
                 id: jsonBtn3
                 text: qsTr("JSON test 3")
                 onToggled: {
-                    cfgTest[2].start = jsonBtn3.checked // with additional save after all
+                    //cfgTest[2].start = jsonBtn3.checked // used to open pages in main
                 }
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -220,33 +220,34 @@ Window {
         }   
     }
     function startupFunction(objectCfgMap){
-        if(cfgTest[0].start){
+        if(true){ //cfgTest[0].start
             let tabPage1 = page1.createObject(stackLayout); // работает
             container.append(tabPage1);
         }
-        if(cfgTest[1].start){
+        if(true){ //cfgTest[1].start
             let tabPage2 = page2.createObject(stackLayout); // работает
             container.append(tabPage2);
         }
-        if(cfgTest[2].start){
+        if(true){ //cfgTest[2].start
             let tabPage3 = page3.createObject(stackLayout); // работает
             container.append(tabPage3);
         }     
     }
     function saveSetUp(){
-        var datamodel = []
-        for (var i = 0; i < dataModel.count; ++i) datamodel.push(dataModel.get(i))
-        datastore = JSON.stringify(datamodel)
+        // var datamodel = []
+        // for (var i = 0; i < dataModel.count; ++i) datamodel.push(dataModel.get(i))
+        // datastore = JSON.stringify(datamodel)
         
-        var jsonToSave = []
-        for (var i = 0; i < jsonTestModel.count; ++i) jsonToSave.push(jsonTestModel.get(i))
+        // var jsonToSave = []
+        // for (var i = 0; i < jsonTestModel.count; ++i) jsonToSave.push(jsonTestModel.get(i))
         //var jsonCfgSave = []
         // for (var i = 0; i < jsonStartCfg.count; ++i) jsonCfgSave.push(jsonStartCfg.get(i))
         // jsonData.saveJson(JSON.stringify(jsonToSave), JSON.stringify(jsonCfgSave))
-        var testMap = {}
-        testMap["model"] = dataTest
-        testMap["startCfg"] = cfgTest
-        jsonData.saveJson(testMap)
+        // var testMap = {}
+        // testMap["model"] = dataTest
+        // testMap["startCfg"] = cfgTest
+        // jsonData.saveJson(testMap)
+        
     }
     ListModel {
         id: jsonTestModel

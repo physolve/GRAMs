@@ -7,6 +7,8 @@
 #include <QJsonObject>
 #include <QVariantList>
 
+#define JSON_OFF 1
+
 MyData::MyData()
 {
   qDebug() << "I have been created";
@@ -165,6 +167,9 @@ void MyData::parse(QString path) {
 
 bool MyData::saveJson(QVariantMap modelData) const
 {
+    #ifdef JSON_OFF
+    return false;
+    #endif
     QFile saveFile(QStringLiteral("save.json"));
 
     if (!saveFile.open(QIODevice::WriteOnly)) {
