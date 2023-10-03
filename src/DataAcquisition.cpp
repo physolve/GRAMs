@@ -56,39 +56,28 @@ DataAcquisition::DataAcquisition(QObject *parent) :
 bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) const{
     /*ADVANTECH Controller Initialization*/
     //QVariantMap advantechDevices;
-    try{
-        FARPROC fn = GetProcAddress(DNL_Instance(), "AdxDaqNaviLibInitialize");
-        if(fn == NULL) return false;
-    }catch(std::exception & e){
-        return false;
-    } // работает
+    // FARPROC fn = GetProcAddress(DNL_Instance(), "AdxDaqNaviLibInitialize");
+    // if(fn == NULL) return false; // работает
 
-    // static HMODULE instance = NULL;
-    //   if (instance == NULL) { 
-    //      instance = LoadLibrary(TEXT("biodaq.dll")); 
-    // } попробуй
+    static HMODULE instance = LoadLibrary(TEXT("biodaq.dll"));;
+    
+    if(instance == NULL) return false; // работает, но короче, проверь с драйвером
 
-    try{
-        auto startCheckInstance = InstantDoCtrl::Create();
-        auto allSupportedDevices = startCheckInstance->getSupportedDevices();
-        if (allSupportedDevices->getCount() == 0)
-        {
-            qDebug() << "No advantech devices connected";
-            return false;
-        }
-        for(int i = 0; i < allSupportedDevices->getCount(); i++){
-            DeviceTreeNode const &node = allSupportedDevices->getItem(i);
-            qDebug("%d, %ls", node.DeviceNumber, node.Description);
-            advantechDeviceMap.insert(QString::fromWCharArray(node.Description),(int)node.DeviceNumber);
-        }
-        startCheckInstance->Dispose();
-        allSupportedDevices->Dispose();
-        return true;
-    }
-    catch(...){
-        qDebug() << "No advantech driver installed";
+    auto startCheckInstance = InstantDoCtrl::Create();
+    auto allSupportedDevices = startCheckInstance->getSupportedDevices();
+    if (allSupportedDevices->getCount() == 0)
+    {
+        qDebug() << "No advantech devices connected";
         return false;
     }
+    for(int i = 0; i < allSupportedDevices->getCount(); i++){
+        DeviceTreeNode const &node = allSupportedDevices->getItem(i);
+        qDebug("%d, %ls", node.DeviceNumber, node.Description);
+        advantechDeviceMap.insert(QString::fromWCharArray(node.Description),(int)node.DeviceNumber);
+    }
+    startCheckInstance->Dispose();
+    allSupportedDevices->Dispose();
+    return true;
     
     /*ADVANTECH Controller Initialization*/
 }
