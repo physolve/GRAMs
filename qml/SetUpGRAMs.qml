@@ -272,13 +272,13 @@ Window {
         Rectangle { height: 30; width: 80; color: "blue" }
     }
     function fillControllers(){
-        let rectObj1 = rectTest1.createObject();
-        let rectObj2 = rectTest2.createObject();
-        let rectObj3 = rectTest3.createObject();
-        itemModel.append(rectObj1)
-        itemModel.append(rectObj2)
-        itemModel.append(rectObj3)
-        
+        // let rectObj1 = rectTest1.createObject();
+        // let rectObj2 = rectTest2.createObject();
+        // let rectObj3 = rectTest3.createObject();
+        // itemModel.append(rectObj1)
+        // itemModel.append(rectObj2)
+        // itemModel.append(rectObj3)
+
         let asr =  dataSource.profileJson
         console.log(JSON.stringify(asr, null, 4))
         for (const [key, value] of Object.entries(asr)) {
@@ -286,5 +286,25 @@ Window {
             // use here keys from profileNames in order
             // fill the rectObj1 somehow, create insides and line settings
         }
+
+        let rsa = dataSource.connectedDevices
+        for (const [key, value] of Object.entries(rsa)) {
+            console.log(`${key}: ${value}`);
+        }
+
+        let profileGRAM350 = asr.GRAM350
+        let controllersGRAM350 = profileGRAM350.controllers
+        let advantechGRAM350 = controllersGRAM350.Advantech
+        for(const [key, value] of Object.entries(advantechGRAM350)){
+            let profileObj = rectTest1.createObject()
+            profileObj.color = Material.color(Material.Red)
+            itemModel.append(profileObj)
+        }
+        for(const [key, value] of Object.entries(rsa)){
+            let realObj = rectTest1.createObject()
+            realObj.color = Material.color(Material.Yellow)
+            itemModel.append(realObj)
+        }
+        //if(rsa.hasOwnProperty("DemoDevice,BID#0")) rectObj1.color = Material.Red;
     }
 }

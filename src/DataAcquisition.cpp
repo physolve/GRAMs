@@ -62,7 +62,7 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
 
     static HMODULE instance = LoadLibrary(TEXT("biodaq.dll"));;
     
-    if(instance == NULL) return false; // работает, но короче, проверь с драйвером
+    if(instance == NULL) return false; 
 
     auto startCheckInstance = InstantDoCtrl::Create();
     auto allSupportedDevices = startCheckInstance->getSupportedDevices();
