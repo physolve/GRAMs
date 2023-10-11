@@ -52,7 +52,7 @@ Window {
         //     for (var i = 0; i < datamodel.length; ++i) dataModel.append(datamodel[i])
         // }
 
-        fillControllers()
+        fillControllers(comboBoxTest.currentText)
 
     }
     MouseArea {
@@ -139,6 +139,7 @@ Window {
                     model: dataSource.profileNames
                     onActivated: {
                         chosenTestModel.text = comboBoxTest.currentText
+                        fillControllers(comboBoxTest.currentText)
                     }
                     Layout.alignment: Qt.AlignHCenter
                     Component.onCompleted: chosenTestModel.text = comboBoxTest.currentText
@@ -252,15 +253,41 @@ Window {
     ListModel {
         id: jsonTestModel
     }
+
+    // Component{
+    //     id: rectTest1
+    //     Rectangle {
+    //         id: customPlus
+    //         implicitWidth: 120
+    //         implicitHeight: 60
+    //         color: "transparent"
+    //         border.color : "steelblue" 
+    //         border.width : 8
+    //         property string text: "test"
+    //         Text{
+    //             id: customPlusText
+    //             anchors.fill: parent
+    //             font.pixelSize: 16
+    //             text: customPlus.text
+    //             horizontalAlignment: Text.AlignHCenter
+    //             verticalAlignment: Text.AlignVCenter
+    //         }
+    //     }
+    // }
+
     Component{
-        id: rectTest1
-        Rectangle {
-            id: customPlus
-            implicitWidth: 120
-            implicitHeight: 120
-            color: "transparent"
-            border.color : "steelblue" 
-            border.width : 8
+        id: valveSetUp
+        ValveSetting{
+        }
+    }
+    Component{
+        id: profileLine
+        Text {
+            text: "profile string..."
+            anchors.fill: parent
+            font.pixelSize: 16
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
         }
     }
     Component{
@@ -271,7 +298,8 @@ Window {
         id: rectTest3
         Rectangle { height: 30; width: 80; color: "blue" }
     }
-    function fillControllers(){
+    function fillControllers(choosenProfile){
+        itemModel.clear()
         // let rectObj1 = rectTest1.createObject();
         // let rectObj2 = rectTest2.createObject();
         // let rectObj3 = rectTest3.createObject();
@@ -279,32 +307,69 @@ Window {
         // itemModel.append(rectObj2)
         // itemModel.append(rectObj3)
 
-        let asr =  dataSource.profileJson
-        console.log(JSON.stringify(asr, null, 4))
-        for (const [key, value] of Object.entries(asr)) {
-            console.log(`${key}: ${value}`);
-            // use here keys from profileNames in order
-            // fill the rectObj1 somehow, create insides and line settings
+        //let asr =  dataSource.profileJson
+        //console.log(JSON.stringify(asr, null, 4))
+        // for (const [key, value] of Object.entries(asr)) {
+        //     console.log(`${key}: ${value}`);
+        //     // use here keys from profileNames in order
+        //     // fill the rectObj1 somehow, create insides and line settings
+        // }
+
+        let profileGRAM = dataSource.profileJson[choosenProfile]
+        let controllersGRAM = profileGRAM.controllers
+        // instead of Advantech, unknown and others get all controllers list
+        // Value is undefined and could not be converted to an object (undefined)
+        if("Advantech" in controllersGRAM){
+            let advantechGRAM = controllersGRAM.Advantech
+            // here u need change by profile which 
+            for(const [key, value] of Object.entries(advantechGRAM)){
+                let profileObj = valveSetUp.createObject()
+                profileObj.color = Material.color(Material.Red)
+                //profileObj.text = value.device // using value[device] because it is array of obj
+                itemModel.append(profileObj)
+                // somehow combine name, state, profile and settings
+                // try fill column with objects or else flipable in separate qml
+                //profileLine
+
+            }
+        }
+        if("unknown" in controllersGRAM){ // option to profile without controllers
+            console.log("this profile has only unknown controller")
         }
 
-        let rsa = dataSource.connectedDevices
-        for (const [key, value] of Object.entries(rsa)) {
-            console.log(`${key}: ${value}`);
-        }
-
-        let profileGRAM350 = asr.GRAM350
-        let controllersGRAM350 = profileGRAM350.controllers
-        let advantechGRAM350 = controllersGRAM350.Advantech
-        for(const [key, value] of Object.entries(advantechGRAM350)){
-            let profileObj = rectTest1.createObject()
-            profileObj.color = Material.color(Material.Red)
-            itemModel.append(profileObj)
-        }
+        //write compare function: 
+            // every connected device compare with profile device
+                //if names don't match -> red by default
+                //if match -> green (continue cycle with next device)
+                //if end of list -> add yellow module 
+        let rsa = dataSource.connectedDevices // for now only advantech connected
         for(const [key, value] of Object.entries(rsa)){
-            let realObj = rectTest1.createObject()
+            if("Advantech" in controllersGRAM)
+                if(key in controllersGRAM.Advantech){
+                    //working change of color
+                    //let t_profileObj = itemModel.get(0)
+                    //t_profileObj.color = Material.color(Material.Green)
+                    console.log("found "+`${key}`);
+                    continue;
+                }
+            let realObj = valveSetUp.createObject()
             realObj.color = Material.color(Material.Yellow)
+            //realObj.customPlus.text = key // using key because it is map (already an object)
             itemModel.append(realObj)
+            // if the last key
         }
-        //if(rsa.hasOwnProperty("DemoDevice,BID#0")) rectObj1.color = Material.Red;
+        let t_profileObj = itemModel.get(0)
+        t_profileObj.color = Material.color(Material.Green)
+        t_profileObj.changeTextFront("I GET IT")
+        // for (const [key, value] of Object.entries(rsa)) {
+        //     console.log(`${key}: ${value}`);
+        // }
+        // for(const [key, value] of Object.entries(rsa)){
+        //     let realObj = rectTest1.createObject()
+        //     realObj.color = Material.color(Material.Yellow)
+        //     realObj.text = key // using key because it is map (already an object)
+        //     itemModel.append(realObj)
+        // }
+        // if(rsa.hasOwnProperty("DemoDevice,BID#0")) rectObj1.color = Material.Red;
     }
 }

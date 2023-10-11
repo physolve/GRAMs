@@ -74,7 +74,9 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
     for(int i = 0; i < allSupportedDevices->getCount(); i++){
         DeviceTreeNode const &node = allSupportedDevices->getItem(i);
         qDebug("%d, %ls", node.DeviceNumber, node.Description);
-        advantechDeviceMap.insert(QString::fromWCharArray(node.Description),(int)node.DeviceNumber); // подумай насчет номера в Map, тут только advantech номера
+        auto advantechDescription = QString::fromWCharArray(node.Description).split(',');
+        auto advantechName = advantechDescription[0]; 
+        advantechDeviceMap.insert(advantechName,(int)node.DeviceNumber); // подумай насчет номера в Map, тут только advantech номера
     }
     startCheckInstance->Dispose();
     allSupportedDevices->Dispose();
