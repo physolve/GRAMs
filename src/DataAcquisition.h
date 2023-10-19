@@ -10,6 +10,7 @@ class DataAcquisition : public QObject
     Q_PROPERTY(QVariantMap connectedDevices MEMBER m_connectedDevices NOTIFY profileNamesChanged)
     Q_PROPERTY(QVariantMap profileJson MEMBER m_profileJson CONSTANT)
     Q_PROPERTY(QStringList profileNames MEMBER m_profileNames CONSTANT)
+    Q_PROPERTY(QVariantMap deviceSettings MEMBER m_deviceSettings NOTIFY profileNamesChanged)
 public:
     explicit DataAcquisition(QObject *parent = 0);
     QVariantMap profileJson () const;
@@ -31,5 +32,7 @@ private:
 
     QStringList m_profileNames;
 
-    bool advantechDeviceCheck(QVariantMap& advantechDeviceMap) const; 
+    bool advantechDeviceCheck(QVariantMap& advantechDeviceMap) const;
+    QList<ControllerInfo> m_deviceInfoList;
+    QVariantMap m_deviceSettings;
 };

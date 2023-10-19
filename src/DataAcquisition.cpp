@@ -45,7 +45,16 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     QJsonObject jsonObject = document.object();
     if(advantechDeviceCheck(m_connectedDevices)){
         // create rectangle in qml using map
-    };
+        for(auto device : m_connectedDevices.keys()){
+            auto description = m_connectedDevices.value(device).toString()+','+device;
+            ControllerInfo a(description);
+            m_deviceInfoList.append(a);
+            // make qml combobox with ret.m_channelCount and ret.m_channelStart and profile and etc.
+        }
+        auto demoPressure = AdvantechTest(m_deviceInfoList.value(0));
+        m_deviceSettings[demoPressure.m_deviceName] = demoPressure.getSettings();
+    }
+
     // try to send to qml GRAM keys
     // TO CREATE PROFILE combo box
     QMap<int, QString> m;
@@ -64,7 +73,8 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
     
     if(instance == NULL) return false; 
 
-    auto startCheckInstance = InstantDoCtrl::Create();
+    // try DaqCtrlBase_Create(Scenario type)  - SceInstantAi works but badly
+    auto startCheckInstance = InstantDoCtrl::Create(); // does it work with every Adv controller?
     auto allSupportedDevices = startCheckInstance->getSupportedDevices();
     if (allSupportedDevices->getCount() == 0)
     {
@@ -75,14 +85,15 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
         DeviceTreeNode const &node = allSupportedDevices->getItem(i);
         qDebug("%d, %ls", node.DeviceNumber, node.Description);
         auto advantechDescription = QString::fromWCharArray(node.Description).split(',');
-        auto advantechName = advantechDescription[0]; 
-        advantechDeviceMap.insert(advantechName,(int)node.DeviceNumber); // подумай насчет номера в Map, тут только advantech номера
+        //auto advantechName = advantechDescription[0]; // I use this because we split BoardID, might use later
+        advantechDeviceMap.insert(advantechDescription.value(1),advantechDescription.value(0)); // подумай насчет номера в Map, тут только advantech номера
     }
     startCheckInstance->Dispose();
     allSupportedDevices->Dispose();
     return true;
     
     /*ADVANTECH Controller Initialization*/
+    // use advantechDeviceMap to additional features like in Instant_AI
 }
 
 QVariantMap DataAcquisition::profileJson() const

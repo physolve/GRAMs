@@ -2,60 +2,95 @@
 
 #include <QtCore/QObject>
 #include "../lib/bdaqctrl.h"
+#include "ControllerInfo.h"
 using namespace Automation::BDaq;
+
 
 class Controller : public QObject
 {
     Q_OBJECT
 public:
-    Controller(QString deviceName, QObject *parent = nullptr);
+    Controller(const ControllerInfo &info, QObject *parent = nullptr);
     virtual ~Controller();
-Q_SIGNALS:
+    void Initialization();
+//Q_SIGNALS:
 
 public slots:
     //void generateData(int type, int rowCount, int colCount);
 
 private:
-    virtual void Initialization();
-    QString deviceName;
-    
+    ControllerInfo m_info;
     //QList<QList<QPointF>> m_data;
     //int m_index;
 
 };
 
-class AdvantechDO : public Controller
+class AdvantechTest : public QObject // can it be universal? maybe create advantechBase
 {
     Q_OBJECT
 public:
-    AdvantechDO(QString deviceName, QObject *parent = nullptr);
-    ~AdvantechDO() override;
-    void Initialization() override;
+    AdvantechTest(const ControllerInfo &info, QObject *parent = nullptr);
+    virtual ~AdvantechTest();
+    void Initialization() ; //override
+    void ConfigureDeviceTest();
 	void CheckError(ErrorCode errorCode);
-Q_SIGNALS:
+    QVariantMap getSettings();
+
+    QString m_deviceName;
+//Q_SIGNALS:
+
+public slots:
+    //void settingAccepted();
+    //void generateData(int type, int rowCount, int colCount);
+
+private:
+    ControllerInfo m_info;
+    int m_channelCount; // share to qml
+	int m_channelStart;
+	QStringList m_valueRanges;
+    
+    ValueRange m_valueRange;
+    QString m_profilePath;
+    InstantAiCtrl *m_instantAiCtrl; // change to smart pointer or initialize inside class 
+	double scaledData[16];
+};
+
+class AdvantechDO : public QObject
+{
+    Q_OBJECT
+public:
+    AdvantechDO(const ControllerInfo &info, QObject *parent = nullptr);
+    ~AdvantechDO();
+    void Initialization() ; //override
+    void ConfigureDeviceDO();
+	void CheckError(ErrorCode errorCode);
+//Q_SIGNALS:
 
 public slots:
     //void generateData(int type, int rowCount, int colCount);
 
 private:
+    ControllerInfo m_info;
     QString profilePath;
     
 };
 
-class AdvantechAI : public Controller
+class AdvantechAI : public QObject
 {
     Q_OBJECT
 public:
-    AdvantechAI(QString deviceName, QObject *parent = nullptr);
-    ~AdvantechAI() override;
-    void Initialization() override;
+    AdvantechAI(const ControllerInfo &info, QObject *parent = nullptr);
+    ~AdvantechAI();
+    void Initialization() ; //override
+    void ConfigureDeviceAI();
 	void CheckError(ErrorCode errorCode);
-Q_SIGNALS:
+//Q_SIGNALS:
 
 public slots:
     //void generateData(int type, int rowCount, int colCount);
 
 private:
+    ControllerInfo m_info;
     int channelCount;
 	int channelStart;
 	ValueRange valueRange;

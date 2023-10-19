@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 
 Rectangle {
-    id: valveSetting
+    id: pressureSetting
     color: "black"
     width: 180
     height: 200
@@ -45,38 +45,47 @@ Rectangle {
         back: Rectangle {
             id: customBack
             implicitWidth: 160
-            implicitHeight: 60
+            implicitHeight: 200
             color: "transparent"
             border.color : "steelblue" 
             border.width : 8
             property string text: "test back"
             property string deviceName: "unknown"
             property string deviceProfile: "path"
+            property var channelCount: 0
+            property var channelStart: 0
+            property var valueRange: 0
             Column{
                 Text{
                     id: customBackText
-                    anchors.fill: parent
+                    //anchors.fill: parent
                     font.pixelSize: 16
                     text: customBack.text
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    //wrapMode: Text.WordWrap
+                    //verticalAlignment: Text.AlignVCenter
                 }
-                Label{
+                Text{
                     id: deviceNameLbl
-                    anchors.fill: parent
+                    //anchors.fill: parent
                     font.pixelSize: 16
                     text: customBack.deviceName
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    wrapMode: Text.WordWrap
+                    //verticalAlignment: Text.AlignVCenter
                 }
-                Label{
+                Text{
                     id: deviceProfileLbl
-                    anchors.fill: parent
+                    //anchors.fill: parent
+                    width: 120
                     font.pixelSize: 16
                     text: customBack.deviceProfile
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    elide: Text.ElideRight
+                    //wrapMode: Text.WordWrap
+                    //verticalAlignment: Text.AlignVCenter
                 }
+                anchors.centerIn: parent
             }
             anchors.centerIn: parent
         } //<-- collapse
@@ -94,7 +103,7 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         onClicked:{
-            if(connected)
+            if(flipable.connected)
                 flipable.flipped = !flipable.flipped
             else console.log("Device not connected: "+`${customPlus.deviceName}`)
         } 

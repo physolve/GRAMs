@@ -191,18 +191,32 @@ Window {
                 Layout.alignment: Qt.AlignHCenter
             }
 
-            GridLayout {
-                columns: implicitW < parent.width ? -1 : parent.width / columnImplicitWidth
-                rowSpacing: 4
-                columnSpacing: 4
+            ScrollView {
+                id: scroller
+                //anchors.top: parent.top
+                //anchors.left: parent.left
+                //anchors.leftMargin: 5
+                //anchors.topMargin: 5
+                width: parent.width
+                //contentWidth: modelGrid.implicitW
+                //height: parent.height * 0.8
+                //ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
                 Layout.alignment: Qt.AlignHCenter
-                property int columnImplicitWidth: children[0].implicitWidth + columnSpacing
-                property int implicitW: itemModel.count * columnImplicitWidth
-                ObjectModel { // fill using frofile + profileList
+                clip : true
+                GridLayout {
+                    //columns: implicitW < parent.width ? -1 : parent.width / columnImplicitWidth
+                    rowSpacing: 4
+                    columnSpacing: 4
+                    flow: GridLayout.LeftToRight
+                    columns: itemModel.count
+                    //property int columnImplicitWidth: children[0].implicitWidth + columnSpacing
+                    //property int implicitW: itemModel.count * columnImplicitWidth
+                    ObjectModel { // fill using profile + profileList
                         id: itemModel
-                }
-                Repeater { 
-                    model: itemModel
+                    }
+                    Repeater { 
+                        model: itemModel
+                    }
                 }
             }
             Button {
@@ -213,26 +227,14 @@ Window {
                     // var jsonCfgTest = []
                     // for (var i = 0; i < jsonStartCfg.count; ++i) jsonCfgTest.push(jsonStartCfg.get(i))
                     // jsonData.cfg = JSON.stringify(jsonCfgTest) 
+
+                    // signal to c++ about creating Controllers using parameters 
                     main.show()
                     cfgWindow.close()
                 }
                 Layout.alignment: Qt.AlignHCenter
             }
         }   
-    }
-    function startupFunction(objectCfgMap){
-        if(true){ //cfgTest[0].start
-            let tabPage1 = page1.createObject(stackLayout); // работает
-            container.append(tabPage1);
-        }
-        if(true){ //cfgTest[1].start
-            let tabPage2 = page2.createObject(stackLayout); // работает
-            container.append(tabPage2);
-        }
-        if(true){ //cfgTest[2].start
-            let tabPage3 = page3.createObject(stackLayout); // работает
-            container.append(tabPage3);
-        }     
     }
     function saveSetUp(){
         // var datamodel = []
@@ -281,6 +283,11 @@ Window {
         }
     }
     Component{
+        id: universalSetUp
+        PressureSetting{
+        }
+    }
+    Component{
         id: profileLine
         Text {
             text: "profile string..."
@@ -325,7 +332,12 @@ Window {
             for(const [key, value] of Object.entries(advantechGRAM)){
                 let profileObj = valveSetUp.createObject()
                 profileObj.color = Material.color(Material.Red)
-                //profileObj.text = value.device // using value[device] because it is array of obj
+                // think about how to connect device description with purpose
+                profileObj.changeTextFront(value.purpose)
+                // change to back with 'value.device' and front with Purpose
+                profileObj.setDeviceLbl(value.device) // using value[device] because it is array of obj
+                profileObj.setDeviceProfile("profile from resources") // make somewhere profiles (maybe in resources)
+
                 itemModel.append(profileObj)
                 // somehow combine name, state, profile and settings
                 // try fill column with objects or else flipable in separate qml
@@ -345,22 +357,32 @@ Window {
         let rsa = dataSource.connectedDevices // for now only advantech connected
         for(const [key, value] of Object.entries(rsa)){
             if("Advantech" in controllersGRAM)
-                if(key in controllersGRAM.Advantech){
+                if(value in controllersGRAM.Advantech){
                     //working change of color
-                    //let t_profileObj = itemModel.get(0)
+                    
+                    console.log("found "+`${value}`);
+                    //let t_profileObj = itemModel.get(0) // take i'th item
                     //t_profileObj.color = Material.color(Material.Green)
-                    console.log("found "+`${key}`);
+                    // use setDeviceConnected as true
+                    //t_profileObj.setDeviceConnected(true)
+                    //fill inside information of device like profile 
                     continue;
                 }
-            let realObj = valveSetUp.createObject()
+            
+            let realObj = universalSetUp.createObject() // it can be pressureSetUp
             realObj.color = Material.color(Material.Yellow)
-            //realObj.customPlus.text = key // using key because it is map (already an object)
+            
+            realObj.changeTextFront("Unexpected device") // using key because it is map (already an object)
+            realObj.setDeviceLbl(`${value}` + " on " + `${key}`) // using value because it is an obj
+            realObj.setDeviceProfile("profile from resources") // make somewhere profiles (maybe in resources)
+            realObj.setDeviceConnected(true) // find a way to decline connection
+            
             itemModel.append(realObj)
             // if the last key
         }
-        let t_profileObj = itemModel.get(0)
-        t_profileObj.color = Material.color(Material.Green)
-        t_profileObj.changeTextFront("I GET IT")
+        // let t_profileObj = itemModel.get(0)
+        // t_profileObj.color = Material.color(Material.Green)
+        // t_profileObj.changeTextFront("I GET IT")
         // for (const [key, value] of Object.entries(rsa)) {
         //     console.log(`${key}: ${value}`);
         // }
@@ -371,5 +393,20 @@ Window {
         //     itemModel.append(realObj)
         // }
         // if(rsa.hasOwnProperty("DemoDevice,BID#0")) rectObj1.color = Material.Red;
+    }
+
+    function startupFunction(objectCfgMap){
+        if(true){ //cfgTest[0].start
+            let tabPage1 = page1.createObject(stackLayout); // работает
+            container.append(tabPage1);
+        }
+        if(true){ //cfgTest[1].start
+            let tabPage2 = page2.createObject(stackLayout); // работает
+            container.append(tabPage2);
+        }
+        if(true){ //cfgTest[2].start
+            let tabPage3 = page3.createObject(stackLayout); // работает
+            container.append(tabPage3);
+        }
     }
 }
