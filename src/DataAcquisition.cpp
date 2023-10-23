@@ -53,6 +53,8 @@ DataAcquisition::DataAcquisition(QObject *parent) :
         }
         auto demoPressure = AdvantechTest(m_deviceInfoList.value(0));
         m_deviceSettings[demoPressure.m_deviceName] = demoPressure.getSettings();
+        auto demoValves = AdvantechTest(m_deviceInfoList.value(1));
+        m_deviceSettings[demoValves.m_deviceName] = demoValves.getSettings();
     }
 
     // try to send to qml GRAM keys

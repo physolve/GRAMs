@@ -18,6 +18,9 @@ Rectangle {
     function setDeviceConnected(stateBool){
         flipable.connected = stateBool
     }
+    function setChannelCount(cnt){
+        customBack.channelCount = cnt
+    }
     //--> slide
     Flipable {
         id: flipable
@@ -32,6 +35,14 @@ Rectangle {
             border.color : "steelblue" 
             border.width : 8
             property string text: "test"
+            MouseArea {
+                anchors.fill: parent
+                onClicked:{
+                    if(flipable.connected)
+                        flipable.flipped = !flipable.flipped
+                    else console.log("Device not connected: "+`${customPlus.deviceName}`)
+                } 
+            }
             Text{
                 id: customPlusText
                 anchors.fill: parent
@@ -52,9 +63,17 @@ Rectangle {
             property string text: "test back"
             property string deviceName: "unknown"
             property string deviceProfile: "path"
-            property var channelCount: 0
+            property var channelCount: 3
             property var channelStart: 0
             property var valueRange: 0
+            MouseArea {
+                anchors.fill: parent
+                onClicked:{
+                    if(flipable.connected)
+                        flipable.flipped = !flipable.flipped
+                    else console.log("Device not connected: "+`${customPlus.deviceName}`)
+                } 
+            }
             Column{
                 Text{
                     id: customBackText
@@ -85,6 +104,10 @@ Rectangle {
                     //wrapMode: Text.WordWrap
                     //verticalAlignment: Text.AlignVCenter
                 }
+                ComboBox{
+                    id: cmbChannelStart
+                    model: customBack.channelCount
+                }
                 anchors.centerIn: parent
             }
             anchors.centerIn: parent
@@ -100,12 +123,4 @@ Rectangle {
         }
     }
     //<-- slide
-    MouseArea {
-        anchors.fill: parent
-        onClicked:{
-            if(flipable.connected)
-                flipable.flipped = !flipable.flipped
-            else console.log("Device not connected: "+`${customPlus.deviceName}`)
-        } 
-    }
 }

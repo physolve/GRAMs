@@ -376,7 +376,10 @@ Window {
             realObj.setDeviceLbl(`${value}` + " on " + `${key}`) // using value because it is an obj
             realObj.setDeviceProfile("profile from resources") // make somewhere profiles (maybe in resources)
             realObj.setDeviceConnected(true) // find a way to decline connection
-            
+            var description = value+','+key
+            //console.log(description)
+            let rsb = dataSource.deviceSettings[description]
+            realObj.setChannelCount(rsb.channelCount)
             itemModel.append(realObj)
             // if the last key
         }
