@@ -3,33 +3,43 @@ import QtQuick.Controls
 
 Rectangle {
     id: pressureSetting
+    property bool connected: false
+    property string innerName: ""
     color: "black"
-    width: 180
+    width: 270
     height: 200
     function changeTextFront(str){
         customPlus.text = str
     }
     function setDeviceLbl(str){
         customBack.deviceName = str
+        innerName = str
     }
     function setDeviceProfile(str){
         customBack.deviceProfile = str
     }
     function setDeviceConnected(stateBool){
-        flipable.connected = stateBool
+        connected = stateBool
     }
     function setChannelCount(cnt){
         customBack.channelCount = cnt
+    }
+    function setValueRange(rng){
+        customBack.valueRange = rng
+    }
+    function getSettings(){
+        return { indexChannelStart:cmbChannelStart.currentIndex,
+        indexChannelCount:cmbChannelCount.currentIndex,
+        indexValueRange:cmbValueRange.currentIndex }
     }
     //--> slide
     Flipable {
         id: flipable
         anchors.centerIn: parent
         property bool flipped: false
-        property bool connected: false
         front: Rectangle {
             id: customPlus
-            implicitWidth: 160
+            implicitWidth: 250
             implicitHeight: 60
             color: "transparent"
             border.color : "steelblue" 
@@ -38,7 +48,7 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 onClicked:{
-                    if(flipable.connected)
+                    if(connected)
                         flipable.flipped = !flipable.flipped
                     else console.log("Device not connected: "+`${customPlus.deviceName}`)
                 } 
@@ -55,7 +65,7 @@ Rectangle {
         } //<-- collapse
         back: Rectangle {
             id: customBack
-            implicitWidth: 160
+            implicitWidth: 250
             implicitHeight: 200
             color: "transparent"
             border.color : "steelblue" 
@@ -69,7 +79,7 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 onClicked:{
-                    if(flipable.connected)
+                    if(connected)
                         flipable.flipped = !flipable.flipped
                     else console.log("Device not connected: "+`${customPlus.deviceName}`)
                 } 
@@ -106,7 +116,58 @@ Rectangle {
                 }
                 ComboBox{
                     id: cmbChannelStart
+                    width: 100
+                    height: 40
+                    font.pointSize: 10
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    model: customBack.channelCount 
+                }
+                ComboBox{
+                    id: cmbChannelCount
+                    width: 100
+                    height: 40
+                    font.pointSize: 10
+                    anchors.horizontalCenter: parent.horizontalCenter
                     model: customBack.channelCount
+                    delegate: ItemDelegate {
+                        width: parent.width
+                        text: index + 1
+                    }
+                    displayText: Number(currentText) + 1
+                    //onCurrentIndexChanged: 
+                }
+                ComboBox{
+                    id: cmbValueRange
+                    width: 180
+                    height: 50
+                    font.pointSize: 10
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    model: customBack.valueRange
+                    // background: Rectangle {
+                    //     color: "lightgrey"
+                    //     border {width: 1; color: "grey"}
+                    //     implicitWidth:  50
+                    //     implicitHeight: 30
+                    // }
+                    contentItem: Label {
+                        text: cmbValueRange.currentText
+                        font: cmbValueRange.font
+                        wrapMode: Text.WordWrap
+                        padding: 4
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    popup: Popup {
+                        y: cmbValueRange.height - 1
+                        width: 200
+                        implicitHeight: contentItem.implicitHeight
+                        contentItem: ListView {
+                            clip: true
+                            implicitHeight: contentHeight
+                            model: cmbValueRange.popup.visible ? cmbValueRange.delegateModel : null
+                            currentIndex: cmbValueRange.highlightedIndex
+                        }
+                    }
+                    //onCurrentIndexChanged:
                 }
                 anchors.centerIn: parent
             }

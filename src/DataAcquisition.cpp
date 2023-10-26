@@ -13,6 +13,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QVariantList>
+#include <QTimer>
 
 Q_DECLARE_METATYPE(QAbstractSeries *)
 Q_DECLARE_METATYPE(QAbstractAxis *)
@@ -20,7 +21,7 @@ Q_DECLARE_METATYPE(QAbstractAxis *)
 
 DataAcquisition::DataAcquisition(QObject *parent) :
     QObject(parent),
-    m_index(-1)
+    m_index(-1), m_timer(new QTimer(this))
 {
     qRegisterMetaType<QAbstractSeries*>();
     qRegisterMetaType<QAbstractAxis*>();
@@ -34,7 +35,7 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     // fill the Map using the same properties as name and profile
     // like: current device : [{name_controller},{}]
     // later compare the maps to approve working state
-    
+    connect(m_timer, &QTimer::timeout, this, &DataAcquisition::processEvents);
     QFile file;
     QDir dir(".");
     file.setFileName(":/MyApplication/profile/GRAMsPfp.json");
@@ -43,6 +44,7 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     file.close();
     QJsonDocument document   =   { QJsonDocument::fromJson(rawData.toUtf8()) };
     QJsonObject jsonObject = document.object();
+
     if(advantechDeviceCheck(m_connectedDevices)){
         // create rectangle in qml using map
         for(auto device : m_connectedDevices.keys()){
@@ -52,9 +54,13 @@ DataAcquisition::DataAcquisition(QObject *parent) :
             // make qml combobox with ret.m_channelCount and ret.m_channelStart and profile and etc.
         }
         auto demoPressure = AdvantechTest(m_deviceInfoList.value(0));
-        m_deviceSettings[demoPressure.m_deviceName] = demoPressure.getSettings();
+        demoPressure.Initialization();
+        m_deviceInfoList[0] = demoPressure.getInfo();
+        m_deviceSettings[demoPressure.m_deviceName] = m_deviceInfoList[0].getSettings();
         auto demoValves = AdvantechTest(m_deviceInfoList.value(1));
-        m_deviceSettings[demoValves.m_deviceName] = demoValves.getSettings();
+        demoValves.Initialization();
+        m_deviceInfoList[1] = demoValves.getInfo();
+        m_deviceSettings[demoValves.m_deviceName] = m_deviceInfoList[1].getSettings();
     }
 
     // try to send to qml GRAM keys
@@ -97,6 +103,39 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
     /*ADVANTECH Controller Initialization*/
     // use advantechDeviceMap to additional features like in Instant_AI
 }
+
+void DataAcquisition::setDeviceParameters(QString name, QVariantMap obj){
+    QVariantMap deviceMap = m_deviceSettings[name].toMap();
+    deviceMap["chChannelCount"] = obj["indexChannelCount"];
+    deviceMap["chCannelStart"] = obj["indexChannelStart"];
+    deviceMap["chValueRange"] = obj["indexValueRange"];
+    m_deviceSettings[name].setValue(deviceMap);
+}
+
+void DataAcquisition::saveStartDevice(){
+    for(ControllerInfo info : m_deviceInfoList){
+        info.setSettings(m_deviceSettings[info.deviceName()].toMap());
+        auto demo = AdvantechTest(info);
+        demo.ConfigureDeviceTest();
+        appendToControllerList(demo);
+    }
+}
+
+void DataAcquisition::appendToControllerList(AdvantechTest& device){
+    controllerList.append(&device);
+}
+
+void DataAcquisition::processEvents(){
+
+}
+
+void DataAcquisition::readDataFromDevice(ControllerInfo info){
+    auto itr = std::find_if(controllerList.begin(), controllerList.end(), [&](AdvantechTest* someclass) { return someclass->m_deviceName == info.deviceName(); });
+    if(itr != controllerList.end()) {
+        (*itr)->someData = "NEW";
+    }
+}
+
 
 QVariantMap DataAcquisition::profileJson() const
 {

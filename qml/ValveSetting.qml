@@ -3,6 +3,8 @@ import QtQuick.Controls
 
 Rectangle {
     id: valveSetting
+    property bool connected: false
+    property string innerName: ""
     color: "black"
     width: 180
     height: 200
@@ -11,19 +13,19 @@ Rectangle {
     }
     function setDeviceLbl(str){
         customBack.deviceName = str
+        innerName = str
     }
     function setDeviceProfile(str){
         customBack.deviceProfile = str
     }
     function setDeviceConnected(stateBool){
-        flipable.connected = stateBool
+        connected = stateBool
     }
     //--> slide
     Flipable {
         id: flipable
         anchors.centerIn: parent
         property bool flipped: false
-        property bool connected: false
         front: Rectangle {
             id: customPlus
             implicitWidth: 160
@@ -32,6 +34,14 @@ Rectangle {
             border.color : "steelblue" 
             border.width : 8
             property string text: "test"
+            MouseArea {
+                anchors.fill: parent
+                onClicked:{
+                    if(connected)
+                        flipable.flipped = !flipable.flipped
+                    else console.log("Device not connected: "+`${customPlus.deviceName}`)
+                } 
+            }
             Text{
                 id: customPlusText
                 anchors.fill: parent
@@ -52,6 +62,14 @@ Rectangle {
             property string text: "test back"
             property string deviceName: "unknown"
             property string deviceProfile: "path"
+            MouseArea {
+                anchors.fill: parent
+                onClicked:{
+                    if(connected)
+                        flipable.flipped = !flipable.flipped
+                    else console.log("Device not connected: "+`${customPlus.deviceName}`)
+                } 
+            }
             Column{
                 Text{
                     id: customBackText
@@ -91,12 +109,4 @@ Rectangle {
         }
     }
     //<-- slide
-    MouseArea {
-        anchors.fill: parent
-        onClicked:{
-            if(connected)
-                flipable.flipped = !flipable.flipped
-            else console.log("Device not connected: "+`${customPlus.deviceName}`)
-        } 
-    }
 }

@@ -13,10 +13,9 @@ void Controller::Initialization(){
 }
 
 AdvantechTest::AdvantechTest(const ControllerInfo &info, QObject *parent) : 
-	QObject(parent), m_info(info)
+	QObject(parent), m_info(info), m_instantAiCtrl(NULL)
 {
 	m_deviceName = m_info.deviceName();
-	Initialization();
 }
 
 AdvantechTest::~AdvantechTest(){
@@ -47,15 +46,16 @@ void AdvantechTest::Initialization() // fill info
 
 	int channelCount = (instantAiCtrl->getChannelCount() < 16) ? 
 		instantAiCtrl->getChannelCount() : 16;
+	// pull to Info
 	int logicChannelCount = instantAiCtrl->getChannelCount();
-
-	m_channelStart = logicChannelCount;
+	// pull to Info
+	m_info.m_channelStart = logicChannelCount;
 	// for (int i = 0; i < logicChannelCount; i++)
 	// {
 	// 	//ui.cmbChannelStart->addItem(QString("%1").arg(i));
 	// 	//iterate to qml in combobox ChannelStart
 	// }
-	m_channelCount = channelCount;
+	m_info.m_channelCount = channelCount;
 	// for (int i = 0; i < channelCount; i++)
 	// {
 	// 	//ui.cmbChannelCount->addItem(QString("%1").arg(i + 1));
@@ -71,7 +71,7 @@ void AdvantechTest::Initialization() // fill info
 			sizeof(vrgDescription), vrgDescription, &ranges, NULL);
 		CheckError(errorCode);
 		QString str = QString::fromWCharArray(vrgDescription);
-		m_valueRanges.append(str);
+		m_info.m_valueRanges.append(str);
 		//ui.cmbValueRange->addItem(str);
 		//iterate to qml in combobox ValueRange
 	}
@@ -84,22 +84,13 @@ void AdvantechTest::Initialization() // fill info
 	//ui.cmbValueRange->setCurrentIndex(0);
 }
 
-QVariantMap AdvantechTest::getSettings(){
-	QVariantMap settingPressure;
-    settingPressure["channelCount"] = m_channelCount;
-	settingPressure["channelStart"] = m_channelStart;
-	settingPressure["valueRanges"] = m_valueRanges;
-	settingPressure["profilePath"] = m_profilePath;
-	return settingPressure;
+const ControllerInfo& AdvantechTest::getInfo(){
+	return m_info;
 }
 
 void AdvantechTest::ConfigureDeviceTest(){ // after accept
-	for (int i = 0; i < 16; i++)
-	{
-		scaledData[i] = 0;
-	}
-	
-	if (!m_instantAiCtrl)
+	m_vector = QVector<double>(16,0.0);
+	if (m_instantAiCtrl==NULL)
 	{
       m_instantAiCtrl = InstantAiCtrl::Create();
 	}
@@ -110,19 +101,19 @@ void AdvantechTest::ConfigureDeviceTest(){ // after accept
     ErrorCode errorCode = m_instantAiCtrl->setSelectedDevice(selected);
 	CheckError(errorCode);
 
-    std::wstring profile = m_profilePath.toStdWString();
+    std::wstring profile = m_info.m_profilePath.toStdWString();
     errorCode = m_instantAiCtrl->LoadProfile(profile.c_str());
     CheckError(errorCode);
 
 	//Get channel max number. set value range for every channel.
 	Array<AiChannel> *channels = m_instantAiCtrl->getChannels();
+
+	Array<ValueRange>* valueRanges = m_instantAiCtrl->getFeatures()->getValueRanges();
+	m_valueRange = valueRanges->getItem(m_info.m_valueRangeCh);
 	for (int i = 0; i < channels->getCount(); i++)
 	{
 		channels->getItem(i).setValueRange(m_valueRange);
 	}
-
-	
-
 }
 
 void AdvantechTest::CheckError(ErrorCode errorCode)
@@ -133,6 +124,22 @@ void AdvantechTest::CheckError(ErrorCode errorCode)
 			QString::number(errorCode, 16).right(8).toUpper();
 		qDebug() << QString("Warning Information %1").arg(message);
 	}
+}
+
+void AdvantechTest::readData(){
+	ErrorCode errorCode = Success;
+	errorCode = m_instantAiCtrl->Read(m_info.m_channelStartCh, m_info.m_channelCountCh, m_vector.data());
+	CheckError(errorCode);
+	if (errorCode != Success)
+	{
+		return;
+	}
+
+}
+
+QVector<double> AdvantechTest::getData(){
+	//vector=scaledData;
+	return m_vector;
 }
 
 AdvantechDO::AdvantechDO(const ControllerInfo &info, QObject *parent) : QObject(parent), m_info(info){

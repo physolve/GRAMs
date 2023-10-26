@@ -34,9 +34,11 @@ public:
     void Initialization() ; //override
     void ConfigureDeviceTest();
 	void CheckError(ErrorCode errorCode);
-    QVariantMap getSettings();
-
     QString m_deviceName;
+    const ControllerInfo& getInfo();
+
+    void readData();
+    QVector<double> getData();
 //Q_SIGNALS:
 
 public slots:
@@ -45,14 +47,11 @@ public slots:
 
 private:
     ControllerInfo m_info;
-    int m_channelCount; // share to qml
-	int m_channelStart;
-	QStringList m_valueRanges;
     
     ValueRange m_valueRange;
-    QString m_profilePath;
-    InstantAiCtrl *m_instantAiCtrl; // change to smart pointer or initialize inside class 
-	double scaledData[16];
+    InstantAiCtrl* m_instantAiCtrl; // change to smart pointer or initialize inside class 
+    QVector<double> m_vector;
+	//double scaledData[16];
 };
 
 class AdvantechDO : public QObject

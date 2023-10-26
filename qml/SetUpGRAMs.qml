@@ -16,7 +16,7 @@ Window {
     Material.accent: Material.Indigo
     flags: Qt.Window | Qt.FramelessWindowHint
     width: 960
-    height: 720
+    height: 760
     title: qsTr("Настройки")
     property int bw: 5
         // The mouse area is just for setting the right cursor shape
@@ -111,7 +111,7 @@ Window {
             Layout.preferredHeight:  parent.height
             visible: true
             FontLoader { id: webLoveLetter; source: "qrc:/MyApplication/fonts/LoveLetter.TTF" }
-            FontLoader { id: webMomоt; source: "qrc:/MyApplication/fonts/Momоt___.ttf" }
+            FontLoader { id: webMomot; source: "qrc:/MyApplication/fonts/Momot___.ttf" }
             // Text { text: "GRAMs: 350 edition"
             //     font.family: webLoveLetter.font.family
             //     font.weight: webLoveLetter.font.weight
@@ -121,8 +121,8 @@ Window {
             //     Layout.alignment:Qt.AlignHCenter
             // }
             Text { text: "GRAMs"
-                font.family: webMomоt.font.family
-                font.weight: webMomоt.font.weight
+                font.family: webMomot.font.family
+                font.weight: webMomot.font.weight
                 font.pixelSize: 24
                 color: "white"
                 horizontalAlignment: Text.AlignHCenter
@@ -208,7 +208,8 @@ Window {
                     rowSpacing: 4
                     columnSpacing: 4
                     flow: GridLayout.LeftToRight
-                    columns: itemModel.count
+                    columns: 3
+                    rows: itemModel.count%3+1
                     //property int columnImplicitWidth: children[0].implicitWidth + columnSpacing
                     //property int implicitW: itemModel.count * columnImplicitWidth
                     ObjectModel { // fill using profile + profileList
@@ -226,11 +227,13 @@ Window {
                     startupFunction()
                     // var jsonCfgTest = []
                     // for (var i = 0; i < jsonStartCfg.count; ++i) jsonCfgTest.push(jsonStartCfg.get(i))
-                    // jsonData.cfg = JSON.stringify(jsonCfgTest) 
-
+                    // jsonData.cfg = JSON.stringify(jsonCfgTest)
+                    replaceControllerInfo()
+                    dataSource.saveStartDevice()
                     // signal to c++ about creating Controllers using parameters 
                     main.show()
                     cfgWindow.close()
+                    // change button from "Продолжить" to "Сохранить"
                 }
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -371,15 +374,16 @@ Window {
             
             let realObj = universalSetUp.createObject() // it can be pressureSetUp
             realObj.color = Material.color(Material.Yellow)
-            
+            var description = value+','+key
             realObj.changeTextFront("Unexpected device") // using key because it is map (already an object)
-            realObj.setDeviceLbl(`${value}` + " on " + `${key}`) // using value because it is an obj
+            realObj.setDeviceLbl(description) //`${value}` + " on " + `${key}` using value because it is an obj
             realObj.setDeviceProfile("profile from resources") // make somewhere profiles (maybe in resources)
             realObj.setDeviceConnected(true) // find a way to decline connection
-            var description = value+','+key
+            
             //console.log(description)
             let rsb = dataSource.deviceSettings[description]
             realObj.setChannelCount(rsb.channelCount)
+            realObj.setValueRange(rsb.valueRanges)
             itemModel.append(realObj)
             // if the last key
         }
@@ -411,5 +415,22 @@ Window {
             let tabPage3 = page3.createObject(stackLayout); // работает
             container.append(tabPage3);
         }
+    }
+    function replaceControllerInfo(){
+        for(var i=0; i<itemModel.count; i++){
+            let t_profileObj = itemModel.get(i);
+            if(t_profileObj.connected){ // now working for Pressure
+                var chSet = t_profileObj.getSettings()
+                console.log("innerName "+t_profileObj.innerName)
+                dataSource.setDeviceParameters(t_profileObj.innerName, chSet)
+                // let rsb = dataSource.deviceSettings[t_profileObj.innerName]
+                // console.log("ChCnt "+chSet.indexChannelCount)
+                // console.log("ChSt "+chSet.indexChannelStart)
+                // console.log("ValRng "+chSet.indexValueRange)
+            }
+            else{
+                console.log("I will not get inside " + t_profileObj.innerName)
+            }
+        }   
     }
 }
