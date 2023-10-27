@@ -23,7 +23,9 @@ public:
     enum Roles {
         NameRole = Qt::UserRole,
         Time,
-        Value
+        Value,
+        CurTime,
+        CurValue
     };
 
     explicit MyModel(QObject *parent = nullptr);

@@ -119,6 +119,7 @@ void DataAcquisition::saveStartDevice(){
         demo.ConfigureDeviceTest();
         appendToControllerList(demo);
     }
+    //m_timer->start(100);
 }
 
 void DataAcquisition::appendToControllerList(AdvantechTest& device){
@@ -132,7 +133,8 @@ void DataAcquisition::processEvents(){
 void DataAcquisition::readDataFromDevice(ControllerInfo info){
     auto itr = std::find_if(controllerList.begin(), controllerList.end(), [&](AdvantechTest* someclass) { return someclass->m_deviceName == info.deviceName(); });
     if(itr != controllerList.end()) {
-        (*itr)->someData = "NEW";
+        (*itr)->readData();
+        auto dataVector = (*itr)->getData();
     }
 }
 

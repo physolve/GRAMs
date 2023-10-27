@@ -6,7 +6,7 @@
 class MyData : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QVariantList  data    READ data     WRITE setData     NOTIFY dataChanged)
+    Q_PROPERTY(QVariantList  data    READ data     WRITE setData     NOTIFY JSONdataChanged)
     Q_PROPERTY(bool          result  READ result   WRITE setResult   NOTIFY resultChanged)
     Q_PROPERTY(int           length  READ length   WRITE setLength   NOTIFY lengthChanged)
 
@@ -65,7 +65,7 @@ class MyData : public QObject
 
     //SIGNALS
     signals:
-    void dataChanged(const QVariantList& data);
+    void JSONdataChanged(const QVariantList& data);
     void resultChanged(bool result);
     void lengthChanged(int length);
 

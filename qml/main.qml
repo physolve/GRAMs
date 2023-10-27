@@ -8,7 +8,7 @@ import QtQuick.Dialogs
 ApplicationWindow {
     id: main
     width: 1840
-    height: 940
+    height: 960
     visible: true
     title: qsTr("GRAMs") //: some information
     Material.theme: Material.Dark
@@ -17,13 +17,25 @@ ApplicationWindow {
     Settings {
         property alias datastore: main.datastore
     }
-    ListModel {
-        id: dataModel
-        ListElement { name: "test1"; value: 1 }
-    }
+    // ListModel {
+    //     id: dataModel
+    //     ListElement { name: "test1"; value: 1 }
+    // }
     Component.onCompleted: {
-        main.hide()
-        winld.active = true
+        //main.hide()
+        //winld.active = true
+         if(true){ //cfgTest[0].start
+            let tabPage1 = page1.createObject(stackLayout); // работает
+            container.append(tabPage1);
+        }
+        if(true){ //cfgTest[1].start
+            let tabPage2 = page2.createObject(stackLayout); // работает
+            container.append(tabPage2);
+        }
+        if(true){ //cfgTest[2].start
+            let tabPage3 = page3.createObject(stackLayout); // работает
+            container.append(tabPage3);
+        }
     }
 
     Loader {
@@ -59,7 +71,7 @@ ApplicationWindow {
         id: bar
         width: parent.width
         Repeater{
-            model: ["First", "Second", "Third", "Fourth", "Fifth"]
+            model: ["Mnemo", "Data", "Settings"]
             TabButton{
                 text: modelData
                 width: Math.max(100, bar.width/5)

@@ -34,7 +34,8 @@ void CustomPlotItem::initCustomPlot(int index) {
 
     updateCustomPlotSize();
     m_CustomPlot->addGraph();
-    m_CustomPlot->graph(0)->setPen(QPen(Qt::red));
+    m_CustomPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(Qt::black, 1.5), QBrush(Qt::white), 9));
+    m_CustomPlot->graph(0)->setPen(QPen(QColor(120, 120, 120), 2));
     //m_CustomPlot->addGraph();
     //m_CustomPlot->graph(1)->setPen(QPen(Qt::black));
 
@@ -51,7 +52,9 @@ void CustomPlotItem::initCustomPlot(int index) {
 
 
     m_CustomPlot->xAxis->setLabel("t");
-    m_CustomPlot->yAxis->setLabel("S");
+    m_CustomPlot->xAxis->setLabelColor(Qt::white);
+    m_CustomPlot->yAxis->setLabel("P, bar");
+    m_CustomPlot->yAxis->setLabelColor(Qt::white);
     m_CustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 
     //startTimer(500);
@@ -60,6 +63,41 @@ void CustomPlotItem::initCustomPlot(int index) {
             &CustomPlotItem::onCustomReplot);
 
     qDebug() << QString("QCustomplot (%1) Initialized").arg(index);
+
+    // set some pens, brushes and backgrounds:
+    m_CustomPlot->xAxis->setBasePen(QPen(Qt::white, 1));
+    m_CustomPlot->yAxis->setBasePen(QPen(Qt::white, 1));
+    m_CustomPlot->xAxis->setTickPen(QPen(Qt::white, 1));
+    m_CustomPlot->yAxis->setTickPen(QPen(Qt::white, 1));
+    m_CustomPlot->xAxis->setSubTickPen(QPen(Qt::white, 1));
+    m_CustomPlot->yAxis->setSubTickPen(QPen(Qt::white, 1));
+    m_CustomPlot->xAxis->setTickLabelColor(Qt::white);
+    m_CustomPlot->yAxis->setTickLabelColor(Qt::white);
+    m_CustomPlot->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+    m_CustomPlot->yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+    m_CustomPlot->xAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
+    m_CustomPlot->yAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
+    m_CustomPlot->xAxis->grid()->setSubGridVisible(true);
+    m_CustomPlot->yAxis->grid()->setSubGridVisible(true);
+    m_CustomPlot->xAxis->grid()->setZeroLinePen(Qt::NoPen);
+    m_CustomPlot->yAxis->grid()->setZeroLinePen(Qt::NoPen);
+    m_CustomPlot->xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+    m_CustomPlot->yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+    QLinearGradient plotGradient;
+    plotGradient.setStart(0, 0);
+    plotGradient.setFinalStop(0, 350);
+    plotGradient.setColorAt(0, QColor(80, 80, 80));
+    plotGradient.setColorAt(1, QColor(50, 50, 50));
+    m_CustomPlot->setBackground(plotGradient);
+    QLinearGradient axisRectGradient;
+    axisRectGradient.setStart(0, 0);
+    axisRectGradient.setFinalStop(0, 350);
+    axisRectGradient.setColorAt(0, QColor(80, 80, 80));
+    axisRectGradient.setColorAt(1, QColor(30, 30, 30));
+    m_CustomPlot->axisRect()->setBackground(axisRectGradient);
+
+
+
   }
   m_CustomPlot->replot();
 }

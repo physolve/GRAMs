@@ -13,6 +13,8 @@ import QtQuick.Shapes
 import QtQuick.Layouts
 import QtQuick.Studio.Effects 1.0
 
+import QtQml.Models
+
 Item {
     id: item1
     width: rectangle.width
@@ -292,12 +294,12 @@ Item {
         }
 
         CircularSlider {
-            id: sldier1
+            id: slider1
             x: 476
             y: 173
             width: 80
             height: 80
-            onValueChanged: item1.newVal = value
+            //onValueChanged: item1.newVal = value
             handle: Rectangle {
                 id: handleItem1
                 width: 6
@@ -309,8 +311,8 @@ Item {
                 antialiasing: true
                 transform: [
                     Translate {
-                        x: (sldier1.handleWidth - width) / 2
-                        y: (sldier1.handleHeight - height) / 2
+                        x: (slider1.handleWidth - width) / 2
+                        y: (slider1.handleHeight - height) / 2
                     }
                 ]
             }
@@ -321,6 +323,7 @@ Item {
             Layout.fillWidth: false
             trackWidth: 10
             value: item1.newVal
+            
             maxValue: 120
             endAngle: 320
 
@@ -328,7 +331,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: sldier1.value.toFixed()
+                text: slider1.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -336,9 +339,9 @@ Item {
                 font.pointSize: 13
             }
         }
-
+        
         CircularSlider {
-            id: sldier2
+            id: slider2
             x: 539
             y: 122
             width: 80
@@ -351,7 +354,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: sldier2.value.toFixed()
+                text: slider2.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -373,8 +376,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (sldier2.handleWidth - width) / 2
-                        y: (sldier2.handleHeight - height) / 2
+                        x: (slider2.handleWidth - width) / 2
+                        y: (slider2.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -383,7 +386,7 @@ Item {
         }
 
         CircularSlider {
-            id: sldier3
+            id: slider3
             x: 763
             y: 165
             width: 80
@@ -396,7 +399,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: sldier3.value.toFixed()
+                text: slider3.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -418,8 +421,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (sldier3.handleWidth - width) / 2
-                        y: (sldier3.handleHeight - height) / 2
+                        x: (slider3.handleWidth - width) / 2
+                        y: (slider3.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -428,7 +431,7 @@ Item {
         }
 
         CircularSlider {
-            id: sldier4
+            id: slider4
             x: 835
             y: 68
             width: 80
@@ -441,7 +444,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: sldier4.value.toFixed()
+                text: slider4.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -463,8 +466,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (sldier4.handleWidth - width) / 2
-                        y: (sldier4.handleHeight - height) / 2
+                        x: (slider4.handleWidth - width) / 2
+                        y: (slider4.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -473,7 +476,7 @@ Item {
         }
 
         CircularSlider {
-            id: sldier5
+            id: slider5
             x: 965
             y: 48
             width: 80
@@ -486,7 +489,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: sldier5.value.toFixed()
+                text: slider5.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -508,8 +511,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (sldier5.handleWidth - width) / 2
-                        y: (sldier5.handleHeight - height) / 2
+                        x: (slider5.handleWidth - width) / 2
+                        y: (slider5.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -518,7 +521,7 @@ Item {
         }
 
         CircularSlider {
-            id: sldier6
+            id: slider6
             x: 524
             y: 575
             width: 80
@@ -531,7 +534,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: sldier6.value.toFixed()
+                text: slider6.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -553,8 +556,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (sldier6.handleWidth - width) / 2
-                        y: (sldier6.handleHeight - height) / 2
+                        x: (slider6.handleWidth - width) / 2
+                        y: (slider6.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -563,7 +566,7 @@ Item {
         }
 
         CircularSlider {
-            id: sldier7
+            id: slider7
             x: 220
             y: 474
             width: 80
@@ -576,7 +579,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: sldier7.value.toFixed()
+                text: slider7.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -598,8 +601,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (sldier7.handleWidth - width) / 2
-                        y: (sldier7.handleHeight - height) / 2
+                        x: (slider7.handleWidth - width) / 2
+                        y: (slider7.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -865,8 +868,12 @@ Item {
             handleHeight: 10
         }
     }
+    // Binding{
+    //     target: item1
+    //     property: "newVal"
+    //     value: _myModel.data(0,260)
+    // }
 }
-
 /*##^##
 Designer {
     D{i:0;formeditorZoom:0.5}

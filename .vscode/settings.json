@@ -101,7 +101,9 @@
         "Momot",
         "Momоt",
         "NAMEAPCE",
+        "antialiasing",
         "datamodel",
+        "listviewer",
         "qreal",
         "winld"
     ],

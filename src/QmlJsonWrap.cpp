@@ -34,7 +34,7 @@ void MyData::setData(const QVariantList& data)
   if (m_data == data)
     return;
   m_data = data;
-  emit dataChanged(m_data);
+  emit JSONdataChanged(m_data);
 }
 
 int MyData::length() const

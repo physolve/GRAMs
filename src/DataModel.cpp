@@ -51,6 +51,10 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
         return QVariant::fromValue(data.x);
     else if ( role == Value )
         return QVariant::fromValue(data.y);
+    else if ( role == CurTime )
+        return QVariant::fromValue(data.x.last());
+    else if ( role == CurValue )
+        return QVariant::fromValue(data.y.last());
     else
         return QVariant();
 }
@@ -61,7 +65,9 @@ QHash<int, QByteArray> MyModel::roleNames() const
     static QHash<int, QByteArray> mapping {
         {NameRole, "name"},
         {Time, "x"},
-        {Value, "y"}
+        {Value, "y"},
+        {CurTime, "ct"},
+        {CurValue, "cv"}
     };
     return mapping;
 }
@@ -106,7 +112,7 @@ void MyModel::testDataFoo(){
     const QModelIndex endIndex   = index(count - 1, 0);
 
     // ...but only the population field
-    emit dataChanged(startIndex, endIndex, QVector<int>() << Time << Value);
+    emit dataChanged(startIndex, endIndex, QVector<int>() << Time << Value << CurTime << CurValue );
 }
 
 void MyModel::appendPoints(QList<quint64> pointX, QList<double> pointY)
