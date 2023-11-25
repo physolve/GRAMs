@@ -22,20 +22,8 @@ ApplicationWindow {
     //     ListElement { name: "test1"; value: 1 }
     // }
     Component.onCompleted: {
-        //main.hide()
-        //winld.active = true
-         if(true){ //cfgTest[0].start
-            let tabPage1 = page1.createObject(stackLayout); // работает
-            container.append(tabPage1);
-        }
-        if(true){ //cfgTest[1].start
-            let tabPage2 = page2.createObject(stackLayout); // работает
-            container.append(tabPage2);
-        }
-        if(true){ //cfgTest[2].start
-            let tabPage3 = page3.createObject(stackLayout); // работает
-            container.append(tabPage3);
-        }
+        main.hide()
+        winld.active = true
     }
 
     Loader {

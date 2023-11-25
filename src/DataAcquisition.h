@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QtCore/QObject>
-#include <QtCharts/QAbstractSeries>
 #include "Controller.h"
 
 class DataAcquisition : public QObject
@@ -14,22 +12,23 @@ class DataAcquisition : public QObject
 public:
     explicit DataAcquisition(QObject *parent = 0);
     QVariantMap profileJson () const;
+
+    const QList<ControllerInfo> getControllersInfo();
+    void processEvents();
+    const QList<QVector<double>> getDataList();
 Q_SIGNALS:
 
 public slots:
-    void generateData(int type, int rowCount, int colCount);
-    void update(QAbstractSeries *series);
-    void saveStartDevice();
+    void saveStartDevice(); // no longer slot
     //void choosenGRAMInitialization();
     void setDeviceParameters(QString name, QVariantMap obj);
-
-    void processEvents();
+    void setChannelMapping(QVariantMap obj);
 signals:
     void profileNamesChanged();
     void deviceSettingsChanged();
 private:
-    QList<QList<QPointF>> m_data; // unused
-    int m_index;
+    //QList<QList<QPointF>> m_data; // unused
+    
     QVariantMap  m_connectedDevices;
 
     QVariantMap  m_profileJson;
@@ -40,10 +39,11 @@ private:
     QList<ControllerInfo> m_deviceInfoList;
     QVariantMap m_deviceSettings;
 
-    QList<AdvantechTest*> controllerList;
+    QVariantMap m_sensorMapping;
+
+    QList<AdvantechTest*> controllerList; // for read
+    // Controller for Write!
     void appendToControllerList(AdvantechTest& device);
 
     void readDataFromDevice(ControllerInfo info);
-
-    QTimer* m_timer;
 };

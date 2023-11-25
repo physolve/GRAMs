@@ -20,7 +20,6 @@ Page {
         width: 120
         height: 300
         model: _myModel
-        
         delegate: Text {
             id: textLabel
             color: "white"

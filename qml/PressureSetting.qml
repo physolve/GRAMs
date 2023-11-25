@@ -5,18 +5,21 @@ Rectangle {
     id: pressureSetting
     property bool connected: false
     property string innerName: ""
+    property string innerPurpose: ""
+    property string innerProfile: ""
     color: "black"
     width: 270
     height: 200
-    function changeTextFront(str){
-        customPlus.text = str
+    function changePurposeFront(str){
+        //customPlus.purpose = str
+        innerPurpose = str
     }
     function setDeviceLbl(str){
-        customBack.deviceName = str
+        //customBack.deviceName = str
         innerName = str
     }
     function setDeviceProfile(str){
-        customBack.deviceProfile = str
+        innerProfile = str
     }
     function setDeviceConnected(stateBool){
         connected = stateBool
@@ -28,9 +31,11 @@ Rectangle {
         customBack.valueRange = rng
     }
     function getSettings(){
+        // add profile path to return
         return { indexChannelStart:cmbChannelStart.currentIndex,
-        indexChannelCount:cmbChannelCount.currentIndex,
-        indexValueRange:cmbValueRange.currentIndex }
+        indexChannelCount:cmbChannelCount.currentIndex + 1,
+        indexValueRange:cmbValueRange.currentIndex,
+        profilePath: innerProfile}
     }
     //--> slide
     Flipable {
@@ -44,7 +49,7 @@ Rectangle {
             color: "transparent"
             border.color : "steelblue" 
             border.width : 8
-            property string text: "test"
+            property string purpose: innerPurpose
             MouseArea {
                 anchors.fill: parent
                 onClicked:{
@@ -57,7 +62,7 @@ Rectangle {
                 id: customPlusText
                 anchors.fill: parent
                 font.pixelSize: 16
-                text: customPlus.text
+                text: customPlus.purpose
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -71,8 +76,8 @@ Rectangle {
             border.color : "steelblue" 
             border.width : 8
             property string text: "test back"
-            property string deviceName: "unknown"
-            property string deviceProfile: "path"
+            property string deviceName: innerName
+            property string deviceProfile: innerProfile
             property var channelCount: 3
             property var channelStart: 0
             property var valueRange: 0

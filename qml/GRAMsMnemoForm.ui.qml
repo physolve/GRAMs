@@ -20,6 +20,32 @@ Item {
     width: rectangle.width
     height: rectangle.height
     property real newVal: 10
+    // property real slider1Val: 0
+    // property real slider2Val: 0
+    // property real slider3Val: 0
+    // property real slider4Val: 0
+    // property real slider5Val: 0
+    property var sliderVal: [10,15,20,25,30]
+    function setVal(val){
+        sliderVal = val
+        // switch(id){
+        //     case 0:
+        //         slider1Val = val
+        //         break
+        //     case 1:
+        //         slider2Val = val
+        //         break
+        //     case 2:
+        //         slider3Val = val
+        //         break
+        //     case 3:
+        //         slider4Val = val
+        //         break
+        //     case 4:
+        //         slider5Val = val
+        //         break
+        // }
+    }
     property real newTempVal: 0.5
     Rectangle {
         id: rectangle
@@ -33,7 +59,7 @@ Item {
             id: image
             visible: true
             anchors.fill: parent
-            source: "qrc:/MyApplication/pictures/GRAMsMimic.svg"
+            source: "qrc:/GRAMs/pictures/GRAMsMimic.svg"
             sourceSize.height: 2044
             sourceSize.width: 3000
             fillMode: Image.PreserveAspectFit
@@ -299,7 +325,7 @@ Item {
             y: 173
             width: 80
             height: 80
-            //onValueChanged: item1.newVal = value
+            //onValueChanged: item1.prVal[0] = value
             handle: Rectangle {
                 id: handleItem1
                 width: 6
@@ -322,8 +348,7 @@ Item {
             startAngle: 40
             Layout.fillWidth: false
             trackWidth: 10
-            value: item1.newVal
-            
+            value: item1.sliderVal[0]
             maxValue: 120
             endAngle: 320
 
@@ -346,7 +371,7 @@ Item {
             y: 122
             width: 80
             height: 80
-            onValueChanged: item1.newVal = value
+            //onValueChanged: item1.prVal[1] = value
             minValue: 0
             endAngle: 320
             rotation: 180
@@ -363,7 +388,7 @@ Item {
             }
             Layout.fillWidth: false
             trackWidth: 10
-            value: item1.newVal
+            value: item1.sliderVal[1]
             maxValue: 120
             progressWidth: 10
             handle: Rectangle {
@@ -391,7 +416,7 @@ Item {
             y: 165
             width: 80
             height: 80
-            onValueChanged: item1.newVal = value
+            //onValueChanged: item1.prVal[2] = value
             minValue: 0
             endAngle: 320
             rotation: 180
@@ -408,7 +433,7 @@ Item {
             }
             trackWidth: 10
             Layout.fillWidth: false
-            value: item1.newVal
+            value: item1.sliderVal[2]
             progressWidth: 10
             maxValue: 120
             handle: Rectangle {
@@ -436,7 +461,7 @@ Item {
             y: 68
             width: 80
             height: 80
-            onValueChanged: item1.newVal = value
+            //onValueChanged: item1.prVal[3] = value
             minValue: 0
             endAngle: 320
             rotation: 180
@@ -453,7 +478,7 @@ Item {
             }
             Layout.fillWidth: false
             trackWidth: 10
-            value: item1.newVal
+            value: item1.sliderVal[3]
             maxValue: 120
             progressWidth: 10
             handle: Rectangle {
@@ -481,7 +506,7 @@ Item {
             y: 48
             width: 80
             height: 80
-            onValueChanged: item1.newVal = value
+            //onValueChanged: item1.prVal[4] = value
             minValue: 0
             endAngle: 320
             rotation: 180
@@ -498,7 +523,7 @@ Item {
             }
             trackWidth: 10
             Layout.fillWidth: false
-            value: item1.newVal
+            value: item1.sliderVal[4]
             progressWidth: 10
             maxValue: 120
             handle: Rectangle {
@@ -526,7 +551,7 @@ Item {
             y: 575
             width: 80
             height: 80
-            onValueChanged: item1.newVal = value
+            //onValueChanged: item1.newVal = value
             minValue: 0
             endAngle: 320
             rotation: 180
@@ -571,7 +596,7 @@ Item {
             y: 474
             width: 80
             height: 80
-            onValueChanged: item1.newVal = value
+            //onValueChanged: item1.newVal = value
             minValue: 0
             endAngle: 320
             rotation: 180

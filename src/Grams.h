@@ -13,6 +13,10 @@ class Grams : public QApplication
 public:
     Grams(int &argc, char **argv);
     ~Grams();
+    Q_INVOKABLE void initializeModel();
+
+private slots:
+    void softEvent();
 
 private:
 
@@ -21,4 +25,6 @@ private:
     QQmlApplicationEngine m_engine;
     DataAcquisition dataSource;
     MyModel dataModel;
+
+    QTimer* softTimer;
 };

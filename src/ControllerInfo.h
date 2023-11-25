@@ -3,7 +3,6 @@
 #include <QString>
 #include <QVariant>
 #include <QMetaType>
-
 class ControllerInfo{
 public:
     ControllerInfo() = default;
@@ -11,6 +10,8 @@ public:
     QString deviceName();
     QVariantMap getSettings();
     void setSettings(const QVariantMap& info);
+    QStringList getNames();
+    void setNames(const QStringList& sensorNames);
     int m_channelCount; // share to qml
 	int m_channelStart;
     QString m_profilePath;
@@ -20,6 +21,7 @@ public:
     int m_valueRangeCh;
     private:
     QString m_deviceName;
+    QStringList m_sensorNames;
 };
 
 Q_DECLARE_METATYPE(ControllerInfo)

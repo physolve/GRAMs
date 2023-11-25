@@ -110,8 +110,8 @@ Window {
             width: parent.width
             Layout.preferredHeight:  parent.height
             visible: true
-            FontLoader { id: webLoveLetter; source: "qrc:/MyApplication/fonts/LoveLetter.TTF" }
-            FontLoader { id: webMomot; source: "qrc:/MyApplication/fonts/Momot___.ttf" }
+            FontLoader { id: webLoveLetter; source: "qrc:/GRAMs/fonts/LoveLetter.TTF" }
+            FontLoader { id: webMomot; source: "qrc:/GRAMs/fonts/Momot___.ttf" }
             // Text { text: "GRAMs: 350 edition"
             //     font.family: webLoveLetter.font.family
             //     font.weight: webLoveLetter.font.weight
@@ -224,13 +224,19 @@ Window {
                 id: continueBtn
                 text: qsTr("Продолжить");
                 onClicked: {
-                    startupFunction()
+                    console.log("Start")
                     // var jsonCfgTest = []
                     // for (var i = 0; i < jsonStartCfg.count; ++i) jsonCfgTest.push(jsonStartCfg.get(i))
                     // jsonData.cfg = JSON.stringify(jsonCfgTest)
                     replaceControllerInfo()
-                    dataSource.saveStartDevice()
-                    // signal to c++ about creating Controllers using parameters 
+                    console.log("Pass 2")
+                    fillSensors()
+                    console.log("Pass 2.5")
+                    // signal to c++ about creating Controllers using parameters
+                    backend.initializeModel()
+                    console.log("Pass 3")
+                    startupFunction()
+                    console.log("Pass 1")
                     main.show()
                     cfgWindow.close()
                     // change button from "Продолжить" to "Сохранить"
@@ -308,6 +314,9 @@ Window {
         id: rectTest3
         Rectangle { height: 30; width: 80; color: "blue" }
     }
+
+    property var m_sensorsMap : "" // for now, then in some qml
+
     function fillControllers(choosenProfile){
         itemModel.clear()
         // let rectObj1 = rectTest1.createObject();
@@ -333,19 +342,31 @@ Window {
             let advantechGRAM = controllersGRAM.Advantech
             // here u need change by profile which 
             for(const [key, value] of Object.entries(advantechGRAM)){
-                let profileObj = valveSetUp.createObject()
+                console.log("I'm inside Object.entries(advantechGRAM)")
+
+                let profileObj = universalSetUp.createObject() //???
                 profileObj.color = Material.color(Material.Red)
                 // think about how to connect device description with purpose
-                profileObj.changeTextFront(value.purpose)
+                profileObj.changePurposeFront(value.purpose)
                 // change to back with 'value.device' and front with Purpose
                 profileObj.setDeviceLbl(value.device) // using value[device] because it is array of obj
-                profileObj.setDeviceProfile("profile from resources") // make somewhere profiles (maybe in resources)
+                profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
 
                 itemModel.append(profileObj)
                 // somehow combine name, state, profile and settings
                 // try fill column with objects or else flipable in separate qml
                 //profileLine
-
+                var dataArray = []
+                console.log("Apply channel mapping")
+                if("sensors" in value){
+                    for (const element of value.sensors) {
+                        dataArray.push(element.name) 
+                    }
+                }
+                var sensorsMap = {}
+                sensorsMap[value.device] = dataArray
+                console.log(sensorsMap)
+                m_sensorsMap = sensorsMap
             }
         }
         if("unknown" in controllersGRAM){ // option to profile without controllers
@@ -358,24 +379,36 @@ Window {
                 //if match -> green (continue cycle with next device)
                 //if end of list -> add yellow module 
         let rsa = dataSource.connectedDevices // for now only advantech connected
+        console.log("I see connected device!!!")
+        console.log(Object.values(rsa))
+        var map1 = []
+        if("Advantech" in controllersGRAM){
+            let advantechGRAM = controllersGRAM.Advantech
+            console.log(advantechGRAM)
+            map1 = advantechGRAM.map(a => a.device);
+        }
+        console.log(map1)
         for(const [key, value] of Object.entries(rsa)){
-            if("Advantech" in controllersGRAM)
-                if(value in controllersGRAM.Advantech){
-                    //working change of color
-                    
-                    console.log("found "+`${value}`);
-                    //let t_profileObj = itemModel.get(0) // take i'th item
-                    //t_profileObj.color = Material.color(Material.Green)
-                    // use setDeviceConnected as true
-                    //t_profileObj.setDeviceConnected(true)
-                    //fill inside information of device like profile 
-                    continue;
-                }
-            
+            if(map1.includes(value)){
+                console.log("found "+`${value}`); 
+                let index = map1.indexOf(value)
+                let t_profileObj = itemModel.get(index) // take i'th item
+                console.log("Now in "+ t_profileObj.innerName)
+                t_profileObj.color = Material.color(Material.Green)
+                let description = value+','+key
+                t_profileObj.setDeviceLbl(description)
+                //t_profileObj.setDeviceProfile("profile from resources") 
+                t_profileObj.setDeviceConnected(true)
+                console.log("set settings")
+                let rsb = dataSource.deviceSettings[description]
+                t_profileObj.setChannelCount(rsb.channelCount)
+                t_profileObj.setValueRange(rsb.valueRanges)
+                continue;
+            }
             let realObj = universalSetUp.createObject() // it can be pressureSetUp
             realObj.color = Material.color(Material.Yellow)
-            var description = value+','+key
-            realObj.changeTextFront("Unexpected device") // using key because it is map (already an object)
+            let description = value+','+key
+            realObj.changePurposeFront("Unexpected device") // using key because it is map (already an object)
             realObj.setDeviceLbl(description) //`${value}` + " on " + `${key}` using value because it is an obj
             realObj.setDeviceProfile("profile from resources") // make somewhere profiles (maybe in resources)
             realObj.setDeviceConnected(true) // find a way to decline connection
@@ -401,7 +434,7 @@ Window {
         // }
         // if(rsa.hasOwnProperty("DemoDevice,BID#0")) rectObj1.color = Material.Red;
     }
-
+    
     function startupFunction(objectCfgMap){
         if(true){ //cfgTest[0].start
             let tabPage1 = page1.createObject(stackLayout); // работает
@@ -417,11 +450,13 @@ Window {
         }
     }
     function replaceControllerInfo(){
+        console.log("inside replaceControllerInfo")
         for(var i=0; i<itemModel.count; i++){
             let t_profileObj = itemModel.get(i);
             if(t_profileObj.connected){ // now working for Pressure
                 var chSet = t_profileObj.getSettings()
                 console.log("innerName "+t_profileObj.innerName)
+                console.log(chSet)
                 dataSource.setDeviceParameters(t_profileObj.innerName, chSet)
                 // let rsb = dataSource.deviceSettings[t_profileObj.innerName]
                 // console.log("ChCnt "+chSet.indexChannelCount)
@@ -432,5 +467,9 @@ Window {
                 console.log("I will not get inside " + t_profileObj.innerName)
             }
         }   
+    }
+    function fillSensors(){ // use with fillControllers
+        console.log(m_sensorsMap)
+        dataSource.setChannelMapping(m_sensorsMap)
     }
 }

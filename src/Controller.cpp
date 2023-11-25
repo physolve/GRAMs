@@ -15,7 +15,14 @@ void Controller::Initialization(){
 AdvantechTest::AdvantechTest(const ControllerInfo &info, QObject *parent) : 
 	QObject(parent), m_info(info), m_instantAiCtrl(NULL)
 {
-	m_deviceName = m_info.deviceName();
+	auto tempDevice = m_info.deviceName();
+	auto tempList = tempDevice.split(',');
+	auto tempName = tempList.value(0);
+	auto tempBID = tempList.value(1);
+	if(tempName == "USB-4716" || "USB-4718"){
+		tempName = "DemoDevice";
+	}
+	m_deviceName = tempName+','+tempBID;//m_info.deviceName();
 }
 
 AdvantechTest::~AdvantechTest(){

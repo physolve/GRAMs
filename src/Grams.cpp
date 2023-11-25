@@ -18,10 +18,12 @@
 Grams::Grams(int &argc, char **argv): 
     QApplication(argc, argv),
     dataSource(this),
-    dataModel(this)
+    dataModel(this),
+    softTimer(new QTimer)
 {
 
     initGUI();
+    connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
 }
 
 Grams::~Grams(){
@@ -60,12 +62,24 @@ void Grams::initGUI(){
 
     // add the global styles module. Not sure why this has to be done here
     // explicitly, because we register the module in its qmldir file.
-    qmlRegisterSingletonType(QUrl("qrc:///Style/Style.qml"), "Style", 1, 0, "Style");
+    qmlRegisterSingletonType(QUrl("qrc:/Style/Style.qml"), "Style", 1, 0, "Style");
     qmlRegisterType<CustomPlotItem>("CustomPlot", 1, 0, "CustomPlotItem");
     qmlRegisterType<MyData>("QmlJson", 1, 0, "JsonData");
     m_engine.rootContext()->setContextProperty("dataSource", &dataSource);
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
-    
+    m_engine.rootContext()->setContextProperty("backend", this);
     m_engine.load(url);
+}
+
+void Grams::initializeModel(){
+    dataSource.saveStartDevice();
+    dataModel.initializeAcquisition(dataSource.getControllersInfo()); // only for sensors? What for valves
+    // for valves make different type
+    softTimer->start(1000);
+}
+
+void Grams::softEvent(){
+    dataSource.processEvents();
+    dataModel.appendData(dataSource.getDataList());
 }

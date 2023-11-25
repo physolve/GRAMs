@@ -1,7 +1,7 @@
 #include "ControllerInfo.h"
 
 ControllerInfo::ControllerInfo(QString deviceName):
-m_deviceName(deviceName),m_channelCountCh(0), m_channelStartCh(0), m_valueRangeCh(0)
+m_deviceName(deviceName), m_channelCountCh(0), m_channelStartCh(0), m_valueRangeCh(0)
 {}
 QString ControllerInfo::deviceName(){return m_deviceName;}
 
@@ -25,4 +25,11 @@ void ControllerInfo::setSettings(const QVariantMap& info){
     m_channelCountCh = info["chChannelCount"].toInt();
 	m_channelStartCh = info["chCannelStart"].toInt();
 	m_valueRangeCh = info["chValueRange"].toInt();
+}
+
+void ControllerInfo::setNames(const QStringList& sensorNames){
+	m_sensorNames = sensorNames;
+}
+QStringList ControllerInfo::getNames(){
+	return m_sensorNames;
 }

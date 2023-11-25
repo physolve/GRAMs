@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DAQNavi Profile="1.0.0.0" Version="3.2.1.0">
+    <DaqDevice ModuleIndex="0">
+        <Property ID="8">
+            <Description>Product ID:</Description>
+            <Attribute>0</Attribute>
+            <Type>2</Type>
+            <EnumType>ProductId</EnumType>
+            <Tip>Product ID is used to represent a DAQ Device model and distinguish devices of different models. Each device model owns an unique Product ID.</Tip>
+            <Value>198</Value>
+        </Property>
+    </DaqDevice>
+    <DaqAi ModuleIndex="0">
+        <Property ID="51">
+            <Description>Connection Type:</Description>
+            <Attribute>1</Attribute>
+            <Type>65538</Type>
+            <EnumType>AiSignalType</EnumType>
+            <Tip>Gets or sets the connection type of each channel.</Tip>
+            <Value>1,1,1,1,1,1,1,1</Value>
+        </Property>
+        <Property ID="52">
+            <Description>Value Range Type:</Description>
+            <Attribute>1</Attribute>
+            <Type>65538</Type>
+            <EnumType>ValueRange</EnumType>
+            <Tip>Gets or sets the ValueRange for the selected channel.</Tip>
+            <Value>32798,32798,32798,32798,32798,32798,32798,32798</Value>
+        </Property>
+        <Property ID="57">
+            <Description>Cjc Channel:</Description>
+            <Attribute>1</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets the channel number of the Cjc channel which are used to temperature measurement.</Tip>
+            <Value>-1</Value>
+        </Property>
+        <Property ID="58">
+            <Description>Set Cjc Update Frequency:</Description>
+            <Attribute>3</Attribute>
+            <Type>5</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets how long time to update the Cjc value.</Tip>
+            <Value>2</Value>
+        </Property>
+        <Property ID="59">
+            <Description>Cjc Value:</Description>
+            <Attribute>3</Attribute>
+            <Type>5</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets the CJC value, in Celsius degree.</Tip>
+            <Value>25</Value>
+        </Property>
+        <Property ID="53">
+            <Description>Burn Out Return Type:</Description>
+            <Attribute>1</Attribute>
+            <Type>65538</Type>
+            <EnumType>BurnoutRetType</EnumType>
+            <Tip>Gets or sets the burn out return type of the selected channel when detected the burn out event.</Tip>
+            <Value>0,0,0,0,0,0,0,0</Value>
+        </Property>
+        <Property ID="54">
+            <Description>Burn Out Return Value:</Description>
+            <Attribute>3</Attribute>
+            <Type>65541</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets the preset particular return value of selected channel when detected the burn out and the return type of the channel is 'ReturnParticularValue'.</Tip>
+            <Value>0,0,0,0,0,0,0,0</Value>
+        </Property>
+        <Property ID="235">
+            <Description>Auto Convert Start Channel:</Description>
+            <Attribute>3</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets the default start channel value for ADC auto update function of InstantAI.</Tip>
+            <Value>0</Value>
+        </Property>
+        <Property ID="236">
+            <Description>Auto Convert Channel Count: </Description>
+            <Attribute>3</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets the default channel count value for ADC auto update function of InstantAI.</Tip>
+            <Value>1</Value>
+        </Property>
+        <Property ID="50">
+            <Description>Channel Count:</Description>
+            <Attribute>2</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>The count of logical channels which can be used to acquire AI samples. This value depends on the channel connection type of the device.</Tip>
+            <Value>8</Value>
+        </Property>
+        <Property ID="390">
+            <Description>Record Section Length:</Description>
+            <Attribute>3</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets the record section length.</Tip>
+            <Value>1024</Value>
+        </Property>
+        <Property ID="391">
+            <Description>Record Section Count:</Description>
+            <Attribute>3</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets the record section count.</Tip>
+            <Value>0</Value>
+        </Property>
+        <Property ID="349">
+            <Description>Recode Cycle:</Description>
+            <Attribute>3</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets the record cycles.</Tip>
+            <Value>1</Value>
+        </Property>
+        <Property ID="23">
+            <Description>Resolution:</Description>
+            <Attribute>2</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>Data resolution refers to the number of the bit that is used to realize analog to digital(or digital to analog) conversion,the bigger bit number of ADC(or DAC) is, the higher the resolution will be</Tip>
+            <Value>16</Value>
+        </Property>
+        <Property ID="26">
+            <Description>Channel Number Max:</Description>
+            <Attribute>2</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip> Max number of physical channel.Physical channel refers to visible input/output terminals or pins that can connect wires on a data acquisition card.</Tip>
+            <Value>7</Value>
+        </Property>
+        <Property ID="27">
+            <Description>Channel Connection Type:</Description>
+            <Attribute>0</Attribute>
+            <Type>65538</Type>
+            <EnumType>AiChannelType</EnumType>
+            <Tip>The channel connection type.</Tip>
+            <Value>1</Value>
+        </Property>
+        <Property ID="392">
+            <Description>Connection Type:</Description>
+            <Attribute>0</Attribute>
+            <Type>65538</Type>
+            <EnumType>AiSignalType</EnumType>
+            <Tip>The device supported connection type.</Tip>
+            <Value>1</Value>
+        </Property>
+        <Property ID="31">
+            <Description>Value Range:</Description>
+            <Attribute>0</Attribute>
+            <Type>65538</Type>
+            <EnumType>ValueRange</EnumType>
+            <Tip>The device supported Value Range type.</Tip>
+            <Value>30,28,27,25,11,9,33,34,32804,32798,32799,32800,32805,32806,32803</Value>
+        </Property>
+        <Property ID="35">
+            <Description>Scan Method:</Description>
+            <Attribute>0</Attribute>
+            <Type>2</Type>
+            <EnumType>SamplingMethod</EnumType>
+            <Tip>The device channel scan method,it would be Simultaneous or EqualIntervalSwitch.</Tip>
+            <Value>0</Value>
+        </Property>
+        <Property ID="34">
+            <Description>Cjc Channels:</Description>
+            <Attribute>0</Attribute>
+            <Type>65538</Type>
+            <EnumType></EnumType>
+            <Tip>The supported Cjc channels.</Tip>
+            <Value>-1</Value>
+        </Property>
+        <Property ID="28">
+            <Description>Burn Detect Return Types:</Description>
+            <Attribute>0</Attribute>
+            <Type>65538</Type>
+            <EnumType>BurnoutRetType</EnumType>
+            <Tip>The supported data type returned if the device support burn detection and when this event happened.</Tip>
+            <Value>0,1,2,3,4</Value>
+        </Property>
+        <Property ID="36">
+            <Description>Scan Channel Start Base:</Description>
+            <Attribute>2</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>The base number of the start scan channel, for example, if this property value is 2, the start scan channel can be only set to 2,4,6,8 and so on.</Tip>
+            <Value>1</Value>
+        </Property>
+        <Property ID="37">
+            <Description>Scan Channel Count Base:</Description>
+            <Attribute>2</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip>The base number of the scan channel count, for example, if scan channel count is 2, the scan channel count can only be set to 2,4,6,8 and so on.</Tip>
+            <Value>1</Value>
+        </Property>
+    </DaqAi>
+    <DaqDio ModuleIndex="0">
+        <Property ID="120">
+            <Description>DI Data Mask:</Description>
+            <Attribute>0</Attribute>
+            <Type>65536</Type>
+            <EnumType></EnumType>
+            <Tip>DiDataMask is used to describe whether each channel of a digital port is used DI function or not. The value of DataMask has 8 bits and each bit corresponds to one channel of the digital port. Value 1 means that the corresponding channel can be used for DI function. DiDataMask of this port will be changed when the port direction changing.</Tip>
+            <Value>255</Value>
+        </Property>
+        <Property ID="121">
+            <Description>DO Data Mask:</Description>
+            <Attribute>0</Attribute>
+            <Type>65536</Type>
+            <EnumType></EnumType>
+            <Tip>Do DataMask is used to describe whether each channel of  one digital port could be used for digital output.  Every DataMask has 8 bits and each bit corresponds to one channel of digital port. When the value of one bit is 1, it means the corresponding channel could be used for digital output.DoDataMask of this port will be changed when the port direction changing.</Tip>
+            <Value>255</Value>
+        </Property>
+        <Property ID="354">
+            <Description>DI Inverse Ports:</Description>
+            <Attribute>1</Attribute>
+            <Type>65536</Type>
+            <EnumType></EnumType>
+            <Tip>Gets or sets whether enable the DI value inverse.</Tip>
+            <Value>0</Value>
+        </Property>
+        <Property ID="26">
+            <Description>Channel Number Max:</Description>
+            <Attribute>2</Attribute>
+            <Type>2</Type>
+            <EnumType></EnumType>
+            <Tip> Max number of physical channel.Physical channel refers to visible input/output terminals or pins that can connect wires on a data acquisition card.</Tip>
+            <Value>7</Value>
+        </Property>
+        <Property ID="82">
+            <Description>Ports Type:</Description>
+            <Attribute>0</Attribute>
+            <Type>65536</Type>
+            <EnumType>DioPortType</EnumType>
+            <Tip>The type of all digital port.There are six kinds of port type,the name and meaning, listed in the DioPortType Enumeration.</Tip>
+            <Value>2</Value>
+        </Property>
+    </DaqDio>
+</DAQNavi>

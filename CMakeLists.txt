@@ -6,11 +6,15 @@ set(EXECUTABLE_NAME "GRAMs")
 
 project(${EXECUTABLE_NAME} VERSION 0.1 LANGUAGES CXX)
 
+#set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(Qt6 6.2.4 COMPONENTS Quick QuickControls2 Charts PrintSupport LinguistTools REQUIRED) 
+find_package(Qt6 6.2.4 COMPONENTS Quick QuickControls2 Charts PrintSupport REQUIRED) # Charts QuickControls2   LinguistTools
 
 set(MY_UNITTESTS TRUE)
 include(config.cmake)
@@ -41,34 +45,37 @@ qt_add_executable(${EXECUTABLE_NAME}
     ${IMAGE_RESOURCES}
 )
 
-file(GLOB QML_SOURCES RELATIVE ${CMAKE_SOURCE_DIR} qml/*.qml ) #qml/components/*.qml <- for custom modules
-source_group("Qml Files" FILES ${QML_SOURCES})
+#file(GLOB QML_SOURCES RELATIVE ${CMAKE_SOURCE_DIR} qml/*.qml ) #qml/components/*.qml <- for custom modules
+#source_group("Qml Files" FILES ${QML_SOURCES})
 
-qt_add_qml_module(${EXECUTABLE_NAME}
-    URI ${EXECUTABLE_NAME}
-    VERSION 1.0
-    QML_FILES ${QML_SOURCES}
-)
+#qt_add_qml_module(${EXECUTABLE_NAME}
+#    URI ${EXECUTABLE_NAME}
+#    VERSION 1.0
+#    QML_FILES ${QML_SOURCES}
+#)
 
-set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-    MACOSX_BUNDLE FALSE
-    WIN32_EXECUTABLE TRUE
-)
+#set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+#    MACOSX_BUNDLE FALSE
+#    WIN32_EXECUTABLE TRUE
+#)
 
-target_include_directories(${EXECUTABLE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+#target_include_directories(${EXECUTABLE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(${EXECUTABLE_NAME}
     PRIVATE Qt6::Quick
-    PRIVATE Qt6::QuickControls2
-    PRIVATE Qt6::Charts
-    PRIVATE Qt6::PrintSupport
+            Qt6::QuickControls2
+            Qt6::Charts
+            Qt6::PrintSupport
+    #PRIVATE Qt6::QuickControls2
+    #PRIVATE Qt6::Charts
+    #PRIVATE Qt6::PrintSupport
     #PRIVATE Controlsplugin
     #PRIVATE FirstPluginplugin
     #PRIVATE SecondPluginplugin
     PRIVATE Styleplugin
 )
 
-file(GLOB_RECURSE QML_SOURCES2 RELATIVE ${CMAKE_SOURCE_DIR} *.qml)
+#file(GLOB_RECURSE QML_SOURCES2 RELATIVE ${CMAKE_SOURCE_DIR} *.qml)
 
 # TODO: using lupdate create translate
 # qt_add_translations(${EXECUTABLE_NAME} TS_FILES
@@ -78,7 +85,7 @@ file(GLOB_RECURSE QML_SOURCES2 RELATIVE ${CMAKE_SOURCE_DIR} *.qml)
 #     RESOURCE_PREFIX "/translations"
 # )
 
-install(TARGETS ${EXECUTABLE_NAME}
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+#install(TARGETS ${EXECUTABLE_NAME}
+#    BUNDLE DESTINATION .
+#    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#)

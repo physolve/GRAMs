@@ -22,9 +22,9 @@ Page{
                 Layout.fillHeight: true
                 ListView {
                     id: dataView
+                    model: _myModel
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    model: _myModel
                     clip: true
                     interactive: false
                     delegate: Item {
@@ -44,7 +44,7 @@ Page{
                             target: dataView.model    // EDIT: I drew the wrong conclusions here, see text below!
                             function onDataChanged() {
                                 customPlot.backendData(model.x, model.y)
-                                //console.log("DataChanged received")
+                                //gRAMsMnemoForm.setVal(model.cv, model.index) // it's Working
                             }
                         }
                     }
@@ -54,8 +54,19 @@ Page{
                     active: true
                     }
                 }
+
+                // Connections {
+                //     target: dataView.model    // EDIT: I drew the wrong conclusions here, see text below!
+                //     function onDataChanged() {
+                //         gRAMsMnemoForm.newVal = model.cv // it's Working
+                //     }
+                // }
             }
         }
+    }
+    Connections {
+        target: _myModel
+        onDataChanged: gRAMsMnemoForm.setVal(_myModel.getCurValues()) // it's Working fine
     }
     //property alias headerColor: label.color
     // Rectangle {
