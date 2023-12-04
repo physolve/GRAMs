@@ -104,6 +104,7 @@ void DataAcquisition::setDeviceParameters(QString name, QVariantMap obj){
     deviceMap["chChannelCount"] = obj["indexChannelCount"];
     deviceMap["chCannelStart"] = obj["indexChannelStart"];
     deviceMap["chValueRange"] = obj["indexValueRange"];
+    deviceMap["profilePath"] = obj["inProfilePath"]; 
     m_deviceSettings[name].setValue(deviceMap);
 }
 void DataAcquisition::setChannelMapping(QVariantMap obj){
@@ -116,16 +117,20 @@ void DataAcquisition::saveStartDevice(){
         // костыль для m_sensorMapping
         auto tempShortName = info.deviceName().split(',');
         info.setNames(m_sensorMapping[tempShortName.at(0)].toStringList());
-        auto demo = AdvantechTest(info);
-        demo.ConfigureDeviceTest();
-        appendToControllerList(demo);
+
+        //auto demo = AdvantechTest(info);
+        //demo.ConfigureDeviceTest();
+        //appendToControllerList(demo);
+
+        controllerList.append(new AdvantechTest(info));
+        controllerList.last()->ConfigureDeviceTest();
     }
     //m_timer->start(100);
 }
 
-void DataAcquisition::appendToControllerList(AdvantechTest& device){
-    controllerList.append(&device);
-}
+// void DataAcquisition::appendToControllerList(AdvantechTest& device){
+//     controllerList.append(&device);
+// }
 
 const QList<ControllerInfo> DataAcquisition::getControllersInfo(){ // get Read controllers
     return m_deviceInfoList;
@@ -151,7 +156,7 @@ void DataAcquisition::processEvents(){ // function to iterate over m_deviceInfoL
     
 }
 
-const QList<QVector<double>> DataAcquisition::getDataList(){
+const QList<QVector<double>> DataAcquisition::getDataList(){ // const & >
     QList<QVector<double>> dataList;
     for(auto controller : controllerList){ // data from controllerList in order of purpose
         dataList << controller->getData();

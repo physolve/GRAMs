@@ -128,14 +128,25 @@ QVariant  MyModel::getCurValues() const{
 
 void MyModel::appendData(const QList<QVector<double>> & dataList){ //dataMap to Sensor ???
     // order of controller names
-    const auto data = dataList.at(0);
-    const int count = m_sensors.count();
+    // for(auto &controllerData : dataList){
+        
+    // }
+    auto controllerData = dataList.at(0);
+    const int count = m_sensors.count(); //  m_sensors of THE controller
     auto time = m_time.elapsed()/1000;
     auto value = 0.0;
     for (int i = 0; i < count; ++i) {
-        value = data.at(i);
+        value = controllerData.at(i);
         m_sensors[i]->appendData(time,value);
     }
+    //const auto data = dataList.at(0);
+    
+    // we've just updated all rows...
+    const QModelIndex startIndex = index(0, 0);
+    const QModelIndex endIndex   = index(count - 1, 0);
+
+    // ...but only the population field
+    emit dataChanged(startIndex, endIndex, QVector<int>() << Time << Value << CurTime << CurValue );
 }
 
 // void MyModel::testDataFoo(){

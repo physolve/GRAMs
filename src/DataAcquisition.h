@@ -43,7 +43,7 @@ private:
 
     QList<AdvantechTest*> controllerList; // for read
     // Controller for Write!
-    void appendToControllerList(AdvantechTest& device);
+    //void appendToControllerList(AdvantechTest& device);
 
     void readDataFromDevice(ControllerInfo info);
 };

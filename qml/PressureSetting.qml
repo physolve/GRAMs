@@ -35,7 +35,7 @@ Rectangle {
         return { indexChannelStart:cmbChannelStart.currentIndex,
         indexChannelCount:cmbChannelCount.currentIndex + 1,
         indexValueRange:cmbValueRange.currentIndex,
-        profilePath: innerProfile}
+        inProfilePath: innerProfile}
     }
     //--> slide
     Flipable {

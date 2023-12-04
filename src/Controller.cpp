@@ -13,7 +13,7 @@ void Controller::Initialization(){
 }
 
 AdvantechTest::AdvantechTest(const ControllerInfo &info, QObject *parent) : 
-	QObject(parent), m_info(info), m_instantAiCtrl(NULL)
+	QObject(parent), m_info(info), m_instantAiCtrl(NULL), m_vector(16,0.0)
 {
 	auto tempDevice = m_info.deviceName();
 	auto tempList = tempDevice.split(',');
@@ -26,14 +26,11 @@ AdvantechTest::AdvantechTest(const ControllerInfo &info, QObject *parent) :
 }
 
 AdvantechTest::~AdvantechTest(){
-
+	qDebug() << QString("Oh no, %1 was deleted").arg(m_deviceName);
 }
 
 void AdvantechTest::Initialization() // fill info
 {
-	//ui.cmbChannelCount->clear();
-	//ui.cmbChannelStart->clear();
-	//ui.cmbValueRange->clear();
 	// replace in qml 
     std::wstring description = m_deviceName.toStdWString();//ui.cmbDevice->currentText().toStdWString();
     DeviceInformation selected(description.c_str());
@@ -84,11 +81,6 @@ void AdvantechTest::Initialization() // fill info
 	}
 
 	instantAiCtrl->Dispose();
-
-	//Set the default value.
-	//ui.cmbChannelStart->setCurrentIndex(0);
-	//ui.cmbChannelCount->setCurrentIndex(1);
-	//ui.cmbValueRange->setCurrentIndex(0);
 }
 
 const ControllerInfo& AdvantechTest::getInfo(){
@@ -96,7 +88,8 @@ const ControllerInfo& AdvantechTest::getInfo(){
 }
 
 void AdvantechTest::ConfigureDeviceTest(){ // after accept
-	m_vector = QVector<double>(16,0.0);
+	//m_vector = QVector<double>(16,0.0);
+	qDebug() << m_vector;
 	if (m_instantAiCtrl==NULL)
 	{
       m_instantAiCtrl = InstantAiCtrl::Create();
@@ -107,7 +100,7 @@ void AdvantechTest::ConfigureDeviceTest(){ // after accept
 
     ErrorCode errorCode = m_instantAiCtrl->setSelectedDevice(selected);
 	CheckError(errorCode);
-
+	// add DIR ? profile
     std::wstring profile = m_info.m_profilePath.toStdWString();
     errorCode = m_instantAiCtrl->LoadProfile(profile.c_str());
     CheckError(errorCode);
@@ -141,10 +134,9 @@ void AdvantechTest::readData(){
 	{
 		return;
 	}
-
 }
 
-QVector<double> AdvantechTest::getData(){
+QVector<double> AdvantechTest::getData(){ // const & ?
 	//vector=scaledData;
 	return m_vector;
 }

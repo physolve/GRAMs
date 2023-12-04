@@ -346,12 +346,16 @@ Window {
 
                 let profileObj = universalSetUp.createObject() //???
                 profileObj.color = Material.color(Material.Red)
+                //Exception thrown wil::ResultException
                 // think about how to connect device description with purpose
                 profileObj.changePurposeFront(value.purpose)
                 // change to back with 'value.device' and front with Purpose
                 profileObj.setDeviceLbl(value.device) // using value[device] because it is array of obj
-                profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
+                if ("profile" in value){
+                    console.log(key + " " + value.device + " " + value.profile) //?
 
+                    profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
+                }
                 itemModel.append(profileObj)
                 // somehow combine name, state, profile and settings
                 // try fill column with objects or else flipable in separate qml
