@@ -37,10 +37,11 @@ public:
     //bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     QHash<int, QByteArray> roleNames() const override; // use QMultiHash
     Q_INVOKABLE QVariant getCurValues() const;
+    Q_INVOKABLE void appendProfileSensors(QVariantMap sensors); // QVector<double>& data??
 
     void initializeAcquisition(const QList<ControllerInfo>& info);
     void appendData(const QList<QVector<double>> & dataList);
-    void fillSensors(const QVector<double>& data);
+    //void fillSensors(const QVector<double>& data);
 public slots:
     //void duplicateData(int row);
     //void removeData(int row);

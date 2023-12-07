@@ -18,15 +18,41 @@ MyModel::MyModel(QObject *parent) :
     // }
 }
 
+void MyModel::appendProfileSensors(QVariantMap sensors){
+    // for this moment we only know about profile and not controllers, so we create firstly using names
+    // and then in initializeAcquisition we put mapping to link with controller channels
+    //Debug: 
+    //  FIRST USB-4750, ,
+    //  USB-4716,DD311,DD312,DD331,DD332,DD333,DD391,
+    //  USB-4718,toCustomSlider,toCustomSlider1,toCustomSlider2,toCustomSlider3,toCustomSlider4
+    int idx_shift = 0;
+    for (auto i = sensors.begin(), end = sensors.end(); i != end; ++i){
+        QString controllerName = i.key();
+        QStringList sensorNameList = i.value().toStringList();
+        int idx = idx_shift;
+        for(auto sensorName : sensorNameList){
+            // might be Sensor type, but whatever
+            auto sensor = new Sensor(sensorName, idx);
+            this->m_sensors.append(sensor);
+            ++idx;
+        }
+        idx_shift += sensorNameList.count();
+    }
+    // in initializeAcquisition we use mapping to converge profile names and controller
+}
+
 void MyModel::initializeAcquisition(const QList<ControllerInfo>& controllersInfo){
     //clear weird data
     m_controllersInfo = controllersInfo;
     for(auto info : m_controllersInfo){
-        auto sensorNames = info.getNames();
+        // get Names from what?
+        // if we have name in already existing sensors we just rearrange them
+        //auto sensorNames = info.getNames();
         // CHECK COUNT and CHANNELS
-        if (sensorNames.count() >= info.m_channelCountCh-info.m_channelStartCh)
-            qDebug() << "All channels are mapped";
-        else continue;
+        // if (sensorNames.count() >= info.m_channelCountCh-info.m_channelStartCh)
+        //     qDebug() << "All channels are mapped";
+        //else continue; // it means that we append m_sensors before!!!
+        // those append for unexpected sensors not appeared in profile
         for(int i = info.m_channelStartCh; i<info.m_channelCountCh; i++){ // default : m_channelStartCh = 0, m_channelCountCh = 8
             // check type of Sensor
             // use SensorMap
@@ -88,6 +114,7 @@ QVariant  MyModel::getCurValues() const{
     QList<double> curValues;
     for(auto sensor : m_sensors)
         curValues << sensor->getCurValue();
+    qDebug() << curValues;
     return QVariant::fromValue(curValues); 
 }
 //<-- slide

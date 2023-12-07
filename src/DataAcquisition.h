@@ -22,7 +22,7 @@ public slots:
     void saveStartDevice(); // no longer slot
     //void choosenGRAMInitialization();
     void setDeviceParameters(QString name, QVariantMap obj);
-    void setChannelMapping(QVariantMap obj);
+    //void setChannelMapping(QVariantMap obj);
 signals:
     void profileNamesChanged();
     void deviceSettingsChanged();
@@ -39,7 +39,7 @@ private:
     QList<ControllerInfo> m_deviceInfoList;
     QVariantMap m_deviceSettings;
 
-    QVariantMap m_sensorMapping;
+    //QVariantMap m_sensorMapping;
 
     QList<AdvantechTest*> controllerList; // for read
     // Controller for Write!

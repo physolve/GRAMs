@@ -27,9 +27,9 @@ void ControllerInfo::setSettings(const QVariantMap& info){
 	m_valueRangeCh = info["chValueRange"].toInt();
 }
 
-void ControllerInfo::setNames(const QStringList& sensorNames){
-	m_sensorNames = sensorNames;
-}
-QStringList ControllerInfo::getNames(){
-	return m_sensorNames;
-}
+// void ControllerInfo::setNames(const QStringList& sensorNames){
+// 	m_sensorNames = sensorNames;
+// }
+// QStringList ControllerInfo::getNames(){
+// 	return m_sensorNames;
+// }

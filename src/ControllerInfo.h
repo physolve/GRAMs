@@ -10,8 +10,8 @@ public:
     QString deviceName();
     QVariantMap getSettings();
     void setSettings(const QVariantMap& info);
-    QStringList getNames();
-    void setNames(const QStringList& sensorNames);
+    //QStringList getNames();
+    //void setChannelId(const QStringList& sensorNames);
     int m_channelCount; // share to qml
 	int m_channelStart;
     QString m_profilePath;

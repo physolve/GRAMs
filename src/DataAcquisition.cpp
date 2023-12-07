@@ -100,6 +100,7 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
 }
 
 void DataAcquisition::setDeviceParameters(QString name, QVariantMap obj){
+    // check what deviceSetting name we have (short one?)
     QVariantMap deviceMap = m_deviceSettings[name].toMap();
     deviceMap["chChannelCount"] = obj["indexChannelCount"];
     deviceMap["chCannelStart"] = obj["indexChannelStart"];
@@ -107,16 +108,18 @@ void DataAcquisition::setDeviceParameters(QString name, QVariantMap obj){
     deviceMap["profilePath"] = obj["inProfilePath"]; 
     m_deviceSettings[name].setValue(deviceMap);
 }
-void DataAcquisition::setChannelMapping(QVariantMap obj){
-    m_sensorMapping = obj;
-}
+// void DataAcquisition::setChannelMapping(QVariantMap obj){
+//     // sensor mapping then used for setNames like position of controller output???
+//     m_sensorMapping = obj;
+// }
 
 void DataAcquisition::saveStartDevice(){
     for(ControllerInfo& info : m_deviceInfoList){
         info.setSettings(m_deviceSettings[info.deviceName()].toMap());
         // костыль для m_sensorMapping
-        auto tempShortName = info.deviceName().split(',');
-        info.setNames(m_sensorMapping[tempShortName.at(0)].toStringList());
+        //auto tempShortName = info.deviceName().split(',');
+        //qDebug() << m_sensorMapping[tempShortName.at(0)].toStringList();
+        //info.setNames(m_sensorMapping[tempShortName.at(0)].toStringList());
 
         //auto demo = AdvantechTest(info);
         //demo.ConfigureDeviceTest();

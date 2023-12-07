@@ -230,13 +230,15 @@ Window {
                     // jsonData.cfg = JSON.stringify(jsonCfgTest)
                     replaceControllerInfo()
                     console.log("Pass 2")
+                    // using fill Sensors to append profile sensors
                     fillSensors()
+
                     console.log("Pass 2.5")
                     // signal to c++ about creating Controllers using parameters
                     backend.initializeModel()
                     console.log("Pass 3")
                     startupFunction()
-                    console.log("Pass 1")
+                    console.log("Pass FINAL")
                     main.show()
                     cfgWindow.close()
                     // change button from "Продолжить" to "Сохранить"
@@ -338,9 +340,12 @@ Window {
         let controllersGRAM = profileGRAM.controllers
         // instead of Advantech, unknown and others get all controllers list
         // Value is undefined and could not be converted to an object (undefined)
+        
         if("Advantech" in controllersGRAM){
             let advantechGRAM = controllersGRAM.Advantech
-            // here u need change by profile which 
+            // here u need change by profile which
+                //similarly create valveMap 
+            let sensorsMap = {}
             for(const [key, value] of Object.entries(advantechGRAM)){
                 console.log("I'm inside Object.entries(advantechGRAM)")
 
@@ -353,25 +358,29 @@ Window {
                 profileObj.setDeviceLbl(value.device) // using value[device] because it is array of obj
                 if ("profile" in value){
                     console.log(key + " " + value.device + " " + value.profile) //?
-
                     profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
                 }
                 itemModel.append(profileObj)
                 // somehow combine name, state, profile and settings
                 // try fill column with objects or else flipable in separate qml
                 //profileLine
-                var dataArray = []
+                let dataArray = {}
                 console.log("Apply channel mapping")
+                // map to IDx from profile where idx -> channel
+                // remember that you also need to connect it with sliders on Mnemo, for that mnemo must have ids too
+                // Here dataArray should be ordered in channel id, then in sensorsMap i hope it stays
                 if("sensors" in value){
                     for (const element of value.sensors) {
-                        dataArray.push(element.name) 
+                        //dataArray.push(element.name)
+                        dataArray[element.name] = element.cch
                     }
                 }
-                var sensorsMap = {}
                 sensorsMap[value.device] = dataArray
-                console.log(sensorsMap)
-                m_sensorsMap = sensorsMap
+                // now sensorsMap should be modified 
+                
             }
+            console.log("FIRST " + Object.entries(sensorsMap))
+            m_sensorsMap = sensorsMap
         }
         if("unknown" in controllersGRAM){ // option to profile without controllers
             console.log("this profile has only unknown controller")
@@ -385,7 +394,7 @@ Window {
         let rsa = dataSource.connectedDevices // for now only advantech connected
         console.log("I see connected device!!!")
         console.log(Object.values(rsa))
-        var map1 = []
+        let map1 = []
         if("Advantech" in controllersGRAM){
             let advantechGRAM = controllersGRAM.Advantech
             console.log(advantechGRAM)
@@ -437,6 +446,11 @@ Window {
         //     itemModel.append(realObj)
         // }
         // if(rsa.hasOwnProperty("DemoDevice,BID#0")) rectObj1.color = Material.Red;
+
+        // here we append qml of sensor mapping
+        // in file VisualChannelMapping.qml we create visual representation of expected profile and real controller
+
+
     }
     
     function startupFunction(objectCfgMap){
@@ -473,7 +487,9 @@ Window {
         }   
     }
     function fillSensors(){ // use with fillControllers
-        console.log(m_sensorsMap)
-        dataSource.setChannelMapping(m_sensorsMap)
+        console.log("SECOND!!! " + Object.entries(m_sensorsMap))
+        // also somewhere here you can append virtual sensor for modelling  
+        _myModel.appendProfileSensors(m_sensorsMap) // send raw map of sensors
+        //dataSource.setChannelMapping(m_sensorsMap)
     }
 }

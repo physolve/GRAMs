@@ -27,7 +27,12 @@ Item {
     // property real slider5Val: 0
     property var sliderVal: [10,15,20,25,30]
     function setVal(val){
-        sliderVal = val
+        if(val.length < 4){
+            console.log("Not enough values")
+            sliderVal = [0,0,0,0,0]
+        }
+        else 
+            sliderVal = val
         // switch(id){
         //     case 0:
         //         slider1Val = val
@@ -523,7 +528,7 @@ Item {
             }
             trackWidth: 10
             Layout.fillWidth: false
-            value: item1.sliderVal[4]
+            value: 0//item1.sliderVal[4]
             progressWidth: 10
             maxValue: 120
             handle: Rectangle {
