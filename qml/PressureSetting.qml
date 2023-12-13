@@ -1,6 +1,5 @@
 import QtQuick
-//import QtQuick.Controls
-import QtQuick.Dialogs
+import QtQuick.Controls
 
 Rectangle {
     id: pressureSetting
@@ -28,6 +27,7 @@ Rectangle {
     }
     function setChannelCount(cnt){
         customBack.channelCount = cnt
+        visualChannelMapping.setChannelList(customBack.channelCount)
     }
     function setValueRange(rng){
         customBack.valueRange = rng
@@ -90,7 +90,7 @@ Rectangle {
             property string text: "test back"
             property string deviceName: innerName
             property string deviceProfile: innerProfile
-            property var channelCount: 3
+            property var channelCount: 4
             property var channelStart: 0
             property var valueRange: 0
             MouseArea {
@@ -194,7 +194,7 @@ Rectangle {
                     text: qsTr("Open Dialog")
                     onClicked: {
                         //winld.active = true
-                        myWindow.open()
+                        popup.open()
                     }
                 }
                 anchors.centerIn: parent
@@ -235,13 +235,18 @@ Rectangle {
     //         item.visualChannelMapping.setNameList(nameList)
     //     }
     // }
-    Dialog {
-        id: myWindow
-        width: 200
-        height: 200
-        modal: true // no need for this as it is the default value
-        parentWindow: cfgWindow
+    Popup {
+        id: popup
+        parent: Overlay.overlay
+        x: 100
+        y: 200
+        width: visualChannelMapping.width
+        height: visualChannelMapping.height
+        padding: 0
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         Item{
+            anchors.margins: 0
             VisualChannelMapping{
                 id: visualChannelMapping
             }

@@ -339,13 +339,14 @@ Window {
                 // remember that you also need to connect it with sliders on Mnemo, for that mnemo must have ids too
                 // Here dataArray should be ordered in channel id, then in sensorsMap i hope it stays
                 if("sensors" in value){
-                    for (const element of value.sensors) {
-                        //dataArray.push(element.name)
-                        dataArray[element.name] = element.cch
-                    }
+                    // for (const element of value.sensors) {
+                    //     //dataArray.push(element.name)
+                    //     dataArray[element.name] = element.cch
+                    // }
+                    profileObj.setMappingNames(value.sensors)
                 }
-                console.log("in setMappingNames SetUp " + JSON.stringify(dataArray))
-                profileObj.setMappingNames(dataArray)
+                //console.log("in setMappingNames SetUp " + JSON.stringify(dataArray))
+                //profileObj.setMappingNames(dataArray)
 
                 itemModel.append(profileObj)
             }

@@ -8,23 +8,36 @@ Rectangle {
     //first row is channels
     //second row is sensors with arrows to left and right transposition
     
-    width: 640
+    width: 740
     height: 320
-
+    border.color: "black"; color: "transparent"
+    /*
     gradient: Gradient {
         GradientStop { position: 0.0; color: "#f6f6f6" }
         GradientStop { position: 0.9; color: "#d7d7d7" }
         GradientStop { position: 1.0; color: "#282828" } //
     }
-    
+    */
     //property var namesList: undefined
 
     function setNameList(namesList){
-        console.log("in setNameList VCM " + JSON.stringify(namesList))
-        for(const [key, value] of Object.entries(namesList)){
-            namesModel.append({"name": key, "curColor": "#53d769"})
-            channelsModel.append({"num": value, "curColor": "#388049"})
+        //console.log("in setNameList VCM " + JSON.stringify(namesList))
+        const sortedObject = namesList.sort((a, b) => a.cch - b.cch)
+        //console.log("SORTED " + JSON.stringify(sortedObject))
+        let result = sortedObject.map(a=>a.name)
+        // for(const [key, value] of Object.entries(sortedObject)){
+        //     namesModel.append({"name": key, "curColor": "#53d769"})
+        //     channelsModel.append({"num": value, "curColor": "#388049"})
+        // }
+        for(const element of result){
+            namesModel.append({"name": element, "curColor": "#53d769"})
         }
+    }
+    function setChannelList(channelList){
+        // for (let i = 0; i < channelList; i++){
+        //     channelsModel.append({"num": i, "curColor": "#388049"})
+        // }
+        channelsModel = channelList
     }
 
     function getMappedNames(){
@@ -44,24 +57,25 @@ Rectangle {
     Component{
         id: sensorName
         Rectangle { 
-            height: 40; width: 130; color: curColor 
-            //required property int index
-            property int idx: 0
-            Text { anchors.centerIn: parent; color: "black"; text: "Sensor name " + name; font.pointSize:12 }
-            Layout.alignment: Qt.AlignCenter
+            height: 40; width: 60; color: curColor 
+            Text { anchors.centerIn: parent; color: "black"; text: name; font.pointSize:12 }
             Rectangle{
-                height: 40; width: 20; color: "#7dbbffFF"
+                height: 15; width: 15; color: "#7dbbffFF"
+                radius: 5
                 anchors.left: parent.left
-                anchors.top: parent.top
+                //anchors.top: parent.top
+                anchors.verticalCenter: parent.verticalCenter
                 MouseArea{
                     anchors.fill: parent
                     onClicked: index>0 ? namesModel.move(index,index-1,1) : console.log("leftest")
                 }
             }
             Rectangle{
-                height: 40; width: 20; color: "#7dbbffFF"
+                height: 15; width: 15; color: "#7dbbffFF"
+                radius: 5
                 anchors.right: parent.right
-                anchors.top: parent.top
+                //anchors.top: parent.top
+                anchors.verticalCenter: parent.verticalCenter
                 MouseArea{
                     anchors.fill: parent
                     onClicked: index<namesModel.count-1 ? namesModel.move(index,index+1,1) : console.log("rightest")
@@ -85,39 +99,21 @@ Rectangle {
         delegate: sensorName
     }
 
-    ListModel{
-        id: channelsModel
-    }
+    // ListModel{
+    //     id: channelsModel
+    // }
     
     Component{
         id: channelName
         Rectangle { 
-            height: 40; width: 130; color: curColor 
+            height: 40; width: 60; color: "#388049"
             //required property int index
-            property int idx: 0 // get this Property for mapping (or index)
-            Text { anchors.centerIn: parent; color: "white"; text: "Channel num " + num; font.pointSize:12 }
-            Layout.alignment: Qt.AlignCenter
-            // channels are not movable
-            // Rectangle{
-            //     height: 40; width: 20; color: "#7dbbffFF"
-            //     anchors.left: parent.left
-            //     anchors.top: parent.top
-            //     MouseArea{
-            //         anchors.fill: parent
-            //         onClicked: index>0 ? channelsModel.move(index,index-1,1) : console.log("leftest")
-            //     }
-            // }
-            // Rectangle{
-            //     height: 40; width: 20; color: "#7dbbffFF"
-            //     anchors.right: parent.right
-            //     anchors.top: parent.top
-            //     MouseArea{
-            //         anchors.fill: parent
-            //         onClicked: index<channelsModel.count-1 ? channelsModel.move(index,index+1,1) : console.log("rightest")
-            //     }
-            // }
+            //property int idx: 0 // get this Property for mapping (or index)
+            Text { anchors.centerIn: parent; color: "white"; text: index; font.pointSize:12 }
         }
     }
+
+    property int channelsModel: 0
 
     ListView{
         id: channelsGrid
@@ -140,7 +136,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.margins: 10
         text: "Save mapping"
-        width: 60
+        width: 180
         onClicked: {
             let result = []
             for(let i = 0; i < channelsModel.count; i++){ // in order of channels
@@ -160,81 +156,4 @@ Rectangle {
         //     channelsModel.append({"num": i+alphabet[alphabet.length-1-i], "curColor": "#388049"})
         // }
     }
-    /*
-
-    */
-    
-    // GridLayout{
-    //     //anchors.fill: parent
-    //     id: namesGrid
-    //     anchors.top: parent.top
-    //     anchors.left: parent.left
-    //     width: repHere.width+10
-    //     height: 40
-    //     anchors.margins: 10
-    //     rowSpacing: 4
-    //     columnSpacing: 4
-    //     flow: GridLayout.LeftToRight
-    //     columns: repHere.count
-    //     Repeater{
-    //     }
-        
-    // }
-    // GridLayout {
-    //     //columns: implicitW < parent.width ? -1 : parent.width / columnImplicitWidth
-    //     rowSpacing: 4
-    //     columnSpacing: 4
-    //     flow: GridLayout.LeftToRight
-    //     columns: 3
-    //     rows: 1//itemModel.count%3+1
-    //     //property int columnImplicitWidth: children[0].implicitWidth + columnSpacing
-    //     //property int implicitW: itemModel.count * columnImplicitWidth
-    //     ObjectModel { // fill using profile + profileList
-    //         id: namesModel
-    //     }
-    //     Repeater { 
-    //         model: namesModel
-    //     }
-    // }
-    /*
-    id: repHere
-            model: arrayS
-            Rectangle { 
-                height: 40; width: 130; color: "#53d769" 
-                property int idx: 0
-                required property string modelData
-                required property int index
-                required property var model
-                Text { anchors.centerIn: parent; color: "black"; text: "Sensor name " + modelData; font.pointSize:14 } //+ " " + index
-                Layout.alignment: Qt.AlignCenter
-                Rectangle{
-                    height: 40; width: 20; color: "#7dbbffFF"
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    MouseArea{
-                        anchors.fill: parent
-                        onClicked: {
-                            if(index > 0){
-                                const temp = model[index].value
-                                model[index].value = model[index-1].value
-                                model[index-1].value = temp
-                            }
-                            else console.log(model + " " + arrayS)
-                        }
-                        //index>0 ? [arrayS[index-1], arrayS[index]] = [arrayS[index], arrayS[index-1]] : console.log("leftest")
-                    }
-                }
-                Rectangle{
-                    height: 40; width: 20; color: "#7dbbffFF"
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    MouseArea{
-                        anchors.fill: parent
-                        onClicked: index<model.count-1 ? [arrayS[index], arrayS[index+1]] = [arrayS[index+1], arrayS[index]] : console.log("rightest")
-                    }
-                }
-            }
-    */
-
-
 }
