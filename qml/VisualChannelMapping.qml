@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtQml.Models
 
 Rectangle {
-    id: visualChannelMapping
+    //id: visualChannelMapping
     //first row is channels
     //second row is sensors with arrows to left and right transposition
     
@@ -17,6 +17,23 @@ Rectangle {
         GradientStop { position: 1.0; color: "#282828" } //
     }
     
+    //property var namesList: undefined
+
+    function setNameList(namesList){
+        console.log("in setNameList VCM " + JSON.stringify(namesList))
+        for(const [key, value] of Object.entries(namesList)){
+            namesModel.append({"name": key, "curColor": "#53d769"})
+            channelsModel.append({"num": value, "curColor": "#388049"})
+        }
+    }
+
+    function getMappedNames(){
+        let result = []
+            for(let i = 0; i < channelsModel.count; i++){ // in order of channels
+                result.push(namesModel.get(i).name)           
+            }
+        return result
+    }
     // ObjectModel {
     //     id: namesModel
     // }
@@ -77,27 +94,28 @@ Rectangle {
         Rectangle { 
             height: 40; width: 130; color: curColor 
             //required property int index
-            property int idx: 0
-            Text { anchors.centerIn: parent; color: "white"; text: "Channel name " + name; font.pointSize:12 }
+            property int idx: 0 // get this Property for mapping (or index)
+            Text { anchors.centerIn: parent; color: "white"; text: "Channel num " + num; font.pointSize:12 }
             Layout.alignment: Qt.AlignCenter
-            Rectangle{
-                height: 40; width: 20; color: "#7dbbffFF"
-                anchors.left: parent.left
-                anchors.top: parent.top
-                MouseArea{
-                    anchors.fill: parent
-                    onClicked: index>0 ? channelsModel.move(index,index-1,1) : console.log("leftest")
-                }
-            }
-            Rectangle{
-                height: 40; width: 20; color: "#7dbbffFF"
-                anchors.right: parent.right
-                anchors.top: parent.top
-                MouseArea{
-                    anchors.fill: parent
-                    onClicked: index<channelsModel.count-1 ? channelsModel.move(index,index+1,1) : console.log("rightest")
-                }
-            }
+            // channels are not movable
+            // Rectangle{
+            //     height: 40; width: 20; color: "#7dbbffFF"
+            //     anchors.left: parent.left
+            //     anchors.top: parent.top
+            //     MouseArea{
+            //         anchors.fill: parent
+            //         onClicked: index>0 ? channelsModel.move(index,index-1,1) : console.log("leftest")
+            //     }
+            // }
+            // Rectangle{
+            //     height: 40; width: 20; color: "#7dbbffFF"
+            //     anchors.right: parent.right
+            //     anchors.top: parent.top
+            //     MouseArea{
+            //         anchors.fill: parent
+            //         onClicked: index<channelsModel.count-1 ? channelsModel.move(index,index+1,1) : console.log("rightest")
+            //     }
+            // }
         }
     }
 
@@ -124,22 +142,23 @@ Rectangle {
         text: "Save mapping"
         width: 60
         onClicked: {
-            let result = {}
-            for(let i = 0; i < Math.max(namesModel.count,channelsModel.count); i++){
-                result[namesModel.get(i).name] = channelsModel.get(i).name           
+            let result = []
+            for(let i = 0; i < channelsModel.count; i++){ // in order of channels
+                result.push(namesModel.get(i).name)           
             }
-            console.log(JSON.stringify(result))
+            console.log(result)
         }
     }
 
     Component.onCompleted: {
-        let aplhabet = ["a","b","c","d"]
-        for(let i = 0; i<4; i++){
-            //let curName = sensorName.createObject()
-            //curName.idx = i
-            namesModel.append({"name": i+aplhabet[i], "curColor": "#53d769"})
-            channelsModel.append({"name": i+aplhabet[aplhabet.length-1-i], "curColor": "#388049"})
-        }
+        console.log("Visual Channel Mapping completed")
+        //let alphabet = ["a","b","c","d"]
+        // for(let i = 0; i<4; i++){
+        //     //let curName = sensorName.createObject()
+        //     //curName.idx = i
+        //     namesModel.append({"name": i+alphabet[i], "curColor": "#53d769"})
+        //     channelsModel.append({"num": i+alphabet[alphabet.length-1-i], "curColor": "#388049"})
+        // }
     }
     /*
 

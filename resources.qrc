@@ -17,5 +17,6 @@
         <file>qml/SetUpGRAMs.qml</file>
         <file>qml/Valve.ui.qml</file>
         <file>qml/ValveSetting.qml</file>
+        <file>qml/VisualChannelMapping.qml</file>
     </qresource>
 </RCC>

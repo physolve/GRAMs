@@ -125,7 +125,7 @@ Window {
                 font.weight: webMomot.font.weight
                 font.pixelSize: 24
                 color: "white"
-                horizontalAlignment: Text.AlignHCenter
+                horizontalAlignment: Text.AlignHCenter // ?
                 Layout.alignment: Qt.AlignHCenter
             }
             RowLayout {
@@ -234,6 +234,8 @@ Window {
                     fillSensors()
 
                     console.log("Pass 2.5")
+                    // signal to MODEL about channels mapping and creation of array with sensor names
+                    
                     // signal to c++ about creating Controllers using parameters
                     backend.initializeModel()
                     console.log("Pass 3")
@@ -261,32 +263,10 @@ Window {
         // testMap["model"] = dataTest
         // testMap["startCfg"] = cfgTest
         // jsonData.saveJson(testMap)
-        
     }
     ListModel {
         id: jsonTestModel
     }
-
-    // Component{
-    //     id: rectTest1
-    //     Rectangle {
-    //         id: customPlus
-    //         implicitWidth: 120
-    //         implicitHeight: 60
-    //         color: "transparent"
-    //         border.color : "steelblue" 
-    //         border.width : 8
-    //         property string text: "test"
-    //         Text{
-    //             id: customPlusText
-    //             anchors.fill: parent
-    //             font.pixelSize: 16
-    //             text: customPlus.text
-    //             horizontalAlignment: Text.AlignHCenter
-    //             verticalAlignment: Text.AlignVCenter
-    //         }
-    //     }
-    // }
 
     Component{
         id: valveSetUp
@@ -317,16 +297,8 @@ Window {
         Rectangle { height: 30; width: 80; color: "blue" }
     }
 
-    property var m_sensorsMap : "" // for now, then in some qml
-
     function fillControllers(choosenProfile){
         itemModel.clear()
-        // let rectObj1 = rectTest1.createObject();
-        // let rectObj2 = rectTest2.createObject();
-        // let rectObj3 = rectTest3.createObject();
-        // itemModel.append(rectObj1)
-        // itemModel.append(rectObj2)
-        // itemModel.append(rectObj3)
 
         //let asr =  dataSource.profileJson
         //console.log(JSON.stringify(asr, null, 4))
@@ -360,10 +332,7 @@ Window {
                     console.log(key + " " + value.device + " " + value.profile) //?
                     profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
                 }
-                itemModel.append(profileObj)
-                // somehow combine name, state, profile and settings
-                // try fill column with objects or else flipable in separate qml
-                //profileLine
+                // append names into mapping scene
                 let dataArray = {}
                 console.log("Apply channel mapping")
                 // map to IDx from profile where idx -> channel
@@ -375,12 +344,12 @@ Window {
                         dataArray[element.name] = element.cch
                     }
                 }
-                sensorsMap[value.device] = dataArray
-                // now sensorsMap should be modified 
-                
+                console.log("in setMappingNames SetUp " + JSON.stringify(dataArray))
+                profileObj.setMappingNames(dataArray)
+
+                itemModel.append(profileObj)
             }
-            console.log("FIRST " + Object.entries(sensorsMap))
-            m_sensorsMap = sensorsMap
+
         }
         if("unknown" in controllersGRAM){ // option to profile without controllers
             console.log("this profile has only unknown controller")
@@ -447,10 +416,6 @@ Window {
         // }
         // if(rsa.hasOwnProperty("DemoDevice,BID#0")) rectObj1.color = Material.Red;
 
-        // here we append qml of sensor mapping
-        // in file VisualChannelMapping.qml we create visual representation of expected profile and real controller
-
-
     }
     
     function startupFunction(objectCfgMap){
@@ -467,15 +432,17 @@ Window {
             container.append(tabPage3);
         }
     }
+
     function replaceControllerInfo(){
         console.log("inside replaceControllerInfo")
-        for(var i=0; i<itemModel.count; i++){
+        let deviceObj = {}
+        for(let i=0; i<itemModel.count; i++){
             let t_profileObj = itemModel.get(i);
             if(t_profileObj.connected){ // now working for Pressure
-                var chSet = t_profileObj.getSettings()
+                let chSet = t_profileObj.getSettings()
                 console.log("innerName "+t_profileObj.innerName)
                 console.log(chSet)
-                dataSource.setDeviceParameters(t_profileObj.innerName, chSet)
+                deviceObj[t_profileObj.innerName] = chSet
                 // let rsb = dataSource.deviceSettings[t_profileObj.innerName]
                 // console.log("ChCnt "+chSet.indexChannelCount)
                 // console.log("ChSt "+chSet.indexChannelStart)
@@ -485,11 +452,22 @@ Window {
                 console.log("I will not get inside " + t_profileObj.innerName)
             }
         }   
+        dataSource.setDeviceParameters(deviceObj) // rewrite to ONE call not in loop !!!
     }
+
     function fillSensors(){ // use with fillControllers
-        console.log("SECOND!!! " + Object.entries(m_sensorsMap))
+        console.log("inside fillSensors")
+        let namesObj = {}
+        for(let i=0; i<itemModel.count; i++){
+            let t_profileObj = itemModel.get(i);
+            if(t_profileObj.connected){
+                let chSet = t_profileObj.getMappedNames()
+                namesObj[t_profileObj.innerName] = chSet
+            }
+        }
+        console.log("SECOND!!! " + Object.entries(namesObj))
         // also somewhere here you can append virtual sensor for modelling  
-        _myModel.appendProfileSensors(m_sensorsMap) // send raw map of sensors
+        _myModel.appendProfileSensors(namesObj) // send raw map of sensors
         //dataSource.setChannelMapping(m_sensorsMap)
     }
 }

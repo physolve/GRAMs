@@ -14,6 +14,7 @@ public:
     Grams(int &argc, char **argv);
     ~Grams();
     Q_INVOKABLE void initializeModel();
+    // add JSON and profile here?
 
 private slots:
     void softEvent();

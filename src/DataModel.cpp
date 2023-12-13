@@ -44,20 +44,24 @@ void MyModel::appendProfileSensors(QVariantMap sensors){
 void MyModel::initializeAcquisition(const QList<ControllerInfo>& controllersInfo){
     //clear weird data
     m_controllersInfo = controllersInfo;
+
     for(auto info : m_controllersInfo){
         // get Names from what?
         // if we have name in already existing sensors we just rearrange them
         //auto sensorNames = info.getNames();
-        // CHECK COUNT and CHANNELS
+        
         // if (sensorNames.count() >= info.m_channelCountCh-info.m_channelStartCh)
         //     qDebug() << "All channels are mapped";
         //else continue; // it means that we append m_sensors before!!!
         // those append for unexpected sensors not appeared in profile
+
+        // channelMap is VariantMap with structure {name:channel}
+        // BUT we should get this map for EVERY controller -> must Use channelMapList[controllerName] -> channelMap[array?]
+        // CHECK COUNT and CHANNELS
+        
         for(int i = info.m_channelStartCh; i<info.m_channelCountCh; i++){ // default : m_channelStartCh = 0, m_channelCountCh = 8
             // check type of Sensor
-            // use SensorMap
-            auto sensor = new Sensor(sensorNames.at(i), i);
-            this->m_sensors.append(sensor);   
+            // check info providing ControllerInfo with sensors matching channel
         }
     }
 

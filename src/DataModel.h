@@ -20,7 +20,7 @@
 class MyModel : public QAbstractListModel
 {
     Q_OBJECT
-
+    //Q_PROPERTY(QVariantMap channelMapList MEMBER m_channelMapList NOTIFY channelMapListChanged)
 public:
     enum Roles {
         NameRole = Qt::UserRole,
@@ -42,6 +42,10 @@ public:
     void initializeAcquisition(const QList<ControllerInfo>& info);
     void appendData(const QList<QVector<double>> & dataList);
     //void fillSensors(const QVector<double>& data);
+
+signals:
+    void channelMapListChanged();
+
 public slots:
     //void duplicateData(int row);
     //void removeData(int row);
@@ -50,6 +54,7 @@ private slots:
     //void testDataFoo();
 
     //void updateDataChanged(int idx);
+
 private: //members
     QList<ControllerInfo> m_controllersInfo;
     //QVector<Data> m_data;

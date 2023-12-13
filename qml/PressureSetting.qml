@@ -1,5 +1,6 @@
 import QtQuick
-import QtQuick.Controls
+//import QtQuick.Controls
+import QtQuick.Dialogs
 
 Rectangle {
     id: pressureSetting
@@ -7,9 +8,10 @@ Rectangle {
     property string innerName: ""
     property string innerPurpose: ""
     property string innerProfile: ""
+    property var m_sensorsMap: undefined
     color: "black"
     width: 270
-    height: 200
+    height: 300
     function changePurposeFront(str){
         //customPlus.purpose = str
         innerPurpose = str
@@ -30,12 +32,22 @@ Rectangle {
     function setValueRange(rng){
         customBack.valueRange = rng
     }
+
+    function setMappingNames(nameData){
+        console.log("in setMappingNames PS " + JSON.stringify(nameData))
+        visualChannelMapping.setNameList(nameData)
+    }
+    
     function getSettings(){
         // add profile path to return
         return { indexChannelStart:cmbChannelStart.currentIndex,
         indexChannelCount:cmbChannelCount.currentIndex + 1,
         indexValueRange:cmbValueRange.currentIndex,
         inProfilePath: innerProfile}
+    }
+
+    function getMappedNames(){
+        return visualChannelMapping.getMappedNames()
     }
     //--> slide
     Flipable {
@@ -71,7 +83,7 @@ Rectangle {
         back: Rectangle {
             id: customBack
             implicitWidth: 250
-            implicitHeight: 200
+            implicitHeight: 300
             color: "transparent"
             border.color : "steelblue" 
             border.width : 8
@@ -174,6 +186,17 @@ Rectangle {
                     }
                     //onCurrentIndexChanged:
                 }
+                Button{
+                    id: openChannelMapping
+                    width: 180
+                    height: 50
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("Open Dialog")
+                    onClicked: {
+                        //winld.active = true
+                        myWindow.open()
+                    }
+                }
                 anchors.centerIn: parent
             }
             anchors.centerIn: parent
@@ -189,4 +212,43 @@ Rectangle {
         }
     }
     //<-- slide
+    // Loader {
+    //     id: winld
+    //     active: false
+    //     sourceComponent: Window {
+    //         //id: myWindow
+    //         width: 200
+    //         height: 200
+    //         flags:  Qt.Window | Qt.WindowSystemMenuHint
+    //                 | Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint
+    //                 | Qt.WindowMaximizeButtonHint | Qt.WindowStaysOnTopHint
+    //         visible: true
+    //         modality: Qt.NonModal // no need for this as it is the default value
+    //         Item{
+    //             VisualChannelMapping{
+    //                 id: visualChannelMapping
+    //             }
+    //         }
+    //         onClosing: winld.active = false
+    //     }
+    //     onLoaded:{
+    //         item.visualChannelMapping.setNameList(nameList)
+    //     }
+    // }
+    Dialog {
+        id: myWindow
+        width: 200
+        height: 200
+        modal: true // no need for this as it is the default value
+        parentWindow: cfgWindow
+        Item{
+            VisualChannelMapping{
+                id: visualChannelMapping
+            }
+        }
+        //onClosing: winld.active = false
+    }
 }
+            // VisualChannelMapping{
+            //     id: visualChannelMapping
+            // }

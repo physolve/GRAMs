@@ -21,6 +21,7 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     // fill the Map using the same properties as name and profile
     // like: current device : [{name_controller},{}]
     // later compare the maps to approve working state
+    // later move THIS JSON SHIT somewhere else, like in GRAM constructor or individual class
     QFile file;
     QDir dir("profile");
     file.setFileName(dir.filePath("GRAMsPfp.json")); //???
@@ -99,14 +100,17 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
     // use advantechDeviceMap to additional features like in Instant_AI
 }
 
-void DataAcquisition::setDeviceParameters(QString name, QVariantMap obj){
+void DataAcquisition::setDeviceParameters(const QVariantMap& deviceParametersMap){ // rewrite to ONE call not in loop
     // check what deviceSetting name we have (short one?)
-    QVariantMap deviceMap = m_deviceSettings[name].toMap();
-    deviceMap["chChannelCount"] = obj["indexChannelCount"];
-    deviceMap["chCannelStart"] = obj["indexChannelStart"];
-    deviceMap["chValueRange"] = obj["indexValueRange"];
-    deviceMap["profilePath"] = obj["inProfilePath"]; 
-    m_deviceSettings[name].setValue(deviceMap);
+    for (auto i = deviceParametersMap.cbegin(), end = deviceParametersMap.cend(); i != end; ++i){
+        QVariantMap deviceMap = m_deviceSettings[i.key()].toMap();
+        auto obj = i.value().toMap();
+        deviceMap["chChannelCount"] = obj["indexChannelCount"];
+        deviceMap["chCannelStart"] = obj["indexChannelStart"];
+        deviceMap["chValueRange"] = obj["indexValueRange"];
+        deviceMap["profilePath"] = obj["inProfilePath"]; 
+        m_deviceSettings[i.key()].setValue(deviceMap);
+    }
 }
 // void DataAcquisition::setChannelMapping(QVariantMap obj){
 //     // sensor mapping then used for setNames like position of controller output???

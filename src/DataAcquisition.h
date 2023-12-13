@@ -21,7 +21,7 @@ Q_SIGNALS:
 public slots:
     void saveStartDevice(); // no longer slot
     //void choosenGRAMInitialization();
-    void setDeviceParameters(QString name, QVariantMap obj);
+    void setDeviceParameters(const QVariantMap& deviceParametersMap);
     //void setChannelMapping(QVariantMap obj);
 signals:
     void profileNamesChanged();
