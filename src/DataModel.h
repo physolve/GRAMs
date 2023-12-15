@@ -13,8 +13,6 @@
 //     QString name;
 //     QList<quint64> x; // one second data
 //     QList<double> y; // one second data
-
-
 // };
 
 class MyModel : public QAbstractListModel
@@ -39,7 +37,7 @@ public:
     Q_INVOKABLE QVariant getCurValues() const;
     Q_INVOKABLE void appendProfileSensors(QVariantMap sensors); // QVector<double>& data??
 
-    void initializeAcquisition(const QList<ControllerInfo>& info);
+    void initializeAcquisition(); //const QList<ControllerInfo>& info
     void appendData(const QList<QVector<double>> & dataList);
     //void fillSensors(const QVector<double>& data);
 
@@ -56,7 +54,7 @@ private slots:
     //void updateDataChanged(int idx);
 
 private: //members
-    QList<ControllerInfo> m_controllersInfo;
+    //QList<ControllerInfo> m_controllersInfo;
     //QVector<Data> m_data;
     QList<Sensor*> m_sensors; // PURPOSE BASED Hash?
     QElapsedTimer m_time;

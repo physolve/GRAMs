@@ -47,7 +47,7 @@ Rectangle {
     }
 
     function getMappedNames(){
-        return visualChannelMapping.getMappedNames()
+        return visualChannelMapping.mappingResult()
     }
     //--> slide
     Flipable {
@@ -151,7 +151,7 @@ Rectangle {
                         text: index + 1
                     }
                     displayText: Number(currentText) + 1
-                    //onCurrentIndexChanged: 
+                    onCurrentIndexChanged: visualChannelMapping.setChannelList(currentIndex+1)
                 }
                 ComboBox{
                     id: cmbValueRange

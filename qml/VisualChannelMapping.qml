@@ -21,31 +21,27 @@ Rectangle {
     //property var namesList: undefined
 
     function setNameList(namesList){
+        console.log("I'm setting namesList (b)")
         //console.log("in setNameList VCM " + JSON.stringify(namesList))
         const sortedObject = namesList.sort((a, b) => a.cch - b.cch)
         //console.log("SORTED " + JSON.stringify(sortedObject))
         let result = sortedObject.map(a=>a.name)
-        // for(const [key, value] of Object.entries(sortedObject)){
-        //     namesModel.append({"name": key, "curColor": "#53d769"})
-        //     channelsModel.append({"num": value, "curColor": "#388049"})
-        // }
-        for(const element of result){
-            namesModel.append({"name": element, "curColor": "#53d769"})
+
+        let colors = ["#fac89e","#e3e891","#c2fc99","#a3fcb3","#92e8d5","#96c8f2","#ada8ff","#ce94f7","#ed94dd","#fea8bb"]
+        for(const [index, element] of result.entries()){
+            namesModel.append({"name": element, "curColor": colors[index]})
         }
     }
     function setChannelList(channelList){
-        // for (let i = 0; i < channelList; i++){
-        //     channelsModel.append({"num": i, "curColor": "#388049"})
-        // }
+        console.log("I'm setting channelList (a)")
         channelsModel = channelList
-    }
-
-    function getMappedNames(){
-        let result = []
-            for(let i = 0; i < channelsModel.count; i++){ // in order of channels
-                result.push(namesModel.get(i).name)           
+        if(namesModel.count <= channelsModel){
+            let unnamedCount = channelsModel-namesModel.count 
+            while(unnamedCount--){
+                namesModel.append({"name": "unnamed", "curColor": "#b5bec4"})
             }
-        return result
+        }
+        else console.log("you have to delete some namesModel")
     }
     // ObjectModel {
     //     id: namesModel
@@ -58,12 +54,28 @@ Rectangle {
         id: sensorName
         Rectangle { 
             height: 40; width: 60; color: curColor 
-            Text { anchors.centerIn: parent; color: "black"; text: name; font.pointSize:12 }
+            Text { anchors.centerIn: parent; color: "black"; text: name; font.pointSize:10 }
             Rectangle{
-                height: 15; width: 15; color: "#7dbbffFF"
-                radius: 5
+                height: 10; width: 10;
+                radius: 4
+                gradient: Gradient { //The rectangle background
+                    orientation: Gradient.Horizontal
+                    GradientStop {
+                        position: 0.00;
+                        color: "#600000";
+                    }
+                    GradientStop {
+                        position: 0.40;
+                        color: "#300000";
+                    }
+                    GradientStop {
+                        position: 0.50;
+                        color: "transparent";
+                    }
+                }
                 anchors.left: parent.left
                 //anchors.top: parent.top
+                anchors.margins: 2
                 anchors.verticalCenter: parent.verticalCenter
                 MouseArea{
                     anchors.fill: parent
@@ -71,10 +83,26 @@ Rectangle {
                 }
             }
             Rectangle{
-                height: 15; width: 15; color: "#7dbbffFF"
-                radius: 5
+                height: 10; width: 10;
+                radius: 4
+                gradient: Gradient { //The rectangle background
+                    orientation: Gradient.Horizontal
+                    GradientStop {
+                        position: 1.00;
+                        color: "#600000";
+                    }
+                    GradientStop {
+                        position: 0.60;
+                        color: "#300000";
+                    }
+                    GradientStop {
+                        position: 0.50;
+                        color: "transparent";
+                    }
+                }
                 anchors.right: parent.right
                 //anchors.top: parent.top
+                anchors.margins: 2
                 anchors.verticalCenter: parent.verticalCenter
                 MouseArea{
                     anchors.fill: parent
@@ -138,22 +166,15 @@ Rectangle {
         text: "Save mapping"
         width: 180
         onClicked: {
-            let result = []
-            for(let i = 0; i < channelsModel.count; i++){ // in order of channels
-                result.push(namesModel.get(i).name)           
-            }
-            console.log(result)
+            console.log(mappingResult())
         }
     }
-
-    Component.onCompleted: {
-        console.log("Visual Channel Mapping completed")
-        //let alphabet = ["a","b","c","d"]
-        // for(let i = 0; i<4; i++){
-        //     //let curName = sensorName.createObject()
-        //     //curName.idx = i
-        //     namesModel.append({"name": i+alphabet[i], "curColor": "#53d769"})
-        //     channelsModel.append({"num": i+alphabet[alphabet.length-1-i], "curColor": "#388049"})
-        // }
+    function mappingResult(){
+        let result = []
+            for(let i = 0; i < channelsModel; i++){ // in order of channels
+                i < namesModel.count ? result.push(namesModel.get(i).name) : console.log("missed channel")           
+            }
+        return result
     }
+
 }

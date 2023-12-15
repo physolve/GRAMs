@@ -74,7 +74,7 @@ void Grams::initGUI(){
 
 void Grams::initializeModel(){
     dataSource.saveStartDevice();
-    dataModel.initializeAcquisition(dataSource.getControllersInfo()); // only for sensors? What for valves
+    dataModel.initializeAcquisition(); //dataSource.getControllersInfo() only for sensors? What for valves
     // for valves make different type
     softTimer->start(1000);
 }

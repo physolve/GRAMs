@@ -13,7 +13,7 @@ void Controller::Initialization(){
 }
 
 AdvantechTest::AdvantechTest(const ControllerInfo &info, QObject *parent) : 
-	QObject(parent), m_info(info), m_instantAiCtrl(NULL), m_vector(16,0.0)
+	QObject(parent), m_info(info), m_instantAiCtrl(NULL), m_vector(8,0.0)
 {
 	auto tempDevice = m_info.deviceName();
 	auto tempList = tempDevice.split(',');
@@ -89,7 +89,7 @@ const ControllerInfo& AdvantechTest::getInfo(){
 
 void AdvantechTest::ConfigureDeviceTest(){ // after accept
 	//m_vector = QVector<double>(16,0.0);
-	qDebug() << m_vector;
+	//qDebug() << m_vector;
 	if (m_instantAiCtrl==NULL)
 	{
       m_instantAiCtrl = InstantAiCtrl::Create();
@@ -110,10 +110,18 @@ void AdvantechTest::ConfigureDeviceTest(){ // after accept
 
 	Array<ValueRange>* valueRanges = m_instantAiCtrl->getFeatures()->getValueRanges();
 	m_valueRange = valueRanges->getItem(m_info.m_valueRangeCh);
+	
 	for (int i = 0; i < channels->getCount(); i++)
 	{
 		channels->getItem(i).setValueRange(m_valueRange);
 	}
+
+	qDebug() << "INFO COUNT " << channels->getCount();
+	resizeDataVector(m_info.m_channelCountCh);
+}
+
+void AdvantechTest::resizeDataVector(uint8_t size){
+	this->m_vector.resize(size);
 }
 
 void AdvantechTest::CheckError(ErrorCode errorCode)
@@ -128,6 +136,7 @@ void AdvantechTest::CheckError(ErrorCode errorCode)
 
 void AdvantechTest::readData(){
 	ErrorCode errorCode = Success;
+	//qDebug() << "controller Data count = " << m_vector.count();
 	errorCode = m_instantAiCtrl->Read(m_info.m_channelStartCh, m_info.m_channelCountCh, m_vector.data());
 	CheckError(errorCode);
 	if (errorCode != Success)

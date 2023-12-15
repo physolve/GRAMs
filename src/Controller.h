@@ -36,7 +36,7 @@ public:
 	void CheckError(ErrorCode errorCode);
     QString m_deviceName;
     const ControllerInfo& getInfo();
-
+    void resizeDataVector(uint8_t size);
     void readData();
     QVector<double> getData();
 //Q_SIGNALS:
