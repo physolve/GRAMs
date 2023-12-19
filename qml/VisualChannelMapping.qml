@@ -28,20 +28,39 @@ Rectangle {
         let result = sortedObject.map(a=>a.name)
 
         let colors = ["#fac89e","#e3e891","#c2fc99","#a3fcb3","#92e8d5","#96c8f2","#ada8ff","#ce94f7","#ed94dd","#fea8bb"]
+        namesModel.clear()
         for(const [index, element] of result.entries()){
             namesModel.append({"name": element, "curColor": colors[index]})
         }
     }
     function setChannelList(channelList){
-        console.log("I'm setting channelList (a)")
+        console.log("I'm setting channelList (a) " + channelList)
         channelsModel = channelList
+        
+        // here is matching virtual sensors array and profile
+        
         if(namesModel.count <= channelsModel){
             let unnamedCount = channelsModel-namesModel.count 
             while(unnamedCount--){
                 namesModel.append({"name": "unnamed", "curColor": "#b5bec4"})
             }
         }
-        else console.log("you have to delete some namesModel")
+        else {
+            let extraCount = namesModel.count-channelsModel
+            let i = 0 
+            // otherwise you can just order every unnamed to the end
+            while(i<namesModel.count&&extraCount>0){
+                if(namesModel.get(i).name == "unnamed"){
+                    namesModel.remove(i)
+                    extraCount--
+                    console.log("deleted " + i + ", extra count " + extraCount)
+                }
+                else i++
+            }
+            if(extraCount>0) console.log("you have unmaped profile sensors")
+        }
+    
+    
     }
     // ObjectModel {
     //     id: namesModel

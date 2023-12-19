@@ -90,7 +90,7 @@ Rectangle {
             property string text: "test back"
             property string deviceName: innerName
             property string deviceProfile: innerProfile
-            property var channelCount: 4
+            property var channelCount: 8
             property var channelStart: 0
             property var valueRange: 0
             MouseArea {
@@ -145,6 +145,7 @@ Rectangle {
                     height: 40
                     font.pointSize: 10
                     anchors.horizontalCenter: parent.horizontalCenter
+                    currentIndex: customBack.channelCount-1 
                     model: customBack.channelCount
                     delegate: ItemDelegate {
                         width: parent.width
