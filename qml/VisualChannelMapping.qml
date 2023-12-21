@@ -49,7 +49,7 @@ Rectangle {
             let extraCount = namesModel.count-channelsModel
             let i = 0 
             // otherwise you can just order every unnamed to the end
-            while(i<namesModel.count&&extraCount>0){
+            while(i < namesModel.count&&extraCount>0){
                 if(namesModel.get(i).name == "unnamed"){
                     namesModel.remove(i)
                     extraCount--
@@ -57,7 +57,7 @@ Rectangle {
                 }
                 else i++
             }
-            if(extraCount>0) console.log("you have unmaped profile sensors")
+            if(extraCount > 0) console.log("you have unmapped profile sensors")
         }
     
     
@@ -191,7 +191,7 @@ Rectangle {
     function mappingResult(){
         let result = []
             for(let i = 0; i < channelsModel; i++){ // in order of channels
-                i < namesModel.count ? result.push(namesModel.get(i).name) : console.log("missed channel")           
+                result.push(namesModel.get(i).name)           
             }
         return result
     }

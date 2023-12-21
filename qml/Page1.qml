@@ -66,7 +66,10 @@ Page{
     }
     Connections {
         target: _myModel
-        onDataChanged: gRAMsMnemoForm.setVal(_myModel.getCurValues()) // it's Working fine
+        onDataChanged: {
+            gRAMsMnemoForm.setPressureVal(_myModel.getCurPressureValues()) // it's Working fine
+            gRAMsMnemoForm.setTempVal(_myModel.getCurTempValues())
+        }
     }
     //property alias headerColor: label.color
     // Rectangle {

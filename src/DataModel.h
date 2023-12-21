@@ -35,6 +35,8 @@ public:
     //bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     QHash<int, QByteArray> roleNames() const override; // use QMultiHash
     Q_INVOKABLE QVariant getCurValues() const;
+    Q_INVOKABLE QVariant getCurPressureValues() const; // this is temporally, change to some ordinate way like map of names? or idx
+    Q_INVOKABLE QVariant getCurTempValues() const;
     Q_INVOKABLE void appendProfileSensors(QVariantMap sensors); // QVector<double>& data??
 
     void initializeAcquisition(); //const QList<ControllerInfo>& info

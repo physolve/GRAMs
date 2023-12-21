@@ -116,9 +116,29 @@ QVariant  MyModel::getCurValues() const{
     QList<double> curValues;
     for(auto sensor : m_sensors)
         curValues << sensor->getCurValue();
-    qDebug() << curValues;
+    //qDebug() << curValues;
     return QVariant::fromValue(curValues); 
 }
+
+QVariant MyModel::getCurPressureValues() const{
+    QList<double> curPressureValues;
+    auto idStart = 0;
+    auto idEnd = 5; 
+    for(auto i = idStart; i<=idEnd; i++){
+        curPressureValues << m_sensors[i]->getCurValue();
+    }
+    return QVariant::fromValue(curPressureValues); 
+}
+QVariant MyModel::getCurTempValues() const{
+    QList<double> curTempValues;
+    auto idStart = 6;
+    auto idEnd = 10; 
+    for(auto i = idStart; i<=idEnd; i++){
+        curTempValues << m_sensors[i]->getCurValue();
+    }
+    return QVariant::fromValue(curTempValues); 
+}
+
 //<-- slide
 // void MyModel::updateDataChanged(int idx)
 // {

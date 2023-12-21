@@ -19,39 +19,26 @@ Item {
     id: item1
     width: rectangle.width
     height: rectangle.height
-    property real newVal: 10
-    // property real slider1Val: 0
-    // property real slider2Val: 0
-    // property real slider3Val: 0
-    // property real slider4Val: 0
-    // property real slider5Val: 0
-    property var sliderVal: [10,15,20,25,30]
-    function setVal(val){
-        if(val.length < 4){
+    property var pressureVal: [0.0,0.0,0.0,0.0,0.0,0.0]
+                            // 0,  1,  2,  3,  4,  5
+    property var tempVal: [0.0,0.0,0.0,0.0,0.0,0.0]
+                            // 0,  1,  2,  3,  4
+    function setPressureVal(val){
+        if(val.length < 6){
             console.log("Not enough values")
-            sliderVal = [0,0,0,0,0]
+            pressureVal = [0.0,0.0,0.0,0.0,0.0,0.0]
         }
         else 
-            sliderVal = val
-        // switch(id){
-        //     case 0:
-        //         slider1Val = val
-        //         break
-        //     case 1:
-        //         slider2Val = val
-        //         break
-        //     case 2:
-        //         slider3Val = val
-        //         break
-        //     case 3:
-        //         slider4Val = val
-        //         break
-        //     case 4:
-        //         slider5Val = val
-        //         break
-        // }
+            pressureVal = val
     }
-    property real newTempVal: 0.5
+    function setTempVal(val){
+        if(val.length < 5){
+            console.log("Not enough values")
+            tempVal = [0.0,0.0,0.0,0.0,0.0]
+        }
+        else 
+            tempVal = val
+    }
     Rectangle {
         id: rectangle
         x: 0
@@ -325,7 +312,7 @@ Item {
         }
 
         CircularSlider {
-            id: slider1
+            id: aDD311_s
             x: 476
             y: 173
             width: 80
@@ -342,8 +329,8 @@ Item {
                 antialiasing: true
                 transform: [
                     Translate {
-                        x: (slider1.handleWidth - width) / 2
-                        y: (slider1.handleHeight - height) / 2
+                        x: (aDD311_s.handleWidth - width) / 2
+                        y: (aDD311_s.handleHeight - height) / 2
                     }
                 ]
             }
@@ -353,7 +340,7 @@ Item {
             startAngle: 40
             Layout.fillWidth: false
             trackWidth: 10
-            value: item1.sliderVal[0]
+            value: item1.pressureVal[0]
             maxValue: 120
             endAngle: 320
 
@@ -361,7 +348,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: slider1.value.toFixed()
+                text: aDD311_s.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -371,7 +358,7 @@ Item {
         }
         
         CircularSlider {
-            id: slider2
+            id: aDD312_s
             x: 539
             y: 122
             width: 80
@@ -384,7 +371,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: slider2.value.toFixed()
+                text: aDD312_s.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -393,7 +380,7 @@ Item {
             }
             Layout.fillWidth: false
             trackWidth: 10
-            value: item1.sliderVal[1]
+            value: item1.pressureVal[1]
             maxValue: 120
             progressWidth: 10
             handle: Rectangle {
@@ -406,8 +393,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (slider2.handleWidth - width) / 2
-                        y: (slider2.handleHeight - height) / 2
+                        x: (aDD312_s.handleWidth - width) / 2
+                        y: (aDD312_s.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -416,7 +403,7 @@ Item {
         }
 
         CircularSlider {
-            id: slider3
+            id: aDD331_s
             x: 763
             y: 165
             width: 80
@@ -429,7 +416,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: slider3.value.toFixed()
+                text: aDD331_s.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -438,7 +425,7 @@ Item {
             }
             trackWidth: 10
             Layout.fillWidth: false
-            value: item1.sliderVal[2]
+            value: item1.pressureVal[2]
             progressWidth: 10
             maxValue: 120
             handle: Rectangle {
@@ -451,8 +438,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (slider3.handleWidth - width) / 2
-                        y: (slider3.handleHeight - height) / 2
+                        x: (aDD331_s.handleWidth - width) / 2
+                        y: (aDD331_s.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -461,7 +448,7 @@ Item {
         }
 
         CircularSlider {
-            id: slider4
+            id: aDD332_s
             x: 835
             y: 68
             width: 80
@@ -474,7 +461,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: slider4.value.toFixed()
+                text: aDD332_s.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -483,7 +470,7 @@ Item {
             }
             Layout.fillWidth: false
             trackWidth: 10
-            value: item1.sliderVal[3]
+            value: item1.pressureVal[3]
             maxValue: 120
             progressWidth: 10
             handle: Rectangle {
@@ -496,8 +483,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (slider4.handleWidth - width) / 2
-                        y: (slider4.handleHeight - height) / 2
+                        x: (aDD332_s.handleWidth - width) / 2
+                        y: (aDD332_s.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -506,7 +493,7 @@ Item {
         }
 
         CircularSlider {
-            id: slider5
+            id: aDD333_s
             x: 965
             y: 48
             width: 80
@@ -519,7 +506,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: slider5.value.toFixed()
+                text: aDD333_s.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -528,7 +515,7 @@ Item {
             }
             trackWidth: 10
             Layout.fillWidth: false
-            value: 0//item1.sliderVal[4]
+            value: item1.pressureVal[4]
             progressWidth: 10
             maxValue: 120
             handle: Rectangle {
@@ -541,8 +528,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (slider5.handleWidth - width) / 2
-                        y: (slider5.handleHeight - height) / 2
+                        x: (aDD333_s.handleWidth - width) / 2
+                        y: (aDD333_s.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -551,7 +538,7 @@ Item {
         }
 
         CircularSlider {
-            id: slider6
+            id: aDD391_s
             x: 524
             y: 575
             width: 80
@@ -564,7 +551,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: slider6.value.toFixed()
+                text: aDD391_s.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -573,7 +560,7 @@ Item {
             }
             Layout.fillWidth: false
             trackWidth: 10
-            value: item1.newVal
+            value: item1.pressureVal[5]
             maxValue: 120
             progressWidth: 10
             handle: Rectangle {
@@ -586,8 +573,8 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (slider6.handleWidth - width) / 2
-                        y: (slider6.handleHeight - height) / 2
+                        x: (aDD391_s.handleWidth - width) / 2
+                        y: (aDD391_s.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
@@ -596,7 +583,7 @@ Item {
         }
 
         CircularSlider {
-            id: slider7
+            id: aDV301_s
             x: 220
             y: 474
             width: 80
@@ -609,7 +596,7 @@ Item {
                 width: 40
                 height: 20
                 color: "#fefefe"
-                text: slider7.value.toFixed()
+                text: aDV301_s.value.toFixed()
                 anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignHCenter
                 font.pointSize: 13
@@ -618,7 +605,7 @@ Item {
             }
             trackWidth: 10
             Layout.fillWidth: false
-            value: item1.newVal
+            value: 0
             progressWidth: 10
             maxValue: 120
             handle: Rectangle {
@@ -631,229 +618,21 @@ Item {
                 border.width: 5
                 transform: [
                     Translate {
-                        x: (slider7.handleWidth - width) / 2
-                        y: (slider7.handleHeight - height) / 2
+                        x: (aDV301_s.handleWidth - width) / 2
+                        y: (aDV301_s.handleHeight - height) / 2
                     }
                 ]
                 antialiasing: true
             }
             startAngle: 40
         }
-
         CircularSlider {
-            id: customSlider
-            x: 1044
-            y: 263
-            hideProgress: true
-            hideTrack: true
-            width: 80
-            height: 80
-            onValueChanged: item1.newTempVal = value
-            handleColor: "#6272A4"
-            handleWidth: 10
-            handleHeight: 10
-            value: item1.newTempVal
-
-            // Custom progress Indicator
-            Item {
-                anchors.fill: parent
-                anchors.margins: 5
-                Rectangle {
-                    id: mask
-                    anchors.fill: parent
-                    radius: width / 2
-                    color: "#282A36"
-                    border.width: 5
-                    border.color: "#44475A"
-                }
-
-                Item {
-                    anchors.fill: mask
-                    anchors.margins: 5
-                    layer.enabled: true
-                    rotation: 180
-                    layer.effect: OpacityMaskEffect {
-                        id: opacityMask
-                        maskSource: mask
-                    }
-                    Rectangle {
-                        height: parent.height * customSlider.value
-                        width: parent.width
-                        //radius: parent.width/2
-                        layer.enabled: true
-                        color: "#ec0636"
-                    }
-                }
-
-                Label {
-                    anchors.centerIn: parent
-                    font.pointSize: 8
-                    color: "#FEFEFE"
-                    text: (customSlider.value * 100).toFixed() + "%"
-                }
-            }
-        }
-
-        CircularSlider {
-            id: customSlider1
-            x: 835
-            y: 332
-            width: 80
-            height: 80
-            onValueChanged: item1.newTempVal = value
-            handleHeight: 10
-            hideTrack: true
-            value: item1.newTempVal
-            Item {
-                anchors.fill: parent
-                anchors.margins: 5
-                Rectangle {
-                    id: mask1
-                    color: "#282a36"
-                    radius: width / 2
-                    border.color: "#44475a"
-                    border.width: 5
-                    anchors.fill: parent
-                }
-
-                Item {
-                    anchors.fill: mask1
-                    anchors.margins: 5
-                    Rectangle {
-                        width: parent.width
-                        height: parent.height * customSlider1.value
-                        color: "#ec0636"
-                        layer.enabled: true
-                    }
-                    layer.effect: OpacityMaskEffect {
-                        id: opacityMask1
-                        maskSource: mask1
-                    }
-                    rotation: 180
-                    layer.enabled: true
-                }
-
-                Label {
-                    color: "#fefefe"
-                    text: (customSlider1.value * 100).toFixed() + "%"
-                    anchors.centerIn: parent
-                    font.pointSize: 8
-                }
-            }
-            handleWidth: 10
-            hideProgress: true
-            handleColor: "#6272a4"
-        }
-
-        CircularSlider {
-            id: customSlider2
-            x: 710
-            y: 509
-            width: 80
-            height: 80
-            onValueChanged: item1.newTempVal = value
-            handleHeight: 10
-            hideTrack: true
-            value: item1.newTempVal
-            Item {
-                anchors.fill: parent
-                anchors.margins: 5
-                Rectangle {
-                    id: mask2
-                    color: "#282a36"
-                    radius: width / 2
-                    border.color: "#44475a"
-                    border.width: 5
-                    anchors.fill: parent
-                }
-
-                Item {
-                    anchors.fill: mask2
-                    anchors.margins: 5
-                    Rectangle {
-                        width: parent.width
-                        height: parent.height * customSlider2.value
-                        color: "#ec0636"
-                        layer.enabled: true
-                    }
-                    layer.effect: OpacityMaskEffect {
-                        id: opacityMask2
-                        maskSource: mask2
-                    }
-                    rotation: 180
-                    layer.enabled: true
-                }
-
-                Label {
-                    color: "#fefefe"
-                    text: (customSlider2.value * 100).toFixed() + "%"
-                    anchors.centerIn: parent
-                    font.pointSize: 8
-                }
-            }
-            handleWidth: 10
-            hideProgress: true
-            handleColor: "#6272a4"
-        }
-
-        CircularSlider {
-            id: customSlider3
-            x: 651
-            y: 463
-            width: 80
-            height: 80
-            onValueChanged: item1.newTempVal = value
-            handleWidth: 10
-            hideTrack: true
-            Item {
-                anchors.fill: parent
-                anchors.margins: 5
-                Rectangle {
-                    id: mask3
-                    color: "#282a36"
-                    radius: width / 2
-                    border.color: "#44475a"
-                    border.width: 5
-                    anchors.fill: parent
-                }
-
-                Item {
-                    anchors.fill: mask3
-                    anchors.margins: 5
-                    layer.effect: OpacityMaskEffect {
-                        id: opacityMask3
-                        maskSource: mask3
-                    }
-                    layer.enabled: true
-                    rotation: 180
-                    Rectangle {
-                        width: parent.width
-                        height: parent.height * customSlider3.value
-                        color: "#ec0636"
-                        layer.enabled: true
-                    }
-                }
-
-                Label {
-                    color: "#fefefe"
-                    text: (customSlider3.value * 100).toFixed() + "%"
-                    anchors.centerIn: parent
-                    font.pointSize: 8
-                }
-            }
-            value: item1.newTempVal
-            hideProgress: true
-            handleColor: "#6272a4"
-            handleHeight: 10
-        }
-
-        CircularSlider {
-            id: customSlider4
+            id: aDT314_s
             x: 577
             y: 363
             width: 80
             height: 80
-            onValueChanged: item1.newTempVal = value
+            //onValueChanged: item1.newTempVal = value
             handleWidth: 10
             hideTrack: true
             Item {
@@ -879,7 +658,7 @@ Item {
                     rotation: 180
                     Rectangle {
                         width: parent.width
-                        height: parent.height * customSlider4.value
+                        height: parent.height * aDT314_s.value/1200
                         color: "#ec0636"
                         layer.enabled: true
                     }
@@ -887,15 +666,218 @@ Item {
 
                 Label {
                     color: "#fefefe"
-                    text: (customSlider4.value * 100).toFixed() + "%"
+                    text: (aDT314_s.value).toFixed() + " °C"
                     anchors.centerIn: parent
                     font.pointSize: 8
                 }
             }
-            value: item1.newTempVal
+            value: item1.tempVal[0]
             hideProgress: true
             handleColor: "#6272a4"
             handleHeight: 10
+        }
+        CircularSlider {
+            id: aDT352_s
+            x: 651
+            y: 463
+            width: 80
+            height: 80
+            //onValueChanged: item1.newTempVal = value
+            handleWidth: 10
+            hideTrack: true
+            Item {
+                anchors.fill: parent
+                anchors.margins: 5
+                Rectangle {
+                    id: mask3
+                    color: "#282a36"
+                    radius: width / 2
+                    border.color: "#44475a"
+                    border.width: 5
+                    anchors.fill: parent
+                }
+
+                Item {
+                    anchors.fill: mask3
+                    anchors.margins: 5
+                    layer.effect: OpacityMaskEffect {
+                        id: opacityMask3
+                        maskSource: mask3
+                    }
+                    layer.enabled: true
+                    rotation: 180
+                    Rectangle {
+                        width: parent.width
+                        height: parent.height * aDT352_s.value/1200
+                        color: "#ec0636"
+                        layer.enabled: true
+                    }
+                }
+
+                Label {
+                    color: "#fefefe"
+                    text: (aDT352_s.value).toFixed() + " °C"
+                    anchors.centerIn: parent
+                    font.pointSize: 8
+                }
+            }
+            value: item1.tempVal[1]
+            hideProgress: true
+            handleColor: "#6272a4"
+            handleHeight: 10
+        }
+        CircularSlider {
+            id: aDT354_s
+            x: 710
+            y: 509
+            width: 80
+            height: 80
+            //onValueChanged: item1.newTempVal = value
+            handleHeight: 10
+            hideTrack: true
+            value: item1.tempVal[2]
+            Item {
+                anchors.fill: parent
+                anchors.margins: 5
+                Rectangle {
+                    id: mask2
+                    color: "#282a36"
+                    radius: width / 2
+                    border.color: "#44475a"
+                    border.width: 5
+                    anchors.fill: parent
+                }
+
+                Item {
+                    anchors.fill: mask2
+                    anchors.margins: 5
+                    Rectangle {
+                        width: parent.width
+                        height: parent.height * aDT354_s.value/1200
+                        color: "#ec0636"
+                        layer.enabled: true
+                    }
+                    layer.effect: OpacityMaskEffect {
+                        id: opacityMask2
+                        maskSource: mask2
+                    }
+                    rotation: 180
+                    layer.enabled: true
+                }
+
+                Label {
+                    color: "#fefefe"
+                    text: (aDT354_s.value).toFixed()  + " °C"
+                    anchors.centerIn: parent
+                    font.pointSize: 8
+                }
+            }
+            handleWidth: 10
+            hideProgress: true
+            handleColor: "#6272a4"
+        }
+        CircularSlider {
+            id: aDT358_s
+            x: 835
+            y: 332
+            width: 80
+            height: 80
+            //onValueChanged: item1.newTempVal = value
+            handleHeight: 10
+            hideTrack: true
+            value: item1.tempVal[3]
+            Item {
+                anchors.fill: parent
+                anchors.margins: 5
+                Rectangle {
+                    id: mask1
+                    color: "#282a36"
+                    radius: width / 2
+                    border.color: "#44475a"
+                    border.width: 5
+                    anchors.fill: parent
+                }
+
+                Item {
+                    anchors.fill: mask1
+                    anchors.margins: 5
+                    Rectangle {
+                        width: parent.width
+                        height: parent.height * aDT358_s.value/1200
+                        color: "#ec0636"
+                        layer.enabled: true
+                    }
+                    layer.effect: OpacityMaskEffect {
+                        id: opacityMask1
+                        maskSource: mask1
+                    }
+                    rotation: 180
+                    layer.enabled: true
+                }
+
+                Label {
+                    color: "#fefefe"
+                    text: (aDT358_s.value).toFixed() + " °C"
+                    anchors.centerIn: parent
+                    font.pointSize: 8
+                }
+            }
+            handleWidth: 10
+            hideProgress: true
+            handleColor: "#6272a4"
+        }
+        CircularSlider {
+            id: aDT359_s
+            x: 1044
+            y: 263
+            hideProgress: true
+            hideTrack: true
+            width: 80
+            height: 80
+            //onValueChanged: item1.newTempVal = value
+            handleColor: "#6272A4"
+            handleWidth: 10
+            handleHeight: 10
+            value: item1.tempVal[4]
+
+            // Custom progress Indicator
+            Item {
+                anchors.fill: parent
+                anchors.margins: 5
+                Rectangle {
+                    id: mask
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "#282A36"
+                    border.width: 5
+                    border.color: "#44475A"
+                }
+
+                Item {
+                    anchors.fill: mask
+                    anchors.margins: 5
+                    layer.enabled: true
+                    rotation: 180
+                    layer.effect: OpacityMaskEffect {
+                        id: opacityMask
+                        maskSource: mask
+                    }
+                    Rectangle {
+                        height: parent.height * aDT359_s.value/1200
+                        width: parent.width
+                        //radius: parent.width/2
+                        layer.enabled: true
+                        color: "#ec0636"
+                    }
+                }
+
+                Label {
+                    anchors.centerIn: parent
+                    font.pointSize: 8
+                    color: "#FEFEFE"
+                    text: (aDT359_s.value).toFixed() + " °C"
+                }
+            }
         }
     }
     // Binding{
