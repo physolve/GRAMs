@@ -12,6 +12,8 @@ void Controller::Initialization(){
 
 }
 
+// temporal names should be erased and then reused in simulation controller //
+
 AdvantechTest::AdvantechTest(const ControllerInfo &info, QObject *parent) : 
 	QObject(parent), m_info(info), m_instantAiCtrl(NULL), m_vector(8,0.0)
 {
@@ -150,40 +152,23 @@ QVector<double> AdvantechTest::getData(){ // const & ?
 	return m_vector;
 }
 
-AdvantechDO::AdvantechDO(const ControllerInfo &info, QObject *parent) : QObject(parent), m_info(info){
-    Initialization();
+AdvantechDO::AdvantechDO(const ControllerInfo &info, QObject *parent) : 
+	QObject(parent), m_info(info), m_instantDoCtrl(NULL), m_vector(8,0.0)
+{
+	auto tempDevice = m_info.deviceName();
+	auto tempList = tempDevice.split(',');
+	auto tempName = tempList.value(0);
+	auto tempBID = tempList.value(1);
+	if(tempName == "USB-4750"){
+		tempName = "DemoDevice";
+	}
+	m_deviceName = tempName+','+tempBID;//m_info.deviceName();
 }
 
 AdvantechDO::~AdvantechDO(){  }
 
-void AdvantechDO::Initialization()
-{
-    auto instantDoCtrl = InstantDoCtrl::Create();
-    auto supportedDevices = instantDoCtrl->getSupportedDevices();
-
-	if (supportedDevices->getCount() == 0)
-	{
-		/*send to qml debug line*/
-        // QMessageBox::information(this, tr("Warning Information"), 
-		// 	tr("No device to support the currently demonstrated function!"));
-		/*for security*/
-        //QCoreApplication::quit();
-	} else {
-
-		for (int i = 0; i < supportedDevices->getCount(); i++) {
-			DeviceTreeNode const &node = supportedDevices->getItem(i);
-			//qDebug("%d, %ls", node.DeviceNumber, node.Description);
-            /*add to qml combo box*/
-			
-			//ui.cmbDevice->
-            //addItem(QString::fromWCharArray(node.Description));
-		}
-		/*set to null index*/
-        //ui.cmbDevice->setCurrentIndex(0);	
-	}
-
-	instantDoCtrl->Dispose();
-	supportedDevices->Dispose();
+AdvantechDO::ConfigureDeviceDO(){
+	m_instantDoCtrl = InstantDoCtrl::Create();
 }
 
 AdvantechAI::AdvantechAI(const ControllerInfo &info, QObject *parent) : QObject(parent), m_info(info){

@@ -34,8 +34,8 @@ public:
     void Initialization() ; //override
     void ConfigureDeviceTest();
 	void CheckError(ErrorCode errorCode);
-    QString m_deviceName;
-    const ControllerInfo& getInfo();
+    QString m_deviceName; // move to base class
+    const ControllerInfo& getInfo(); // move to base class
     void resizeDataVector(uint8_t size);
     void readData();
     QVector<double> getData();
@@ -60,9 +60,10 @@ class AdvantechDO : public QObject
 public:
     AdvantechDO(const ControllerInfo &info, QObject *parent = nullptr);
     ~AdvantechDO();
-    void Initialization() ; //override
     void ConfigureDeviceDO();
 	void CheckError(ErrorCode errorCode);
+    QString m_deviceName; // move to base class
+    const ControllerInfo& getInfo(); // move to base class
 //Q_SIGNALS:
 
 public slots:
@@ -70,8 +71,8 @@ public slots:
 
 private:
     ControllerInfo m_info;
-    QString profilePath;
-    
+    InstantDoCtrl* m_instantDoCtrl;  // change to smart pointer or initialize inside class
+    QVector<bool> m_vector;
 };
 
 class AdvantechAI : public QObject
