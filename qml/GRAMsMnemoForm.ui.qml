@@ -21,8 +21,8 @@ Item {
     height: rectangle.height
     property var pressureVal: [0.0,0.0,0.0,0.0,0.0,0.0]
                             // 0,  1,  2,  3,  4,  5
-    property var tempVal: [0.0,0.0,0.0,0.0,0.0,0.0]
-                            // 0,  1,  2,  3,  4
+    property var tempVal: [0.0,0.0,0.0,0.0,0.0]
+                        // 0,  1,  2,  3,  4
     function setPressureVal(val){
         if(val.length < 6){
             console.log("Not enough values")

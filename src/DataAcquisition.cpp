@@ -52,11 +52,16 @@ DataAcquisition::DataAcquisition(QObject *parent) :
         m_deviceInfoList[0] = demoPressure.getInfo();
         auto tempName = m_deviceInfoList[0].deviceName();
         m_deviceSettings[tempName] = m_deviceInfoList[0].getSettings(); // demoPressure.m_deviceName
-        auto demoValves = AdvantechTest(m_deviceInfoList.value(1)); // for now Thermocouples
-        demoValves.Initialization();
-        m_deviceInfoList[1] = demoValves.getInfo();
+        auto demoTemperature = AdvantechTest(m_deviceInfoList.value(1)); // for now Thermocouples
+        demoTemperature.Initialization();
+        m_deviceInfoList[1] = demoTemperature.getInfo();
         tempName = m_deviceInfoList[1].deviceName();
         m_deviceSettings[tempName] = m_deviceInfoList[1].getSettings(); //demoValves.m_deviceName
+        auto demoValves = AdvantechTest(m_deviceInfoList.value(1)); // for now Thermocouples
+        //demoTemperature.Initialization();
+        //m_deviceInfoList[1] = demoTemperature.getInfo();
+        //tempName = m_deviceInfoList[1].deviceName();
+        //m_deviceSettings[tempName] = m_deviceInfoList[1].getSettings(); //demoValves.m_deviceName
     }
 }
 
