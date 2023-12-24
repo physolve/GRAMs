@@ -11,26 +11,26 @@
                 {
                     "device": "USB-4716",
                     "purpose": "pressure",
-                    "profile": "profile/usb-4716-ai-diff-8.xml",
+                    "profile": "",
                     "sensors":[
-                        { "name": "DD311", "idx": 0 },
-                        { "name": "DD312", "idx": 1 },
-                        { "name": "DD331", "idx": 2 },
-                        { "name": "DD332", "idx": 3 },
-                        { "name": "DD333", "idx": 4 },
-                        { "name": "DD391", "idx": 5 }
+                        { "name": "DD311", "cch": 0 },
+                        { "name": "DD312", "cch": 1 },
+                        { "name": "DD331", "cch": 2 },
+                        { "name": "DD332", "cch": 3 },
+                        { "name": "DD333", "cch": 4 },
+                        { "name": "DD391", "cch": 5 }
                     ]
                 },
                 {
                     "device": "USB-4718",
                     "purpose": "thermocouples",
-                    "profile": "profile/usb-4718-ai-tc-8.xml",
+                    "profile": "",
                     "sensors":[
-                        {"name": "toCustomSlider"},
-                        {"name": "toCustomSlider1"},
-                        {"name": "toCustomSlider2"},
-                        {"name": "toCustomSlider3"},
-                        {"name": "toCustomSlider4"}
+                        {"name": "DT314", "cch": 0},
+                        {"name": "DT352", "cch": 1},
+                        {"name": "DT354", "cch": 2},
+                        {"name": "DT358", "cch": 3},
+                        {"name": "DT359", "cch": 4}
                     ]
                 }
             ]

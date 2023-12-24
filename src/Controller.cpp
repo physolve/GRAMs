@@ -165,10 +165,36 @@ AdvantechDO::AdvantechDO(const ControllerInfo &info, QObject *parent) :
 	m_deviceName = tempName+','+tempBID;//m_info.deviceName();
 }
 
-AdvantechDO::~AdvantechDO(){  }
+AdvantechDO::~AdvantechDO(){ }
 
-AdvantechDO::ConfigureDeviceDO(){
+void AdvantechDO::ConfigureDeviceDO(){
 	m_instantDoCtrl = InstantDoCtrl::Create();
+
+    std::wstring description = m_deviceName.toStdWString();
+    DeviceInformation selected(description.c_str());
+
+	ErrorCode errorCode = Success;
+	errorCode = m_instantDoCtrl->setSelectedDevice(selected);
+	CheckError(errorCode);
+    std::wstring profile = m_info.m_profilePath.toStdWString();
+    errorCode = m_instantDoCtrl->LoadProfile(profile.c_str());
+    CheckError(errorCode);
+	portCount = m_instantDoCtrl->getPortCount();
+
+}
+
+void AdvantechDO::applyFeatures(){
+	
+	DioFeatures * features = m_instantDoCtrl->getFeatures(); 
+	Array<uint8>* portMasks = features->getDoDataMask();//getDataMask();
+
+	quint8 *portStates = new quint8[portCount];
+	ErrorCode errorCode = Success;
+    errorCode = m_instantDoCtrl->Read(0, portCount, portStates);
+    CheckError(errorCode);
+
+	qDebug() << portMasks;
+	//setting initial state
 }
 
 AdvantechAI::AdvantechAI(const ControllerInfo &info, QObject *parent) : QObject(parent), m_info(info){

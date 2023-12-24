@@ -29,7 +29,7 @@ signals:
 private:
     //QList<QList<QPointF>> m_data; // unused
     
-    QVariantMap  m_connectedDevices;
+    QVariantMap  m_advantechDeviceMap;
 
     QVariantMap  m_profileJson;
 

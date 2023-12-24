@@ -37,10 +37,9 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     m_profileNames = QStringList(m.values());
     m_profileJson = jsonObject.toVariantMap();
 
-    if(advantechDeviceCheck(m_connectedDevices)){
-        // create rectangle in qml using map
-        for(auto device : m_connectedDevices.keys()){
-            auto description = m_connectedDevices.value(device).toString()+','+device;
+    if(advantechDeviceCheck(m_advantechDeviceMap)){
+        for(auto device : m_advantechDeviceMap.keys()){
+            auto description = m_advantechDeviceMap.value(device).toString()+','+device;
             ControllerInfo a(description);
             m_deviceInfoList.append(a);
             // make qml combobox with ret.m_channelCount and ret.m_channelStart and profile and etc.
@@ -51,17 +50,21 @@ DataAcquisition::DataAcquisition(QObject *parent) :
         demoPressure.Initialization();
         m_deviceInfoList[0] = demoPressure.getInfo();
         auto tempName = m_deviceInfoList[0].deviceName();
-        m_deviceSettings[tempName] = m_deviceInfoList[0].getSettings(); // demoPressure.m_deviceName
+        auto a = (ControllerPrType*)&m_deviceInfoList[0];
+        m_deviceSettings[tempName] = a->getSettings(); // demoPressure.m_deviceName
         auto demoTemperature = AdvantechTest(m_deviceInfoList.value(1)); // for now Thermocouples
         demoTemperature.Initialization();
         m_deviceInfoList[1] = demoTemperature.getInfo();
         tempName = m_deviceInfoList[1].deviceName();
-        m_deviceSettings[tempName] = m_deviceInfoList[1].getSettings(); //demoValves.m_deviceName
-        auto demoValves = AdvantechTest(m_deviceInfoList.value(1)); // for now Thermocouples
-        //demoTemperature.Initialization();
-        //m_deviceInfoList[1] = demoTemperature.getInfo();
-        //tempName = m_deviceInfoList[1].deviceName();
-        //m_deviceSettings[tempName] = m_deviceInfoList[1].getSettings(); //demoValves.m_deviceName
+        a = (ControllerPrType*)&m_deviceInfoList[1];
+        m_deviceSettings[tempName] = a->getSettings(); //demoValves.m_deviceName
+        
+        //you don't need preliminary parameters for valves
+        
+        //auto demoValves = AdvantechDO(m_deviceInfoList.value(2)); // for now Valves
+        //m_deviceInfoList[2] = demoValves.getInfo(); without changes here
+        //auto tempName = m_deviceInfoList[2].deviceName();
+        //m_deviceSettings[tempName] = m_deviceInfoList[2].getSettings(); // demoPressure.m_deviceName
     }
 }
 
@@ -93,7 +96,9 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
         if(tempName == "DemoDevice"){
             if(tempBID == "BID#0")
                 tempName = "USB-4716";
-            else tempName = "USB-4718";
+            else if(tempBID == "BID#1") 
+                tempName = "USB-4718";
+            else tempName = "USB-4750";
         }
         advantechDeviceMap.insert(tempBID, tempName); // подумай насчет номера в Map, тут только advantech номера
     }

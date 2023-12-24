@@ -62,6 +62,8 @@ public:
     ~AdvantechDO();
     void ConfigureDeviceDO();
 	void CheckError(ErrorCode errorCode);
+    void applyFeatures();
+    void setData();
     QString m_deviceName; // move to base class
     const ControllerInfo& getInfo(); // move to base class
 //Q_SIGNALS:
@@ -72,6 +74,7 @@ public slots:
 private:
     ControllerInfo m_info;
     InstantDoCtrl* m_instantDoCtrl;  // change to smart pointer or initialize inside class
+    int portCount;
     QVector<bool> m_vector;
 };
 

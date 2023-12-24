@@ -1,11 +1,23 @@
 #include "ControllerInfo.h"
 
 ControllerInfo::ControllerInfo(QString deviceName):
-m_deviceName(deviceName), m_channelCountCh(0), m_channelStartCh(0), m_valueRangeCh(0)
+m_deviceName(deviceName)
 {}
 QString ControllerInfo::deviceName(){return m_deviceName;}
 
-QVariantMap ControllerInfo::getSettings(){
+
+// void ControllerInfo::setNames(const QStringList& sensorNames){
+// 	m_sensorNames = sensorNames;
+// }
+// QStringList ControllerInfo::getNames(){
+// 	return m_sensorNames;
+// }
+
+ControllerPrType::ControllerPrType(QString deviceName): ControllerInfo (deviceName), 
+m_channelCountCh(0), m_channelStartCh(0), m_valueRangeCh(0){
+
+}
+QVariantMap ControllerPrType::getSettings(){
 	QVariantMap settingPressure;
     settingPressure["channelCount"] = m_channelCount;
 	settingPressure["channelStart"] = m_channelStart;
@@ -17,7 +29,7 @@ QVariantMap ControllerInfo::getSettings(){
 	return settingPressure;
 }
 
-void ControllerInfo::setSettings(const QVariantMap& info){
+void ControllerPrType::setSettings(const QVariantMap& info){
 	m_channelCount = info["channelCount"].toInt();
 	m_channelStart = info["channelStart"].toInt();
 	m_valueRanges = info["valueRanges"].toStringList();
@@ -26,10 +38,3 @@ void ControllerInfo::setSettings(const QVariantMap& info){
 	m_channelStartCh = info["chCannelStart"].toInt();
 	m_valueRangeCh = info["chValueRange"].toInt();
 }
-
-// void ControllerInfo::setNames(const QStringList& sensorNames){
-// 	m_sensorNames = sensorNames;
-// }
-// QStringList ControllerInfo::getNames(){
-// 	return m_sensorNames;
-// }
