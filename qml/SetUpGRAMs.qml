@@ -361,7 +361,7 @@ Window {
                 //if names don't match -> red by default
                 //if match -> green (continue cycle with next device)
                 //if end of list -> add yellow module 
-        let rsa = dataSource.connectedDevices // for now only advantech connected
+        let rsa = dataSource.advantechDeviceMap // for now only advantech connected
         console.log("I see connected device!!!")
         console.log(Object.values(rsa))
         let map1 = []

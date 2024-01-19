@@ -14,7 +14,7 @@ void Controller::Initialization(){
 
 // temporal names should be erased and then reused in simulation controller //
 
-AdvantechTest::AdvantechTest(const ControllerInfo &info, QObject *parent) : 
+AdvantechTest::AdvantechTest(const ControllerPrType &info, QObject *parent) : 
 	QObject(parent), m_info(info), m_instantAiCtrl(NULL), m_vector(8,0.0)
 {
 	auto tempDevice = m_info.deviceName();
@@ -85,7 +85,7 @@ void AdvantechTest::Initialization() // fill info
 	instantAiCtrl->Dispose();
 }
 
-const ControllerInfo& AdvantechTest::getInfo(){
+const ControllerPrType& AdvantechTest::getInfo(){
 	return m_info;
 }
 
@@ -152,7 +152,7 @@ QVector<double> AdvantechTest::getData(){ // const & ?
 	return m_vector;
 }
 
-AdvantechDO::AdvantechDO(const ControllerInfo &info, QObject *parent) : 
+AdvantechDO::AdvantechDO(const ControllerValveType &info, QObject *parent) : 
 	QObject(parent), m_info(info), m_instantDoCtrl(NULL), m_vector(8,0.0)
 {
 	auto tempDevice = m_info.deviceName();
@@ -195,6 +195,27 @@ void AdvantechDO::applyFeatures(){
 
 	qDebug() << portMasks;
 	//setting initial state
+}
+
+void AdvantechDO::CheckError(ErrorCode errorCode)
+{
+	if (errorCode >= 0xE0000000 && errorCode != Success)
+	{
+		QString message = tr("Sorry, there are some errors occurred, Error Code: 0x") +
+			QString::number(errorCode, 16).right(8).toUpper();
+		qDebug() << QString("Warning Information %1").arg(message);
+	}
+
+	 if (BioFailed(errorCode))
+	{
+		QString message = tr("Sorry, there are some errors occurred, Error Code: 0x") +
+			QString::number(errorCode, 16).right(8).toUpper();
+		qDebug() << QString("Warning Information %1").arg(message);
+	}
+}
+
+const ControllerValveType& AdvantechDO::getInfo(){
+	return m_info;
 }
 
 AdvantechAI::AdvantechAI(const ControllerInfo &info, QObject *parent) : QObject(parent), m_info(info){

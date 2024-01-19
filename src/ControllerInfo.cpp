@@ -38,3 +38,6 @@ void ControllerPrType::setSettings(const QVariantMap& info){
 	m_channelStartCh = info["chCannelStart"].toInt();
 	m_valueRangeCh = info["chValueRange"].toInt();
 }
+
+ControllerValveType::ControllerValveType(QString deviceName): ControllerInfo (deviceName){
+}

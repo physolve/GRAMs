@@ -29,13 +29,13 @@ class AdvantechTest : public QObject // can it be universal? maybe create advant
 {
     Q_OBJECT
 public:
-    AdvantechTest(const ControllerInfo &info, QObject *parent = nullptr);
+    AdvantechTest(const ControllerPrType &info, QObject *parent = nullptr); 
     virtual ~AdvantechTest();
     void Initialization() ; //override
     void ConfigureDeviceTest();
 	void CheckError(ErrorCode errorCode);
     QString m_deviceName; // move to base class
-    const ControllerInfo& getInfo(); // move to base class
+    const ControllerPrType& getInfo(); // move to base class
     void resizeDataVector(uint8_t size);
     void readData();
     QVector<double> getData();
@@ -46,7 +46,7 @@ public slots:
     //void generateData(int type, int rowCount, int colCount);
 
 private:
-    ControllerInfo m_info;
+    ControllerPrType m_info;
     
     ValueRange m_valueRange;
     InstantAiCtrl* m_instantAiCtrl; // change to smart pointer or initialize inside class 
@@ -58,24 +58,27 @@ class AdvantechDO : public QObject
 {
     Q_OBJECT
 public:
-    AdvantechDO(const ControllerInfo &info, QObject *parent = nullptr);
+    AdvantechDO(const ControllerValveType &info, QObject *parent = nullptr);
     ~AdvantechDO();
     void ConfigureDeviceDO();
 	void CheckError(ErrorCode errorCode);
     void applyFeatures();
     void setData();
     QString m_deviceName; // move to base class
-    const ControllerInfo& getInfo(); // move to base class
+    const ControllerValveType& getInfo(); // move to base class
 //Q_SIGNALS:
 
 public slots:
     //void generateData(int type, int rowCount, int colCount);
 
 private:
-    ControllerInfo m_info;
+    ControllerValveType m_info;
     InstantDoCtrl* m_instantDoCtrl;  // change to smart pointer or initialize inside class
     int portCount;
     QVector<bool> m_vector;
+    int key;
+	quint8 mask;
+	quint8 state;
 };
 
 class AdvantechAI : public QObject

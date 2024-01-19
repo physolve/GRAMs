@@ -39,32 +39,36 @@ DataAcquisition::DataAcquisition(QObject *parent) :
 
     if(advantechDeviceCheck(m_advantechDeviceMap)){
         for(auto device : m_advantechDeviceMap.keys()){
-            auto description = m_advantechDeviceMap.value(device).toString()+','+device;
-            ControllerInfo a(description);
-            m_deviceInfoList.append(a);
+            auto options = m_advantechDeviceMap.value(device).toStringList(); // {tempName, tempPurpose}
+            auto description = options.at(0) +','+device;
+            if(options.at(1)=="pressure"){
+                ControllerPrType a(description);
+                auto demoPressure = AdvantechTest(a);
+                demoPressure.Initialization();
+                a = demoPressure.getInfo();
+                auto tempName = a.deviceName();
+                m_deviceSettings[tempName] = a.getSettings();
+            }
+            else if(options.at(1)=="temperature"){
+                ControllerPrType a(description);
+                auto demoTemperature = AdvantechTest(a); // for now Thermocouples
+                demoTemperature.Initialization();
+                a = demoTemperature.getInfo();
+                auto tempName = a.deviceName();
+                m_deviceSettings[tempName] = a.getSettings();
+        
+            }
+            else if(options.at(1)=="valve"){  
+                ControllerValveType a(description);
+                auto demoValves = AdvantechDO(a);
+                a = demoValves.getInfo();
+                auto tempName = a.deviceName();
+                QVariantMap blank;
+                blank["nothing"] = 0;
+                m_deviceSettings[tempName] = blank; // demoPressure.m_deviceName
+            }
             // make qml combobox with ret.m_channelCount and ret.m_channelStart and profile and etc.
-        }
-
-        // not safe due to TWO DemoDevice (change later to iterator in m_deviceInfoList)
-        auto demoPressure = AdvantechTest(m_deviceInfoList.value(0));
-        demoPressure.Initialization();
-        m_deviceInfoList[0] = demoPressure.getInfo();
-        auto tempName = m_deviceInfoList[0].deviceName();
-        auto a = (ControllerPrType*)&m_deviceInfoList[0];
-        m_deviceSettings[tempName] = a->getSettings(); // demoPressure.m_deviceName
-        auto demoTemperature = AdvantechTest(m_deviceInfoList.value(1)); // for now Thermocouples
-        demoTemperature.Initialization();
-        m_deviceInfoList[1] = demoTemperature.getInfo();
-        tempName = m_deviceInfoList[1].deviceName();
-        a = (ControllerPrType*)&m_deviceInfoList[1];
-        m_deviceSettings[tempName] = a->getSettings(); //demoValves.m_deviceName
-        
-        //you don't need preliminary parameters for valves
-        
-        //auto demoValves = AdvantechDO(m_deviceInfoList.value(2)); // for now Valves
-        //m_deviceInfoList[2] = demoValves.getInfo(); without changes here
-        //auto tempName = m_deviceInfoList[2].deviceName();
-        //m_deviceSettings[tempName] = m_deviceInfoList[2].getSettings(); // demoPressure.m_deviceName
+        }  
     }
 }
 
@@ -93,14 +97,25 @@ bool DataAcquisition::advantechDeviceCheck(QVariantMap& advantechDeviceMap) cons
         //auto advantechName = advantechDescription[0]; // I use this because we split BoardID, might use later
         auto tempName = advantechDescription.value(0);
         auto tempBID = advantechDescription.value(1);
+        QString tempPurpose;
         if(tempName == "DemoDevice"){
-            if(tempBID == "BID#0")
+            if(tempBID == "BID#0"){
                 tempName = "USB-4716";
-            else if(tempBID == "BID#1") 
+                tempPurpose = "pressure";
+            }
+            else if(tempBID == "BID#1"){
                 tempName = "USB-4718";
-            else tempName = "USB-4750";
+                tempPurpose = "temperature";
+            }
+            else {
+                tempName = "USB-4750";
+                tempPurpose = "valve";
+            }
         }
-        advantechDeviceMap.insert(tempBID, tempName); // подумай насчет номера в Map, тут только advantech номера
+        QVariantList val;
+        val.append(tempName);
+        val.append(tempPurpose);
+        advantechDeviceMap.insert(tempBID, val); // подумай насчет номера в Map, тут только advantech номера
     }
     startCheckInstance->Dispose();
     allSupportedDevices->Dispose();
@@ -128,33 +143,32 @@ void DataAcquisition::setDeviceParameters(const QVariantMap& deviceParametersMap
 // }
 
 void DataAcquisition::saveStartDevice(){
-    for(ControllerInfo& info : m_deviceInfoList){
-        info.setSettings(m_deviceSettings[info.deviceName()].toMap());
-        // костыль для m_sensorMapping
-        //auto tempShortName = info.deviceName().split(',');
-        //qDebug() << m_sensorMapping[tempShortName.at(0)].toStringList();
-        //info.setNames(m_sensorMapping[tempShortName.at(0)].toStringList());
-
-        //auto demo = AdvantechTest(info);
-        //demo.ConfigureDeviceTest();
-        //appendToControllerList(demo);
-
-        controllerList.append(new AdvantechTest(info));
-        controllerList.last()->ConfigureDeviceTest();
+    for(auto device : m_advantechDeviceMap.keys()){
+       auto options = m_advantechDeviceMap.value(device).toStringList(); // {tempName, tempPurpose}
+        auto description = options.at(0) +','+device;
+        if(options.at(1)=="pressure"){
+            ControllerPrType info(description);
+            info.setSettings(m_deviceSettings[info.deviceName()].toMap());
+            auto controllerPr = new AdvantechTest(info);
+            controllerPr->ConfigureDeviceTest();
+            controllerList.append(controllerPr);
+        }
+        else if(options.at(1)=="temperature"){
+            ControllerPrType info(description);
+            info.setSettings(m_deviceSettings[info.deviceName()].toMap());
+            auto controllerTemp = new AdvantechTest(info);
+            controllerTemp->ConfigureDeviceTest();
+            controllerList.append(controllerTemp);
+    
+        }
+        else if(options.at(1)=="valve"){  
+            ControllerValveType info(description);
+            auto controllerValves = new AdvantechDO(info);
+            controllerDO.append(controllerValves);
+        }
     }
     //m_timer->start(100);
 }
-
-// void DataAcquisition::appendToControllerList(AdvantechTest& device){
-//     controllerList.append(&device);
-// }
-
-const QList<ControllerInfo> DataAcquisition::getControllersInfo(){ // get Read controllers
-    return m_deviceInfoList;
-}
-
-// get Write controllers (valves)
-
 
 void DataAcquisition::readDataFromDevice(ControllerInfo info){ // do we necessary need this?
     auto itr = std::find_if(controllerList.begin(), controllerList.end(), [&](AdvantechTest* someclass) { return someclass->m_deviceName == info.deviceName(); });
@@ -163,14 +177,10 @@ void DataAcquisition::readDataFromDevice(ControllerInfo info){ // do we necessar
     }
 }
 
-void DataAcquisition::processEvents(){ // function to iterate over m_deviceInfoList every second (or frequently)
-    // for(auto info : m_deviceInfoList){
-    //     readDataFromDevice(info);
-    // }
+void DataAcquisition::processEvents(){
     for(auto controller : controllerList){
         controller->readData();
     }
-    
 }
 
 const QList<QVector<double>> DataAcquisition::getDataList(){ // const & >
