@@ -5,6 +5,7 @@
 
 #include "DataAcquisition.h"
 #include "DataModel.h"
+#include "Initialize.h"
 
 class Grams : public QApplication
 {
@@ -24,8 +25,9 @@ private:
     void initGUI();
 
     QQmlApplicationEngine m_engine;
+    Initialize initSource;
     DataAcquisition dataSource;
     MyModel dataModel;
 
-    QTimer* softTimer;
+    QTimer *softTimer;
 };

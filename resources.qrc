@@ -14,6 +14,7 @@
         <file>qml/Page2.qml</file>
         <file>qml/Page3.qml</file>
         <file>qml/PressureSetting.qml</file>
+        <file>qml/Initialize.qml</file>
         <file>qml/SetUpGRAMs.qml</file>
         <file>qml/Valve.ui.qml</file>
         <file>qml/ValveSetting.qml</file>

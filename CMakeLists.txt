@@ -14,7 +14,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(Qt6 6.2.4 COMPONENTS Quick QuickControls2 Charts PrintSupport REQUIRED) # Charts QuickControls2   LinguistTools
+find_package(Qt6 6.2.4 COMPONENTS Quick QuickControls2 Charts PrintSupport OpenGL REQUIRED) # Charts QuickControls2   LinguistTools
 
 set(MY_UNITTESTS TRUE)
 include(config.cmake)
@@ -29,7 +29,6 @@ add_subdirectory(modules/Style)
 #     add_subdirectory(tests/UnitTestQML)
 #     add_subdirectory(tests/UnitTestCpp)
 # endif()
-
 #TODO: add resources file
 qt_add_resources(IMAGE_RESOURCES resources.qrc)
 
@@ -44,6 +43,9 @@ qt_add_executable(${EXECUTABLE_NAME}
     ${CPP_LIBS} ${HPP_LIBS}
     ${IMAGE_RESOURCES}
 )
+
+#add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
+
 
 #file(GLOB QML_SOURCES RELATIVE ${CMAKE_SOURCE_DIR} qml/*.qml ) #qml/components/*.qml <- for custom modules
 #source_group("Qml Files" FILES ${QML_SOURCES})
@@ -66,6 +68,7 @@ target_link_libraries(${EXECUTABLE_NAME}
             Qt6::QuickControls2
             Qt6::Charts
             Qt6::PrintSupport
+            Qt6::OpenGL
     #PRIVATE Qt6::QuickControls2
     #PRIVATE Qt6::Charts
     #PRIVATE Qt6::PrintSupport

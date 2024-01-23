@@ -31,7 +31,7 @@ ApplicationWindow {
         active: false
         asynchronous: true //test
         visible: status == Loader.Ready //test
-        sourceComponent:  SetUpGRAMs{
+        sourceComponent:  Initialize{
         }
     }
 

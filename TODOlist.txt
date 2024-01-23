@@ -274,3 +274,8 @@
 19.01
     TODO:
         Сделай в advantechDeviceMap {name: "", purpose: ""} карту внутри value (потом замени это в SetUpGRAMs)
+22.01
+    TODO:
+        Поместить настройку для системы клапанов отдельным модулем
+        Переписать Initialize в формате (profile - real - pass)
+        

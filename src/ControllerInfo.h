@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QString>
+//#include <QString>
 #include <QVariant>
 #include <QMetaType>
 class ControllerInfo{

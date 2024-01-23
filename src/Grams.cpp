@@ -13,10 +13,10 @@
 #include <QCommandLineParser>
 #include <QtQuickControls2/QQuickStyle>
 #include "CustomPlotItem.h"
-#include "QmlJsonWrap.h"
 
 Grams::Grams(int &argc, char **argv): 
     QApplication(argc, argv),
+    initSource(this),
     dataSource(this),
     dataModel(this),
     softTimer(new QTimer)
@@ -64,7 +64,8 @@ void Grams::initGUI(){
     // explicitly, because we register the module in its qmldir file.
     qmlRegisterSingletonType(QUrl("qrc:/Style/Style.qml"), "Style", 1, 0, "Style");
     qmlRegisterType<CustomPlotItem>("CustomPlot", 1, 0, "CustomPlotItem");
-    qmlRegisterType<MyData>("QmlJson", 1, 0, "JsonData");
+
+    m_engine.rootContext()->setContextProperty("initSource", &initSource);
     m_engine.rootContext()->setContextProperty("dataSource", &dataSource);
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
@@ -73,10 +74,10 @@ void Grams::initGUI(){
 }
 
 void Grams::initializeModel(){
-    dataSource.saveStartDevice();
-    dataModel.initializeAcquisition();
+    //dataSource.saveStartDevice();
+    //dataModel.initializeAcquisition();
     // for valves make different type
-    softTimer->start(1000);
+    //softTimer->start(1000);
 }
 
 void Grams::softEvent(){

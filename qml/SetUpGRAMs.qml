@@ -372,13 +372,13 @@ Window {
         }
         console.log(map1)
         for(const [key, value] of Object.entries(rsa)){
-            if(map1.includes(value)){
-                console.log("found "+`${value}`); 
-                let index = map1.indexOf(value)
+            if(map1.includes(value.name)){
+                console.log("found "+`${value.name}`); 
+                let index = map1.indexOf(value.name)
                 let t_profileObj = itemModel.get(index) // take i'th item
                 console.log("Now in "+ t_profileObj.innerName)
                 t_profileObj.color = Material.color(Material.Green)
-                let description = value+','+key
+                let description = value.name+','+key
                 t_profileObj.setDeviceLbl(description)
                 //t_profileObj.setDeviceProfile("profile from resources") 
                 t_profileObj.setDeviceConnected(true)
@@ -390,7 +390,7 @@ Window {
             }
             let realObj = universalSetUp.createObject() // it can be pressureSetUp
             realObj.color = Material.color(Material.Yellow)
-            let description = value+','+key
+            let description = value.name+','+key
             realObj.changePurposeFront("Unexpected device") // using key because it is map (already an object)
             realObj.setDeviceLbl(description) //`${value}` + " on " + `${key}` using value because it is an obj
             realObj.setDeviceProfile("profile from resources") // make somewhere profiles (maybe in resources)

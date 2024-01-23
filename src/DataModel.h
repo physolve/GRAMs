@@ -6,19 +6,9 @@
 #include "Sensor.h"
 #include "Controller.h"
 
-// struct Data {
-//     Data() {}
-//     Data( const QString& name, QList<quint64> x, QList<double> y)
-//         : name(name), x(x), y(y) {}
-//     QString name;
-//     QList<quint64> x; // one second data
-//     QList<double> y; // one second data
-// };
-
 class MyModel : public QAbstractListModel
 {
     Q_OBJECT
-    //Q_PROPERTY(QVariantMap channelMapList MEMBER m_channelMapList NOTIFY channelMapListChanged)
 public:
     enum Roles {
         NameRole = Qt::UserRole,
@@ -39,25 +29,13 @@ public:
     Q_INVOKABLE QVariant getCurTempValues() const;
     Q_INVOKABLE void appendProfileSensors(QVariantMap sensors); // QVector<double>& data??
 
-    void initializeAcquisition(); //const QList<ControllerInfo>& info
+    void initializeAcquisition();
     void appendData(const QList<QVector<double>> & dataList);
-    //void fillSensors(const QVector<double>& data);
 
 signals:
     void channelMapListChanged();
 
-public slots:
-    //void duplicateData(int row);
-    //void removeData(int row);
-
-private slots:
-    //void testDataFoo();
-
-    //void updateDataChanged(int idx);
-
-private: //members
-    //QList<ControllerInfo> m_controllersInfo;
-    //QVector<Data> m_data;
+private:
     QList<Sensor*> m_sensors; // PURPOSE BASED Hash?
     QElapsedTimer m_time;
 };

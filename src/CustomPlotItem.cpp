@@ -31,8 +31,9 @@ void CustomPlotItem::initCustomPlot(int index) {
     m_CustomPlot = new QCustomPlot();
 
     connect( m_CustomPlot, &QCustomPlot::destroyed, this, [=](){ qDebug() << QString(" QCustomPlot (%1) pointer is destroyed ").arg(index); });
-
+    //m_CustomPlot->setOpenGl(true);
     updateCustomPlotSize();
+    qDebug() << m_CustomPlot->openGl();
     m_CustomPlot->addGraph();
     m_CustomPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(Qt::black, 1.5), QBrush(Qt::white), 9));
     m_CustomPlot->graph(0)->setPen(QPen(QColor(120, 120, 120), 2));
