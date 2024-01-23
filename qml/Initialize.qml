@@ -64,27 +64,39 @@ Window {
         if("Advantech" in curProfile){
             console.log("\tI need to create Advantech instances")
             advantechRequest(curProfile.Advantech)
+
         }
     }
-    function advantechRequest(curAdvantech){
+    function advantechRequest(curAdvantech){ // already sync with connected?
         console.log("Asking backend to create: ")
+        let advantechParameters = []
         for(const [key, value] of Object.entries(curAdvantech)){
             switch(value.purpose){
                 case "valves":
                     console.log("\tcreate valve settings for " + value.device)
+                    let andvantechDO = {}
+                    andvantechDO = advModuleDOType()
+                    advantechParameters.push(andvantechDO)
                     break;
                 case "pressure":
-                    console.log("\tcreate pressure settings for " + value.device)
-                    // creating sensors too!
-                    break;
                 case "thermocouples":
                     console.log("\tcreate thermocouples settings for " + value.device)
+                    let andvantechAI = {}
+                    andvantechAI = advModuleAIType()
+                    advantechParameters.push(andvantechDO)
                     // creating sensors too!
                     break;
-                default: console.log(`Sorry, we are out of ${expr}.`);
+                default: console.log(`Sorry, we are out of ${value.purpose}.`);
             }
-
         }
+    }
+    function advModuleAIType(){
+        initSource.advModuleAIType()
+
+    }
+    function advModuleDOType(){
+        initSource.advModuleDOType()
+        
     }
     onClosing:{
         main.show()

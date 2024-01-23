@@ -13,10 +13,10 @@ private:
     QString m_deviceName;
 };
 
-class ControllerPrType : public ControllerInfo {
+class AdvAIType: public ControllerInfo {
 public:
-    ControllerPrType() = default;
-    ControllerPrType(QString deviceName);
+    AdvAIType() = default;
+    AdvAIType(QString deviceName);
     QVariantMap getSettings();
     void setSettings(const QVariantMap& info);
     int m_channelCount; // share to qml
@@ -30,10 +30,10 @@ public:
 //     QStringList m_sensorNames;
 };
 
-class ControllerValveType : public ControllerInfo {
+class AdvDOType: public ControllerInfo {
 public:
-    ControllerValveType() = default;
-    ControllerValveType(QString deviceName);
+    AdvDOType() = default;
+    AdvDOType(QString deviceName);
     QString m_profilePath;
 };
 

@@ -9,7 +9,10 @@ class Initialize : public QObject
     Q_PROPERTY(QVariantMap profileJson MEMBER m_profileJson CONSTANT)
     Q_PROPERTY(QStringList profileNames MEMBER m_profileNames CONSTANT)
     Q_PROPERTY(QVariantMap deviceSettings MEMBER m_deviceSettings NOTIFY deviceSettingsChanged)
-    //Q_INVOKABLE void takeSomething(QString &what);
+
+    Q_INVOKABLE void advModuleAIType();
+    Q_INVOKABLE void advModuleDOType();
+
 public:
     Initialize(QObject *parent = 0);
 signals:
@@ -29,4 +32,5 @@ private:
     QStringList m_profileNames;
 
     QVariantMap m_deviceSettings;
+
 };

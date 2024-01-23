@@ -1,4 +1,5 @@
 #include "Initialize.h"
+#include "Controller.h"
 
 #include <QDir>
 #include <QFile>
@@ -43,10 +44,10 @@ bool Initialize::readProfile(QString &rawData){
 }
 
 bool Initialize::jsonParser(QString &rawData){
-    QJsonDocument document   =   { QJsonDocument::fromJson(rawData.toUtf8()) };
+    QJsonDocument document = { QJsonDocument::fromJson(rawData.toUtf8()) };
     QJsonObject jsonObject = document.object();
     QMap<int, QString> m;
-    for(auto s : jsonObject.keys()) 
+    for(auto s : jsonObject.keys()) // it is just sorting thing
         m[jsonObject[s].toObject()["profileId"].toInt()] = s;
     m_profileNames = m.values();
     m_profileJson = jsonObject.toVariantMap();
@@ -72,5 +73,16 @@ bool Initialize::advantechDeviceCheck(){
     startCheckInstance->Dispose();
     allSupportedDevices->Dispose();
     return true;
+}
+
+void Initialize::advModuleAIType(){ // how to assemble description 
+    auto options = m_advantechDeviceMap.value(device).toStringList(); // {tempName, tempPurpose}
+    auto description = options.at(0) +','+device;
+    AdvAIType a(description);
+    auto demoAdvAI = AdvantechTest(a);
+    demoPressure.Initialization();
+    a = demoPressure.getInfo();
+    auto tempName = a.deviceName();
+    m_deviceSettings[tempName] = a.getSettings();
 }
 

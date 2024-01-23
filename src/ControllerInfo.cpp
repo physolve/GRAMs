@@ -13,11 +13,11 @@ QString ControllerInfo::deviceName(){return m_deviceName;}
 // 	return m_sensorNames;
 // }
 
-ControllerPrType::ControllerPrType(QString deviceName): ControllerInfo (deviceName), 
+AdvAIType::AdvAIType(QString deviceName): ControllerInfo (deviceName), 
 m_channelCountCh(0), m_channelStartCh(0), m_valueRangeCh(0){
 
 }
-QVariantMap ControllerPrType::getSettings(){
+QVariantMap AdvAIType::getSettings(){
 	QVariantMap settingPressure;
     settingPressure["channelCount"] = m_channelCount;
 	settingPressure["channelStart"] = m_channelStart;
@@ -29,7 +29,7 @@ QVariantMap ControllerPrType::getSettings(){
 	return settingPressure;
 }
 
-void ControllerPrType::setSettings(const QVariantMap& info){
+void AdvAIType::setSettings(const QVariantMap& info){
 	m_channelCount = info["channelCount"].toInt();
 	m_channelStart = info["channelStart"].toInt();
 	m_valueRanges = info["valueRanges"].toStringList();
@@ -39,5 +39,5 @@ void ControllerPrType::setSettings(const QVariantMap& info){
 	m_valueRangeCh = info["chValueRange"].toInt();
 }
 
-ControllerValveType::ControllerValveType(QString deviceName): ControllerInfo (deviceName){
+AdvDOType::AdvDOType(QString deviceName): ControllerInfo (deviceName){
 }
