@@ -82,21 +82,20 @@ Window {
             //need function to sync with real (connected in placeholder)
         }
     }
-    property var advantechAIWait: []
-    property var advantechDOWait: []
+    property var advantechWait: []
     function advantechRequest(curAdvantech){ 
         console.log("Asking backend to create: ")
         for(const [key, value] of Object.entries(curAdvantech)){
             switch(value.purpose){
                 case "valves":
                     console.log("\tcreate DO settings for " + value.device)
-                    advantechDOWait.push(value.device)
+                    advantechWait.push({"name":value.device, "type": "DO", "index":itemModel.count})
                     advModuleDOType(value)
                     break;
                 case "pressure":
                 case "thermocouples":
                     console.log("\tcreate AI settings for " + value.device)
-                    advantechAIWait.push(value.device)
+                    advantechWait.push({"name":value.device, "type": "AI", "index":itemModel.count})
                     advModuleAIType(value)
                     // creating sensors too!
                     break;
@@ -147,15 +146,48 @@ Window {
         console.log(Object.values(rsa))
         console.log("\tI will compare those to profile")
         for(const [key, value] of Object.entries(rsa)){
-            if(advantechAIWait.includes(value))
-                console.log("\tMatch! Asking for real data to fill setting")
-            else if(advantechDOWait.includes(value))
-                console.log("\tMatch! Asking for real data to fill setting")
+            if(advantechWait.includes(value)){
+                console.log("\tMatch! Asking for real data to fill setting " + value.name)
+                switch(value.type){
+                case "AI":
+                    advModuleAIReal(value.name+','+key, value.index)
+                    break
+                case "DO":
+                    advModuleDOReal(value.name+','+key, value.index)
+                    break
+                default: break
+                }
+                continue
+            }
             else {
                 console.log("\tNo match, creating field for " + value)
                 fieldModule(value+','+key)
             }
         }
+    }
+    function advModuleAIReal(description, index){
+        let t_profileObj = itemModel.get(index) // take i'th item
+        console.log("\tNow in "+ t_profileObj.innerName)
+        t_profileObj.color = Material.color(Material.Green)
+        t_profileObj.setDeviceLbl(description)
+        //t_profileObj.setDeviceProfile("profile from resources") 
+        t_profileObj.setDeviceConnected(true)
+        console.log("set settings")
+        //let rsb = initSource.deviceSettings[description]
+        //t_profileObj.setChannelCount(rsb.channelCount)
+        //t_profileObj.setValueRange(rsb.valueRanges)
+    }
+    function advModuleDOReal(description, index){
+        let t_profileObj = itemModel.get(index) // take i'th item
+        console.log("\tNow in "+ t_profileObj.innerName)
+        t_profileObj.color = Material.color(Material.Green)
+        t_profileObj.setDeviceLbl(description)
+        //t_profileObj.setDeviceProfile("profile from resources") 
+        t_profileObj.setDeviceConnected(true)
+        console.log("set settings")
+        //let rsb = initSource.deviceSettings[description]
+        //t_profileObj.setChannelCount(rsb.channelCount)
+        //t_profileObj.setValueRange(rsb.valueRanges)
     }
     onClosing:{
         main.show()
