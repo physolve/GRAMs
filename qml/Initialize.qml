@@ -89,7 +89,7 @@ Window {
             switch(value.purpose){
                 case "valves":
                     console.log("\tcreate DO settings for " + value.device)
-                    advantechWait.push({"name":value.device, "type": "DO", "index":itemModel.count})
+                    advantechWait.push({"name":value.device, "type": "DO", "index":itemModel.count })
                     advModuleDOType(value)
                     break;
                 case "pressure":
@@ -145,20 +145,22 @@ Window {
         console.log("I see real devices")
         console.log(Object.values(rsa))
         console.log("\tI will compare those to profile")
+        let waitNames = advantechWait.map(a => a.name)
+        console.log(waitNames)
         for(const [key, value] of Object.entries(rsa)){
-            if(advantechWait.includes(value)){
-                console.log("\tMatch! Asking for real data to fill setting " + value.name)
-                switch(value.type){
+            if(waitNames.includes(value)){
+                let element = advantechWait[waitNames.indexOf(value)]
+                console.log("\tMatch! Asking for real data to fill setting " + value)
+                switch(element.type){
                 case "AI":
-                    advModuleAIReal(value.name+','+key, value.index)
+                    advModuleAIReal(value+','+key, element.index)
                     break
                 case "DO":
-                    advModuleDOReal(value.name+','+key, value.index)
+                    advModuleDOReal(value+','+key, element.index)
                     break
                 default: break
                 }
-                continue
-            }
+            }  
             else {
                 console.log("\tNo match, creating field for " + value)
                 fieldModule(value+','+key)
@@ -190,7 +192,7 @@ Window {
         //t_profileObj.setValueRange(rsb.valueRanges)
     }
     onClosing:{
-        main.show()
+        //main.show()
         initialize.close()
     }
 }
