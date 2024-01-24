@@ -14,7 +14,7 @@ void Controller::Initialization(){
 
 // temporal names should be erased and then reused in simulation controller //
 
-AdvantechTest::AdvantechTest(const ControllerPrType &info, QObject *parent) : 
+AdvantechTest::AdvantechTest(const AdvAIType &info, QObject *parent) : 
 	QObject(parent), m_info(info), m_instantAiCtrl(NULL), m_vector(8,0.0)
 {
 	auto tempDevice = m_info.deviceName();
@@ -85,7 +85,7 @@ void AdvantechTest::Initialization() // fill info
 	instantAiCtrl->Dispose();
 }
 
-const ControllerPrType& AdvantechTest::getInfo(){
+const AdvAIType& AdvantechTest::getInfo(){
 	return m_info;
 }
 
@@ -152,7 +152,7 @@ QVector<double> AdvantechTest::getData(){ // const & ?
 	return m_vector;
 }
 
-AdvantechDO::AdvantechDO(const ControllerValveType &info, QObject *parent) : 
+AdvantechDO::AdvantechDO(const AdvDOType &info, QObject *parent) : 
 	QObject(parent), m_info(info), m_instantDoCtrl(NULL), m_vector(8,0.0)
 {
 	auto tempDevice = m_info.deviceName();
@@ -214,7 +214,7 @@ void AdvantechDO::CheckError(ErrorCode errorCode)
 	}
 }
 
-const ControllerValveType& AdvantechDO::getInfo(){
+const AdvDOType& AdvantechDO::getInfo(){
 	return m_info;
 }
 

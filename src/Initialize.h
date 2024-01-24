@@ -10,8 +10,7 @@ class Initialize : public QObject
     Q_PROPERTY(QStringList profileNames MEMBER m_profileNames CONSTANT)
     Q_PROPERTY(QVariantMap deviceSettings MEMBER m_deviceSettings NOTIFY deviceSettingsChanged)
 
-    Q_INVOKABLE void advModuleAIType();
-    Q_INVOKABLE void advModuleDOType();
+    //Q_INVOKABLE void advModuleCheck();
 
 public:
     Initialize(QObject *parent = 0);

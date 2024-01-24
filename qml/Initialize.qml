@@ -16,6 +16,7 @@ Window {
     Component.onCompleted: {
         profileBox.currentIndex = 0
         parseRequirements()
+        realRequirements()
     }
     ColumnLayout{
         anchors.centerIn: parent
@@ -42,6 +43,7 @@ Window {
                 model: initSource.profileNames
                 onActivated: {
                     parseRequirements()
+                    
                 }
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -56,6 +58,19 @@ Window {
                 Layout.alignment: Qt.AlignHCenter
             }
         }
+        GridLayout {
+            rowSpacing: 4
+            columnSpacing: 4
+            flow: GridLayout.LeftToRight
+            columns: 3
+            rows: itemModel.count%3+1
+            ObjectModel {
+                id: itemModel
+            }
+            Repeater { 
+                model: itemModel
+            }
+        }
     }
     function parseRequirements(){
         let profileName = profileBox.currentText
@@ -64,39 +79,83 @@ Window {
         if("Advantech" in curProfile){
             console.log("\tI need to create Advantech instances")
             advantechRequest(curProfile.Advantech)
-
+            //need function to sync with real (connected in placeholder)
         }
     }
-    function advantechRequest(curAdvantech){ // already sync with connected?
+    property var advantechAIWait: []
+    property var advantechDOWait: []
+    function advantechRequest(curAdvantech){ 
         console.log("Asking backend to create: ")
-        let advantechParameters = []
         for(const [key, value] of Object.entries(curAdvantech)){
             switch(value.purpose){
                 case "valves":
-                    console.log("\tcreate valve settings for " + value.device)
-                    let andvantechDO = {}
-                    andvantechDO = advModuleDOType()
-                    advantechParameters.push(andvantechDO)
+                    console.log("\tcreate DO settings for " + value.device)
+                    advantechDOWait.push(value.device)
+                    advModuleDOType(value)
                     break;
                 case "pressure":
                 case "thermocouples":
-                    console.log("\tcreate thermocouples settings for " + value.device)
-                    let andvantechAI = {}
-                    andvantechAI = advModuleAIType()
-                    advantechParameters.push(andvantechDO)
+                    console.log("\tcreate AI settings for " + value.device)
+                    advantechAIWait.push(value.device)
+                    advModuleAIType(value)
                     // creating sensors too!
                     break;
                 default: console.log(`Sorry, we are out of ${value.purpose}.`);
             }
         }
     }
-    function advModuleAIType(){
-        initSource.advModuleAIType()
-
+    Component{
+        id: advModuleAI
+        PressureSetting{
+        }
     }
-    function advModuleDOType(){
-        initSource.advModuleDOType()
-        
+    Component{
+        id: advModuleDO
+        ValveSetting{
+        }
+    }
+    function advModuleAIType(value){
+        let profileObj = advModuleAI.createObject()
+        profileObj.color = Material.color(Material.Red)
+        profileObj.changePurposeFront(value.purpose)
+        profileObj.setDeviceLbl(value.device) // using value[device] because it is array of obj
+        if ("profile" in value){
+            profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
+        }
+        itemModel.append(profileObj)
+    }
+    function advModuleDOType(value){
+        let profileObj = advModuleDO.createObject()
+        profileObj.color = Material.color(Material.Red)
+        profileObj.changePurposeFront(value.purpose)
+        profileObj.setDeviceLbl(value.device) // using value[device] because it is array of obj
+        if ("profile" in value){
+            profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
+        }
+        itemModel.append(profileObj)
+    }
+     function fieldModule(description){
+        let realObj = advModuleAI.createObject()
+        realObj.color = Material.color(Material.Yellow) 
+        realObj.changePurposeFront(description) // using key because it is map (already an object)
+        //realObj.setDeviceConnected(true) // find a way to decline connection
+        itemModel.append(realObj)
+    }
+    function realRequirements(){
+        let rsa = initSource.advantechDeviceMap // for now only advantech connected
+        console.log("I see real devices")
+        console.log(Object.values(rsa))
+        console.log("\tI will compare those to profile")
+        for(const [key, value] of Object.entries(rsa)){
+            if(advantechAIWait.includes(value))
+                console.log("\tMatch! Asking for real data to fill setting")
+            else if(advantechDOWait.includes(value))
+                console.log("\tMatch! Asking for real data to fill setting")
+            else {
+                console.log("\tNo match, creating field for " + value)
+                fieldModule(value+','+key)
+            }
+        }
     }
     onClosing:{
         main.show()

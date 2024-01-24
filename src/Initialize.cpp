@@ -74,15 +74,3 @@ bool Initialize::advantechDeviceCheck(){
     allSupportedDevices->Dispose();
     return true;
 }
-
-void Initialize::advModuleAIType(){ // how to assemble description 
-    auto options = m_advantechDeviceMap.value(device).toStringList(); // {tempName, tempPurpose}
-    auto description = options.at(0) +','+device;
-    AdvAIType a(description);
-    auto demoAdvAI = AdvantechTest(a);
-    demoPressure.Initialization();
-    a = demoPressure.getInfo();
-    auto tempName = a.deviceName();
-    m_deviceSettings[tempName] = a.getSettings();
-}
-

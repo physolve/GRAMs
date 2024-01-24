@@ -152,7 +152,7 @@ Rectangle {
                         text: index + 1
                     }
                     displayText: Number(currentText) + 1
-                    onCurrentIndexChanged: visualChannelMapping.setChannelList(currentIndex+1)
+                    onCurrentIndexChanged: if(connected)visualChannelMapping.setChannelList(currentIndex+1)
                 }
                 ComboBox{
                     id: cmbValueRange
