@@ -172,7 +172,7 @@ Window {
         t_profileObj.setDeviceConnected(true)
         console.log("set settings")
 
-        let settings = initSource.advantechDeviceFill(description)
+        let settings = initSource.advantechDeviceFill(description, "pressure")
         
         t_profileObj.setChannelCount(settings.channelCount)
         t_profileObj.setValueRange(settings.valueRanges)
@@ -184,7 +184,7 @@ Window {
         t_profileObj.setDeviceLbl(description)
         t_profileObj.setDeviceConnected(true)
         console.log("set settings")
-        let settings = initSource.advantechDeviceFill(description)
+        let settings = initSource.advantechDeviceFill(description, "valve")
     }
     function fieldModule(description){
         let realObj = advModuleAI.createObject()

@@ -34,7 +34,6 @@ public:
     void Initialization() ; //override
     void ConfigureDeviceTest();
 	void CheckError(ErrorCode errorCode);
-    QString m_deviceName; // move to base class
     const AdvAIType& getInfo(); // move to base class
     void resizeDataVector(uint8_t size);
     void readData();
@@ -64,7 +63,6 @@ public:
 	void CheckError(ErrorCode errorCode);
     void applyFeatures();
     void setData();
-    QString m_deviceName; // move to base class
     const AdvDOType& getInfo(); // move to base class
 //Q_SIGNALS:
 
