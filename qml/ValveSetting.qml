@@ -20,6 +20,9 @@ Rectangle {
     function setDeviceProfile(str){
         customBack.deviceProfile = str
     }
+    function getDeviceProfile(){
+        return customBack.deviceProfile
+    }
     function setDeviceConnected(stateBool){
         connected = stateBool
     }

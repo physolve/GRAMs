@@ -121,6 +121,9 @@ Window {
         if ("profile" in value){
             profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
         }
+        if("sensors" in value){
+            profileObj.setMappingNames(value.sensors)
+        }
         itemModel.append(profileObj)
     }
     function advModuleDOType(value){
@@ -132,13 +135,6 @@ Window {
             profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
         }
         itemModel.append(profileObj)
-    }
-     function fieldModule(description){
-        let realObj = advModuleAI.createObject()
-        realObj.color = Material.color(Material.Yellow) 
-        realObj.changePurposeFront(description) // using key because it is map (already an object)
-        //realObj.setDeviceConnected(true) // find a way to decline connection
-        itemModel.append(realObj)
     }
     function realRequirements(){
         let rsa = initSource.advantechDeviceMap // for now only advantech connected
@@ -175,21 +171,27 @@ Window {
         //t_profileObj.setDeviceProfile("profile from resources") 
         t_profileObj.setDeviceConnected(true)
         console.log("set settings")
-        //let rsb = initSource.deviceSettings[description]
-        //t_profileObj.setChannelCount(rsb.channelCount)
-        //t_profileObj.setValueRange(rsb.valueRanges)
+
+        let settings = initSource.advantechDeviceFill(description)
+        
+        t_profileObj.setChannelCount(settings.channelCount)
+        t_profileObj.setValueRange(settings.valueRanges)
     }
     function advModuleDOReal(description, index){
         let t_profileObj = itemModel.get(index) // take i'th item
         console.log("\tNow in "+ t_profileObj.innerName)
         t_profileObj.color = Material.color(Material.Green)
         t_profileObj.setDeviceLbl(description)
-        //t_profileObj.setDeviceProfile("profile from resources") 
         t_profileObj.setDeviceConnected(true)
         console.log("set settings")
-        //let rsb = initSource.deviceSettings[description]
-        //t_profileObj.setChannelCount(rsb.channelCount)
-        //t_profileObj.setValueRange(rsb.valueRanges)
+        let settings = initSource.advantechDeviceFill(description)
+    }
+    function fieldModule(description){
+        let realObj = advModuleAI.createObject()
+        realObj.color = Material.color(Material.Yellow) 
+        realObj.changePurposeFront(description) // using key because it is map (already an object)
+        //realObj.setDeviceConnected(true) // find a way to decline connection
+        itemModel.append(realObj)
     }
     onClosing:{
         //main.show()

@@ -74,3 +74,21 @@ bool Initialize::advantechDeviceCheck(){
     allSupportedDevices->Dispose();
     return true;
 }
+
+QVariantMap Initialize::advantechDeviceFill(const QString &description, const QString &type){
+    QVariantMap advantechDeviceSettings;
+    if(type == "pressure" || type == "temperature"){
+        AdvAIType a(description);
+        auto demoPressure = AdvantechTest(a);
+        demoPressure.Initialization();
+        a = demoPressure.getInfo();
+        advantechDeviceSettings = a.getSettings();
+    }
+    else if(type == "valve"){
+        AdvDOType a(description);
+        auto demoValves = AdvantechDO(a);
+        a = demoValves.getInfo();
+        advantechDeviceSettings["blank"] = "null";
+    }
+    return advantechDeviceSettings;
+}
