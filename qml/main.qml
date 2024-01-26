@@ -14,6 +14,7 @@ ApplicationWindow {
     Material.theme: Material.Dark
     Material.accent: Material.Indigo
     property string datastore: ""
+    property int profileId: 0
     Settings {
         property alias datastore: main.datastore
     }
@@ -25,7 +26,6 @@ ApplicationWindow {
         main.hide()
         winld.active = true
     }
-
     Loader {
         id: winld
         active: false

@@ -12,28 +12,31 @@ Page{
     Component{
         id: gram350mnemo
         GRAMsMnemoForm {
-                //id: gRAMsMnemoForm
-                width: 1350
-                height: 900
+            //id: gRAMsMnemoForm
+            width: 1350
+            height: 900
         }
     }
     Component{
         id: gram50mnemo
         GRAM50Mnemo {
-                //id: gRAMsMnemoForm
-                width: 1350
-                height: 900
+            //id: gRAMsMnemoForm
+            width: 1350
+            height: 900
         }
     }
-    property int profileId: 0
+    Component.onCompleted: {
+        console.log(main.profileId)
+    }
+
     StackLayout {
         id: stackLayout
         anchors.fill: parent
         RowLayout{
             Item {
-                id: mnemo
                 Loader { 
-                    sourceComponent: (profileId == 0 ? gram350mnemo : gram50mnemo) 
+                    id: mnemo
+                    sourceComponent: (main.profileId == 0 ? gram350mnemo : gram50mnemo)
                 }
             }
             ColumnLayout {
@@ -78,8 +81,8 @@ Page{
     Connections {
         target: _myModel
         onDataChanged: {
-            gRAMsMnemoForm.setPressureVal(_myModel.getCurPressureValues()) // it's Working fine
-            gRAMsMnemoForm.setTempVal(_myModel.getCurTempValues())
+            mnemo.item.setPressureVal(_myModel.getCurPressureValues()) //gRAMsMnemoForm  it's Working fine
+            mnemo.item.setTempVal(_myModel.getCurTempValues()) //gRAMsMnemoForm 
         }
     }
 

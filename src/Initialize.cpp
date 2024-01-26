@@ -62,14 +62,16 @@ bool Initialize::advantechDeviceCheck(){
         qDebug() << "No advantech devices connected";
         return false;
     }
+    QVariantMap deviceMap;
     for(int i = 0; i < allSupportedDevices->getCount(); i++){
         DeviceTreeNode const &node = allSupportedDevices->getItem(i);
         qDebug("%d, %ls", node.DeviceNumber, node.Description);
         auto advantechDescription = QString::fromWCharArray(node.Description).split(',');
         auto tempName = advantechDescription.value(0);
         auto tempBID = advantechDescription.value(1);
-        m_advantechDeviceMap.insert(tempBID,tempName);
+        deviceMap.insert(tempBID,tempName);
     }
+    m_advantechDeviceMap = deviceMap;
     startCheckInstance->Dispose();
     allSupportedDevices->Dispose();
     return true;

@@ -43,7 +43,7 @@ Window {
                 model: initSource.profileNames
                 onActivated: {
                     parseRequirements()
-                    
+                    realRequirements()
                 }
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -73,6 +73,8 @@ Window {
         }
     }
     function parseRequirements(){
+        itemModel.clear()
+        advantechWait = []
         let profileName = profileBox.currentText
         console.log("For " + profileName + " to work I need:")
         let curProfile = initSource.profileJson[profileName].controllers
@@ -194,7 +196,13 @@ Window {
         itemModel.append(realObj)
     }
     onClosing:{
-        //main.show()
+        main.profileId = profileBox.currentIndex
+        if(true){ //cfgTest[0].start
+            let tabPage1 = page1.createObject(stackLayout); // работает
+            container.append(tabPage1);
+        }
+
+        main.show()
         initialize.close()
     }
 }
