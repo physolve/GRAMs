@@ -4,7 +4,8 @@
 
 Controller::Controller(const ControllerInfo &info, QObject *parent) : 
 	QObject(parent), m_info(info)
-{}
+{
+}
 Controller::~Controller(){
 	qDebug() << "Controller deleted";
 }
@@ -20,13 +21,13 @@ AdvantechTest::AdvantechTest(const AdvAIType &info, QObject *parent) :
 }
 
 AdvantechTest::~AdvantechTest(){
-	qDebug() << QString("Oh no, %1 was deleted").arg(m_deviceName);
+    qDebug() << QString("Oh no, %1 was deleted").arg(m_info.deviceName());
 }
 
 void AdvantechTest::Initialization() // fill info
 {
 	// replace in qml 
-    std::wstring description = m_deviceName.toStdWString();//ui.cmbDevice->currentText().toStdWString();
+    std::wstring description = m_info.deviceName().toStdWString();//ui.cmbDevice->currentText().toStdWString();
     DeviceInformation selected(description.c_str());
 
     InstantAiCtrl *instantAiCtrl = InstantAiCtrl::Create();
@@ -89,7 +90,7 @@ void AdvantechTest::ConfigureDeviceTest(){ // after accept
       m_instantAiCtrl = InstantAiCtrl::Create();
 	}
 
-    std::wstring description = m_deviceName.toStdWString();
+    std::wstring description = m_info.deviceName().toStdWString();
     DeviceInformation selected(description.c_str());
 
     ErrorCode errorCode = m_instantAiCtrl->setSelectedDevice(selected);
@@ -147,14 +148,6 @@ QVector<double> AdvantechTest::getData(){ // const & ?
 AdvantechDO::AdvantechDO(const AdvDOType &info, QObject *parent) : 
 	QObject(parent), m_info(info), m_instantDoCtrl(NULL), m_vector(8,0.0)
 {
-	auto tempDevice = m_info.deviceName();
-	auto tempList = tempDevice.split(',');
-	auto tempName = tempList.value(0);
-	auto tempBID = tempList.value(1);
-	if(tempName == "USB-4750"){
-		tempName = "DemoDevice";
-	}
-	m_deviceName = tempName+','+tempBID;//m_info.deviceName();
 }
 
 AdvantechDO::~AdvantechDO(){ }
@@ -162,7 +155,7 @@ AdvantechDO::~AdvantechDO(){ }
 void AdvantechDO::ConfigureDeviceDO(){
 	m_instantDoCtrl = InstantDoCtrl::Create();
 
-    std::wstring description = m_deviceName.toStdWString();
+    std::wstring description = m_info.deviceName().toStdWString();
     DeviceInformation selected(description.c_str());
 
 	ErrorCode errorCode = Success;

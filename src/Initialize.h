@@ -8,12 +8,9 @@ class Initialize : public QObject
     Q_PROPERTY(QVariantMap profileJson MEMBER m_profileJson CONSTANT)
     Q_PROPERTY(QStringList profileNames MEMBER m_profileNames CONSTANT)
     Q_PROPERTY(QVariantMap advantechDeviceMap MEMBER m_advantechDeviceMap NOTIFY advantechDeviceMapChanged)
-    //Q_PROPERTY(QVariantMap advantechDeviceSettings MEMBER m_advantechDeviceSettings NOTIFY advantechDeviceSettingsChanged)
-
-    Q_INVOKABLE QVariantMap advantechDeviceFill(const QString &description, const QString &type);
-
 public:
     Initialize(QObject *parent = 0);
+    Q_INVOKABLE QVariantMap advantechDeviceFill(const QString &description, const QString &type);
 signals:
     void advantechDeviceMapChanged();
     //void advantechDeviceSettingsChanged();
