@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import Qt.labs.settings
 import QtQuick.Dialogs
 //import Style
-
+import "mnemo"
 ApplicationWindow {
     id: main
     width: 1840

@@ -38,19 +38,38 @@
     },
     "GRAM50": {
         "profileId":1,
-        "controllers":{
+        "controllers":{ 
             "Advantech":[
                 {
                     "device": "USB-4750",
-                    "purpose": "Valves"
+                    "purpose": "valves",
+                    "chnCnt": 16
                 },
                 {
                     "device": "USB-4716",
-                    "purpose": "Pressure"
+                    "purpose": "pressure",
+                    "profile": "usb-4716-ai-diff-8.xml",
+                    "sensors":[
+                        { "name": "DD311", "cch": 0 },
+                        { "name": "DD312", "cch": 1 },
+                        { "name": "DD331", "cch": 2 },
+                        { "name": "DD332", "cch": 3 },
+                        { "name": "DD334", "cch": 4 }
+                    ]
                 },
                 {
                     "device": "USB-4718",
-                    "purpose": "Thermocouples"
+                    "purpose": "thermocouples",
+                    "profile": "usb-4718-ai-tc-8",
+                    "sensors":[
+                        {"name": "DT314", "cch": 0},
+                        {"name": "DT352", "cch": 1},
+                        {"name": "DT354", "cch": 2},
+                        {"name": "DT356", "cch": 3},
+                        {"name": "DT358", "cch": 4},
+                        {"name": "DK359", "cch": 5},
+                        {"name": "DK341T", "cch": 6}
+                    ]
                 }
             ]
         }

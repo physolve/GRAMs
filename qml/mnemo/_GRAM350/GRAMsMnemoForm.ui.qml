@@ -14,6 +14,7 @@ import QtQuick.Layouts
 import QtQuick.Studio.Effects 1.0
 
 import QtQml.Models
+import ".."
 
 Item {
     id: item1
