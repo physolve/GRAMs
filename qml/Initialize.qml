@@ -14,7 +14,7 @@ Window {
     height: 760
     title: qsTr("Настройки")
     Component.onCompleted: {
-        profileBox.currentIndex = 0
+        profileBox.currentIndex = 1
         parseRequirements()
         realRequirements()
     }
