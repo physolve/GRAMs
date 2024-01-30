@@ -37,7 +37,9 @@ Rectangle {
         console.log("in setMappingNames PS " + JSON.stringify(nameData))
         visualChannelMapping.setNameList(nameData)
     }
-    
+    function setInitialChannelCount(ind){
+        cmbChannelCount.currentIndex = ind
+    }
     function getSettings(){
         // add profile path to return
         return { indexChannelStart:cmbChannelStart.currentIndex,

@@ -125,6 +125,7 @@ Window {
         }
         if("sensors" in value){
             profileObj.setMappingNames(value.sensors)
+            profileObj.setInitialChannelCount(value.sensors.length)
         }
         itemModel.append(profileObj)
     }
