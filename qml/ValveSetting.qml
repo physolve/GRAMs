@@ -6,22 +6,18 @@ Rectangle {
     property bool connected: false
     property string innerName: ""
     property string innerPurpose: ""
+    property string innerProfile: ""
     color: "black"
-    width: 180
-    height: 200
+    width: 270
+    height: 300
     function changePurposeFront(str){
-        customPlus.purpose = str
         innerPurpose = str
     }
     function setDeviceLbl(str){
-        customBack.deviceName = str
         innerName = str
     }
     function setDeviceProfile(str){
-        customBack.deviceProfile = str
-    }
-    function getDeviceProfile(){
-        return customBack.deviceProfile
+        innerProfile = str
     }
     function setDeviceConnected(stateBool){
         connected = stateBool
@@ -38,7 +34,7 @@ Rectangle {
             color: "transparent"
             border.color : "steelblue" 
             border.width : 8
-            property string purpose: "test"
+            property string purpose: innerPurpose
             MouseArea {
                 anchors.fill: parent
                 onClicked:{
@@ -59,14 +55,14 @@ Rectangle {
         } //<-- collapse
         back: Rectangle {
             id: customBack
-            implicitWidth: 160
-            implicitHeight: 60
+            implicitWidth: 250
+            implicitHeight: 300
             color: "transparent"
             border.color : "steelblue" 
             border.width : 8
             property string text: "test back"
-            property string deviceName: "unknown"
-            property string deviceProfile: "path"
+            property string deviceName: innerName
+            property string deviceProfile: innerProfile
             MouseArea {
                 anchors.fill: parent
                 onClicked:{
@@ -78,28 +74,25 @@ Rectangle {
             Column{
                 Text{
                     id: customBackText
-                    anchors.fill: parent
                     font.pixelSize: 16
                     text: customBack.text
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Label{
                     id: deviceNameLbl
-                    anchors.fill: parent
                     font.pixelSize: 16
                     text: customBack.deviceName
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Label{
                     id: deviceProfileLbl
-                    anchors.fill: parent
+                    width: 120
                     font.pixelSize: 16
                     text: customBack.deviceProfile
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    elide: Text.ElideRight
                 }
+                anchors.centerIn: parent
             }
             anchors.centerIn: parent
         } //<-- collapse

@@ -22,24 +22,32 @@ Rectangle {
     function setDeviceProfile(str){
         innerProfile = str
     }
-    function setDeviceConnected(stateBool){
-        connected = stateBool
-    }
-    function setChannelCount(cnt){
-        customBack.channelCount = cnt
-        visualChannelMapping.setChannelList(customBack.channelCount)
-    }
-    function setValueRange(rng){
-        customBack.valueRange = rng
-    }
 
     function setMappingNames(nameData){
         console.log("in setMappingNames PS " + JSON.stringify(nameData))
         visualChannelMapping.setNameList(nameData)
     }
     function setInitialChannelCount(ind){
-        cmbChannelCount.currentIndex = ind
+        customBack.startChannel = ind
     }
+    function setDefaultType(ind){
+        customBack.defaultType = ind
+    }  
+    function setDeviceConnected(stateBool){
+        connected = stateBool
+    }
+    function setChannelCount(cnt){
+        customBack.channelCount = cnt
+        if(customBack.startChannel<customBack.channelCount)
+            cmbChannelCount.currentIndex = customBack.startChannel
+        visualChannelMapping.setChannelList(cmbChannelCount.currentIndex+1)
+    }
+    function setValueRange(rng){
+        customBack.valueRange = rng
+        if(customBack.defaultType<customBack.valueRange.length)
+            cmbValueRange.currentIndex = customBack.defaultType
+    }
+
     function getSettings(){
         // add profile path to return
         return { indexChannelStart:cmbChannelStart.currentIndex,
@@ -47,7 +55,6 @@ Rectangle {
         indexValueRange:cmbValueRange.currentIndex,
         inProfilePath: innerProfile}
     }
-
     function getMappedNames(){
         return visualChannelMapping.mappingResult()
     }
@@ -92,9 +99,11 @@ Rectangle {
             property string text: "test back"
             property string deviceName: innerName
             property string deviceProfile: innerProfile
-            property var channelCount: 8
-            property var channelStart: 0
-            property var valueRange: 0
+            property int channelCount: 8
+            property int startChannel: 1
+            property int channelStart: 0
+            property var valueRange: ""
+            property int defaultType: 0
             MouseArea {
                 anchors.fill: parent
                 onClicked:{
@@ -147,7 +156,7 @@ Rectangle {
                     height: 40
                     font.pointSize: 10
                     anchors.horizontalCenter: parent.horizontalCenter
-                    currentIndex: customBack.channelCount-1 
+                    //currentIndex: customBack.channelCount-1 
                     model: customBack.channelCount
                     delegate: ItemDelegate {
                         width: parent.width

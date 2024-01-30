@@ -288,6 +288,9 @@
     TODO:
         Значения на контроллерах по умолчанию:
             DO - ничего;
-            4716, 0-8 (sensor count), 0~10 V;
-            4718, 0-8 (sensor count), T/C k type -270 ~ 1372 degree C
-             
+            4716, 0-8 (sensor count), 0~10 V (5);
+            4718, 0-8 (sensor count), T/C k type -270 ~ 1372 degree C (9)
+    NOTE: 
+        У Advantech есть интересный BufferedAI
+    TODO:
+        Сделай маппинг клапанов

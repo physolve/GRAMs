@@ -125,8 +125,12 @@ Window {
         }
         if("sensors" in value){
             profileObj.setMappingNames(value.sensors)
-            profileObj.setInitialChannelCount(value.sensors.length)
+            profileObj.setInitialChannelCount(value.sensors.length-1)
         }
+        if("defaultType" in value){
+            profileObj.setDefaultType(value.defaultType)
+        }
+
         itemModel.append(profileObj)
     }
     function advModuleDOType(value){

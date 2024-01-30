@@ -43,12 +43,25 @@
                 {
                     "device": "USB-4750",
                     "purpose": "valves",
-                    "chnCnt": 16
+                    "chnCnt": 16,
+                    "valveMap":[
+                        "v_k104",
+                        "v_k109",
+                        "v_k109",
+                        "v_k109",
+                        "v_k109",
+                        "v_k109",
+                        "v_k109",
+                        "v_k109",
+                        "v_k109",
+                        "v_k109"
+                    ]
                 },
                 {
                     "device": "USB-4716",
                     "purpose": "pressure",
                     "profile": "usb-4716-ai-diff-8.xml",
+                    "defaultType": 5,
                     "sensors":[
                         { "name": "DD311", "cch": 0 },
                         { "name": "DD312", "cch": 1 },
@@ -61,6 +74,7 @@
                     "device": "USB-4718",
                     "purpose": "thermocouples",
                     "profile": "usb-4718-ai-tc-8",
+                    "defaultType": 9,
                     "sensors":[
                         {"name": "DT314", "cch": 0},
                         {"name": "DT352", "cch": 1},
