@@ -11,6 +11,7 @@ class Initialize : public QObject
 public:
     Initialize(QObject *parent = 0);
     Q_INVOKABLE QVariantMap advantechDeviceFill(const QString &description, const QString &type);
+    
 signals:
     void advantechDeviceMapChanged();
     //void advantechDeviceSettingsChanged();
@@ -27,5 +28,4 @@ private:
     QVariantMap m_advantechDeviceMap;
 
     //QVariantMap m_advantechDeviceSettings;
-
 };

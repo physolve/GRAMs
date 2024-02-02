@@ -41,3 +41,7 @@ void AdvAIType::setSettings(const QVariantMap& info){
 
 AdvDOType::AdvDOType(QString deviceName): ControllerInfo (deviceName){
 }
+
+void AdvDOType::setSettings(const QVariantMap& info){
+	m_profilePath = info["profilePath"].toString();
+}

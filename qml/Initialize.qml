@@ -59,6 +59,7 @@ Window {
             }
         }
         GridLayout {
+            Layout.alignment: Qt.AlignHCenter
             rowSpacing: 4
             columnSpacing: 4
             flow: GridLayout.LeftToRight
@@ -70,6 +71,15 @@ Window {
             Repeater { 
                 model: itemModel
             }
+        }
+        Button{
+            id: continueBtn
+            text: qsTr("Продолжить");
+            onClicked: {
+                saveSettings()
+                exitSave()
+            }
+            Layout.alignment: Qt.AlignHCenter
         }
     }
     function parseRequirements(){
@@ -141,6 +151,9 @@ Window {
         if ("profile" in value){
             profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
         }
+        if("valveMap" in value){
+            profileObj.setValvesNames(value.valveMap)
+        }
         itemModel.append(profileObj)
     }
     function realRequirements(){
@@ -200,14 +213,63 @@ Window {
         //realObj.setDeviceConnected(true) // find a way to decline connection
         itemModel.append(realObj)
     }
-    onClosing:{
-        main.profileId = profileBox.currentIndex
-        if(true){ //cfgTest[0].start
-            let tabPage1 = page1.createObject(stackLayout); // работает
-            container.append(tabPage1);
-        }
 
+    function saveSettings(){
+        console.log("save controllers parameters")
+        saveControllers()
+    }
+    function saveControllers(){
+        // create index list from itemModel to separate Advantech and others
+        for(let i=0; i<itemModel.count; i++){ // iterate trough itemModel
+            // find AdvantechControllers index
+            let lcl_item = itemModel.get(i)
+            if(lcl_item.connected){ // || ?advantech
+                saveAdvantechControllers(index)
+                if(lcl_item.innerPurpose == "pressure" || lcl_item.innerPurpose == "temperature"){
+                    console.log("create sensors model")
+                    saveAdvantechSensors(i)
+                }
+                else{
+                    console.log("create valves model")
+                    saveAdvantechValves(i)
+                }
+            }
+        }
+    }
+    function saveAdvantechControllers(index){
+        let t_profileObj = itemModel.get(index) // take i'th item
+        let description = t_profileObj.innerName
+        let purpose = t_profileObj.innerPurpose
+        let settigns = t_profileObj.getSettings
+        dataSource.advantechDeviceSetting(description, purpose, settigns)
+    }
+
+    function saveAdvantechSensors(index){
+        let namesObj = {}
+        let t_profileObj = itemModel.get(index);
+        namesObj[t_profileObj.innerPurpose] = t_profileObj.getMappedNames()
+        _myModel.appendProfileSensors(namesObj)
+    }
+    function saveAdvantechValves(index){
+        let t_profileObj = itemModel.get(index);
+        _valveModel.appendValves(t_profileObj.getMappedValves())
+    }
+    // rewrite to another type of saving function
+    
+    function exitSave(){
+        main.profileId = profileBox.currentIndex
         main.show()
         initialize.close()
     }
+    // onClosing:{ // make pages in main as default
+    //     main.profileId = profileBox.currentIndex
+        
+    //     if(true){ //cfgTest[0].start
+    //         let tabPage1 = page1.createObject(stackLayout); // работает
+    //         container.append(tabPage1);
+    //     }
+
+    //     main.show()
+    //     initialize.close()
+    // }
 }

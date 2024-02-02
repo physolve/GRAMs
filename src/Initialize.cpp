@@ -87,9 +87,9 @@ QVariantMap Initialize::advantechDeviceFill(const QString &description, const QS
         advantechDeviceSettings = a.getSettings();
     }
     else if(type == "valve"){
-        AdvDOType a(description);
-        auto demoValves = AdvantechDO(a);
-        a = demoValves.getInfo();
+        //AdvDOType a(description);
+        //auto demoValves = AdvantechDO(a);
+        //a = demoValves.getInfo();
         advantechDeviceSettings["blank"] = "null";
     }
     return advantechDeviceSettings;

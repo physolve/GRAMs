@@ -10,8 +10,8 @@ public:
     QVariantMap profileJson () const;
     void processEvents(); // wierdly written
     const QList<QVector<double>> getDataList();
-
+    Q_INVOKABLE void advantechDeviceSetting(const QString &description, const QString &type, const QVariantMap& deviceSettings);
 private:
     QList<AdvantechTest*> controllerList; // for read
-    QList<AdvantechDO*> controllerDO; // for read
+    QList<AdvantechDO*> controllerDO; // for read | only one is enough?
 };

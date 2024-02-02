@@ -16,7 +16,7 @@ void MyModel::appendProfileSensors(QVariantMap sensors){
     // and then in initializeAcquisition we put mapping to link with controller channels
     int idx_shift = 0;
     for (auto i = sensors.begin(), end = sensors.end(); i != end; ++i){
-        QString controllerName = i.key();
+        QString controllerPurpose = i.key();
         //differentiate Sensor type using controllerName
         QStringList sensorNameList = i.value().toStringList();
 

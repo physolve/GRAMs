@@ -7,7 +7,6 @@ Rectangle {
     property string innerName: ""
     property string innerPurpose: ""
     property string innerProfile: ""
-    property var m_sensorsMap: undefined
     color: "black"
     width: 270
     height: 300
@@ -49,7 +48,6 @@ Rectangle {
     }
 
     function getSettings(){
-        // add profile path to return
         return { indexChannelStart:cmbChannelStart.currentIndex,
         indexChannelCount:cmbChannelCount.currentIndex + 1,
         indexValueRange:cmbValueRange.currentIndex,

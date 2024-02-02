@@ -23,17 +23,16 @@ public:
 	int m_channelStart;
 	QStringList m_valueRanges;
     QString m_profilePath;
-    int m_channelCountCh;
-	int m_channelStartCh;
     int m_valueRangeCh;
-// private:
-//     QStringList m_sensorNames;
+	int m_channelStartCh;
+    int m_channelCountCh;
 };
 
 class AdvDOType: public ControllerInfo {
 public:
     AdvDOType() = default;
     AdvDOType(QString deviceName);
+    void setSettings(const QVariantMap& info);
     QString m_profilePath;
 };
 

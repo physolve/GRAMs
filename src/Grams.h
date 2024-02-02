@@ -5,6 +5,7 @@
 
 #include "DataAcquisition.h"
 #include "DataModel.h"
+#include "ValveModel.h"
 #include "Initialize.h"
 
 class Grams : public QApplication
@@ -27,6 +28,7 @@ private:
     QQmlApplicationEngine m_engine;
     Initialize initSource;
     DataAcquisition dataSource;
+    ValveModel valveModel;
     MyModel dataModel;
 
     QTimer *softTimer;

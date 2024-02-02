@@ -18,7 +18,6 @@ Rectangle {
         GradientStop { position: 1.0; color: "#282828" } //
     }
     */
-    //property var namesList: undefined
 
     function setNameList(namesList){
         console.log("I'm setting namesList (b)")

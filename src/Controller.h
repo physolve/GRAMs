@@ -32,6 +32,7 @@ public:
     AdvantechTest(const AdvAIType &info, QObject *parent = nullptr); 
     virtual ~AdvantechTest();
     void Initialization() ; //override
+    void initialInfo();
     void ConfigureDeviceTest();
 	void CheckError(ErrorCode errorCode);
     const AdvAIType& getInfo(); // move to base class

@@ -24,42 +24,28 @@ AdvantechTest::~AdvantechTest(){
     qDebug() << QString("Oh no, %1 was deleted").arg(m_info.deviceName());
 }
 
-void AdvantechTest::Initialization() // fill info
+void AdvantechTest::Initialization()
 {
-	// replace in qml 
-    std::wstring description = m_info.deviceName().toStdWString();//ui.cmbDevice->currentText().toStdWString();
+    std::wstring description = m_info.deviceName().toStdWString();
     DeviceInformation selected(description.c_str());
 
     InstantAiCtrl *instantAiCtrl = InstantAiCtrl::Create();
 	ErrorCode errorCode = instantAiCtrl->setSelectedDevice(selected);
-	
-	//ui.btnOK->setEnabled(true);
-	
+
 	if (errorCode != 0){
 		QString str;
         QString des = QString::fromStdWString(description);
-		//qDebug() << (this, "Warning Information", str);
-		//ui.btnOK->setEnabled(false);
 		return;
 	}
 
 	int channelCount = (instantAiCtrl->getChannelCount() < 16) ? 
 		instantAiCtrl->getChannelCount() : 16;
-	// pull to Info
+
 	int logicChannelCount = instantAiCtrl->getChannelCount();
-	// pull to Info
+
 	m_info.m_channelStart = logicChannelCount;
-	// for (int i = 0; i < logicChannelCount; i++)
-	// {
-	// 	//ui.cmbChannelStart->addItem(QString("%1").arg(i));
-	// 	//iterate to qml in combobox ChannelStart
-	// }
+
 	m_info.m_channelCount = channelCount;
-	// for (int i = 0; i < channelCount; i++)
-	// {
-	// 	//ui.cmbChannelCount->addItem(QString("%1").arg(i + 1));
-	// 	//iterate to qml in combobox ChannelCount
-	// }
 
 	Array<ValueRange>* ValueRanges = instantAiCtrl->getFeatures()->getValueRanges();
 	wchar_t		 vrgDescription[128];
@@ -71,8 +57,6 @@ void AdvantechTest::Initialization() // fill info
 		CheckError(errorCode);
 		QString str = QString::fromWCharArray(vrgDescription);
 		m_info.m_valueRanges.append(str);
-		//ui.cmbValueRange->addItem(str);
-		//iterate to qml in combobox ValueRange
 	}
 
 	instantAiCtrl->Dispose();
@@ -83,8 +67,7 @@ const AdvAIType& AdvantechTest::getInfo(){
 }
 
 void AdvantechTest::ConfigureDeviceTest(){ // after accept
-	//m_vector = QVector<double>(16,0.0);
-	//qDebug() << m_vector;
+
 	if (m_instantAiCtrl==NULL)
 	{
       m_instantAiCtrl = InstantAiCtrl::Create();
@@ -112,7 +95,7 @@ void AdvantechTest::ConfigureDeviceTest(){ // after accept
 	}
 
 	qDebug() << "INFO COUNT " << channels->getCount();
-	resizeDataVector(m_info.m_channelCountCh);
+	resizeDataVector(m_info.m_channelCountCh); // ?
 }
 
 void AdvantechTest::resizeDataVector(uint8_t size){

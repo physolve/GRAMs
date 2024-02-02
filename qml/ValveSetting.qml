@@ -7,6 +7,7 @@ Rectangle {
     property string innerName: ""
     property string innerPurpose: ""
     property string innerProfile: ""
+    property var valveMap: []
     color: "black"
     width: 270
     height: 300
@@ -21,6 +22,17 @@ Rectangle {
     }
     function setDeviceConnected(stateBool){
         connected = stateBool
+    }
+    function setValvesNames(nameData){
+        console.log("in setValvesNames VS " + JSON.stringify(nameData))
+
+        valveMap = nameData
+    }
+    function getSettings(){
+        return { inProfilePath: innerProfile }
+    }
+    function getMappedValves(){
+        return valveMap
     }
     //--> slide
     Flipable {

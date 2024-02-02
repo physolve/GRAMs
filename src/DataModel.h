@@ -36,6 +36,6 @@ signals:
     void channelMapListChanged();
 
 private:
-    QList<Sensor*> m_sensors; // PURPOSE BASED Hash?
+    QList<Sensor*> m_sensors; // PURPOSE BASED Hash? pointer beacause we don't know in start?
     QElapsedTimer m_time;
 };
