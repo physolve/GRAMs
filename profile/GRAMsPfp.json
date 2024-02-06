@@ -23,7 +23,7 @@
                 },
                 {
                     "device": "USB-4718",
-                    "purpose": "thermocouples",
+                    "purpose": "temperature",
                     "profile": "",
                     "sensors":[
                         {"name": "DT314", "cch": 0},
@@ -77,7 +77,7 @@
                 },
                 {
                     "device": "USB-4718",
-                    "purpose": "thermocouples",
+                    "purpose": "temperature",
                     "profile": "usb-4718-ai-tc-8",
                     "defaultType": 9,
                     "sensors":[

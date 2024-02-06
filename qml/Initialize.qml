@@ -40,7 +40,7 @@ Window {
             ComboBox {
                 id: profileBox
                 width: 100
-                model: initSource.profileNames
+                model: initSource ? initSource.profileNames : null // makes me fell bad
                 onActivated: {
                     parseRequirements()
                     realRequirements()
@@ -105,7 +105,7 @@ Window {
                     advModuleDOType(value)
                     break;
                 case "pressure":
-                case "thermocouples":
+                case "temperature":
                     console.log("\tcreate AI settings for " + value.device)
                     advantechWait.push({"name":value.device, "type": "AI", "index":itemModel.count})
                     advModuleAIType(value)
@@ -204,7 +204,7 @@ Window {
         t_profileObj.setDeviceLbl(description)
         t_profileObj.setDeviceConnected(true)
         console.log("set settings")
-        let settings = initSource.advantechDeviceFill(description, "valve")
+        let settings = initSource.advantechDeviceFill(description, "valves")
     }
     function fieldModule(description){
         let realObj = advModuleAI.createObject()
@@ -243,7 +243,7 @@ Window {
         let t_profileObj = itemModel.get(index) // take i'th item
         let description = t_profileObj.innerName
         let purpose = t_profileObj.innerPurpose
-        let settigns = t_profileObj.getSettings
+        let settigns = t_profileObj.getSettings()
         dataSource.advantechDeviceSetting(description, purpose, settigns)
     }
 
@@ -263,6 +263,7 @@ Window {
         main.profileId = profileBox.currentIndex
         main.show()
         initialize.close()
+        dataSource.testRead()
     }
     // onClosing:{ // make pages in main as default
     //     main.profileId = profileBox.currentIndex

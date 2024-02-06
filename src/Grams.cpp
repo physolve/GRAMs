@@ -16,10 +16,10 @@
 
 Grams::Grams(int &argc, char **argv): 
     QApplication(argc, argv),
-    initSource(this),
-    dataSource(this),
-    valveModel(this),
-    dataModel(this),
+    initSource(),
+    dataSource(),
+    valveModel(),
+    dataModel(),
     softTimer(new QTimer)
 {
 
@@ -50,9 +50,8 @@ void Grams::initGUI(){
     //         qWarning() << "OpenGL is not set as the graphics backend, so AbstractSeries.useOpenGL will not work.";
     //         qWarning() << "Set QSG_RHI_BACKEND=opengl environment variable to force the OpenGL backend to be used.";
     //     }
-
+    
     m_engine.addImportPath(":/");
-
     const QUrl url(QString("qrc:/%1/qml/main.qml").arg(applicationName));
     QObject::connect(
                 &m_engine, &QQmlApplicationEngine::objectCreated, this,

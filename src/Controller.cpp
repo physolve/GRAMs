@@ -95,7 +95,7 @@ void AdvantechTest::ConfigureDeviceTest(){ // after accept
 	}
 
 	qDebug() << "INFO COUNT " << channels->getCount();
-	resizeDataVector(m_info.m_channelCountCh); // ?
+	resizeDataVector(m_info.m_channelCount); // ?
 }
 
 void AdvantechTest::resizeDataVector(uint8_t size){
@@ -115,7 +115,7 @@ void AdvantechTest::CheckError(ErrorCode errorCode)
 void AdvantechTest::readData(){
 	ErrorCode errorCode = Success;
 	//qDebug() << "controller Data count = " << m_vector.count();
-	errorCode = m_instantAiCtrl->Read(m_info.m_channelStartCh, m_info.m_channelCountCh, m_vector.data());
+	errorCode = m_instantAiCtrl->Read(m_info.m_channelStart, m_info.m_channelCount, m_vector.data());
 	CheckError(errorCode);
 	if (errorCode != Success)
 	{

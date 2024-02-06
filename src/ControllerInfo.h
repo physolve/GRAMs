@@ -24,8 +24,6 @@ public:
 	QStringList m_valueRanges;
     QString m_profilePath;
     int m_valueRangeCh;
-	int m_channelStartCh;
-    int m_channelCountCh;
 };
 
 class AdvDOType: public ControllerInfo {
