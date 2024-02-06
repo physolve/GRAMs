@@ -30,10 +30,7 @@
                         {"name": "DT352", "cch": 1},
                         {"name": "DT354", "cch": 2},
                         {"name": "DT358", "cch": 3},
-                        {"name": "DT359", "cch": 4},
-                        {"name": "AK132", "cch": 5},
-                        {"name": "AK134", "cch": 6},
-                        {"name": "AK136", "cch": 7}
+                        {"name": "DT359", "cch": 4}
                     ]
                 }
             ]

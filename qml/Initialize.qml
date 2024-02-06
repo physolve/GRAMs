@@ -224,14 +224,17 @@ Window {
             // find AdvantechControllers index
             let lcl_item = itemModel.get(i)
             if(lcl_item.connected){ // || ?advantech
-                saveAdvantechControllers(index)
+                saveAdvantechControllers(i)
                 if(lcl_item.innerPurpose == "pressure" || lcl_item.innerPurpose == "temperature"){
                     console.log("create sensors model")
                     saveAdvantechSensors(i)
                 }
-                else{
+                else if(lcl_item.innerPurpose == "valves"){
                     console.log("create valves model")
                     saveAdvantechValves(i)
+                }
+                else{
+                    console.log("unknown controller")
                 }
             }
         }

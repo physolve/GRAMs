@@ -8,22 +8,17 @@ Check out https://doc.qt.io/qtcreator/creator-quick-ui-forms.html for details on
 */
 import QtQuick 6.2
 import QtQuick.Controls
-import QtQuick.Studio.Components
-import QtQuick.Shapes
-import QtQuick.Layouts
-import QtQuick.Studio.Effects
-
+//import QtQuick.Studio.Components
+//import QtQuick.Shapes
+//import QtQuick.Layouts
+//import QtQuick.Studio.Effects
 import ".."
 Item {
     id: item1
     width: rectangle.width
     height: rectangle.height
-    property real newVal: 10
-    property real newTempVal: 0.5
     Rectangle {
         id: rectangle
-        x: 0
-        y: 0
         width: 1320
         height: 900
         color: "#00685757"
@@ -32,14 +27,11 @@ Item {
         id: image
         visible: true
         anchors.fill: parent
-        source: "images/GRAMsMimicNew.svg"
-        anchors.rightMargin: 0
-        anchors.bottomMargin: 2
-        anchors.leftMargin: 0
-        anchors.topMargin: -2
+        source: "qrc:/GRAMs/qml/mnemo/_GRAM50/images/GRAMsMimicNew.svg"
         sourceSize.height: 1340
         sourceSize.width: 972
         fillMode: Image.PreserveAspectFit
+        
     }
 
     GroupBox {
@@ -169,7 +161,7 @@ Item {
         }
 
         Valve {
-            id: v_k110
+            id: v_k104
             x: 143
             y: 402
             width: 34
@@ -195,60 +187,74 @@ Item {
             checkable: true
         }
     }
-    PressureSlider {
-        id: p_dd312
-        x: 563
-        y: 142
-    }
-    PressureSlider {
-        id: p_dd311
-        x: 563
-        y: 228
+    SensorWidget {
+        id: s_C3
+        x: 148
+        y: 109
+        value: 0.000097
     }
 
-    PressureSlider {
-        id: p_dd331
-        x: 916
-        y: 269
+    SensorWidget {
+        id: s_C2
+        x: 148
+        y: 202
+        value: 0.0001
     }
 
-    PressureSlider {
-        id: p_dd332
-        x: 916
-        y: 142
-    }
-    PressureSlider {
-        id: p_dd334
-        x: 916
-        y: 206
-    }
-    PressureSlider {
-        id: p_dv301
-        x: 466
-        y: 605
+    SensorWidget {
+        id: s_C1
+        x: 148
+        y: 288
+        value: 0.0001
     }
 
-    TempSlider {
-        id: t_dt359
-        x: 1108
-        y: 376
+    SensorWidget {
+        id: s_312
+        x: 528
+        y: 164
+        value: 0.0001
     }
 
-    TempSlider {
-        id: t_dt358
-        x: 916
-        y: 376
+    SensorWidget {
+        id: s_311
+        x: 528
+        y: 242
+        value: 0.0001
     }
-    TempSlider {
-        id: t_dt360
-        x: 740
-        y: 182
+
+    SensorWidget {
+        id: s_332
+        x: 896
+        y: 164
+        value: 0.0001
+    }
+
+    SensorWidget {
+        id: s_334
+        x: 896
+        y: 226
+        value: 0.0001
+    }
+
+    SensorWidget {
+        id: s_331
+        x: 896
+        y: 288
+        value: 0.0001
+    }
+
+    SensorWidget {
+        id: s_301
+        x: 452
+        y: 624
+        value: 0.0001
     }
 }
 
 /*##^##
 Designer {
-    D{i:0}D{i:1;locked:true}D{i:2;locked:true}D{i:3;locked:true}
+    D{i:0}D{i:1;locked:true}D{i:2;locked:true}D{i:21}D{i:22}D{i:23}D{i:24}D{i:25}D{i:26}
+D{i:27}D{i:28}
 }
 ##^##*/
 

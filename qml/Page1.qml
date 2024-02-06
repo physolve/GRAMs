@@ -13,16 +13,13 @@ Page{
         id: gram350mnemo
         GRAMsMnemoForm {
             //id: gRAMsMnemoForm
-            width: 1350
-            height: 900
+            width: 1350 //?
+            height: 900 //?
         }
     }
     Component{
         id: gram50mnemo
         GRAM50Mnemo {
-            //id: gRAMsMnemoForm
-            width: 1350
-            height: 900
         }
     }
     Component.onCompleted: {
