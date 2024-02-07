@@ -72,7 +72,10 @@
                         { "name": "DD312", "cch": 1 },
                         { "name": "DD331", "cch": 2 },
                         { "name": "DD332", "cch": 3 },
-                        { "name": "DD334", "cch": 4 }
+                        { "name": "DD334", "cch": 4 },
+                        { "name": "DD341", "cch": 5 },
+                        { "name": "DT341", "cch": 6 },
+                        { "name": "DT314", "cch": 7 }
                     ]
                 },
                 {
@@ -81,13 +84,14 @@
                     "profile": "usb-4718-ai-tc-8",
                     "defaultType": 9,
                     "sensors":[
-                        {"name": "DT314", "cch": 0},
-                        {"name": "DT352", "cch": 1},
-                        {"name": "DT354", "cch": 2},
-                        {"name": "DT356", "cch": 3},
-                        {"name": "DT358", "cch": 4},
-                        {"name": "DK359", "cch": 5},
-                        {"name": "DK341T", "cch": 6}
+                        {"name": "DT350", "cch": 0},
+                        {"name": "DT351", "cch": 1},
+                        {"name": "DT352", "cch": 2},
+                        {"name": "DT354", "cch": 3},
+                        {"name": "DT356", "cch": 4},
+                        {"name": "DT357", "cch": 5},
+                        {"name": "DT358", "cch": 6},
+                        {"name": "DK359", "cch": 7}
                     ]
                 }
             ]
