@@ -57,6 +57,7 @@ public:
     void ConfigureDeviceDO();
 	void CheckError(ErrorCode errorCode);
     void applyFeatures();
+    void resizeDataVector(uint8_t size);
     void readData() override;
     void setData();
     const AdvDOType& getInfo(); // move to base class

@@ -138,11 +138,13 @@ const QVector<double> AdvantechAI::getData(){ // const & ?
 /* Advantech Digital Output (pressure and temperature readings) */
 
 AdvantechDO::AdvantechDO(const AdvDOType &info, QObject *parent) :
-	AdvantechCtrl(info.m_deviceName,parent), m_info(info), m_instantDoCtrl(NULL), m_vector(8,0.0)
+	AdvantechCtrl(info.m_deviceName,parent), m_info(info), m_instantDoCtrl(NULL), m_vector(16,false)
 {
 }
 
-AdvantechDO::~AdvantechDO(){ }
+AdvantechDO::~AdvantechDO(){
+    qDebug() << QString("Oh no, %1 was deleted").arg(m_info.m_deviceName);
+}
 
 void AdvantechDO::ConfigureDeviceDO(){
 	m_instantDoCtrl = InstantDoCtrl::Create();
@@ -157,7 +159,12 @@ void AdvantechDO::ConfigureDeviceDO(){
     errorCode = m_instantDoCtrl->LoadProfile(profile.c_str());
     CheckError(errorCode);
 	portCount = m_instantDoCtrl->getPortCount();
+	qDebug() << "INFO VALVE PORT COUNT " << portCount;
+	resizeDataVector(portCount*8); // ?
+}
 
+void AdvantechDO::resizeDataVector(uint8_t size){
+	this->m_vector.resize(size);
 }
 
 void AdvantechDO::applyFeatures(){
@@ -183,6 +190,13 @@ void AdvantechDO::readData(){
 	{
 		return;
 	}
+	QVector<bool> vector;
+	for(int i  = 0; i< portCount; ++i){
+		for(int j = 0; j < 8; ++j){
+			vector.append(portStates[i]>>j&0x1);
+		}
+	}
+	m_vector = vector;
 }
 
 const QVector<bool> AdvantechDO::getData(){ // const & ?
