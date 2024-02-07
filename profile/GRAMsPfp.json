@@ -65,7 +65,7 @@
                 {
                     "device": "USB-4716",
                     "purpose": "pressure",
-                    "profile": "usb-4716-ai-diff-8.xml",
+                    "profile": "profile/usb-4716-ai-diff-8.xml",
                     "defaultType": 5,
                     "sensors":[
                         { "name": "DD311", "cch": 0 },
@@ -81,7 +81,7 @@
                 {
                     "device": "USB-4718",
                     "purpose": "temperature",
-                    "profile": "usb-4718-ai-tc-8",
+                    "profile": "profile/usb-4718-ai-tc-8.xml",
                     "defaultType": 9,
                     "sensors":[
                         {"name": "DT350", "cch": 0},

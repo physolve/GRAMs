@@ -39,6 +39,12 @@ Page{
             ColumnLayout {
                 Layout.preferredWidth: 490
                 Layout.fillHeight: true
+                Button{
+                    text: "test read"
+                    width: 480
+                    height: 180
+                    onClicked: dataSource.testRead()
+                }
                 ListView {
                     id: dataView
                     model: _myModel
