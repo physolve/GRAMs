@@ -1,5 +1,4 @@
 #include "Initialize.h"
-#include "Controller.h"
 
 #include <QDir>
 #include <QFile>
@@ -8,6 +7,7 @@
 #include <QJsonObject>
 #include <QVariantList>
 
+#include "controllers/AdvantechCtrl.h"
 #include "../lib/bdaqctrl.h"
 using namespace Automation::BDaq;
 
@@ -79,18 +79,15 @@ bool Initialize::advantechDeviceCheck(){
 
 QVariantMap Initialize::advantechDeviceFill(const QString &description, const QString &type){
     QVariantMap advantechDeviceSettings;
-    if(type == "pressure" || type == "temperature"){
+    if(type == "valves"){
+        advantechDeviceSettings["blank"] = "null";
+    }
+    else{
         AdvAIType a(description);
-        auto demoPressure = AdvantechTest(a);
+        auto demoPressure = AdvantechAI(a);
         demoPressure.Initialization();
         a = demoPressure.getInfo();
         advantechDeviceSettings = a.getSettings();
-    }
-    else if(type == "valves"){
-        //AdvDOType a(description);
-        //auto demoValves = AdvantechDO(a);
-        //a = demoValves.getInfo();
-        advantechDeviceSettings["blank"] = "null";
     }
     return advantechDeviceSettings;
 }

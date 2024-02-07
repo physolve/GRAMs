@@ -3,7 +3,7 @@
 ControllerInfo::ControllerInfo(QString deviceName):
 m_deviceName(deviceName)
 {}
-QString ControllerInfo::deviceName(){return m_deviceName;}
+//QString ControllerInfo::deviceName(){return m_deviceName;}
 
 
 // void ControllerInfo::setNames(const QStringList& sensorNames){

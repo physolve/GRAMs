@@ -1,44 +1,38 @@
 #pragma once
 
 #include <QtCore/QObject>
-#include "../lib/bdaqctrl.h"
+#include "../../lib/bdaqctrl.h"
 #include "ControllerInfo.h"
 using namespace Automation::BDaq;
 
 
-class Controller : public QObject
+class AdvantechCtrl : public QObject
 {
     Q_OBJECT
 public:
-    Controller(const ControllerInfo &info, QObject *parent = nullptr);
-    virtual ~Controller();
-    void Initialization();
-//Q_SIGNALS:
-
-public slots:
-    //void generateData(int type, int rowCount, int colCount);
-
-private:
-    ControllerInfo m_info;
-    //QList<QList<QPointF>> m_data;
-    //int m_index;
+    AdvantechCtrl(QString name, QObject *parent = nullptr);
+    virtual ~AdvantechCtrl();
+    virtual void Initialization();
+    virtual void readData(); 
+protected:
+    QString m_name;
 
 };
 
-class AdvantechTest : public QObject // can it be universal? maybe create advantechBase
+class AdvantechAI : public AdvantechCtrl
 {
     Q_OBJECT
 public:
-    AdvantechTest(const AdvAIType &info, QObject *parent = nullptr); 
-    virtual ~AdvantechTest();
+    AdvantechAI(const AdvAIType &info, QObject *parent = nullptr); 
+    virtual ~AdvantechAI();
     void Initialization() ; //override
     void initialInfo();
     void ConfigureDeviceTest();
 	void CheckError(ErrorCode errorCode);
     const AdvAIType& getInfo(); // move to base class
     void resizeDataVector(uint8_t size);
-    void readData();
-    QVector<double> getData();
+    void readData() override;
+    const QVector<double> getData();
 //Q_SIGNALS:
 
 public slots:
@@ -54,7 +48,7 @@ private:
 	//double scaledData[16];
 };
 
-class AdvantechDO : public QObject
+class AdvantechDO : public AdvantechCtrl
 {
     Q_OBJECT
 public:
@@ -63,8 +57,10 @@ public:
     void ConfigureDeviceDO();
 	void CheckError(ErrorCode errorCode);
     void applyFeatures();
+    void readData() override;
     void setData();
     const AdvDOType& getInfo(); // move to base class
+    const QVector<bool> getData();
 //Q_SIGNALS:
 
 public slots:
@@ -75,29 +71,9 @@ private:
     InstantDoCtrl* m_instantDoCtrl;  // change to smart pointer or initialize inside class
     int portCount;
     QVector<bool> m_vector;
+    quint8 m_portMasks;
+    quint8 m_portStates;
     int key;
 	quint8 mask;
 	quint8 state;
-};
-
-class AdvantechAI : public QObject
-{
-    Q_OBJECT
-public:
-    AdvantechAI(const ControllerInfo &info, QObject *parent = nullptr);
-    ~AdvantechAI();
-    void Initialization() ; //override
-    void ConfigureDeviceAI();
-	void CheckError(ErrorCode errorCode);
-//Q_SIGNALS:
-
-public slots:
-    //void generateData(int type, int rowCount, int colCount);
-
-private:
-    ControllerInfo m_info;
-    int channelCount;
-	int channelStart;
-	ValueRange valueRange;
-    QString profilePath;
 };

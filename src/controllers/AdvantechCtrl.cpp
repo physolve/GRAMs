@@ -1,32 +1,34 @@
-#include "Controller.h"
+#include "AdvantechCtrl.h"
 
 #include <QDebug>
 
-Controller::Controller(const ControllerInfo &info, QObject *parent) : 
-	QObject(parent), m_info(info)
+AdvantechCtrl::AdvantechCtrl(QString name, QObject *parent) : 
+	QObject(parent), m_name(name)
 {
 }
-Controller::~Controller(){
+AdvantechCtrl::~AdvantechCtrl(){
 	qDebug() << "Controller deleted";
 }
-void Controller::Initialization(){
-
+void AdvantechCtrl::Initialization(){
+    qDebug() << "Controller initialized";
 }
+void AdvantechCtrl::readData(){
+	qDebug() << "I read data!";
+}
+/* Advantech Analog Input (pressure and temperature readings) */
 
-// temporal names should be erased and then reused in simulation controller //
-
-AdvantechTest::AdvantechTest(const AdvAIType &info, QObject *parent) : 
-	QObject(parent), m_info(info), m_instantAiCtrl(NULL), m_vector(8,0.0)
+AdvantechAI::AdvantechAI(const AdvAIType &info, QObject *parent) :
+	AdvantechCtrl(info.m_deviceName,parent), m_info(info), m_instantAiCtrl(NULL), m_vector(8,0.0)
 {
 }
 
-AdvantechTest::~AdvantechTest(){
-    qDebug() << QString("Oh no, %1 was deleted").arg(m_info.deviceName());
+AdvantechAI::~AdvantechAI(){
+    qDebug() << QString("Oh no, %1 was deleted").arg(m_info.m_deviceName);
 }
 
-void AdvantechTest::Initialization()
+void AdvantechAI::Initialization()
 {
-    std::wstring description = m_info.deviceName().toStdWString();
+    std::wstring description = m_info.m_deviceName.toStdWString();
     DeviceInformation selected(description.c_str());
 
     InstantAiCtrl *instantAiCtrl = InstantAiCtrl::Create();
@@ -62,18 +64,18 @@ void AdvantechTest::Initialization()
 	instantAiCtrl->Dispose();
 }
 
-const AdvAIType& AdvantechTest::getInfo(){
+const AdvAIType& AdvantechAI::getInfo(){
 	return m_info;
 }
 
-void AdvantechTest::ConfigureDeviceTest(){ // after accept
+void AdvantechAI::ConfigureDeviceTest(){ // after accept
 
 	if (m_instantAiCtrl==NULL)
 	{
       m_instantAiCtrl = InstantAiCtrl::Create();
 	}
 
-    std::wstring description = m_info.deviceName().toStdWString();
+    std::wstring description = m_info.m_deviceName.toStdWString();
     DeviceInformation selected(description.c_str());
 
     ErrorCode errorCode = m_instantAiCtrl->setSelectedDevice(selected);
@@ -98,11 +100,11 @@ void AdvantechTest::ConfigureDeviceTest(){ // after accept
 	resizeDataVector(m_info.m_channelCount); // ?
 }
 
-void AdvantechTest::resizeDataVector(uint8_t size){
+void AdvantechAI::resizeDataVector(uint8_t size){
 	this->m_vector.resize(size);
 }
 
-void AdvantechTest::CheckError(ErrorCode errorCode)
+void AdvantechAI::CheckError(ErrorCode errorCode)
 {
     if (BioFailed(errorCode))
 	{
@@ -112,7 +114,7 @@ void AdvantechTest::CheckError(ErrorCode errorCode)
 	}
 }
 
-void AdvantechTest::readData(){
+void AdvantechAI::readData(){
 	ErrorCode errorCode = Success;
 	//qDebug() << "controller Data count = " << m_vector.count();
 	errorCode = m_instantAiCtrl->Read(m_info.m_channelStart, m_info.m_channelCount, m_vector.data());
@@ -123,13 +125,20 @@ void AdvantechTest::readData(){
 	}
 }
 
-QVector<double> AdvantechTest::getData(){ // const & ?
+const QVector<double> AdvantechAI::getData(){ // const & ?
 	//vector=scaledData;
 	return m_vector;
 }
+/*******************************/
+/*******************************/
+/*******************************/
+/****        pass            ***/
+/*******************************/
+/*******************************/
+/* Advantech Digital Output (pressure and temperature readings) */
 
-AdvantechDO::AdvantechDO(const AdvDOType &info, QObject *parent) : 
-	QObject(parent), m_info(info), m_instantDoCtrl(NULL), m_vector(8,0.0)
+AdvantechDO::AdvantechDO(const AdvDOType &info, QObject *parent) :
+	AdvantechCtrl(info.m_deviceName,parent), m_info(info), m_instantDoCtrl(NULL), m_vector(8,0.0)
 {
 }
 
@@ -138,7 +147,7 @@ AdvantechDO::~AdvantechDO(){ }
 void AdvantechDO::ConfigureDeviceDO(){
 	m_instantDoCtrl = InstantDoCtrl::Create();
 
-    std::wstring description = m_info.deviceName().toStdWString();
+    std::wstring description = m_info.m_deviceName.toStdWString();
     DeviceInformation selected(description.c_str());
 
 	ErrorCode errorCode = Success;
@@ -161,8 +170,24 @@ void AdvantechDO::applyFeatures(){
     errorCode = m_instantDoCtrl->Read(0, portCount, portStates);
     CheckError(errorCode);
 
-	qDebug() << portMasks;
-	//setting initial state
+	qDebug() << m_name << " port masks" << portMasks;
+	qDebug() << m_name << " port states" << portStates;
+}
+
+void AdvantechDO::readData(){
+	quint8 *portStates = new quint8[portCount];
+    ErrorCode errorCode = Success;
+	errorCode = m_instantDoCtrl->Read(0, portCount, portStates);
+	CheckError(errorCode);
+	if (errorCode != Success)
+	{
+		return;
+	}
+}
+
+const QVector<bool> AdvantechDO::getData(){ // const & ?
+	//vector=scaledData;
+	return m_vector;
 }
 
 void AdvantechDO::CheckError(ErrorCode errorCode)
@@ -184,43 +209,4 @@ void AdvantechDO::CheckError(ErrorCode errorCode)
 
 const AdvDOType& AdvantechDO::getInfo(){
 	return m_info;
-}
-
-AdvantechAI::AdvantechAI(const ControllerInfo &info, QObject *parent) : QObject(parent), m_info(info){
-    Initialization();
-}
-
-AdvantechAI::~AdvantechAI(){
-
-}
-
-void AdvantechAI::Initialization()
-{
-    InstantAiCtrl *instantAiCtrl = InstantAiCtrl::Create();
-	Array<DeviceTreeNode>* supportedDevices = instantAiCtrl->getSupportedDevices();
-
-	if (supportedDevices->getCount() == 0)
-	{
-		/*send to qml debug line*/
-        // QMessageBox::information(this, tr("Warning Information"), 
-		// 	tr("No device to support the currently demonstrated function!"));
-		/*for security*/
-        //QCoreApplication::quit();
-	} 
-	else
-	{
-		for (int i = 0; i < supportedDevices->getCount(); i++)
-		{
-			DeviceTreeNode const &node = supportedDevices->getItem(i);
-			//qDebug("%d, %ls\n", node.DeviceNumber, node.Description);
-			/*add to qml combo box*/
-            //ui.cmbDevice->
-            //addItem(QString::fromWCharArray(node.Description));
-		}
-		/*set to null index*/
-        //ui.cmbDevice->setCurrentIndex(0);
-	}
-
-	instantAiCtrl->Dispose();
-	supportedDevices->Dispose();
 }

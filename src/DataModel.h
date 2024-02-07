@@ -4,7 +4,6 @@
 #include <QElapsedTimer>
 #include <QColor>
 #include "Sensor.h"
-#include "Controller.h"
 
 class MyModel : public QAbstractListModel
 {

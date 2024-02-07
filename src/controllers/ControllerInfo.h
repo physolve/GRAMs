@@ -7,10 +7,10 @@ class ControllerInfo{
 public:
     ControllerInfo() = default;
     ControllerInfo(QString deviceName);
-    QString deviceName();
+    //QString deviceName();
     // vitual for get settings?
-private:
     QString m_deviceName;
+private:
 };
 
 class AdvAIType: public ControllerInfo {

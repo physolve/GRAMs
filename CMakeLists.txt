@@ -35,11 +35,15 @@ qt_add_resources(IMAGE_RESOURCES resources.qrc)
 file(GLOB CPP_SOURCES src/*.cpp)
 file(GLOB HPP_SOURCES src/*.h)
 
+file(GLOB CPP_CONTROLLERS src/controllers/*.cpp)
+file(GLOB HPP_CONTROLLERS src/controllers/*.h)
+
 file(GLOB CPP_LIBS lib/*.cpp)
 file(GLOB HPP_LIBS lib/*.h)
 
 qt_add_executable(${EXECUTABLE_NAME}
     ${CPP_SOURCES} ${HPP_SOURCES}
+    ${CPP_CONTROLLERS} ${HPP_CONTROLLERS}
     ${CPP_LIBS} ${HPP_LIBS}
     ${IMAGE_RESOURCES}
 )
