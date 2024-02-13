@@ -8,7 +8,7 @@ public:
     explicit DataAcquisition(QObject *parent = 0);
     QVariantMap profileJson () const;
     void processEvents(); // wierdly written
-    const QList<QVector<double>> getMeasures();
+    const QMap<QString,QVector<double>> getMeasures();
     const QVector<bool> getValves();
     Q_INVOKABLE void advantechDeviceSetting(const QString &description, const QString &type, const QVariantMap& deviceSettings);
     Q_INVOKABLE void testRead(); 

@@ -75,7 +75,6 @@ void Grams::initGUI(){
 }
 
 void Grams::initializeModel(){
-    //dataSource.saveStartDevice();
     //dataModel.initializeAcquisition();
     // for valves make different type
     //softTimer->start(1000);

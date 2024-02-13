@@ -1,6 +1,6 @@
 #include "Sensor.h"
 
-Sensor::Sensor(QString name, int idx, QObject *parent) : QObject(parent),m_name(name),m_idx(idx),m_cX(0),m_cY(0)
+Sensor::Sensor(QString name, QObject *parent) : QObject(parent),m_name(name),m_cX(0),m_cY(0)
 {
 }
 void Sensor::appendData(quint64 x, double y){

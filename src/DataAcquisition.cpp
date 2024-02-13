@@ -31,21 +31,21 @@ void DataAcquisition::processEvents(){
     }
 }
 
-const QList<QVector<double>> DataAcquisition::getMeasures(){ // const & >
-    QList<QVector<double>> dataList;
+const QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
+    QMap<QString,QVector<double>> dataMap;
 
     auto controller = m_controllerList["pressure"].staticCast<AdvantechAI>();
     // rewrite this somehow maybe using lambda or idk
     if(!controller.isNull()) 
-        dataList.append(controller->getData());
-    else dataList.append(QVector<double>(8,0.0));
+        dataMap.insert("pressure", controller->getData());
+    else dataMap.insert("pressure", QVector<double>(8,0.0));
     controller = m_controllerList["temperature"].staticCast<AdvantechAI>();
 
     if(!controller.isNull()) 
-        dataList.append(controller->getData());
-    else dataList.append(QVector<double>(8,0.0));
+        dataMap.insert("temperature", controller->getData());
+    else dataMap.insert("temperature", QVector<double>(8,0.0));
 
-    return dataList;
+    return dataMap;
 }
 const QVector<bool> DataAcquisition::getValves(){
     auto controller = m_controllerList["valves"].staticCast<AdvantechDO>();
@@ -54,7 +54,10 @@ const QVector<bool> DataAcquisition::getValves(){
     else
         return QVector<bool>(8,false);
 }
+
 void DataAcquisition::testRead(){ // died
+    if(m_controllerList.isEmpty())
+        return;
     processEvents();
     for(auto vector : getMeasures()){
         qDebug() << vector;

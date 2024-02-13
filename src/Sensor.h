@@ -8,10 +8,9 @@ class Sensor : public QObject
 {
     Q_OBJECT
 public:
-    explicit Sensor(QString name, int idx, QObject *parent = nullptr);  // later create QObject child with other properties 
+    explicit Sensor(QString name, QObject *parent = nullptr);  // later create QObject child with other properties 
                                                                         //(if we are going to use qml )
     QString m_name;
-    int m_idx;
     void appendData(quint64 x, double y);
     QList<quint64>& getTime();
     QList<double>& getValue();

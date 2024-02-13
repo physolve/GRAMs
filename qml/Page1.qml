@@ -81,12 +81,11 @@ Page{
             }
         }
     }
-    Connections {
-        target: _myModel
-        onDataChanged: {
-            mnemo.item.setPressureVal(_myModel.getCurPressureValues()) //gRAMsMnemoForm  it's Working fine
-            mnemo.item.setTempVal(_myModel.getCurTempValues()) //gRAMsMnemoForm 
-        }
-    }
-
+    // Connections {
+    //     target: _myModel
+    //     onDataChanged: {
+    //         mnemo.item.setPressureVal(_myModel.getCurPressureValues()) //gRAMsMnemoForm  it's Working fine
+    //         mnemo.item.setTempVal(_myModel.getCurTempValues()) //gRAMsMnemoForm 
+    //     }
+    // }
 }

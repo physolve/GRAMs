@@ -14,20 +14,15 @@ MyModel::MyModel(QObject *parent) :
 void MyModel::appendProfileSensors(QVariantMap sensors){
     // for this moment we only know about profile and not controllers, so we create firstly using names
     // and then in initializeAcquisition we put mapping to link with controller channels
-    int idx_shift = 0;
+    
+    //while creation link sensor to appenging data and function
+    m_controllersToSensors.clear();
     for (auto i = sensors.begin(), end = sensors.end(); i != end; ++i){
-        QString controllerPurpose = i.key();
-        //differentiate Sensor type using controllerName
         QStringList sensorNameList = i.value().toStringList();
-
-        int idx = idx_shift;
+        m_controllersToSensors.insert(i.key(),sensorNameList);
         for(auto sensorName : sensorNameList){
-            // might be Sensor type, but whatever
-            auto sensor = new Sensor(sensorName, idx);
-            this->m_sensors.append(sensor);
-            ++idx;
+            m_sensors.insert(sensorName, QSharedPointer<Sensor>(new Sensor(sensorName)));
         }
-        idx_shift += sensorNameList.count();
     }
     // in initializeAcquisition we use mapping to converge profile names and controller
 }
@@ -49,8 +44,11 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
 {
     if ( !index.isValid() )
         return QVariant();
+    
+    QStringList allNames = m_controllersToSensors["pressure"] + m_controllersToSensors["temperature"];
 
-    auto sensor = this->m_sensors.at(index.row());
+    auto sensor = this->m_sensors[allNames.at(index.row())];
+
     if ( role == NameRole ){
         return sensor->m_name;
     }
@@ -87,49 +85,34 @@ QVariant  MyModel::getCurValues() const{
     return QVariant::fromValue(curValues); 
 }
 
-QVariant MyModel::getCurPressureValues() const{
-    QList<double> curPressureValues;
-    auto idStart = 0;
-    auto idEnd = 5; 
-    for(auto i = idStart; i<=idEnd; i++){
-        curPressureValues << m_sensors[i]->getCurValue();
-    }
-    return QVariant::fromValue(curPressureValues); 
+QVariantMap MyModel::getCurPressureValues() const{ // lets try to change from QVariant to QVariantMap
+    //QVector<double> curPressureValues;
+    QVariantMap curPressureValues;
+    QStringList mappedNames = m_controllersToSensors["pressure"];
+    for(auto name : mappedNames){
+        curPressureValues[name] = m_sensors[name]->getCurValue();
+    } // its bad, try lambda 
+    return curPressureValues;//QVariant::fromValue(curPressureValues); 
 }
-QVariant MyModel::getCurTempValues() const{
-    QList<double> curTempValues;
-    auto idStart = 6;
-    auto idEnd = 10; 
-    for(auto i = idStart; i<=idEnd; i++){
-        curTempValues << m_sensors[i]->getCurValue();
+QVariantMap MyModel::getCurTempValues() const{
+    //QList<double> curTempValues;
+    QVariantMap curTempValues;
+    QStringList mappedNames = m_controllersToSensors["temperature"];
+    for(auto name : mappedNames){
+        curTempValues[name] = m_sensors[name]->getCurValue();
     }
-    return QVariant::fromValue(curTempValues); 
+    return curTempValues;//QVariant::fromValue(curTempValues); 
 }
 
-void MyModel::appendData(const QList<QVector<double>> & dataList){ //dataMap to Sensor ???
-    // order of controller names
-    // for(auto &controllerData : dataList){
-        
-    // }
-    //auto controllerData = dataList.at(0);
-    int idx_shift = 0;
-    for(auto& controllerData : dataList){
-        
-        const int count = controllerData.count();//m_sensors.count(); //  m_sensors of THE controller
-        //qDebug() << "controller Data count = " << controllerData.count();
-        // what count to use to identify data?
-        auto time = m_time.elapsed()/1000;
-        auto value = 0.0;
-        for (int i = 0; i < count; ++i) {
-            value = controllerData.at(i);
-            m_sensors[i+idx_shift]->appendData(time,value);
+void MyModel::appendData(const QMap<QString, QVector<double>> & dataMap){ // not tested
+    auto time = m_time.elapsed()/1000;
+    for (auto i = dataMap.begin(), end = dataMap.end(); i != end; ++i){
+        auto mappedNames = m_controllersToSensors[i.key()];
+        auto values = i.value();
+        for(auto j = 0; j<mappedNames.count(); ++j){
+            m_sensors[mappedNames.at(j)]->appendData(time,values.at(j));
         }
-        idx_shift += count;
     }
-    
-    //const auto data = dataList.at(0);
-    //qDebug() << QString("shift = %1, sensors count = %2").arg(idx_shift).arg(m_sensors.count());
-    // we've just updated all rows...
     const QModelIndex startIndex = index(0, 0);
     const QModelIndex endIndex   = index(m_sensors.count() - 1, 0);
 

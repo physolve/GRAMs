@@ -8,15 +8,47 @@ Check out https://doc.qt.io/qtcreator/creator-quick-ui-forms.html for details on
 */
 import QtQuick 6.2
 import QtQuick.Controls
+
 //import QtQuick.Studio.Components
 //import QtQuick.Shapes
 //import QtQuick.Layouts
 //import QtQuick.Studio.Effects
+
 import ".."
 Item {
-    id: item1
+    id: item1 //?
     width: rectangle.width
     height: rectangle.height
+    property var presValues: {
+        "DD311" : 0.0,
+        "DD312" : 0.0,
+        "DD331" : 0.0,
+        "DD332" : 0.0,
+        "DD334" : 0.0,
+        "DD341" : 0.0 
+    }
+    function setPresValues(values) {
+        console.log(JSON.stringify(values))
+        for(const [key, value] of Object.entries(values)){
+            presValues.key = value
+        }
+        refreshPresValues()
+    }
+    function refreshPresValues() {
+        s_311.value = presValues.DD311
+        s_312.value = presValues.DD312
+        s_331.value = presValues.DD331
+        s_332.value = presValues.DD332
+        s_334.value = presValues.DD334
+        s_341.value = presValues.DD341
+    }
+    Connections {
+        target: _myModel
+        onDataChanged: {
+            setPresValues(_myModel.getCurPressureValues()) //gRAMsMnemoForm  it's Working fine // NOW IT RERTURNS QVariantMap
+            //mnemo.item.setTempVal(_myModel.getCurTempValues()) //gRAMsMnemoForm // NOW IT RERTURNS QVariantMap
+        }
+    }
     Rectangle {
         id: rectangle
         width: 1320
@@ -27,11 +59,14 @@ Item {
         id: image
         visible: true
         anchors.fill: parent
-        source: "qrc:/GRAMs/qml/mnemo/_GRAM50/images/GRAMsMimicNew.svg"
+        source: "images/GRAMsMimicNew.svg"
+        anchors.rightMargin: 0
+        anchors.bottomMargin: 2
+        anchors.leftMargin: 0
+        anchors.topMargin: -2
         sourceSize.height: 1340
         sourceSize.width: 972
         fillMode: Image.PreserveAspectFit
-        
     }
 
     GroupBox {
@@ -209,6 +244,13 @@ Item {
     }
 
     SensorWidget {
+        id: s_311
+        x: 528
+        y: 242
+        value: 0.0001
+    }
+
+    SensorWidget {
         id: s_312
         x: 528
         y: 164
@@ -216,9 +258,9 @@ Item {
     }
 
     SensorWidget {
-        id: s_311
-        x: 528
-        y: 242
+        id: s_331
+        x: 896
+        y: 288
         value: 0.0001
     }
 
@@ -236,12 +278,6 @@ Item {
         value: 0.0001
     }
 
-    SensorWidget {
-        id: s_331
-        x: 896
-        y: 288
-        value: 0.0001
-    }
 
     SensorWidget {
         id: s_301
@@ -249,12 +285,18 @@ Item {
         y: 624
         value: 0.0001
     }
+
+    SensorWidget {
+        id: s_341
+        x: 712
+        y: 202
+        value: 0.0001
+    }
 }
 
 /*##^##
 Designer {
-    D{i:0}D{i:1;locked:true}D{i:2;locked:true}D{i:21}D{i:22}D{i:23}D{i:24}D{i:25}D{i:26}
-D{i:27}D{i:28}
+    D{i:0}D{i:1;locked:true}D{i:2;locked:true}D{i:29}
 }
 ##^##*/
 
