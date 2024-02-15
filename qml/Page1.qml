@@ -43,7 +43,7 @@ Page{
                     text: "test read"
                     width: 480
                     height: 180
-                    onClicked: dataSource.testRead()
+                    onClicked: backend.testRead()
                 }
                 ListView {
                     id: dataView

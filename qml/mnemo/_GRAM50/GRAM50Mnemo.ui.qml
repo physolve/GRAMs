@@ -19,22 +19,17 @@ Item {
     id: item1 //?
     width: rectangle.width
     height: rectangle.height
-    property var presValues: {
-        "DD311" : 0.0,
-        "DD312" : 0.0,
-        "DD331" : 0.0,
-        "DD332" : 0.0,
-        "DD334" : 0.0,
-        "DD341" : 0.0 
-    }
-    function setPresValues(values) {
-        console.log(JSON.stringify(values))
-        for(const [key, value] of Object.entries(values)){
-            presValues.key = value
-        }
-        refreshPresValues()
-    }
-    function refreshPresValues() {
+    // property var presValues: {
+    //     "DD311" : 0.0,
+    //     "DD312" : 0.0,
+    //     "DD331" : 0.0,
+    //     "DD332" : 0.0,
+    //     "DD334" : 0.0,
+    //     "DD341" : 0.0 
+    // }
+    function setPresValues(presValues) {
+        //presValues = values
+        //refreshPresValues()
         s_311.value = presValues.DD311
         s_312.value = presValues.DD312
         s_331.value = presValues.DD331
@@ -42,6 +37,14 @@ Item {
         s_334.value = presValues.DD334
         s_341.value = presValues.DD341
     }
+    // function refreshPresValues() {
+    //     s_311.value = presValues.DD311
+    //     s_312.value = presValues.DD312
+    //     s_331.value = presValues.DD331
+    //     s_332.value = presValues.DD332
+    //     s_334.value = presValues.DD334
+    //     s_341.value = presValues.DD341
+    // }
     Connections {
         target: _myModel
         onDataChanged: {

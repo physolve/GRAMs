@@ -16,7 +16,6 @@ void MyModel::appendProfileSensors(QVariantMap sensors){
     // and then in initializeAcquisition we put mapping to link with controller channels
     
     //while creation link sensor to appenging data and function
-    m_controllersToSensors.clear();
     for (auto i = sensors.begin(), end = sensors.end(); i != end; ++i){
         QStringList sensorNameList = i.value().toStringList();
         m_controllersToSensors.insert(i.key(),sensorNameList);
@@ -88,8 +87,8 @@ QVariant  MyModel::getCurValues() const{
 QVariantMap MyModel::getCurPressureValues() const{ // lets try to change from QVariant to QVariantMap
     //QVector<double> curPressureValues;
     QVariantMap curPressureValues;
-    QStringList mappedNames = m_controllersToSensors["pressure"];
-    for(auto name : mappedNames){
+    //QStringList mappedNames = m_controllersToSensors["pressure"];
+    for(auto name : m_controllersToSensors["pressure"]){
         curPressureValues[name] = m_sensors[name]->getCurValue();
     } // its bad, try lambda 
     return curPressureValues;//QVariant::fromValue(curPressureValues); 

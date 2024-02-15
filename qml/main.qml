@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt.labs.settings
+//import Qt.labs.settings
 import QtQuick.Dialogs
 //import Style
 import "mnemo"
@@ -15,9 +15,9 @@ ApplicationWindow {
     Material.accent: Material.Indigo
     property string datastore: ""
     property int profileId: 0
-    Settings {
-        property alias datastore: main.datastore
-    }
+    // Settings {
+    //     property alias datastore: main.datastore
+    // }
     // ListModel {
     //     id: dataModel
     //     ListElement { name: "test1"; value: 1 }
@@ -52,7 +52,7 @@ ApplicationWindow {
 
     onClosing: {
        //cfgWindow.saveSetUp()
-       console.log("save setup function")
+       //console.log("save setup function")
     }
 
     header: TabBar {

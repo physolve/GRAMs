@@ -84,3 +84,8 @@ void Grams::softEvent(){
     dataSource.processEvents();
     //dataModel.appendData(dataSource.getDataList());
 }
+
+void Grams::testRead(){
+    dataSource.testRead();
+    dataModel.appendData(dataSource.getMeasures());
+}

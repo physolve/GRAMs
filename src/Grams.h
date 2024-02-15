@@ -16,6 +16,7 @@ public:
     Grams(int &argc, char **argv);
     ~Grams();
     Q_INVOKABLE void initializeModel();
+    Q_INVOKABLE void testRead();
     // add JSON and profile here?
 
 private slots:
