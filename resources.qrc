@@ -8,6 +8,7 @@
         <file>qml/mnemo/_GRAM50/GRAM50Mnemo.ui.qml</file>
         <file>qml/mnemo/_GRAM50/images/GRAMsMimicNew.svg</file>
         <file>qml/mnemo/_GRAM50/SensorWidget.qml</file>
+        <file>qml/mnemo/_GRAM50/ThermoWidget.qml</file>
         
         <file>qml/mnemo/Valve.ui.qml</file>
         <file>qml/mnemo/CircularSlider.qml</file>

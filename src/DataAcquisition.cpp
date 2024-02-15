@@ -52,7 +52,7 @@ const QVector<bool> DataAcquisition::getValves(){
     if(!controller.isNull())
         return controller->getData();
     else
-        return QVector<bool>(8,false);
+        return QVector<bool>(16,false);
 }
 
 void DataAcquisition::testRead(){ // died

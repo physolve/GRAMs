@@ -20,6 +20,8 @@ Button {
     icon.color: "#00ffffff"
     layer.enabled: false
 
+    property bool value: true
+
     implicitWidth: buttonBackground.implicitWidth
     implicitHeight: buttonBackground.implicitHeight
     leftPadding: 4

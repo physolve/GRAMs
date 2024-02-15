@@ -19,14 +19,6 @@ Item {
     id: item1 //?
     width: rectangle.width
     height: rectangle.height
-    // property var presValues: {
-    //     "DD311" : 0.0,
-    //     "DD312" : 0.0,
-    //     "DD331" : 0.0,
-    //     "DD332" : 0.0,
-    //     "DD334" : 0.0,
-    //     "DD341" : 0.0 
-    // }
     function setPresValues(presValues) {
         //presValues = values
         //refreshPresValues()
@@ -36,20 +28,50 @@ Item {
         s_332.value = presValues.DD332
         s_334.value = presValues.DD334
         s_341.value = presValues.DD341
+        t_341.value = presValues.DT341
+        t_314.value = presValues.DT314
+
     }
-    // function refreshPresValues() {
-    //     s_311.value = presValues.DD311
-    //     s_312.value = presValues.DD312
-    //     s_331.value = presValues.DD331
-    //     s_332.value = presValues.DD332
-    //     s_334.value = presValues.DD334
-    //     s_341.value = presValues.DD341
-    // }
+
+    function setTempValues(tempValues){
+        t_352.value = tempValues.DT352
+        t_354.value = tempValues.DT354
+        t_356.value = tempValues.DT356
+        t_358.value = tempValues.DT358
+        t_359.value = tempValues.DT359
+
+    }
+
+    function setValves(valveStates){
+        v_k104.checked = valveStates.v_k104
+        v_k109.checked = valveStates.v_k109
+        v_k114.checked = valveStates.v_k114
+        v_k118.checked = valveStates.v_k118
+        v_k131.checked = valveStates.v_k131
+        v_k133.checked = valveStates.v_k133
+        v_k135.checked = valveStates.v_k135
+        v_k151.checked = valveStates.v_k151
+        v_k153.checked = valveStates.v_k153
+        v_k155.checked = valveStates.v_k155
+        v_k171.checked = valveStates.v_k171
+        v_k173.checked = valveStates.v_k173
+        v_k176.checked = valveStates.v_k176
+        v_k178.checked = valveStates.v_k178
+        v_k179.checked = valveStates.v_k179
+        v_k192.checked = valveStates.v_k192
+    }
+
     Connections {
         target: _myModel
         onDataChanged: {
             setPresValues(_myModel.getCurPressureValues()) //gRAMsMnemoForm  it's Working fine // NOW IT RERTURNS QVariantMap
-            //mnemo.item.setTempVal(_myModel.getCurTempValues()) //gRAMsMnemoForm // NOW IT RERTURNS QVariantMap
+            setTempValues(_myModel.getCurTempValues())
+        }
+    }
+    Connections {
+        target: _valveModel
+        onDataChanged: {
+            setValves(_myModel.getCurStates())
         }
     }
     Rectangle {
@@ -63,10 +85,6 @@ Item {
         visible: true
         anchors.fill: parent
         source: "images/GRAMsMimicNew.svg"
-        anchors.rightMargin: 0
-        anchors.bottomMargin: 2
-        anchors.leftMargin: 0
-        anchors.topMargin: -2
         sourceSize.height: 1340
         sourceSize.width: 972
         fillMode: Image.PreserveAspectFit
@@ -78,10 +96,7 @@ Item {
         bottomPadding: 0
         topPadding: 0
         padding: 0
-        anchors.rightMargin: 0
-        anchors.bottomMargin: 2
-        anchors.leftMargin: 0
-        anchors.topMargin: -2
+        anchors.margins: 0
         title: qsTr("GramsMnemo")
         Valve {
             id: v_k155
@@ -94,7 +109,7 @@ Item {
         Valve {
             id: v_k153
             x: 775
-            y: 402
+            y: 401
             width: 34
             height: 34
             checkable: true
@@ -120,7 +135,7 @@ Item {
         Valve {
             id: v_k171
             x: 492
-            y: 207
+            y: 208
             width: 34
             height: 34
             checkable: true
@@ -138,10 +153,11 @@ Item {
         Valve {
             id: v_k118
             x: 421
-            y: 207
+            y: 208
             width: 34
             height: 34
             checkable: true
+            checked: true
         }
 
         Valve {
@@ -156,7 +172,7 @@ Item {
         Valve {
             id: v_k192
             x: 862
-            y: 548
+            y: 549
             width: 34
             height: 34
             checkable: true
@@ -165,7 +181,7 @@ Item {
         Valve {
             id: v_k179
             x: 492
-            y: 548
+            y: 547
             width: 34
             height: 34
             checkable: true
@@ -174,7 +190,7 @@ Item {
         Valve {
             id: v_k176
             x: 421
-            y: 592
+            y: 587
             width: 34
             height: 34
             checkable: true
@@ -182,7 +198,7 @@ Item {
 
         Valve {
             id: v_k114
-            x: 272
+            x: 273
             y: 402
             width: 34
             height: 34
@@ -191,7 +207,7 @@ Item {
 
         Valve {
             id: v_k109
-            x: 207
+            x: 205
             y: 402
             width: 34
             height: 34
@@ -200,7 +216,7 @@ Item {
 
         Valve {
             id: v_k104
-            x: 143
+            x: 144
             y: 402
             width: 34
             height: 34
@@ -219,7 +235,7 @@ Item {
         Valve {
             id: v_k135
             x: 319
-            y: 114
+            y: 115
             width: 34
             height: 34
             checkable: true
@@ -227,29 +243,22 @@ Item {
     }
     SensorWidget {
         id: s_C3
-        x: 148
-        y: 109
+        x: 156
+        y: 112
         value: 0.000097
     }
 
     SensorWidget {
         id: s_C2
-        x: 148
-        y: 202
+        x: 156
+        y: 205
         value: 0.0001
     }
 
     SensorWidget {
         id: s_C1
-        x: 148
-        y: 288
-        value: 0.0001
-    }
-
-    SensorWidget {
-        id: s_311
-        x: 528
-        y: 242
+        x: 156
+        y: 291
         value: 0.0001
     }
 
@@ -261,9 +270,9 @@ Item {
     }
 
     SensorWidget {
-        id: s_331
-        x: 896
-        y: 288
+        id: s_311
+        x: 528
+        y: 242
         value: 0.0001
     }
 
@@ -281,22 +290,76 @@ Item {
         value: 0.0001
     }
 
+    SensorWidget {
+        id: s_331
+        x: 896
+        y: 288
+        value: 0.0001
+    }
 
     SensorWidget {
         id: s_301
-        x: 452
-        y: 624
+        x: 461
+        y: 625
         value: 0.0001
     }
 
     SensorWidget {
         id: s_341
-        x: 712
-        y: 202
+        x: 726
+        y: 205
         value: 0.0001
     }
-}
 
+    ThermoWidget {
+        id: t_341
+        x: 740
+        y: 164
+        value: 15
+    }
+
+    ThermoWidget {
+        id: t_314
+        x: 528
+        y: 395
+        value: 15
+    }
+
+    ThermoWidget {
+        id: t_352
+        x: 41
+        y: 112
+        value: 15
+    }
+
+    ThermoWidget {
+        id: t_354
+        x: 41
+        y: 205
+        value: 15
+    }
+
+    ThermoWidget {
+        id: t_356
+        x: 41
+        y: 288
+        value: 15
+    }
+
+    ThermoWidget {
+        id: t_358
+        x: 896
+        y: 395
+        value: 15
+    }
+
+    ThermoWidget {
+        id: t_359
+        x: 1083
+        y: 384
+        value: 15
+    }
+}
 /*##^##
 Designer {
     D{i:0}D{i:1;locked:true}D{i:2;locked:true}D{i:29}

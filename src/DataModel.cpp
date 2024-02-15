@@ -100,10 +100,13 @@ QVariantMap MyModel::getCurTempValues() const{
     for(auto name : mappedNames){
         curTempValues[name] = m_sensors[name]->getCurValue();
     }
+    // use lambda instead for!!! 
     return curTempValues;//QVariant::fromValue(curTempValues); 
 }
 
 void MyModel::appendData(const QMap<QString, QVector<double>> & dataMap){ // not tested
+    if(m_sensors.isEmpty())
+        return;
     auto time = m_time.elapsed()/1000;
     for (auto i = dataMap.begin(), end = dataMap.end(); i != end; ++i){
         auto mappedNames = m_controllersToSensors[i.key()];
@@ -111,6 +114,7 @@ void MyModel::appendData(const QMap<QString, QVector<double>> & dataMap){ // not
         for(auto j = 0; j<mappedNames.count(); ++j){
             m_sensors[mappedNames.at(j)]->appendData(time,values.at(j));
         }
+        // use lambda instead of count method!!! 
     }
     const QModelIndex startIndex = index(0, 0);
     const QModelIndex endIndex   = index(m_sensors.count() - 1, 0);

@@ -88,4 +88,5 @@ void Grams::softEvent(){
 void Grams::testRead(){
     dataSource.testRead();
     dataModel.appendData(dataSource.getMeasures());
+    valveModel.appendData(dataSource.getValves());
 }
