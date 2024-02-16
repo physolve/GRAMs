@@ -71,7 +71,7 @@ Item {
     Connections {
         target: _valveModel
         onDataChanged: {
-            setValves(_myModel.getCurStates())
+            setValves(_valveModel.getCurStates())
         }
     }
     Rectangle {

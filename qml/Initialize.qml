@@ -237,6 +237,7 @@ Window {
                     console.log("unknown controller")
                 }
             }
+            // add else to create SIMULATED sensors (but not valves) 
         }
     }
     function saveAdvantechControllers(index){
@@ -250,6 +251,7 @@ Window {
     function saveAdvantechSensors(index){
         let namesObj = {}
         let t_profileObj = itemModel.get(index);
+        // add if to check connection with else kinda from profile 
         namesObj[t_profileObj.innerPurpose] = t_profileObj.getMappedNames()
         _myModel.appendProfileSensors(namesObj)
     }

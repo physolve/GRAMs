@@ -28,7 +28,7 @@ void DataAcquisition::advantechDeviceSetting(const QString &description, const Q
 void DataAcquisition::processEvents(){
     for (auto i = m_controllerList.cbegin(), end = m_controllerList.cend(); i != end; ++i){
         i.value()->readData();
-    }
+    } // it's okay?
 }
 
 const QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
@@ -59,8 +59,8 @@ void DataAcquisition::testRead(){ // died
     if(m_controllerList.isEmpty())
         return;
     processEvents();
-    for(auto vector : getMeasures()){
-        qDebug() << vector;
-    }
-    qDebug() << getValves();
+    // for(auto vector : getMeasures()){
+    //     qDebug() << vector;
+    // }
+    // qDebug() << getValves();
 }
