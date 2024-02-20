@@ -249,11 +249,10 @@ Window {
     }
 
     function saveAdvantechSensors(index){
-        let namesObj = {}
+        //let namesObj = {}
         let t_profileObj = itemModel.get(index);
         // add if to check connection with else kinda from profile 
-        namesObj[t_profileObj.innerPurpose] = t_profileObj.getMappedNames()
-        _myModel.appendProfileSensors(namesObj)
+        _myModel.appendProfileSensors(t_profileObj.innerPurpose, t_profileObj.getMappedNames())
     }
     function saveAdvantechValves(index){
         let t_profileObj = itemModel.get(index);

@@ -135,7 +135,7 @@ Item {
         Valve {
             id: v_k171
             x: 492
-            y: 208
+            y: 207
             width: 34
             height: 34
             checkable: true
@@ -143,7 +143,7 @@ Item {
 
         Valve {
             id: v_k133
-            x: 319
+            x: 322
             y: 207
             width: 34
             height: 34
@@ -153,11 +153,10 @@ Item {
         Valve {
             id: v_k118
             x: 421
-            y: 208
+            y: 207
             width: 34
             height: 34
             checkable: true
-            checked: true
         }
 
         Valve {
@@ -180,8 +179,8 @@ Item {
 
         Valve {
             id: v_k179
-            x: 492
-            y: 547
+            x: 498
+            y: 549
             width: 34
             height: 34
             checkable: true
@@ -189,7 +188,7 @@ Item {
 
         Valve {
             id: v_k176
-            x: 421
+            x: 422
             y: 587
             width: 34
             height: 34
@@ -198,7 +197,7 @@ Item {
 
         Valve {
             id: v_k114
-            x: 273
+            x: 272
             y: 402
             width: 34
             height: 34
@@ -207,7 +206,7 @@ Item {
 
         Valve {
             id: v_k109
-            x: 205
+            x: 207
             y: 402
             width: 34
             height: 34
@@ -225,8 +224,8 @@ Item {
 
         Valve {
             id: v_k131
-            x: 319
-            y: 293
+            x: 322
+            y: 291
             width: 34
             height: 34
             checkable: true
@@ -234,8 +233,8 @@ Item {
 
         Valve {
             id: v_k135
-            x: 319
-            y: 115
+            x: 322
+            y: 114
             width: 34
             height: 34
             checkable: true
@@ -265,35 +264,35 @@ Item {
     SensorWidget {
         id: s_312
         x: 528
-        y: 164
+        y: 165
         value: 0.0001
     }
 
     SensorWidget {
         id: s_311
         x: 528
-        y: 242
+        y: 244
         value: 0.0001
     }
 
     SensorWidget {
         id: s_332
         x: 896
-        y: 164
+        y: 167
         value: 0.0001
     }
 
     SensorWidget {
         id: s_334
         x: 896
-        y: 226
+        y: 229
         value: 0.0001
     }
 
     SensorWidget {
         id: s_331
         x: 896
-        y: 288
+        y: 291
         value: 0.0001
     }
 
@@ -307,14 +306,14 @@ Item {
     SensorWidget {
         id: s_341
         x: 726
-        y: 205
+        y: 187
         value: 0.0001
     }
 
     ThermoWidget {
         id: t_341
         x: 740
-        y: 164
+        y: 146
         value: 15
     }
 

@@ -22,14 +22,19 @@ Rectangle {
     function setNameList(namesList){
         console.log("I'm setting namesList (b)")
         //console.log("in setNameList VCM " + JSON.stringify(namesList))
-        const sortedObject = namesList.sort((a, b) => a.cch - b.cch)
+        const sortedArray = namesList.sort((a, b) => a.cch - b.cch)
         //console.log("SORTED " + JSON.stringify(sortedObject))
-        let result = sortedObject.map(a=>a.name)
+        //let result = sortedObject.map(a=>a.name)
 
         let colors = ["#fac89e","#e3e891","#c2fc99","#a3fcb3","#92e8d5","#96c8f2","#ada8ff","#ce94f7","#ed94dd","#fea8bb"]
         namesModel.clear()
-        for(const [index, element] of result.entries()){
-            namesModel.append({"name": element, "curColor": colors[index]})
+        for(const [index, element] of result.entries()){ // finish the sequence ->setNameList, <- mappingResult()
+            let m_parameters = {}
+            m_parameters["A"] = "A" in element ? element.A : 1
+            m_parameters["B"] = "B" in element ? element.B : 0
+            m_parameters["R"] = "R" in element ? element.R : 1
+
+            namesModel.append({"name": element.name, "parameters": m_parameters, "curColor": colors[index]})
         }
     }
     function setChannelList(channelList){
@@ -188,9 +193,10 @@ Rectangle {
         }
     }
     function mappingResult(){
-        let result = []
+        let result = {}
             for(let i = 0; i < channelsModel; i++){ // in order of channels
-                result.push(namesModel.get(i).name)           
+                let name = namesModel.get(i).name
+                result[name] = namesModel.get(i).parameters 
             }
         return result
     }
