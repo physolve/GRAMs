@@ -28,7 +28,7 @@ Rectangle {
 
         let colors = ["#fac89e","#e3e891","#c2fc99","#a3fcb3","#92e8d5","#96c8f2","#ada8ff","#ce94f7","#ed94dd","#fea8bb"]
         namesModel.clear()
-        for(const [index, element] of result.entries()){ // finish the sequence ->setNameList, <- mappingResult()
+        for(const [index, element] of sortedArray.entries()){ // finish the sequence ->setNameList, <- mappingResult()
             let m_parameters = {}
             m_parameters["A"] = "A" in element ? element.A : 1
             m_parameters["B"] = "B" in element ? element.B : 0

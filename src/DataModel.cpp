@@ -21,9 +21,10 @@ void MyModel::appendProfileSensors(const QString &controllerName, const QVariant
     m_controllersToSensors.insert(controllerName,sensorNameList);
     for(auto sensorName : sensorNameList){
         QVariantMap param = sensors[sensorName].toMap();
-        QMap<QString, double> m_param;
+        QMap<QString, double> m_param; // is it nessesary?
         m_param["A"] = param["A"].toDouble();
         m_param["B"] = param["B"].toDouble();
+        m_param["R"] = param["R"].toDouble();
         m_sensors.insert(sensorName, QSharedPointer<Sensor>(new Sensor(sensorName, m_param)));
     }
     // in initializeAcquisition we use mapping to converge profile names and controller

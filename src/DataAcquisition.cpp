@@ -33,26 +33,35 @@ void DataAcquisition::processEvents(){
 
 const QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
     QMap<QString,QVector<double>> dataMap;
-
-    auto controller = m_controllerList["pressure"].staticCast<AdvantechAI>();
-    // rewrite this somehow maybe using lambda or idk
-    if(!controller.isNull()) 
+    auto defautl_val = QVector<double>(8,0.0);
+    if(!m_controllerList.contains("pressure"))
+        dataMap.insert("pressure", defautl_val);
+    else{
+        auto controller = m_controllerList["pressure"].staticCast<AdvantechAI>();
+        // rewrite this somehow maybe using lambda or idk
+        if(controller.isNull()) 
+            dataMap.insert("pressure", defautl_val); 
         dataMap.insert("pressure", controller->getData());
-    else dataMap.insert("pressure", QVector<double>(8,0.0));
-    controller = m_controllerList["temperature"].staticCast<AdvantechAI>();
-
-    if(!controller.isNull()) 
+    }
+    
+    if(!m_controllerList.contains("temperature"))
+        dataMap.insert("temperature", defautl_val);
+    else{
+        auto controller = m_controllerList["temperature"].staticCast<AdvantechAI>();
+        if(!controller.isNull()) 
+            dataMap.insert("temperature", defautl_val);
         dataMap.insert("temperature", controller->getData());
-    else dataMap.insert("temperature", QVector<double>(8,0.0));
-
+    }
     return dataMap;
 }
 const QVector<bool> DataAcquisition::getValves(){
-    auto controller = m_controllerList["valves"].staticCast<AdvantechDO>();
-    if(!controller.isNull())
-        return controller->getData();
-    else
-        return QVector<bool>(16,false);
+    auto defautl_val = QVector<bool>(16,false);
+    if(!m_controllerList.contains("valves"))
+        return defautl_val;   
+    auto controller =  m_controllerList["valves"].staticCast<AdvantechDO>();
+    if(controller.isNull())
+        return defautl_val;
+    return controller->getData();
 }
 
 void DataAcquisition::testRead(){ // died
