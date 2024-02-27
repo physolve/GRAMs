@@ -69,6 +69,10 @@ bool Initialize::advantechDeviceCheck(){
         auto advantechDescription = QString::fromWCharArray(node.Description).split(',');
         auto tempName = advantechDescription.value(0);
         auto tempBID = advantechDescription.value(1);
+
+        // it doesn't fit expectations (it should show virtual BID to distinguish from non-virtual and put into BID)
+        //qDebug() << "CHECK INDEX FOR BID to SHOW Virtual " << node.ModulesIndex;
+
         deviceMap.insert(tempBID,tempName);
     }
     m_advantechDeviceMap = deviceMap;

@@ -157,14 +157,14 @@ Window {
         itemModel.append(profileObj)
     }
     function realRequirements(){
-        let rsa = initSource.advantechDeviceMap // for now only advantech connected
+        let rsa = initSource.advantechDeviceMap // for now only advantech connected (key: BID, value: name)
         console.log("I see real devices")
         console.log(Object.values(rsa))
         console.log("\tI will compare those to profile")
         let waitNames = advantechWait.map(a => a.name)
         console.log(waitNames)
         for(const [key, value] of Object.entries(rsa)){
-            if(waitNames.includes(value)){
+            if(waitNames.includes(value)){ //
                 let element = advantechWait[waitNames.indexOf(value)]
                 console.log("\tMatch! Asking for real data to fill setting " + value)
                 switch(element.type){
@@ -213,6 +213,8 @@ Window {
         //realObj.setDeviceConnected(true) // find a way to decline connection
         itemModel.append(realObj)
     }
+
+
 
     function saveSettings(){
         console.log("save controllers parameters")
