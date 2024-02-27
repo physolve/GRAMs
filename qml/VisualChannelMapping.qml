@@ -193,10 +193,11 @@ Rectangle {
         }
     }
     function mappingResult(){
-        let result = {}
+        let result = []
             for(let i = 0; i < channelsModel; i++){ // in order of channels
-                let name = namesModel.get(i).name
-                result[name] = namesModel.get(i).parameters 
+                //let name = namesModel.get(i).name
+                //result[name] = namesModel.get(i).parameters
+                result.push({"name" : namesModel.get(i).name, "parameters" : namesModel.get(i).parameters})
             }
         return result
     }

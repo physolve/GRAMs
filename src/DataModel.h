@@ -26,7 +26,7 @@ public:
     Q_INVOKABLE QVariant getCurValues() const;
     Q_INVOKABLE QVariantMap getCurPressureValues() const; // this is temporally, change to some ordinate way like map of names? or idx
     Q_INVOKABLE QVariantMap getCurTempValues() const;
-    Q_INVOKABLE void appendProfileSensors(const QString &controllerName, const QVariantMap &sensors); // QVector<double>& data??
+    Q_INVOKABLE void appendProfileSensors(const QString &controllerName, const QVariantList &sensors); // QVector<double>& data??
 
     void initializeAcquisition();
     void appendData(const QMap<QString, QVector<double>> & dataMap);

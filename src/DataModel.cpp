@@ -11,23 +11,25 @@ MyModel::MyModel(QObject *parent) :
 {
 }
 
-void MyModel::appendProfileSensors(const QString &controllerName, const QVariantMap &sensors){
+void MyModel::appendProfileSensors(const QString &controllerName, const QVariantList &sensors){
     // for this moment we only know about profile and not controllers, so we create firstly using names
     // and then in initializeAcquisition we put mapping to link with controller channels
-    
+
+    QStringList sensorNameList;
     //while creation link sensor to appenging data and function
-    
-    QStringList sensorNameList = sensors.keys();
-    m_controllersToSensors.insert(controllerName,sensorNameList);
-    for(auto sensorName : sensorNameList){
-        QVariantMap param = sensors[sensorName].toMap();
+    for(auto sensorObj : sensors){
+        auto sensorObjMap = sensorObj.toMap();
+        auto sensorName = sensorObjMap["name"].toString();
+        QVariantMap param = sensorObjMap["parameters"].toMap();
         QMap<QString, double> m_param; // is it nessesary?
         m_param["A"] = param["A"].toDouble();
         m_param["B"] = param["B"].toDouble();
         m_param["R"] = param["R"].toDouble();
         m_sensors.insert(sensorName, QSharedPointer<Sensor>(new Sensor(sensorName, m_param)));
+        sensorNameList << sensorName;
     }
-    // in initializeAcquisition we use mapping to converge profile names and controller
+    m_controllersToSensors.insert(controllerName,sensorNameList);
+
 }
 
 void MyModel::initializeAcquisition(){
