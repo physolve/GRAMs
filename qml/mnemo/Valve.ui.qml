@@ -21,6 +21,9 @@ Button {
     layer.enabled: false
 
     property bool value: true
+    property string name: ""
+
+    // onToggled: console.log("clicked ", num)
 
     implicitWidth: buttonBackground.implicitWidth
     implicitHeight: buttonBackground.implicitHeight

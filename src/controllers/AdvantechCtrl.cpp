@@ -177,8 +177,13 @@ void AdvantechDO::applyFeatures(){
     errorCode = m_instantDoCtrl->Read(0, portCount, portStates);
     CheckError(errorCode);
 
-	qDebug() << m_name << " port masks" << portMasks;
-	qDebug() << m_name << " port states" << portStates;
+	QVector<bool> vector;
+	for(int i  = 0; i< portCount; ++i){
+		for(int j = 0; j < 8; ++j){
+			vector.append(portStates[i]>>j&0x1);
+		}
+	}
+	qDebug() << m_name << " port states" << vector;
 }
 
 void AdvantechDO::readData(){

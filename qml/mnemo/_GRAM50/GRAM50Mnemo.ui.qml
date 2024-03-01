@@ -47,33 +47,50 @@ Item {
         v_k109.checked = valveStates.v_k109
         v_k114.checked = valveStates.v_k114
         v_k118.checked = valveStates.v_k118
+        v_k178.checked = valveStates.v_k178
+        v_k192.checked = valveStates.v_k192
+        v_k176.checked = valveStates.v_k176
+        v_k179.checked = valveStates.v_k179
+        v_k171.checked = valveStates.v_k171
         v_k131.checked = valveStates.v_k131
         v_k133.checked = valveStates.v_k133
         v_k135.checked = valveStates.v_k135
-        v_k151.checked = valveStates.v_k151
-        v_k153.checked = valveStates.v_k153
         v_k155.checked = valveStates.v_k155
-        v_k171.checked = valveStates.v_k171
+        v_k153.checked = valveStates.v_k153
+        v_k151.checked = valveStates.v_k151
         v_k173.checked = valveStates.v_k173
-        v_k176.checked = valveStates.v_k176
-        v_k178.checked = valveStates.v_k178
-        v_k179.checked = valveStates.v_k179
-        v_k192.checked = valveStates.v_k192
+    }
+    
+    function getValvesUI(){
+        return [v_k104.checked, v_k109.checked, v_k114.checked, v_k118.checked, v_k178.checked,
+        v_k192.checked, v_k176.checked, v_k179.checked, v_k171.checked, v_k131.checked, v_k133.checked,
+        v_k135.checked, v_k155.checked, v_k153.checked, v_k151.checked, v_k173.checked]
     }
 
+    // property var valveState: [v_k104.checked, v_k109.checked, v_k114.checked, v_k118.checked, v_k178.checked,
+    //     v_k192.checked, v_k176.checked, v_k179.checked, v_k171.checked, v_k131.checked, v_k133.checked,
+    //     v_k135.checked, v_k155.checked, v_k153.checked, v_k151.checked, v_k173.checked]
+
+    // onValveStateChanged: console.log("changed ", sender.)
+    
     Connections {
         target: _myModel
-        onDataChanged: {
+        function onDataChanged() {
             setPresValues(_myModel.getCurPressureValues()) //gRAMsMnemoForm  it's Working fine // NOW IT RERTURNS QVariantMap
             setTempValues(_myModel.getCurTempValues())
         }
     }
     Connections {
         target: _valveModel
-        onDataChanged: {
+        function onDataChanged() {
             setValves(_valveModel.getCurStates())
         }
     }
+
+    function sendValveToModel(name, state) {
+        _valveModel.setState(name, state)
+    }
+
     Rectangle {
         id: rectangle
         width: 1320
@@ -98,6 +115,127 @@ Item {
         padding: 0
         anchors.margins: 0
         title: qsTr("GramsMnemo")
+        
+        Valve {
+            id: v_k104
+            x: 144
+            y: 402
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k104"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k109
+            x: 207
+            y: 402
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k109"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k114
+            x: 272
+            y: 402
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k114"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k118
+            x: 421
+            y: 207
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k118"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k178
+            x: 421
+            y: 402
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k178"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k192
+            x: 862
+            y: 549
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k192"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k176
+            x: 422
+            y: 587
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k176"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k179
+            x: 498
+            y: 549
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k179"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k171
+            x: 492
+            y: 207
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k171"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k131
+            x: 322
+            y: 291
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k131"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k133
+            x: 322
+            y: 207
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k133"
+            onToggled: sendValveToModel(name, checked)
+        }
+        Valve {
+            id: v_k135
+            x: 322
+            y: 114
+            width: 34
+            height: 34
+            checkable: true
+            name: "v_k135"
+            onToggled: sendValveToModel(name, checked)
+        }
         Valve {
             id: v_k155
             x: 775
@@ -105,6 +243,8 @@ Item {
             width: 34
             height: 34
             checkable: true
+            name: "v_k155"
+            onToggled: sendValveToModel(name, checked)
         }
         Valve {
             id: v_k153
@@ -113,6 +253,8 @@ Item {
             width: 34
             height: 34
             checkable: true
+            name: "v_k153"
+            onToggled: sendValveToModel(name, checked)
         }
         Valve {
             id: v_k151
@@ -121,8 +263,9 @@ Item {
             width: 34
             height: 34
             checkable: true
+            name: "v_k151"
+            onToggled: sendValveToModel(name, checked)
         }
-
         Valve {
             id: v_k173
             x: 862
@@ -130,114 +273,8 @@ Item {
             width: 34
             height: 34
             checkable: true
-        }
-
-        Valve {
-            id: v_k171
-            x: 492
-            y: 207
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k133
-            x: 322
-            y: 207
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k118
-            x: 421
-            y: 207
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k178
-            x: 421
-            y: 402
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k192
-            x: 862
-            y: 549
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k179
-            x: 498
-            y: 549
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k176
-            x: 422
-            y: 587
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k114
-            x: 272
-            y: 402
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k109
-            x: 207
-            y: 402
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k104
-            x: 144
-            y: 402
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k131
-            x: 322
-            y: 291
-            width: 34
-            height: 34
-            checkable: true
-        }
-
-        Valve {
-            id: v_k135
-            x: 322
-            y: 114
-            width: 34
-            height: 34
-            checkable: true
+            name: "v_k173"
+            onToggled: sendValveToModel(name, checked)
         }
     }
     SensorWidget {

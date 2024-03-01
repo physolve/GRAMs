@@ -21,11 +21,10 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             Label {
                 id: label
-                text: Number(sensor.value.toPrecision(5))
+                text: Number(sensor.value.toFixed(3)) //toPrecision
                 font.pixelSize: 17
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
-
             }
         }
         ComboBox {

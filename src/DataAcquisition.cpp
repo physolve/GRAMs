@@ -73,3 +73,4 @@ void DataAcquisition::testRead(){ // died
     // }
     // qDebug() << getValves();
 }
+

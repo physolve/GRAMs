@@ -17,8 +17,9 @@ public:
     ~Grams();
     Q_INVOKABLE void initializeModel();
     Q_INVOKABLE void testRead();
+    Q_INVOKABLE void testSet();
     // add JSON and profile here?
-
+    Q_INVOKABLE void setValveState(QString name, bool state);
 private slots:
     void softEvent();
 

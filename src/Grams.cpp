@@ -90,3 +90,8 @@ void Grams::testRead(){
     dataModel.appendData(dataSource.getMeasures());
     valveModel.appendData(dataSource.getValves());
 }
+
+void Grams::setValveState(QString name, bool state){ // should be filtered
+    qDebug() << name << " " << state;
+    
+ }

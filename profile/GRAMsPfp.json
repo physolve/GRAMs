@@ -48,18 +48,18 @@
                         "v_k109",
                         "v_k114",
                         "v_k118",
+                        "v_k178",
+                        "v_k192",
+                        "v_k176",
+                        "v_k179",
+                        "v_k171",
                         "v_k131",
                         "v_k133",
                         "v_k135",
-                        "v_k151",
-                        "v_k153",
                         "v_k155",
-                        "v_k171",
-                        "v_k173",
-                        "v_k176",
-                        "v_k178",
-                        "v_k179",
-                        "v_k192"
+                        "v_k153",
+                        "v_k151",
+                        "v_k173"
                     ]
                 },
                 {
@@ -95,6 +95,47 @@
                     ]
                 }
             ]
+        },
+        "quartiles":{
+            "addRemoveQuar":{
+                "v_gasSupply": ["v_k104", "v_k109", "v_k114"],
+                "v_gasDrain": ["v_k178", "v_k176"],
+                "m_vacuum": "vacuum_sensor"
+            },
+            "storageQuar":{
+                "v_gasStore": ["v_k131", "v_k133", "v_k135"],
+                "v_gasRelease": ["v_k118"],
+                "v_pressureRange": ["v_k171"],
+                "m_pressure":{
+                    "high": ["DD311", "DD341"],
+                    "low": ["DD312"]
+                },
+                "m_temperature": ["DT341", "DT314", "DT352", "DT354", "DT356"],
+                "cond_pressureRange_close": 1.8,
+                "cond_pressureRange_open": 1.6,
+                "cond_gasRelease": 12
+            },
+            "reactionQuar":{
+                "v_gasLeakage": ["v_k155", "v_k153", "v_k151"],
+                "v_pressureRange": ["v_k176"],
+                "m_pressure":{
+                    "high": ["DD331"],
+                    "low": ["DD332", "DD334"]
+                },
+                "m_temperature": ["DT358", "DT359"],
+                "cond_pressureRange_close": 1.8,
+                "cond_pressureRange_open": 1.6,
+                "cond_gasRelease": 12
+            },
+            "secondLineQuar":{
+                "v_gasLeakage": ["v_k179"],
+                "mass_spectr": "unknown"
+            }
+        },
+        "security": {
+            "contradictionValves":{
+                "v_k104":[]
+            }
         }
     },
     "GRAM S": {
