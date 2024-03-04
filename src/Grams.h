@@ -7,6 +7,7 @@
 #include "DataModel.h"
 #include "ValveModel.h"
 #include "Initialize.h"
+#include "Security.h"
 
 class Grams : public QApplication
 {
@@ -17,7 +18,6 @@ public:
     ~Grams();
     Q_INVOKABLE void initializeModel();
     Q_INVOKABLE void testRead();
-    Q_INVOKABLE void testSet();
     // add JSON and profile here?
     Q_INVOKABLE void setValveState(QString name, bool state);
 private slots:
@@ -32,6 +32,6 @@ private:
     DataAcquisition dataSource;
     ValveModel valveModel;
     MyModel dataModel;
-
+    Security m_safeModule; // naming?
     QTimer *softTimer;
 };

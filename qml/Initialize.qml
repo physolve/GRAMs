@@ -82,17 +82,37 @@ Window {
             Layout.alignment: Qt.AlignHCenter
         }
     }
+    property var m_curQuartiles: {} 
+    property var m_curSecurity: {} 
     function parseRequirements(){
         itemModel.clear()
         advantechWait = []
         let profileName = profileBox.currentText
         console.log("For " + profileName + " to work I need:")
-        let curProfile = initSource.profileJson[profileName].controllers
-        if("Advantech" in curProfile){
-            console.log("\tI need to create Advantech instances")
-            advantechRequest(curProfile.Advantech)
-            //need function to sync with real (connected in placeholder)
+        let curProfile = initSource.profileJson[profileName]
+        if("controllers" in curProfile){
+            let curControllers = curProfile.controllers
+            if("Advantech" in curControllers){
+                console.log("\tI need to create Advantech instances")
+                advantechRequest(curControllers.Advantech)
+                //need function to sync with real (connected in placeholder)
+            }
         }
+        else console.log("Big, big trouble! No controllers")
+        if("quartiles" in curProfile){
+            let curQuartiles = curProfile.quartiles
+            console.log("\t" + JSON.stringify(curQuartiles))
+            // append JSON to safety in exit
+            m_curQuartiles = curQuartiles
+        }
+        else console.log("Big, big trouble! No quartiles")
+        if("security" in curProfile){
+            let curSecurity = curProfile.security
+            console.log("\t" + JSON.stringify(curSecurity))
+            // append JSON to safety in exit
+            m_curSecurity = curSecurity
+        }
+        else console.log("Big, big trouble! No security") 
     }
     property var advantechWait: []
     function advantechRequest(curAdvantech){ 
@@ -261,7 +281,28 @@ Window {
         _valveModel.appendValves(t_profileObj.getMappedValves())
     }
     // rewrite to another type of saving function
-    
+
+    //security parser (as values to security.cpp (safeModule))
+    function securityForm(){
+        m_curQuartiles
+        m_curSecurity
+        if("addRemoveQuar" in m_curQuartiles === false)
+            return
+        let addRemove = m_curQuartiles.addRemoveQuar
+        if("storageQuar" in m_curQuartiles === false)
+            return
+        let storage = m_curQuartiles.storageQuar
+        if("reactionQuar" in m_curQuartiles === false)
+            return
+        let reaction = m_curQuartiles.reactionQuar
+        if("secondLineQuar" in m_curQuartiles === false)
+            return
+        let secondLine = m_curQuartiles.secondLineQuar
+
+        
+        
+    }
+
     function exitSave(){
         main.profileId = profileBox.currentIndex
         main.show()

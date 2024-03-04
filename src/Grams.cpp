@@ -20,6 +20,7 @@ Grams::Grams(int &argc, char **argv):
     dataSource(),
     valveModel(),
     dataModel(),
+    m_safeModule(),
     softTimer(new QTimer)
 {
 
@@ -70,6 +71,7 @@ void Grams::initGUI(){
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     m_engine.rootContext()->setContextProperty("_valveModel", &valveModel);
     m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
+    m_engine.rootContext()->setContextProperty("safeModule", &m_safeModule);
     m_engine.rootContext()->setContextProperty("backend", this);
     m_engine.load(url);
 }

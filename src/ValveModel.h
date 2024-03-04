@@ -32,7 +32,7 @@ public:
     //bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     QHash<int, QByteArray> roleNames() const override; // use QMultiHash
 
-    Q_INVOKABLE void appendValves(QVariant valves);
+    Q_INVOKABLE void appendValves(const QVariant &valves);
     Q_INVOKABLE QVariantMap getCurStates() const;
     //void getStates();
 

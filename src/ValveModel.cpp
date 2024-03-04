@@ -6,7 +6,7 @@ ValveModel::ValveModel(QObject *parent) :
 {
 }
 
-void ValveModel::appendValves(QVariant valves){
+void ValveModel::appendValves(const QVariant &valves){
     m_valveNames = valves.toStringList();
     for(auto valveName : m_valveNames){
         //auto valve = Valve(name, false);
