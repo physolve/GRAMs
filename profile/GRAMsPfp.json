@@ -140,12 +140,17 @@
                 "v_k178":["v_k104", "v_k109", "v_k114", "v_k118"],
                 "v_k118":["v_k104", "v_k109", "v_k114", "v_k178"]
             },
-            "twoOfThree": ["v_k178", "v_k179", "v_k179"],
-            "safetyRelease":{ "v_gasRelease" : "cond_gasRelease" },
-            "safetyClosePressureStorageQuar": {"v_pressureRange" : "cond_pressureRange_close"},
+            "twoOfThree": [
+                ["v_k178", "v_k179", "v_k192"],
+                ["v_k104", "v_k179", "v_k192"],
+                ["v_k109", "v_k179", "v_k192"],
+                ["v_k114", "v_k179", "v_k192"]
+            ],
+            "safetyPressureStorageQuar": {"v_pressureRange" : "cond_pressureRange_close"},
             "safetyOpenPressureStorageQuar": {"v_pressureRange" : "cond_pressureRange_open"},
             "safetyClosePressureReactionQuar": {"v_pressureRange" : "cond_pressureRange_close"},
-            "safetyOpenPressureReactionQuar": {"v_pressureRange" : "cond_pressureRange_open"}
+            "safetyOpenPressureReactionQuar": {"v_pressureRange" : "cond_pressureRange_open"},
+            "safetyRelease": {"v_gasRelease" : "cond_gasRelease" }
         }
     },
     "GRAM S": {
