@@ -93,7 +93,9 @@ void Grams::testRead(){
     valveModel.appendData(dataSource.getValves());
 }
 
-void Grams::setValveState(QString name, bool state){ // should be filtered
+void Grams::setValveState(const QString &name, const bool &state){ // should be filtered
     qDebug() << name << " " << state;
-    
+    auto valveMap = valveModel.securityValveMap(name, state);
+    auto result = m_safeModule.checkValveAction(valveMap, name);
+    valveModel.appendData(name, result);  
  }

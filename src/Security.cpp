@@ -12,7 +12,7 @@ void ValveGraph::addRuleOfThree(const QString &threeNodeOne,const QString &three
 }
 bool ValveGraph::applyGraphMask(const QMap<QString, bool> &valveMap){
     if(!valveMap[m_selfName]) 
-        return;
+        return false;
     bool resultEach = true;
     if(checkEachInList)
         resultEach = maskEachInList(valveMap);
@@ -23,8 +23,6 @@ bool ValveGraph::applyGraphMask(const QMap<QString, bool> &valveMap){
     return result;
 }
 
-ValveToRangePressure::ValveToRangePressure(const QString &selfName, double pressureOpen, double pressureClose)
-: m_selfName(selfName), m_pressureOpen(pressureOpen), m_pressureClose(pressureClose) {}
 bool ValveToRangePressure::applyPressureMask(bool state, double currentPressure, double incomingPressure){
     bool m_state = state;
     if(currentPressure>=m_pressureClose&&incomingPressure>=m_pressureClose){
@@ -35,9 +33,7 @@ bool ValveToRangePressure::applyPressureMask(bool state, double currentPressure,
     return state;
 }
 
-ValveToSafePressure::ValveToSafePressure(const QString &selfName, double pressureOpen)
-: m_selfName(selfName), m_pressureOpen(pressureOpen) {}
-bool ValveToSafePressure::applyPressureMask(bool state, double currentPressure){
+bool ValveToSafeRelease::applyPressureMask(bool state, double currentPressure){
     bool m_state = state;
     if(currentPressure>=m_pressureOpen)
         m_state = true;
@@ -69,24 +65,34 @@ void Security::setContradictionValves(const QVariantMap &contradictionValves, co
     }
 }
 
-void Security::setRangePressureValves(const QVariantMap &rangePressureValves){
-    QStringList valves = rangePressureValves.keys();
-    for(auto valve : valves){
-        auto pressureRange = rangePressureValves[valve].toMap();
-        double pressureOpen = pressureRange["pressureOpen"].toDouble();
-        double pressureClose = pressureRange["pressureClose"].toDouble();
-        m_rangePressureValves.insert(valve, ValveToRangePressure(valve, pressureOpen, pressureClose));
-    }
+void Security::setRangePressureValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen, const double &pressureClose){
+    m_rangePressureValves.insert(valve, ValveToRangePressure{valve, watchQuartile, pressureOpen, pressureClose});
 }
-void Security::setSafePressureValves(const QVariantMap &safePressureValves){
-    QStringList valves = safePressureValves.keys();
-    for(auto valve : valves){
-        auto pressureRange = safePressureValves[valve].toMap();
-        double pressureOpen = pressureRange["pressureOpen"].toDouble();
-        m_safePressureValves.insert(valve, ValveToSafePressure(valve, pressureOpen));
-    }
+void Security::setSafeReleaseValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen){
+    m_safeReleaseValves.insert(valve, ValveToSafeRelease{valve, watchQuartile, pressureOpen});
 }
 
-void Security::checkValveAction(const QMap<QString, bool> &valveMap){
-    
+bool Security::checkValveAction(const QMap<QString, bool> &valveMap, const QString &sender){
+    bool state = valveMap[sender];
+    if(m_contradictionValves.contains(sender)){
+        state = m_contradictionValves[sender].applyGraphMask(valveMap);
+    }
+    return state;
+}
+
+QMap<QString, bool> Security::checkValvePressure(const QMap<QString, bool> &valveMap, const QMap<QString, double> &pressureMap){
+    auto cur_valveMap = valveMap;
+    for(auto valveToRangePressure : m_rangePressureValves.values()){
+        auto valveName = valveToRangePressure.m_selfName;
+        auto pressureQuartile = valveToRangePressure.m_watchQuartile;
+        auto result = valveToRangePressure.applyPressureMask(valveMap[valveName], pressureMap[pressureQuartile], pressureMap[pressureQuartile]); // quartileNode!
+        cur_valveMap[valveName] = result;
+    }
+    for(auto valveToSafeRelease : m_safeReleaseValves.values()){
+        auto valveName = valveToSafeRelease.m_selfName;
+        auto pressureQuartile = valveToSafeRelease.m_watchQuartile;
+        auto result = valveToSafeRelease.applyPressureMask(valveMap[valveName], pressureMap[pressureQuartile]); // quartileNode!
+        cur_valveMap[valveName] = result;
+    }
+    return cur_valveMap;
 }

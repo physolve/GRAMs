@@ -88,7 +88,7 @@ Item {
     }
 
     function sendValveToModel(name, state) {
-        _valveModel.setState(name, state)
+        backend.setValveState(name, state)
     }
 
     Rectangle {

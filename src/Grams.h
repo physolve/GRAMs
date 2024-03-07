@@ -19,7 +19,7 @@ public:
     Q_INVOKABLE void initializeModel();
     Q_INVOKABLE void testRead();
     // add JSON and profile here?
-    Q_INVOKABLE void setValveState(QString name, bool state);
+    Q_INVOKABLE void setValveState(const QString &name, const bool &state);
 private slots:
     void softEvent();
 

@@ -33,10 +33,12 @@ public:
     QHash<int, QByteArray> roleNames() const override; // use QMultiHash
 
     Q_INVOKABLE void appendValves(const QVariant &valves);
-    Q_INVOKABLE QVariantMap getCurStates() const;
+    Q_INVOKABLE QVariantMap getCurStates() const; // for qml
     //void getStates();
+    QMap<QString, bool> securityValveMap(const QString &senderName, const bool &senderState);
 
-    void appendData(const QVector<bool> & valveList);
+    void appendData(const QVector<bool> &valveList);
+    void appendData(const QString & valveName, const bool &valveState);
 
 signals:
     void channelMapListChanged();
@@ -44,7 +46,6 @@ signals:
 private:
     QStringList m_valveNames;
     QHash<QString, QSharedPointer<Valve>> m_valves;
-    
     //QList<Valve*> m_valves; // not pointer beacause we know in start?
     QElapsedTimer m_time;
 };

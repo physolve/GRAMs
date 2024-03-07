@@ -77,6 +77,7 @@ Window {
             text: qsTr("Продолжить");
             onClicked: {
                 saveSettings()
+                securityForm()
                 exitSave()
             }
             Layout.alignment: Qt.AlignHCenter
@@ -284,8 +285,6 @@ Window {
 
     //security parser (as values to security.cpp (safeModule))
     function securityForm(){
-        m_curQuartiles
-        m_curSecurity
         if("addRemoveQuar" in m_curQuartiles === false)
             return
         let addRemove = m_curQuartiles.addRemoveQuar
@@ -299,8 +298,35 @@ Window {
             return
         let secondLine = m_curQuartiles.secondLineQuar
 
+
+        if("contradictionValves" in m_curSecurity === false) // we may be without contr valves but check with question
+            return
+        let contradictionRule = m_curSecurity.contradictionValves
+
+        if("twoOfThree" in m_curSecurity === false)
+            return
+        let twoOfThreeRule = m_curSecurity.twoOfThree
+
+        if("safetyQuars" in m_curSecurity === false)
+            return
+        let safetyQuarRules = m_curSecurity.safetyQuars
+        let sPSQ = [] // [string, double, double] 
+        if("storageQuarSP" in safetyQuarRules){
+            sPSQ = safetyQuarRules.storageQuarSP
+        }
+        let sRSQ = [] // [string, double] 
+        if("storageQuarSR" in safetyQuarRules){
+            sRSQ = safetyQuarRules.storageQuarSR
+        }
+        let sRRQ = [] // [string, double] 
+        if("reactionQuarSP" in safetyQuarRules){
+            sRRQ = safetyQuarRules.reactionQuarSP
+        }
         
-        
+        safeModule.setContradictionValves(contradictionRule, twoOfThreeRule)
+        safeModule.setRangePressureValves(sPSQ.at(0),sPSQ.at(1),sPSQ.at(2))
+        safeModule.setSafeReleaseValves(sRSQ.at(0),sRSQ.at(1))
+        safeModule.setRangePressureValves(sRRQ.at(0),sRRQ.at(1),sRRQ.at(2))
     }
 
     function exitSave(){

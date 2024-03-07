@@ -29,6 +29,15 @@ QVariantMap ValveModel::getCurStates() const{
     return curStates;
 }
 
+QMap<QString, bool> ValveModel::securityValveMap(const QString &senderName, const bool &senderState){
+    QMap<QString, bool> cur_valveMap;
+    for(auto name : m_valveNames){
+        cur_valveMap[name] = m_valves[name]->getState();
+    }
+    cur_valveMap[senderName] = senderState;
+    return cur_valveMap;
+}
+
 int ValveModel::rowCount( const QModelIndex& parent) const
 {
     if (parent.isValid())
@@ -73,6 +82,15 @@ void ValveModel::appendData(const QVector<bool> & valveList){
         m_valves[m_valveNames.at(i)]->setState(value);
         // use lambda instead of count method!!!
     }
+    const QModelIndex startIndex = index(0, 0);
+    const QModelIndex endIndex   = index(m_valves.count() - 1, 0);
+
+    // ...but only the population field
+    emit dataChanged(startIndex, endIndex, QVector<int>() << State);
+}
+void ValveModel::appendData(const QString & valveName, const bool &valveState){
+    m_valves[valveName]->setState(valveState);
+    
     const QModelIndex startIndex = index(0, 0);
     const QModelIndex endIndex   = index(m_valves.count() - 1, 0);
 
