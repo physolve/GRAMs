@@ -43,7 +43,7 @@ bool ValveToSafeRelease::applyPressureMask(bool state, double currentPressure){
 Security::Security(QObject *parent) :
     QObject(parent)
 {
-
+    qDebug() << "Security class is created";
 }
 
 void Security::setContradictionValves(const QVariantMap &contradictionValves, const QVariantList &ruleOfThreeList){

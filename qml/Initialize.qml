@@ -324,7 +324,7 @@ Window {
         }
         
         safeModule.setContradictionValves(contradictionRule, twoOfThreeRule)
-        safeModule.setRangePressureValves(sPSQ.at(0),sPSQ.at(1),sPSQ.at(2))
+        safeModule.setRangePressureValves(sPSQ[0],sPSQ[1],sPSQ[2])
         safeModule.setSafeReleaseValves(sRSQ.at(0),sRSQ.at(1))
         safeModule.setRangePressureValves(sRRQ.at(0),sRRQ.at(1),sRRQ.at(2))
     }

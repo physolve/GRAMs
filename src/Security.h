@@ -2,6 +2,7 @@
 
 #include <QVariant>
 
+
 class ValveGraph{
 public:
     ValveGraph(const QString &selfName = "unknown");
@@ -47,14 +48,15 @@ struct ValveToSafeRelease{
     bool applyPressureMask(bool state, double currentPressure);
 };
 
+
 class Security : public QObject
 {
     Q_OBJECT
+public:
+    Security(QObject *parent = 0);
     Q_INVOKABLE void setContradictionValves(const QVariantMap &contradictionValves, const QVariantList &ruleOfThreeList);
     Q_INVOKABLE void setRangePressureValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen, const double &pressureClose);
     Q_INVOKABLE void setSafeReleaseValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen);
-public:
-    Security(QObject *parent = 0);
     bool checkValveAction(const QMap<QString, bool> &valveMap, const QString &sender);
     QMap<QString, bool> checkValvePressure(const QMap<QString, bool> &valveMap, const QMap<QString, double> &pressureMap);
 
@@ -70,3 +72,4 @@ private:
     QMap<QString, ValveToRangePressure> m_rangePressureValves;
     QMap<QString, ValveToSafeRelease> m_safeReleaseValves;
 };
+

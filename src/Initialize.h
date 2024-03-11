@@ -5,11 +5,11 @@
 class Initialize : public QObject
 {
     Q_OBJECT
+public:
+    Initialize(QObject *parent = 0);
     Q_PROPERTY(QVariantMap profileJson MEMBER m_profileJson CONSTANT)
     Q_PROPERTY(QStringList profileNames MEMBER m_profileNames CONSTANT)
     Q_PROPERTY(QVariantMap advantechDeviceMap MEMBER m_advantechDeviceMap NOTIFY advantechDeviceMapChanged)
-public:
-    Initialize(QObject *parent = 0);
     Q_INVOKABLE QVariantMap advantechDeviceFill(const QString &description, const QString &type);
     
 signals:
