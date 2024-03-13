@@ -10,7 +10,7 @@ class AdvantechCtrl : public QObject
 {
     Q_OBJECT
 public:
-    AdvantechCtrl(QString name, QObject *parent = nullptr);
+    AdvantechCtrl(const QString &name = "unknown", QObject *parent = nullptr);
     virtual ~AdvantechCtrl();
     virtual void Initialization();
     virtual void readData(); 

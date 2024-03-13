@@ -88,14 +88,18 @@ void Grams::softEvent(){
 }
 
 void Grams::testRead(){
-    dataSource.testRead();
+    if(dataSource.getGRAMsIntegrity())
+        dataSource.processEvents();
     dataModel.appendData(dataSource.getMeasures());
     valveModel.appendData(dataSource.getValves());
 }
 
 void Grams::setValveState(const QString &name, const bool &state){ // should be filtered
     qDebug() << name << " " << state;
+    if(!dataSource.getGRAMsIntegrity())
+        return;
     auto valveMap = valveModel.securityValveMap(name, state);
     auto result = m_safeModule.checkValveAction(valveMap, name);
-    valveModel.appendData(name, result);  
- }
+    valveModel.appendData(name, result);
+    //to controller?
+}

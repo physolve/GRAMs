@@ -38,61 +38,63 @@
     },
     "GRAM50": {
         "profileId":1,
+        "stuff":{
+            "valveMap":[
+                "v_k104",
+                "v_k109",
+                "v_k114",
+                "v_k118",
+                "v_k178",
+                "v_k192",
+                "v_k176",
+                "v_k179",
+                "v_k171",
+                "v_k131",
+                "v_k133",
+                "v_k135",
+                "v_k155",
+                "v_k153",
+                "v_k151",
+                "v_k173"
+            ],
+            "pressureSensors":[
+                { "name": "DD311", "cch": 0, "A": 3.1243,   "B": 12.494,    "R": 0.240},
+                { "name": "DD312", "cch": 1, "A": 0.125,    "B": 0.5,       "R": 0.240},
+                { "name": "DD331", "cch": 2, "A": 3.1242,   "B": 12.479,    "R": 0.240},
+                { "name": "DD332", "cch": 3, "A": 0.125,    "B": 0.5002,    "R": 0.240},
+                { "name": "DD334", "cch": 4, "A": 0.00625,  "B": 0.025023,  "R": 0.240},
+                { "name": "DD341", "cch": 5, "A": 1.5625,   "B": 6.2512,    "R": 0.240},
+                { "name": "DT341", "cch": 6, "A": 6.25,     "B": 25,        "R": 0.240},
+                { "name": "DT314", "cch": 7, "A": 9.375,    "B": 87.5,      "R": 0.240}
+            ],
+            "temperatureSensors":[
+                {"name": "DT350", "cch": 0},
+                {"name": "DT351", "cch": 1},
+                {"name": "DT352", "cch": 2},
+                {"name": "DT354", "cch": 3},
+                {"name": "DT356", "cch": 4},
+                {"name": "DT357", "cch": 5},
+                {"name": "DT358", "cch": 6},
+                {"name": "DT359", "cch": 7}
+            ]
+        },
         "controllers":{ 
             "Advantech":[
                 {
                     "device": "USB-4750",
-                    "purpose": "valves",
-                    "valveMap":[
-                        "v_k104",
-                        "v_k109",
-                        "v_k114",
-                        "v_k118",
-                        "v_k178",
-                        "v_k192",
-                        "v_k176",
-                        "v_k179",
-                        "v_k171",
-                        "v_k131",
-                        "v_k133",
-                        "v_k135",
-                        "v_k155",
-                        "v_k153",
-                        "v_k151",
-                        "v_k173"
-                    ]
+                    "purpose": "valves"
                 },
                 {
                     "device": "USB-4716",
                     "purpose": "pressure",
                     "profile": "profile/usb-4716-ai-diff-8.xml",
-                    "defaultType": 5,
-                    "sensors":[
-                        { "name": "DD311", "cch": 0, "A": 3.1243,   "B": 12.494,    "R": 0.240},
-                        { "name": "DD312", "cch": 1, "A": 0.125,    "B": 0.5,       "R": 0.240},
-                        { "name": "DD331", "cch": 2, "A": 3.1242,   "B": 12.479,    "R": 0.240},
-                        { "name": "DD332", "cch": 3, "A": 0.125,    "B": 0.5002,    "R": 0.240},
-                        { "name": "DD334", "cch": 4, "A": 0.00625,  "B": 0.025023,  "R": 0.240},
-                        { "name": "DD341", "cch": 5, "A": 1.5625,   "B": 6.2512,    "R": 0.240},
-                        { "name": "DT341", "cch": 6, "A": 6.25,     "B": 25,        "R": 0.240},
-                        { "name": "DT314", "cch": 7, "A": 9.375,    "B": 87.5,      "R": 0.240}
-                    ]
+                    "defaultType": 5
                 },
                 {
                     "device": "USB-4718",
                     "purpose": "temperature",
                     "profile": "profile/usb-4718-ai-tc-8.xml",
-                    "defaultType": 9,
-                    "sensors":[
-                        {"name": "DT350", "cch": 0},
-                        {"name": "DT351", "cch": 1},
-                        {"name": "DT352", "cch": 2},
-                        {"name": "DT354", "cch": 3},
-                        {"name": "DT356", "cch": 4},
-                        {"name": "DT357", "cch": 5},
-                        {"name": "DT358", "cch": 6},
-                        {"name": "DT359", "cch": 7}
-                    ]
+                    "defaultType": 9
                 }
             ]
         },
@@ -104,8 +106,8 @@
             },
             "storageQuar":{
                 "v_gasStore": ["v_k131", "v_k133", "v_k135"],
-                "v_gasRelease": ["v_k118"],
-                "v_pressureRange": ["v_k171"],
+                "v_gasRelease": "v_k118",
+                "v_pressureRange": "v_k171",
                 "m_pressure":{
                     "high": ["DD311", "DD341"],
                     "low": ["DD312"]
@@ -117,7 +119,7 @@
             },
             "reactionQuar":{
                 "v_gasLeakage": ["v_k155", "v_k153", "v_k151"],
-                "v_pressureRange": ["v_k176"],
+                "v_pressureRange": "v_k176",
                 "m_pressure":{
                     "high": ["DD331"],
                     "low": ["DD332", "DD334"]
@@ -141,14 +143,11 @@
                 "v_k118":["v_k104", "v_k109", "v_k114", "v_k178"]
             },
             "twoOfThree": [
-                ["v_k178", "v_k179", "v_k192"],
-                ["v_k104", "v_k179", "v_k192"],
-                ["v_k109", "v_k179", "v_k192"],
-                ["v_k114", "v_k179", "v_k192"]
+                ["v_k178", "v_k179", "v_k192"]
             ],
             "safetyQuars" : {
                 "storageQuarSP": ["v_pressureRange", "storageQuar", "cond_pressureRange_close", "cond_pressureRange_open"],
-                "storageQuarSR": ["v_gasRelease", "cond_gasRelease"],
+                "storageQuarSR": ["v_gasRelease", "storageQuar", "cond_gasRelease"],
                 "reactionQuarSP": ["v_pressureRange", "reactionQuar", "cond_pressureRange_close", "cond_pressureRange_open"]
             }
         }

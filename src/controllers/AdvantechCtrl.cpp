@@ -2,7 +2,7 @@
 
 #include <QDebug>
 
-AdvantechCtrl::AdvantechCtrl(QString name, QObject *parent) : 
+AdvantechCtrl::AdvantechCtrl(const QString &name, QObject *parent) : 
 	QObject(parent), m_name(name)
 {
 }

@@ -1,6 +1,6 @@
 #include "Sensor.h"
 
-Sensor::Sensor(const QString &name, const QMap<QString,double> &parameters, QObject *parent) : QObject(parent),
+Sensor::Sensor(const QString &name, const QMap<QString,double> &parameters)://, QObject *parent) : QObject(parent),
 m_name(name), m_A(parameters["A"]), m_B(parameters["B"]), m_R(parameters["R"]), m_cX(0), m_cY(0)
 {
 }

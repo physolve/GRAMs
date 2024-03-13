@@ -2,7 +2,6 @@
 
 #include <QVariant>
 
-
 class ValveGraph{
 public:
     ValveGraph(const QString &selfName = "unknown");

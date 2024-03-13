@@ -8,10 +8,10 @@ ValveModel::ValveModel(QObject *parent) :
 
 void ValveModel::appendValves(const QVariant &valves){
     m_valveNames = valves.toStringList();
-    for(auto valveName : m_valveNames){
+    for(const auto &valveName : m_valveNames){
         //auto valve = Valve(name, false);
         //m_valves.append(&valve);
-        m_valves.insert(valveName, QSharedPointer<Valve>(new Valve(valveName)));
+        m_valves.insert(valveName, Valve(valveName));
     }
 }
 // void ValveModel::getStates(){
@@ -23,7 +23,7 @@ void ValveModel::appendValves(const QVariant &valves){
 QVariantMap ValveModel::getCurStates() const{
     QVariantMap curStates;
     for(auto name : m_valveNames){
-        curStates[name] = m_valves[name]->getState();
+        curStates[name] = m_valves[name].getState();
     }
     // use lambda instead for!!! 
     return curStates;
@@ -32,7 +32,7 @@ QVariantMap ValveModel::getCurStates() const{
 QMap<QString, bool> ValveModel::securityValveMap(const QString &senderName, const bool &senderState){
     QMap<QString, bool> cur_valveMap;
     for(auto name : m_valveNames){
-        cur_valveMap[name] = m_valves[name]->getState();
+        cur_valveMap[name] = m_valves[name].getState();
     }
     cur_valveMap[senderName] = senderState;
     return cur_valveMap;
@@ -53,10 +53,10 @@ QVariant ValveModel::data(const QModelIndex &index, int role) const
 
     auto valve = this->m_valves[m_valveNames.at(index.row())];
     if ( role == NameRole ){
-        return valve->m_name;
+        return valve.m_name;
     }
     else if ( role == State )
-        return QVariant::fromValue(valve->m_state);
+        return QVariant::fromValue(valve.m_state);
     else
         return QVariant();
 }
@@ -79,7 +79,7 @@ void ValveModel::appendData(const QVector<bool> & valveList){
     auto value = false;
     for (int i = 0; i < count; ++i) {
         value = valveList.at(i);
-        m_valves[m_valveNames.at(i)]->setState(value);
+        m_valves[m_valveNames.at(i)].setState(value);
         // use lambda instead of count method!!!
     }
     const QModelIndex startIndex = index(0, 0);
@@ -89,7 +89,7 @@ void ValveModel::appendData(const QVector<bool> & valveList){
     emit dataChanged(startIndex, endIndex, QVector<int>() << State);
 }
 void ValveModel::appendData(const QString & valveName, const bool &valveState){
-    m_valves[valveName]->setState(valveState);
+    m_valves[valveName].setState(valveState);
     
     const QModelIndex startIndex = index(0, 0);
     const QModelIndex endIndex   = index(m_valves.count() - 1, 0);

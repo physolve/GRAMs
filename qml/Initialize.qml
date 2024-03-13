@@ -83,14 +83,30 @@ Window {
             Layout.alignment: Qt.AlignHCenter
         }
     }
-    property var m_curQuartiles: {} 
-    property var m_curSecurity: {} 
+    property var valveMap: ([])
+    property var pressureSensors: ([])
+    property var temperatureSensors: ([])
+
+    property var m_curQuartiles: ({})
+    property var m_curSecurity: ({})
+
     function parseRequirements(){
         itemModel.clear()
         advantechWait = []
         let profileName = profileBox.currentText
         console.log("For " + profileName + " to work I need:")
         let curProfile = initSource.profileJson[profileName]
+
+        if("stuff" in curProfile){
+            let stuff = curProfile.stuff
+            if("valveMap" in stuff)
+                valveMap = stuff.valveMap
+            if("pressureSensors" in stuff)
+                pressureSensors = stuff.pressureSensors
+            if("temperatureSensors" in stuff)
+                temperatureSensors = stuff.temperatureSensors
+        }
+        else console.log("Big, big trouble! No stuff")
         if("controllers" in curProfile){
             let curControllers = curProfile.controllers
             if("Advantech" in curControllers){
@@ -119,21 +135,22 @@ Window {
     function advantechRequest(curAdvantech){ 
         console.log("Asking backend to create: ")
         for(const [key, value] of Object.entries(curAdvantech)){
-            switch(value.purpose){
-                case "valves":
-                    console.log("\tcreate DO settings for " + value.device)
-                    advantechWait.push({"name":value.device, "type": "DO", "index":itemModel.count })
-                    advModuleDOType(value)
-                    break;
-                case "pressure":
-                case "temperature":
-                    console.log("\tcreate AI settings for " + value.device)
-                    advantechWait.push({"name":value.device, "type": "AI", "index":itemModel.count})
-                    advModuleAIType(value)
-                    // creating sensors too!
-                    break;
-                default: console.log(`Sorry, we are out of ${value.purpose}.`);
+            if(value.purpose == "valves"){
+                console.log("\tcreate DO settings for " + value.device)
+                advantechWait.push({"name":value.device, "type": "DO", "index":itemModel.count })
+                value.valves = valveMap
+                advModuleDOType(value)
             }
+            else if (value.purpose == "pressure" || value.purpose == "temperature" ){
+                console.log("\tcreate AI settings for " + value.device)
+                advantechWait.push({"name":value.device, "type": "AI", "index":itemModel.count})
+                if(value.purpose == "pressure")
+                    value.sensors = pressureSensors
+                else
+                    value.sensors = temperatureSensors
+                advModuleAIType(value)
+            }
+            else console.log(`Sorry, we are out of ${value.purpose}.`);
         }
     }
     Component{
@@ -154,10 +171,10 @@ Window {
         if ("profile" in value){
             profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
         }
-        if("sensors" in value){
-            profileObj.setMappingNames(value.sensors)
-            profileObj.setInitialChannelCount(value.sensors.length-1)
-        }
+        
+        profileObj.setMappingNames(value.sensors)
+        profileObj.setInitialChannelCount(value.sensors.length-1)
+
         if("defaultType" in value){
             profileObj.setDefaultType(value.defaultType)
         }
@@ -172,9 +189,9 @@ Window {
         if ("profile" in value){
             profileObj.setDeviceProfile(value.profile) // make somewhere profiles (maybe in resources)
         }
-        if("valveMap" in value){
-            profileObj.setValvesNames(value.valveMap)
-        }
+        
+        profileObj.setValvesNames(value.valves)
+
         itemModel.append(profileObj)
     }
     function realRequirements(){
@@ -213,7 +230,7 @@ Window {
         t_profileObj.setDeviceConnected(true)
         console.log("set settings")
 
-        let settings = initSource.advantechDeviceFill(description, "pressure")
+        let settings = initSource.advantechDeviceFill(description, "sensors")
         
         t_profileObj.setChannelCount(settings.channelCount)
         t_profileObj.setValueRange(settings.valueRanges)
@@ -260,7 +277,37 @@ Window {
                     console.log("unknown controller")
                 }
             }
-            // add else to create SIMULATED sensors (but not valves) 
+            // add else to create SIMULATED sensors and model valves names
+            else {
+                let colors = ["#fac89e","#e3e891","#c2fc99","#a3fcb3","#92e8d5","#96c8f2","#ada8ff","#ce94f7","#ed94dd","#fea8bb"]
+                if(lcl_item.innerPurpose == "pressure"){
+                    let sortedArray = pressureSensors.sort((a, b) => a.cch - b.cch)    
+                    let pressureEmul = ([])
+                    for(const [index, element] of sortedArray.entries()){ // finish the sequence ->setNameList, <- mappingResult()
+                        let m_parameters = {}
+                        m_parameters["A"] = 1
+                        m_parameters["B"] = 0
+                        m_parameters["R"] = 1
+                        pressureEmul.push({"name": element.name, "parameters": m_parameters, "curColor": colors[index]})
+                    }
+                    _myModel.appendProfileSensors(lcl_item.innerPurpose, pressureEmul)
+                }
+                else if(lcl_item.innerPurpose == "temperature"){
+                    let sortedArray = temperatureSensors.sort((a, b) => a.cch - b.cch)    
+                    let tempEmul = ([])
+                    for(const [index, element] of sortedArray.entries()){ // finish the sequence ->setNameList, <- mappingResult()
+                        let m_parameters = {}
+                        m_parameters["A"] = 1
+                        m_parameters["B"] = 0
+                        m_parameters["R"] = 1
+                        tempEmul.push({"name": element.name, "parameters": m_parameters, "curColor": colors[index]})
+                    }
+                    _myModel.appendProfileSensors(lcl_item.innerPurpose, tempEmul)
+                }
+                else if(lcl_item.innerPurpose == "valves"){
+                    _valveModel.appendValves(valveMap)
+                }
+            }
         }
     }
     function saveAdvantechControllers(index){
@@ -310,23 +357,34 @@ Window {
         if("safetyQuars" in m_curSecurity === false)
             return
         let safetyQuarRules = m_curSecurity.safetyQuars
-        let sPSQ = [] // [string, double, double] 
+        let sPSQ = [] // [string, string, double, double]
         if("storageQuarSP" in safetyQuarRules){
             sPSQ = safetyQuarRules.storageQuarSP
+            sPSQ[0] = storage[sPSQ[0]]
+            // [1] = storageQuar
+            sPSQ[2] = storage[sPSQ[2]]
+            sPSQ[3] = storage[sPSQ[3]]
         }
-        let sRSQ = [] // [string, double] 
+        let sRSQ = [] // [string, string, double]
         if("storageQuarSR" in safetyQuarRules){
             sRSQ = safetyQuarRules.storageQuarSR
+            sRSQ[0] = storage[sRSQ[0]]
+            // [1] = storageQuar
+            sRSQ[2] = storage[sRSQ[2]]
         }
-        let sRRQ = [] // [string, double] 
+        let sRRQ = [] // [string, string, double, double]
         if("reactionQuarSP" in safetyQuarRules){
             sRRQ = safetyQuarRules.reactionQuarSP
+            sRRQ[0] = reaction[sRRQ[0]]
+            // [1] = reactionQuar
+            sRRQ[2] = reaction[sRRQ[2]]
+            sRRQ[3] = reaction[sRRQ[3]]
         }
         
         safeModule.setContradictionValves(contradictionRule, twoOfThreeRule)
-        safeModule.setRangePressureValves(sPSQ[0],sPSQ[1],sPSQ[2])
-        safeModule.setSafeReleaseValves(sRSQ.at(0),sRSQ.at(1))
-        safeModule.setRangePressureValves(sRRQ.at(0),sRRQ.at(1),sRRQ.at(2))
+        safeModule.setRangePressureValves(sPSQ[0], sPSQ[1], sPSQ[2], sPSQ[3])
+        safeModule.setSafeReleaseValves(sRSQ[0], sRSQ[1], sRSQ[2])
+        safeModule.setRangePressureValves(sRRQ[0], sRRQ[1], sRRQ[2], sRRQ[3])
     }
 
     function exitSave(){

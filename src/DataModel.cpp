@@ -11,13 +11,13 @@ MyModel::MyModel(QObject *parent) :
 {
 }
 
-void MyModel::appendProfileSensors(const QString &controllerName, const QVariantList &sensors){
+void MyModel::appendProfileSensors(const QString &controllerPurpose, const QVariantList &sensors){
     // for this moment we only know about profile and not controllers, so we create firstly using names
     // and then in initializeAcquisition we put mapping to link with controller channels
 
     QStringList sensorNameList;
     //while creation link sensor to appenging data and function
-    for(auto sensorObj : sensors){
+    for(const auto &sensorObj : sensors){
         auto sensorObjMap = sensorObj.toMap();
         auto sensorName = sensorObjMap["name"].toString();
         QVariantMap param = sensorObjMap["parameters"].toMap();
@@ -25,10 +25,10 @@ void MyModel::appendProfileSensors(const QString &controllerName, const QVariant
         m_param["A"] = param["A"].toDouble();
         m_param["B"] = param["B"].toDouble();
         m_param["R"] = param["R"].toDouble();
-        m_sensors.insert(sensorName, QSharedPointer<Sensor>(new Sensor(sensorName, m_param)));
+        m_sensors.insert(sensorName, Sensor(sensorName, m_param));
         sensorNameList << sensorName;
     }
-    m_controllersToSensors.insert(controllerName,sensorNameList);
+    m_controllersToSensors.insert(controllerPurpose, sensorNameList);
 
 }
 
@@ -55,16 +55,16 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
     auto sensor = this->m_sensors[allNames.at(index.row())];
 
     if ( role == NameRole ){
-        return sensor->m_name;
+        return sensor.m_name;
     }
     else if ( role == Time )
-        return QVariant::fromValue(sensor->getTime());
+        return QVariant::fromValue(sensor.getTime());
     else if ( role == Value )
-        return QVariant::fromValue(sensor->getValue());
+        return QVariant::fromValue(sensor.getValue());
     else if ( role == CurTime)
-        return QVariant::fromValue(sensor->getCurTime());
+        return QVariant::fromValue(sensor.getCurTime());
     else if ( role == CurValue)
-        return QVariant::fromValue(sensor->getCurValue());
+        return QVariant::fromValue(sensor.getCurValue());
     else
         return QVariant();
 }
@@ -82,29 +82,19 @@ QHash<int, QByteArray> MyModel::roleNames() const
     return mapping;
 }
 
-QVariant  MyModel::getCurValues() const{
-    QList<double> curValues;
-    for(auto sensor : m_sensors)
-        curValues << sensor->getCurValue();
-    //qDebug() << curValues;
-    return QVariant::fromValue(curValues); 
-}
-
-QVariantMap MyModel::getCurPressureValues() const{ // lets try to change from QVariant to QVariantMap
+QVariantMap MyModel::getCurPressureValues() const{
     //QVector<double> curPressureValues;
     QVariantMap curPressureValues;
-    //QStringList mappedNames = m_controllersToSensors["pressure"];
-    for(auto name : m_controllersToSensors["pressure"]){
-        curPressureValues[name] = m_sensors[name]->getCurValue();
+    for(const auto &name : m_controllersToSensors["pressure"]){
+        curPressureValues[name] = m_sensors[name].getCurValue();
     } // its bad, try lambda 
     return curPressureValues;//QVariant::fromValue(curPressureValues); 
 }
 QVariantMap MyModel::getCurTempValues() const{
     //QList<double> curTempValues;
     QVariantMap curTempValues;
-    QStringList mappedNames = m_controllersToSensors["temperature"];
-    for(auto name : mappedNames){
-        curTempValues[name] = m_sensors[name]->getCurValue();
+    for(const auto &name : m_controllersToSensors["temperature"]){
+        curTempValues[name] = m_sensors[name].getCurValue();
     }
     // use lambda instead for!!! 
     return curTempValues;//QVariant::fromValue(curTempValues); 
@@ -118,7 +108,7 @@ void MyModel::appendData(const QMap<QString, QVector<double>> & dataMap){ // not
         auto mappedNames = m_controllersToSensors[i.key()];
         auto values = i.value();
         for(auto j = 0; j<mappedNames.count(); ++j){
-            m_sensors[mappedNames.at(j)]->appendData(time,values.at(j));
+            m_sensors[mappedNames.at(j)].appendData(time,values.at(j));
         }
         // use lambda instead of count method!!! 
     }

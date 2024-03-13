@@ -1,15 +1,15 @@
 #pragma once
-
-#include <QObject>
+#include <QString>
+#include <QMap>
 //#include <QTimer>
-#include <QDebug>
+//#include <QDebug>
 
-class Sensor : public QObject
+class Sensor //: public QObject
 {
-    Q_OBJECT
+    //Q_OBJECT
 public:
-    explicit Sensor(const QString &name, const QMap<QString,double> &parameters, QObject *parent = nullptr);  // later create QObject child with other properties 
-                                                                        //(if we are going to use qml )
+    explicit Sensor(const QString &name = "unknown", const QMap<QString, double> &parameters = QMap<QString, double>());  //QObject *parent = nullptr  //(if we are going to use qml )
+                                                                       
     QString m_name;
     void appendData(quint64 x, double y);
     QList<quint64>& getTime();

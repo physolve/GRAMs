@@ -23,10 +23,9 @@ public:
     QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
     //bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     QHash<int, QByteArray> roleNames() const override; // use QMultiHash
-    Q_INVOKABLE QVariant getCurValues() const;
     Q_INVOKABLE QVariantMap getCurPressureValues() const; // this is temporally, change to some ordinate way like map of names? or idx
     Q_INVOKABLE QVariantMap getCurTempValues() const;
-    Q_INVOKABLE void appendProfileSensors(const QString &controllerName, const QVariantList &sensors); // QVector<double>& data??
+    Q_INVOKABLE void appendProfileSensors(const QString &controllerPurpose, const QVariantList &sensors); // QVector<double>& data??
 
     void initializeAcquisition();
     void appendData(const QMap<QString, QVector<double>> & dataMap);
@@ -36,7 +35,7 @@ signals:
 
 private:
     QMap<QString, QStringList> m_controllersToSensors;
-    QHash<QString, QSharedPointer<Sensor>> m_sensors;
+    QMap<QString, Sensor> m_sensors;
     //QList<Sensor*> m_sensors; // PURPOSE BASED Hash? pointer beacause we don't know in start?
     QElapsedTimer m_time;
 };
