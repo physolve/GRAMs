@@ -188,7 +188,7 @@ void AdvantechDO::applyFeatures(){
 }
 
 void AdvantechDO::readData(){
-	quint8 *portStates = new quint8[portCount];
+	uint8_t *portStates = new uint8_t[portCount];
     ErrorCode errorCode = Success;
 	errorCode = m_instantDoCtrl->Read(0, portCount, portStates);
 	CheckError(errorCode);
@@ -211,13 +211,14 @@ QVector<bool> AdvantechDO::getData(){ // const & ?
 }
 
 void AdvantechDO::setData(const QVector<bool> &changedState){
-	quint8 *portStates = new quint8[portCount];
+	uint8_t *portStates = new uint8_t[portCount];
 	for(int i  = 0; i< portCount; ++i){
-		QBitArray easySet(8);
+		uint8_t stack = 0;
 		for(int j = 0; j < 8; ++j){
-			easySet.setBit(j,changedState.at(j+8*i));
+			if(changedState.at(j+8*i))
+				stack|=1u<<j; // this is just adding _1_ to ith [0,0,0,_i_,0,0,0,0]
 		}
-		portStates[i] = (quint8)easySet.bits();
+		portStates[i] = stack;
 		qDebug() << portStates[i];
 	}
 	ErrorCode errorCode = Success;

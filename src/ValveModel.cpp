@@ -43,6 +43,16 @@ QMap<QString, bool> ValveModel::getValveMap(){
     return cur_valveMap;
 }
 
+QVector<bool> ValveModel::getValveVector(){
+    const int count = m_valveNames.count();
+    QVector<bool> valveVector(16,false);
+    for (int i = 0; i < count; ++i) {
+        valveVector[i] = m_valves[m_valveNames.at(i)].getState();
+    }
+    // use lambda instead of count method!!!
+    return valveVector;
+}
+
 int ValveModel::rowCount( const QModelIndex& parent) const
 {
     if (parent.isValid())
