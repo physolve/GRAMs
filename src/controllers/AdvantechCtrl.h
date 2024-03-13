@@ -59,9 +59,9 @@ public:
     void applyFeatures();
     void resizeDataVector(uint8_t size);
     void readData() override;
-    void setData();
-    const AdvDOType& getInfo(); // move to base class
-    const QVector<bool> getData();
+    AdvDOType getInfo(); // move to base class
+    QVector<bool> getData();
+    void setData(const QVector<bool> &changedState);
 //Q_SIGNALS:
 
 public slots:

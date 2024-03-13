@@ -76,7 +76,6 @@ Item {
     Connections {
         target: _myModel
         function onDataChanged(topLeft, bottomRight, roles) {
-            console.log("model connect ", topLeft.row, bottomRight.row, roles)
             setPresValues(_myModel.getCurPressureValues()) //gRAMsMnemoForm  it's Working fine // NOW IT RERTURNS QVariantMap
             setTempValues(_myModel.getCurTempValues())
         }

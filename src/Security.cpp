@@ -72,12 +72,14 @@ void Security::setSafeReleaseValves(const QString &valve, const QString &watchQu
     m_safeReleaseValves.insert(valve, ValveToSafeRelease{valve, watchQuartile, pressureOpen});
 }
 
-bool Security::checkValveAction(const QMap<QString, bool> &valveMap, const QString &sender){
-    bool state = valveMap[sender];
+bool Security::checkValveAction(const QMap<QString, bool> &valveMap, const QString &sender, const bool &state){
+    auto imageValveMap = valveMap;
+    imageValveMap[sender] = state;
+    bool imageState = imageValveMap[sender];
     if(m_contradictionValves.contains(sender)){
-        state = m_contradictionValves[sender].applyGraphMask(valveMap);
+        imageState = m_contradictionValves[sender].applyGraphMask(imageValveMap);
     }
-    return state;
+    return imageState;
 }
 
 QMap<QString, bool> Security::checkValvePressure(const QMap<QString, bool> &valveMap, const QMap<QString, double> &pressureMap){

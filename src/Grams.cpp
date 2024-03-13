@@ -98,8 +98,10 @@ void Grams::setValveState(const QString &name, const bool &state){ // should be 
     qDebug() << name << " " << state;
     if(!dataSource.getGRAMsIntegrity())
         return;
-    auto valveMap = valveModel.securityValveMap(name, state);
-    auto result = m_safeModule.checkValveAction(valveMap, name);
-    valveModel.appendData(name, result);
-    //to controller?
+    auto valveMap = valveModel.getValveMap();
+    auto result = m_safeModule.checkValveAction(valveMap, name, state);
+    valveMap[name] = result;
+    qDebug() << valveMap.values().toVector();
+    dataSource.setValves(valveMap.values().toVector());
+    testRead();
 }

@@ -1,6 +1,7 @@
 #include "AdvantechCtrl.h"
 
 #include <QDebug>
+#include <QBitArray>
 
 AdvantechCtrl::AdvantechCtrl(const QString &name, QObject *parent) : 
 	QObject(parent), m_name(name)
@@ -204,9 +205,24 @@ void AdvantechDO::readData(){
 	m_vector = vector;
 }
 
-const QVector<bool> AdvantechDO::getData(){ // const & ?
+QVector<bool> AdvantechDO::getData(){ // const & ?
 	//vector=scaledData;
 	return m_vector;
+}
+
+void AdvantechDO::setData(const QVector<bool> &changedState){
+	quint8 *portStates = new quint8[portCount];
+	for(int i  = 0; i< portCount; ++i){
+		QBitArray easySet(8);
+		for(int j = 0; j < 8; ++j){
+			easySet.setBit(j,changedState.at(j+8*i));
+		}
+		portStates[i] = (quint8)easySet.bits();
+		qDebug() << portStates[i];
+	}
+	ErrorCode errorCode = Success;
+	errorCode = m_instantDoCtrl->Write(0, portCount, portStates);
+	CheckError(errorCode);
 }
 
 void AdvantechDO::CheckError(ErrorCode errorCode)
@@ -226,6 +242,6 @@ void AdvantechDO::CheckError(ErrorCode errorCode)
 	}
 }
 
-const AdvDOType& AdvantechDO::getInfo(){
+AdvDOType AdvantechDO::getInfo(){
 	return m_info;
 }

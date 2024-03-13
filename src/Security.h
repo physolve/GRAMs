@@ -56,7 +56,7 @@ public:
     Q_INVOKABLE void setContradictionValves(const QVariantMap &contradictionValves, const QVariantList &ruleOfThreeList);
     Q_INVOKABLE void setRangePressureValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen, const double &pressureClose);
     Q_INVOKABLE void setSafeReleaseValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen);
-    bool checkValveAction(const QMap<QString, bool> &valveMap, const QString &sender);
+    bool checkValveAction(const QMap<QString, bool> &valveMap, const QString &sender, const bool &state);
     QMap<QString, bool> checkValvePressure(const QMap<QString, bool> &valveMap, const QMap<QString, double> &pressureMap);
 
 private:

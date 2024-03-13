@@ -35,8 +35,8 @@ public:
     Q_INVOKABLE void appendValves(const QVariant &valves);
     Q_INVOKABLE QVariantMap getCurStates() const; // for qml
     //void getStates();
-    QMap<QString, bool> securityValveMap(const QString &senderName, const bool &senderState);
-
+    //QMap<QString, bool> securityValveMap(const QString &senderName, const bool &senderState);
+    QMap<QString, bool> getValveMap();
     void appendData(const QVector<bool> &valveList);
     void appendData(const QString & valveName, const bool &valveState);
 

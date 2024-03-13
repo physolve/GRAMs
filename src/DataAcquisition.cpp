@@ -8,7 +8,7 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     GRAMsIntegrity["valves"] = ControllerConnection::Offline;
 }
 
-const bool DataAcquisition::getGRAMsIntegrity(){
+bool DataAcquisition::getGRAMsIntegrity(){
     //auto l_integrity = [](const QList<ControllerConnection> a) { 
     for(auto b:GRAMsIntegrity.values())
             if(b!=ControllerConnection::Online)
@@ -43,7 +43,7 @@ void DataAcquisition::processEvents(){
     } // it's okay?
 }
 
-const QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
+QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
     QMap<QString,QVector<double>> dataMap;
     auto defautl_val = QVector<double>(8,0.0);
     for(const QString &type : {"pressure", "temperature"}){
@@ -59,12 +59,20 @@ const QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
     }
     return dataMap;
 }
-const QVector<bool> DataAcquisition::getValves(){
+
+QVector<bool> DataAcquisition::getValves(){
     auto defautl_val = QVector<bool>(16,false);
     if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
         return defautl_val; 
     auto controller = m_controllerList["valves"].staticCast<AdvantechDO>(); // type of static_cast from profile?
     return controller->getData();
+}
+
+void DataAcquisition::setValves(const QVector<bool> &states){
+    if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
+        return;
+    auto controller = m_controllerList["valves"].staticCast<AdvantechDO>();
+    controller->setData(states);
 }
 
 void DataAcquisition::testRead(){ // died

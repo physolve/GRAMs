@@ -29,12 +29,17 @@ QVariantMap ValveModel::getCurStates() const{
     return curStates;
 }
 
-QMap<QString, bool> ValveModel::securityValveMap(const QString &senderName, const bool &senderState){
+// QMap<QString, bool> ValveModel::securityValveMap(const QString &senderName, const bool &senderState){
+//     auto cur_valveMap = controllerValveMap();
+//     cur_valveMap[senderName] = senderState;
+//     return cur_valveMap;
+// }
+
+QMap<QString, bool> ValveModel::getValveMap(){
     QMap<QString, bool> cur_valveMap;
-    for(auto name : m_valveNames){
+    for(const auto &name : m_valveNames){ // I don't like it
         cur_valveMap[name] = m_valves[name].getState();
     }
-    cur_valveMap[senderName] = senderState;
     return cur_valveMap;
 }
 
