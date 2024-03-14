@@ -6,7 +6,7 @@ viewBox="0 0 948.07 688.13"
  xmlns:xlink="http://www.w3.org/1999/xlink"
  xmlns:xodm="http://www.corel.com/coreldraw/odm/2003">
  <defs>
-  <font id="FontID1" horiz-adv-x="722" font-variant="normal" style="fill-rule:nonzero" font-style="normal" font-weight="700">
+  <font id="FontID1" horiz-adv-x="722" font-variant="normal" style="fill-rule:nonzero" font-weight="700">
 	<font-face 
 		font-family="Times New Roman">
 		<font-face-src>
@@ -64,10 +64,10 @@ viewBox="0 0 948.07 688.13"
   </font>
   <style type="text/css">
    <![CDATA[
-    @font-face { font-family:"Times New Roman";font-variant:normal;font-style:normal;font-weight:bold;src:url("#FontID1") format(svg)}
+    @font-face { font-family:"Times New Roman";font-variant:normal;font-weight:bold;src:url("#FontID1") format(svg)}
     @font-face { font-family:"Verdana";font-variant:normal;font-style:normal;font-weight:normal;src:url("#FontID0") format(svg)}
-    .str1 {stroke:#2642E0;stroke-width:7.08;stroke-miterlimit:22.9256}
-    .str2 {stroke:#2642E0;stroke-width:7.08;stroke-miterlimit:2.61313}
+    .str2 {stroke:#2642E0;stroke-width:7.08;stroke-miterlimit:22.9256}
+    .str1 {stroke:#2642E0;stroke-width:7.08;stroke-miterlimit:2.61313}
     .str3 {stroke:#090469;stroke-width:5.66;stroke-miterlimit:22.9256}
     .str5 {stroke:#2642E0;stroke-width:1.42;stroke-miterlimit:22.9256}
     .str0 {stroke:black;stroke-width:1.67;stroke-miterlimit:22.9256}
@@ -80,9 +80,9 @@ viewBox="0 0 948.07 688.13"
     .fil6 {fill:#303030}
     .fil11 {fill:#999999}
     .fil5 {fill:#9C3D3D}
+    .fil3 {fill:#D1363B}
     .fil8 {fill:#DCEB3D}
     .fil9 {fill:#E3A92B}
-    .fil3 {fill:red}
     .fil2 {fill:#2642E0;fill-rule:nonzero}
     .fnt1 {font-weight:normal;font-size:11.79px;font-family:'Verdana'}
     .fnt4 {font-weight:normal;font-size:11.79px;font-family:'Verdana'}
@@ -96,24 +96,27 @@ viewBox="0 0 948.07 688.13"
  <g id="Layer_x0020_1">
   <metadata id="CorelCorpID_0Corel-Layer"/>
   <rect class="fil0 str0" x="0.84" y="0.84" width="946.4" height="686.46"/>
-  <line class="fil1 str1" x1="550.17" y1="516.26" x2="493.17" y2= "516.26" />
-  <polyline class="fil1 str1" points="640.93,276.55 640.79,143.6 668.19,143.6 "/>
-  <path class="fil1 str2" d="M773.26 276.69l-20.37 0m-9.62 0l0 0 -102.4 0 -337.76 -0.01 -39.33 0.01 0.12 -39.34 41.14 0 0 -136.47 39.21 0"/>
-  <line class="fil1 str1" x1="743.27" y1="432.25" x2="305.04" y2= "432.8" />
-  <line class="fil1 str1" x1="305.04" y1="537.47" x2="304.54" y2= "276.69" />
-  <polyline class="fil1 str1" points="92.8,442.68 92.8,276.69 263.78,276.69 "/>
-  <line class="fil1 str1" x1="190.79" y1="276.69" x2="190.68" y2= "440.42" />
-  <line class="fil1 str1" x1="141.12" y1="276.69" x2="141.12" y2= "439.79" />
-  <polyline class="fil1 str1" points="359.81,276.69 359.67,171.33 359.67,141.48 396.42,141.48 "/>
-  <line class="fil1 str1" x1="524.36" y1="318.18" x2="622.92" y2= "318.33" />
-  <polyline class="fil1 str1" points="521.85,276.69 521.85,359.81 621.12,360.3 621.25,274.74 "/>
-  <line class="fil1 str2" x1="669.49" y1="190.61" x2="640.84" y2= "190.63" />
-  <line class="fil1 str2" x1="669.6" y1="238.07" x2="640.92" y2= "238.07" />
-  <g id="_2027992414416">
+  <line class="fil1 str1" x1="749.64" y1="276.69" x2="781.21" y2= "276.69" />
+  <line class="fil1 str2" x1="550.17" y1="516.26" x2="493.17" y2= "516.26" />
+  <polyline class="fil1 str2" points="640.93,276.55 640.79,143.6 668.19,143.6 "/>
+  <g>
+   <path class="fil2" d="M743.27 276.69l0 0 0 0 0 0 0 3.54 0 -3.54zm-102.4 -3.54l102.4 0 0 7.08 -102.4 0 0 0 0 -7.08zm-337.76 -0.01l337.76 0.01 0 7.08 -337.76 -0.01 0 -7.08 0 0zm-39.34 0.01l39.34 -0.01 0 7.08 -39.33 0.01 -3.54 -3.55 3.53 -3.53zm0.01 7.08l-3.55 0 0.01 -3.55 3.54 3.55zm3.65 -42.87l-0.12 39.34 -7.07 -0.02 0.12 -39.34 3.54 -3.53 3.53 3.55zm-7.07 -0.02l0.01 -3.53 3.53 0 -3.54 3.53zm44.68 3.55l-41.14 0 0 -7.08 41.14 0 3.54 3.54 -3.54 3.54zm3.54 -3.54l0 3.54 -3.54 0 3.54 -3.54zm0 -136.47l0 136.47 -7.08 0 0 -136.47 3.54 -3.54 3.54 3.54zm-7.08 0l0 -3.54 3.54 0 -3.54 3.54zm17.85 3.54l-14.31 0 0 -7.08 14.31 0 0 7.08zm24.9 -3.54l-28.91 12.38 0.38 -0.77 0.35 -0.77 0.33 -0.78 0.3 -0.77 0.28 -0.78 0.25 -0.77 0.23 -0.77 0.21 -0.78 0.18 -0.77 0.15 -0.78 0.14 -0.77 0.11 -0.78 0.08 -0.77 0.06 -0.77 0.04 -0.78 0.01 -0.77 -0.01 -0.78 -0.04 -0.77 -0.06 -0.77 -0.08 -0.78 -0.11 -0.77 -0.14 -0.78 -0.15 -0.77 -0.18 -0.78 -0.21 -0.77 -0.23 -0.77 -0.25 -0.78 -0.28 -0.77 -0.3 -0.78 -0.33 -0.77 -0.35 -0.77 -0.38 -0.78 0 0 28.91 12.39z"/>
+  </g>
+  <line class="fil1 str2" x1="743.27" y1="432.25" x2="305.04" y2= "432.8" />
+  <line class="fil1 str2" x1="305.04" y1="537.47" x2="304.54" y2= "276.69" />
+  <polyline class="fil1 str2" points="92.8,442.68 92.8,276.69 263.78,276.69 "/>
+  <line class="fil1 str2" x1="190.79" y1="276.69" x2="190.68" y2= "440.42" />
+  <line class="fil1 str2" x1="141.12" y1="276.69" x2="141.12" y2= "439.79" />
+  <polyline class="fil1 str2" points="359.81,276.69 359.67,171.33 359.67,141.48 396.42,141.48 "/>
+  <line class="fil1 str2" x1="524.36" y1="318.18" x2="622.92" y2= "318.33" />
+  <polyline class="fil1 str2" points="521.85,276.69 521.85,359.81 621.12,360.3 621.25,274.74 "/>
+  <line class="fil1 str1" x1="669.49" y1="190.61" x2="640.84" y2= "190.63" />
+  <line class="fil1 str1" x1="669.6" y1="238.07" x2="640.92" y2= "238.07" />
+  <g id="_2361921623744">
    <line class="fil1 str3" x1="752" y1="294.8" x2="752" y2= "259.11" />
    <line class="fil1 str3" x1="743.27" y1="294.82" x2="743.27" y2= "259.13" />
   </g>
-  <g id="_2027992375824">
+  <g id="_2361921624224">
    <g>
     <path class="fil2" d="M89.83 365.77l-7.7 3.86 0 -7.71 7.7 3.85zm-13.43 -1.06l5.83 0 0 2.12 -5.83 0 0 -2.12z"/>
    </g>
@@ -121,7 +124,7 @@ viewBox="0 0 948.07 688.13"
     <path class="fil2" d="M94.91 365.77l7.7 -3.85 0 7.71 -7.7 -3.86zm13.43 1.06l-5.83 0 0 -2.12 5.83 0 0 2.12z"/>
    </g>
   </g>
-  <g id="_2027992378752">
+  <g id="_2361921624848">
    <g>
     <path class="fil2" d="M138.24 365.49l-7.71 3.86 0 -7.71 7.71 3.85zm-13.44 -1.06l5.84 0 0 2.13 -5.84 0 0 -2.13z"/>
    </g>
@@ -129,7 +132,7 @@ viewBox="0 0 948.07 688.13"
     <path class="fil2" d="M143.31 365.49l7.71 -3.85 0 7.71 -7.71 -3.86zm13.44 1.07l-5.84 0 0 -2.13 5.84 0 0 2.13z"/>
    </g>
   </g>
-  <g id="_2027992377984">
+  <g id="_2361921625808">
    <g>
     <path class="fil2" d="M541.21 271.61l-3.85 -7.71 7.71 0 -3.86 7.71zm1.07 -16.22l0 8.61 -2.13 0 0 -8.61 2.13 0z"/>
    </g>
@@ -137,7 +140,7 @@ viewBox="0 0 948.07 688.13"
     <path class="fil2" d="M541.21 277.72l3.86 7.71 -7.71 0 3.85 -7.71zm-1.06 16.22l0 -8.61 2.13 0 0 8.61 -2.13 0z"/>
    </g>
   </g>
-  <g id="_2027992378176">
+  <g id="_2361921626528">
    <g>
     <path class="fil2" d="M188.11 365.48l-7.7 3.85 0 -7.71 7.7 3.86zm-13.43 -1.06l5.83 0 0 2.12 -5.83 0 0 -2.12z"/>
    </g>
@@ -145,7 +148,7 @@ viewBox="0 0 948.07 688.13"
     <path class="fil2" d="M193.18 365.48l7.71 -3.86 0 7.71 -7.71 -3.85zm13.44 1.06l-5.83 0 0 -2.12 5.83 0 0 2.12z"/>
    </g>
   </g>
-  <g id="_2027992380096">
+  <g id="_2361921634160">
    <g>
     <path class="fil2" d="M541.18 315.27l-3.85 -7.71 7.71 0 -3.86 7.71zm1.06 -16.22l0 8.61 -2.12 0 0 -8.61 2.12 0z"/>
    </g>
@@ -155,10 +158,10 @@ viewBox="0 0 948.07 688.13"
   </g>
   <rect class="fil3 str0" x="771.41" y="259" width="147.2" height="35.38" rx="17.69" ry="17.69"/>
   <text x="806.48" y="282.09"  class="fil4 fnt0">F: xx bar</text>
-  <rect class="fil5 str0" x="266.12" y="347.43" width="77.14" height="56.69"/>
-  <text x="296.88" y="372.89"  class="fil4 fnt1">A0 </text>
-  <text x="276.59" y="387.23"  class="fil4 fnt1">2250 </text>
-  <text x="310.72" y="387.23"  class="fil4 fnt1">см3</text>
+  <rect class="fil5 str0" x="266.12" y="342.02" width="77.14" height="56.69"/>
+  <text x="296.88" y="367.48"  class="fil4 fnt1">A0 </text>
+  <text x="276.59" y="381.82"  class="fil4 fnt1">2250 </text>
+  <text x="310.72" y="381.82"  class="fil4 fnt1">см3</text>
   <rect class="fil5 str0" transform="matrix(2.64845E-14 -1.24931 1.34496 4.45013E-14 76.6593 537.33)" width="77.14" height="22.65"/>
   <g transform="matrix(2.64845E-14 -1 1 2.64845E-14 -413.373 1158.64)">
    <text x="645.68" y="501.34"  class="fil4 fnt1">G1: 101 </text>
@@ -184,7 +187,7 @@ viewBox="0 0 948.07 688.13"
   <g transform="matrix(2.64845E-14 -1 1 2.64845E-14 -314.582 1158.44)">
    <text x="630.12" y="515.68"  class="fil4 fnt1">xx bar [H/Ar]</text>
   </g>
-  <rect class="fil5 str0" x="90.51" y="156.3" width="101.22" height="31.07"/>
+  <rect class="fil5 str0" x="90.51" y="156.3" width="101.22" height="31.07" rx="14.69" ry="15.37"/>
   <text x="117.21" y="168.96"  class="fil4 fnt1">C</text>
   <text x="142.45" y="168.96"  class="fil4 fnt1">13</text>
   <text x="125.45" y="168.96"  class="fil4 fnt1">2</text>
@@ -192,14 +195,14 @@ viewBox="0 0 948.07 688.13"
   <text x="132.95" y="168.96"  class="fil4 fnt1">: </text>
   <text x="164.94" y="168.96"  class="fil4 fnt1"> </text>
   <text x="116.75" y="183.29"  class="fil4 fnt1">300 см3</text>
-  <rect class="fil5 str0" x="90.51" y="221.82" width="101.22" height="31.07"/>
+  <rect class="fil5 str0" x="90.51" y="221.82" width="101.22" height="31.07" rx="14.86" ry="15.54"/>
   <text x="117.14" y="234.47"  class="fil4 fnt1">C1: 132 </text>
   <text x="116.68" y="248.81"  class="fil4 fnt1">150 </text>
   <text x="143.31" y="248.81"  class="fil4 fnt1">см3</text>
-  <line class="fil1 str2" x1="190.68" y1="237.35" x2="263.9" y2= "237.35" />
-  <line class="fil1 str2" x1="190.68" y1="171.84" x2="263.78" y2= "171.84" />
-  <polyline class="fil1 str2" points="190.68,100.88 263.78,100.88 263.78,234.62 "/>
-  <g id="_2027992394688">
+  <line class="fil1 str1" x1="190.68" y1="237.35" x2="263.9" y2= "237.35" />
+  <line class="fil1 str1" x1="190.68" y1="171.84" x2="263.78" y2= "171.84" />
+  <polyline class="fil1 str1" points="190.68,100.88 263.78,100.88 263.78,234.62 "/>
+  <g id="_2361921585824">
    <g>
     <path class="fil2" d="M518.56 461.6l-7.71 3.85 0 -7.7 7.71 3.85zm-16.22 -1.06l8.61 0 0 2.12 -8.61 0 0 -2.12z"/>
    </g>
@@ -207,36 +210,36 @@ viewBox="0 0 948.07 688.13"
     <path class="fil2" d="M524.67 461.6l7.71 -3.85 0 7.7 -7.71 -3.85zm16.22 1.06l-8.61 0 0 -2.12 8.61 0 0 2.12z"/>
    </g>
   </g>
-  <rect class="fil5 str0" x="90.51" y="85.34" width="101.22" height="31.07"/>
+  <rect class="fil5 str0" x="90.51" y="85.34" width="101.22" height="31.07" rx="14.86" ry="15.54"/>
   <text x="117.21" y="98"  class="fil4 fnt1">C</text>
   <text x="142.45" y="98"  class="fil4 fnt1">13</text>
   <text x="125.45" y="98"  class="fil4 fnt1">3: </text>
   <text x="157.44" y="98"  class="fil4 fnt1">6 </text>
   <text x="116.75" y="112.33"  class="fil4 fnt1">300 см3</text>
-  <path class="fil1 str2" d="M521.67 537.48c0,-5.39 0,-104.91 0,-104.91"/>
-  <g id="_2027992395888">
+  <path class="fil1 str1" d="M521.67 537.48c0,-5.39 0,-104.91 0,-104.91"/>
+  <g id="_2361921586352">
    <circle class="fil6 str4" cx="305.04" cy="562.9" r="25.43"/>
    <line class="fil1 str5" x1="288.64" y1="543.47" x2="295.41" y2= "586.45" />
    <line class="fil1 str5" x1="321.44" y1="543.47" x2="314.67" y2= "586.45" />
    <circle class="fil1 str5" cx="305.04" cy="562.9" r="8.91"/>
   </g>
-  <g id="_2027992397424">
+  <g id="_2361921589280">
    <circle class="fil6 str4" cx="521.67" cy="562.9" r="25.43"/>
    <line class="fil1 str5" x1="505.27" y1="543.47" x2="512.03" y2= "586.45" />
    <line class="fil1 str5" x1="538.07" y1="543.47" x2="531.3" y2= "586.45" />
    <circle class="fil1 str5" cx="521.67" cy="562.9" r="8.91"/>
   </g>
-  <g id="_2027992401840">
+  <g id="_2361921589328">
    <circle class="fil6 str4" cx="468.35" cy="516.26" r="25.43"/>
    <rect class="fil1 str5" x="451.26" y="499.17" width="34.18" height="34.18"/>
    <text x="461.24" y="524.84"  class="fil7 fnt2">S</text>
   </g>
-  <g id="_2027992401936">
+  <g id="_2361921586736">
    <rect class="fil8 str0" x="545.89" y="503.68" width="121.52" height="25.17" rx="14.61" ry="12.59"/>
    <text x="575.03" y="521.62"  class="fil4 fnt3">A2: 904</text>
   </g>
-  <g id="_2027992402704">
-   <rect class="fil9 str0" x="664.73" y="171.84" width="73.6" height="34.58"/>
+  <g id="_2361917036912">
+   <rect class="fil9 str0" x="664.73" y="175.36" width="73.6" height="27.55"/>
    <g transform="matrix(0.984779 0 0 1 41.5404 -316.192)">
     <text x="638.38" y="501.34"  class="fil4 fnt4">D2</text>
     <text x="694.12" y="501.34"  class="fil4 fnt4">4</text>
@@ -251,8 +254,8 @@ viewBox="0 0 948.07 688.13"
     <text x="668.21" y="515.68"  class="fil4 fnt4">бар</text>
    </g>
   </g>
-  <g id="_2027992410624">
-   <rect class="fil9 str0" x="665.11" y="125.54" width="73.6" height="34.92"/>
+  <g id="_2361917040704">
+   <rect class="fil9 str0" x="665.11" y="128.63" width="73.6" height="28.75"/>
    <text x="670.15" y="139.02"  class="fil4 fnt4">D2</text>
    <text x="725.89" y="139.02"  class="fil4 fnt4">2</text>
    <text x="686.73" y="139.02"  class="fil4 fnt4">: </text>
@@ -263,8 +266,8 @@ viewBox="0 0 948.07 688.13"
    <text x="681.88" y="153.36"  class="fil4 fnt4">xx </text>
    <text x="699.98" y="153.36"  class="fil4 fnt4">бар</text>
   </g>
-  <g id="_2027992410144">
-   <rect class="fil9 str0" x="663.98" y="221.5" width="73.6" height="31.71"/>
+  <g id="_2361917044640">
+   <rect class="fil9 str0" x="663.98" y="223.91" width="73.6" height="26.89"/>
    <g transform="matrix(1.00763 0 0 1 25.7932 -267.968)">
     <text x="642.94" y="501.34"  class="fil4 fnt4">E: </text>
     <text x="697.06" y="501.34"  class="fil4 fnt4"> </text>
@@ -275,7 +278,7 @@ viewBox="0 0 948.07 688.13"
     <text x="668.21" y="515.68"  class="fil4 fnt4">бар</text>
    </g>
   </g>
-  <g id="_2028712046144">
+  <g id="_2361917044832">
    <rect class="fil9 str0" x="396.42" y="125.95" width="73.6" height="32.68"/>
    <g transform="matrix(1.00691 0 0 1 -241.602 -363.033)">
     <text x="645.71" y="501.34"  class="fil4 fnt4">D1</text>
@@ -287,7 +290,7 @@ viewBox="0 0 948.07 688.13"
     <text x="668.21" y="515.68"  class="fil4 fnt4">бар</text>
    </g>
   </g>
-  <g id="_2028712045904">
+  <g id="_2361917047520">
    <rect class="fil9 str0" x="397.82" y="186.04" width="73.6" height="30.53"/>
    <g transform="matrix(0.984834 0 0 1 -225.089 -304.017)">
     <text x="650.28" y="501.34"  class="fil4 fnt4">E: </text>
@@ -298,7 +301,7 @@ viewBox="0 0 948.07 688.13"
     <text x="668.21" y="515.67"  class="fil4 fnt4">бар</text>
    </g>
   </g>
-  <g id="_2028712048640">
+  <g id="_2361917046224">
    <rect class="fil9 str0" x="328.04" y="477.87" width="73.6" height="31.7"/>
    <text x="341.61" y="489.74"  class="fil4 fnt4">A0</text>
    <text x="366.68" y="489.74"  class="fil4 fnt4">301</text>
@@ -306,14 +309,14 @@ viewBox="0 0 948.07 688.13"
    <text x="345.5" y="504.08"  class="fil4 fnt4">xx </text>
    <text x="363.61" y="504.08"  class="fil4 fnt4">бар</text>
   </g>
-  <line class="fil1 str2" x1="397.82" y1="201.22" x2="359.71" y2= "201.26" />
-  <line class="fil1 str1" x1="328.04" y1="493.72" x2="305.04" y2= "493.72" />
-  <g id="_2028712047536">
+  <line class="fil1 str1" x1="397.82" y1="201.22" x2="359.71" y2= "201.26" />
+  <line class="fil1 str2" x1="328.04" y1="493.72" x2="305.04" y2= "493.72" />
+  <g id="_2361917046992">
    <rect class="fil10 str0" x="805.28" y="295" width="82.43" height="19.81" rx="9.91" ry="9.91"/>
    <text x="815.16" y="310.25"  class="fil4 fnt3">F: xx o</text>
    <text x="866.66" y="310.25"  class="fil4 fnt3">С</text>
   </g>
-  <g id="_2028712052288">
+  <g id="_2361917048192">
    <rect class="fil10 str0" x="669.22" y="303.53" width="60.15" height="29.37" rx="30.08" ry="5.84"/>
    <text x="672.75" y="315.34"  class="fil4 fnt4">E: </text>
    <text x="702.89" y="315.34"  class="fil4 fnt4">358 </text>
@@ -321,19 +324,19 @@ viewBox="0 0 948.07 688.13"
    <text x="682.32" y="329.68"  class="fil4 fnt4">xx o</text>
    <text x="707.58" y="329.68"  class="fil4 fnt4">С</text>
   </g>
-  <g id="_2028712057760">
+  <g id="_2361917047472">
    <rect class="fil10 str0" x="9.02" y="161.93" width="82.43" height="19.81" rx="9.91" ry="9.91"/>
    <text x="13.4" y="177.2"  class="fil4 fnt3">С2</text>
    <text x="76.52" y="177.2"  class="fil4 fnt3">С</text>
    <text x="33.06" y="177.2"  class="fil4 fnt3">: xx o</text>
   </g>
-  <g id="_2028712062560">
+  <g id="_2361917048336">
    <rect class="fil10 str0" x="8.53" y="227.45" width="82.43" height="19.81" rx="9.91" ry="9.91"/>
    <text x="12.91" y="242.71"  class="fil4 fnt3">С1</text>
    <text x="76.03" y="242.71"  class="fil4 fnt3">С</text>
    <text x="32.57" y="242.71"  class="fil4 fnt3">: xx o</text>
   </g>
-  <g id="_2028712061216">
+  <g id="_2361917050400">
    <rect class="fil10 str0" x="396.13" y="303.51" width="60.15" height="29.37" rx="30.08" ry="5.84"/>
    <text x="399.35" y="315.33"  class="fil4 fnt4">B</text>
    <text x="430.12" y="315.33"  class="fil4 fnt4">314</text>
@@ -343,26 +346,26 @@ viewBox="0 0 948.07 688.13"
    <text x="409.23" y="329.66"  class="fil4 fnt4">xx o</text>
    <text x="434.5" y="329.66"  class="fil4 fnt4">С</text>
   </g>
-  <g id="_2028712062416">
+  <g id="_2361917049776">
    <rect class="fil10 str0" x="538.55" y="113.63" width="60.15" height="29.37" rx="30.08" ry="5.84"/>
    <text x="550.56" y="125.45"  class="fil4 fnt4">дт341</text>
    <text x="586.23" y="125.45"  class="fil4 fnt4"> </text>
    <text x="551.65" y="139.78"  class="fil4 fnt4">xx o</text>
    <text x="576.91" y="139.78"  class="fil4 fnt4">С</text>
   </g>
-  <g id="_2028712061024">
+  <g id="_2361917049296">
    <rect class="fil10 str0" x="9.44" y="90.97" width="82.43" height="19.81" rx="9.91" ry="9.91"/>
    <text x="13.82" y="106.24"  class="fil4 fnt3">С3</text>
    <text x="76.95" y="106.24"  class="fil4 fnt3">С</text>
    <text x="33.49" y="106.24"  class="fil4 fnt3">: xx o</text>
   </g>
-  <polyline class="fil1 str2" points="521.85,276.69 521.85,158.38 574.08,158.26 "/>
-  <polyline class="fil1 str2" points="359.81,276.69 359.81,318.21 396.13,318.2 "/>
-  <polyline class="fil1 str2" points="669.22,318.21 640.92,318.21 640.93,276.55 "/>
-  <g transform="matrix(1.59328 0 0 1 -731.718 -391.891)">
+  <polyline class="fil1 str1" points="521.85,276.69 521.85,158.38 574.08,158.26 "/>
+  <polyline class="fil1 str1" points="359.81,276.69 359.81,318.21 396.13,318.2 "/>
+  <polyline class="fil1 str1" points="669.22,318.21 640.92,318.21 640.93,276.55 "/>
+  <g transform="matrix(1.59328 0 0 1 -727.041 -391.891)">
    <text x="670" y="501.34"  class="fil7 fnt5">И</text>
   </g>
-  <g id="_2028712065584">
+  <g id="_2361917051120">
    <rect class="fil9 str0" x="532.07" y="143" width="73.6" height="30.53"/>
    <g transform="matrix(0.984834 0 0 1 -90.8405 -347.055)">
     <text x="651.42" y="501.34"  class="fil4 fnt4">дд341</text>
@@ -403,8 +406,8 @@ viewBox="0 0 948.07 688.13"
   <text x="561.73" y="344.56"  class="fil11 fnt4">К1</text>
   <text x="576.15" y="344.56"  class="fil11 fnt4">51</text>
   <text x="605.91" y="197.99"  class="fil11 fnt4">К1</text>
-  <text x="620.34" y="197.99"  class="fil11 fnt4">76</text>
-  <g id="_2028712070480">
+  <text x="620.34" y="197.99"  class="fil11 fnt4">73</text>
+  <g id="_2361917011232">
    <line class="fil1 str3" x1="752" y1="450.46" x2="752" y2= "414.77" />
    <line class="fil1 str3" x1="743.27" y1="450.48" x2="743.27" y2= "414.79" />
   </g>

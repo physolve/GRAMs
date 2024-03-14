@@ -23,7 +23,9 @@ Button {
     property bool value: true
     property string name: ""
 
-    // onToggled: console.log("clicked ", num)
+    autoRepeatInterval: 200
+    autoRepeatDelay: 1000
+    autoRepeat: true
 
     implicitWidth: buttonBackground.implicitWidth
     implicitHeight: buttonBackground.implicitHeight
