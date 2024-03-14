@@ -37,6 +37,7 @@ public:
     //void getStates();
     //QMap<QString, bool> securityValveMap(const QString &senderName, const bool &senderState);
     QMap<QString, bool> getValveMap();
+    QVector<bool> getValveVector();
     void appendData(const QVector<bool> &valveList);
     void appendData(const QString & valveName, const bool &valveState);
 

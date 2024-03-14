@@ -119,7 +119,7 @@
             },
             "reactionQuar":{
                 "v_gasLeakage": ["v_k155", "v_k153", "v_k151"],
-                "v_pressureRange": "v_k176",
+                "v_pressureRange": "v_k173",
                 "m_pressure":{
                     "high": ["DD331"],
                     "low": ["DD332", "DD334"]
