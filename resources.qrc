@@ -22,5 +22,7 @@
         <file>qml/SetUpGRAMs.qml</file>
         <file>qml/ValveSetting.qml</file>
         <file>qml/VisualChannelMapping.qml</file>
+        
+        <file>qml/Chart.qml</file>
     </qresource>
 </RCC>

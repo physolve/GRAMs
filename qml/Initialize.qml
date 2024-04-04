@@ -391,7 +391,7 @@ Window {
         main.profileId = profileBox.currentIndex
         main.show()
         initialize.close()
-        dataSource.testRead()
+        backend.initializeReading()
     }
     // onClosing:{ // make pages in main as default
     //     main.profileId = profileBox.currentIndex

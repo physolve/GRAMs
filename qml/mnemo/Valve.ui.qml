@@ -23,9 +23,7 @@ Button {
     property bool value: true
     property string name: ""
 
-    autoRepeatInterval: 200
-    autoRepeatDelay: 1000
-    autoRepeat: true
+    // pressAndHold
 
     implicitWidth: buttonBackground.implicitWidth
     implicitHeight: buttonBackground.implicitHeight

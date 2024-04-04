@@ -16,8 +16,8 @@ class Grams : public QApplication
 public:
     Grams(int &argc, char **argv);
     ~Grams();
-    Q_INVOKABLE void initializeModel();
-    Q_INVOKABLE void testRead();
+    Q_INVOKABLE void initializeReading();
+    //Q_INVOKABLE void testRead();
     // add JSON and profile here?
     Q_INVOKABLE void setValveState(const QString &name, const bool &state);
 private slots:
@@ -26,6 +26,8 @@ private slots:
 private:
 
     void initGUI();
+
+    void readingEvent();
 
     QQmlApplicationEngine m_engine;
     Initialize initSource;

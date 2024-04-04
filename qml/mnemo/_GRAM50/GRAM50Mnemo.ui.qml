@@ -166,6 +166,7 @@ Item {
             checkable: true
             name: "v_k171"
             onToggled: sendValveToModel(name, checked)
+            onPressAndHold: console.log("Test press and hold")
         }
 
         Valve {

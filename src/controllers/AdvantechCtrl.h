@@ -48,6 +48,37 @@ private:
 	//double scaledData[16];
 };
 
+class AdvantechBuff : public AdvantechCtrl
+{
+    Q_OBJECT
+public:
+    AdvantechBuff(const AdvAIType &info, QObject *parent = nullptr); 
+    virtual ~AdvantechBuff();
+    void Initialization() ; //override
+    void initialInfo();
+    void ConfigureDeviceTest();
+	void CheckError(ErrorCode errorCode);
+    const AdvAIType& getInfo(); // move to base class
+    void resizeDataVector(uint8_t size);
+    void readData() override;
+    const QVector<double> getData();
+    static void BDAQCALL OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *userParam);
+//Q_SIGNALS:
+public slots:
+    //void settingAccepted();
+    //void generateData(int type, int rowCount, int colCount);
+
+private:
+    AdvAIType m_info;
+    
+    ValueRange m_valueRange;
+    WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class 
+    QVector<double> m_vector;
+	//double scaledData[16];
+};
+
+
+
 class AdvantechDO : public AdvantechCtrl
 {
     Q_OBJECT

@@ -20,7 +20,7 @@ public:
     void setValves(const QVector<bool> &states);
     bool getGRAMsIntegrity();
     Q_INVOKABLE void advantechDeviceSetting(const QString &description, const QString &type, const QVariantMap& deviceSettings);
-    Q_INVOKABLE void testRead();
+    //Q_INVOKABLE void testRead();
 private:
     QMap<QString,QSharedPointer<AdvantechCtrl>> m_controllerList; // for read
     QMap<QString, ControllerConnection> GRAMsIntegrity;

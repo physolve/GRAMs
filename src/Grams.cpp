@@ -76,18 +76,23 @@ void Grams::initGUI(){
     m_engine.load(url);
 }
 
-void Grams::initializeModel(){
-    //dataModel.initializeAcquisition();
+void Grams::initializeReading(){
     // for valves make different type
-    //softTimer->start(1000);
+
+    // Add variable timer msec
+    softTimer->start(1000);
+    dataModel.initializeAcquisition();
+    qDebug() << "Now I'm updating every 1000 ms";
 }
 
 void Grams::softEvent(){
-    dataSource.processEvents();
-    //dataModel.appendData(dataSource.getDataList());
+
+    //for now only reading event
+    readingEvent();
+
 }
 
-void Grams::testRead(){
+void Grams::readingEvent(){
     if(dataSource.getGRAMsIntegrity())
         dataSource.processEvents();
     dataModel.appendData(dataSource.getMeasures());
@@ -104,5 +109,5 @@ void Grams::setValveState(const QString &name, const bool &state){ // should be 
     auto valveVector = valveModel.getValveVector();
     qDebug() << valveVector;
     dataSource.setValves(valveVector);
-    testRead();
+    readingEvent();
 }

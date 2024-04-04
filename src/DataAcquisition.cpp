@@ -75,8 +75,8 @@ void DataAcquisition::setValves(const QVector<bool> &states){
     controller->setData(states);
 }
 
-void DataAcquisition::testRead(){ // died
-    if(getGRAMsIntegrity())
-        processEvents();
-}
+// void DataAcquisition::testRead(){ // died
+//     if(getGRAMsIntegrity())
+//         processEvents();
+// }
 

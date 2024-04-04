@@ -33,7 +33,7 @@ void MyModel::appendProfileSensors(const QString &controllerPurpose, const QVari
 }
 
 void MyModel::initializeAcquisition(){
-    
+    // is there any other initializations?
     m_time.start(); // Elapsed timer
 }
 
