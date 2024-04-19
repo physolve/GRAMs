@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setApplicationVersion("0.0.1");
     QCoreApplication::setOrganizationName(QStringLiteral("Tomsk Polytechnic University"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("tpu.ru"));
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
     Grams app(argc, argv);
     return app.exec();
 }
