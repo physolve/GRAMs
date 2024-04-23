@@ -9,6 +9,7 @@
 #include <QDate>
 #include <iostream>
 
+#include <QLibraryInfo>
 #include <QSettings>
 
 void myMessageHandler(QtMsgType type, const QMessageLogContext & context, const QString & msg)
@@ -50,7 +51,10 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setApplicationVersion("0.0.1");
     QCoreApplication::setOrganizationName(QStringLiteral("Tomsk Polytechnic University"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("tpu.ru"));
-    QApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
+    qputenv("QT_FONT_DPI", QByteArray("128"));
+    //QApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
+    // QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    // QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
     Grams app(argc, argv);
     return app.exec();
 }

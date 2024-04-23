@@ -4,101 +4,125 @@
 
 CustomPlotItem::CustomPlotItem(QQuickItem *parent)
     : QQuickPaintedItem(parent), m_CustomPlot(nullptr), m_timerId(0), testTimer(0), rescalingON(true) {
-  setFlag(QQuickItem::ItemHasContents, true);
-  setAcceptedMouseButtons(Qt::AllButtons);
+    setFlag(QQuickItem::ItemHasContents, true);
+    setAcceptedMouseButtons(Qt::AllButtons);
 
-  connect(this, &QQuickPaintedItem::widthChanged, this,
-          &CustomPlotItem::updateCustomPlotSize);
-  connect(this, &QQuickPaintedItem::heightChanged, this,
-          &CustomPlotItem::updateCustomPlotSize);
-  qDebug() << "CustomPlotItem Created";
+    connect(this, &QQuickPaintedItem::widthChanged, this,
+            &CustomPlotItem::updateCustomPlotSize);
+    connect(this, &QQuickPaintedItem::heightChanged, this,
+            &CustomPlotItem::updateCustomPlotSize);
+    qDebug() << "CustomPlotItem Created";
 }
 
 CustomPlotItem::~CustomPlotItem() {
-  delete m_CustomPlot;
-  m_CustomPlot = nullptr;
+    delete m_CustomPlot;
+    m_CustomPlot = nullptr;
 
-  if (m_timerId != 0) {
+    if (m_timerId != 0) {
     killTimer(m_timerId);
-  }
+    }
 
-  qDebug() << "CustomPlotItem Destroyed";
-  
+    qDebug() << "CustomPlotItem Destroyed"; 
+}
+
+void CustomPlotItem::testPassPointer(Sensor* sensor_ptr){
+    m_sensors << sensor_ptr;
+}
+
+void CustomPlotItem::testPtrPlot(){
+    if(!m_sensors.isEmpty()){
+        qDebug() << m_sensors[0]->m_name;
+    }
 }
 
 void CustomPlotItem::initCustomPlot(int index) {
-  if(!m_CustomPlot){
-    m_CustomPlot = new QCustomPlot();
+    if(!m_CustomPlot){
+        m_CustomPlot = new QCustomPlot();
 
-    connect( m_CustomPlot, &QCustomPlot::destroyed, this, [=](){ qDebug() << QString(" QCustomPlot (%1) pointer is destroyed ").arg(index); });
-    updateCustomPlotSize();
-    
-    m_CustomPlot->setOpenGl(true); // it's not working without some fckn include
+        connect( m_CustomPlot, &QCustomPlot::destroyed, this, [=](){ qDebug() << QString(" QCustomPlot (%1) pointer is destroyed ").arg(index); });
+        updateCustomPlotSize();
 
+        m_CustomPlot->setOpenGl(true); // it's not working without some fckn include
+
+        m_CustomPlot->addGraph();
+        m_CustomPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(Qt::black, 1.5), QBrush(Qt::white), 9));
+        m_CustomPlot->graph(0)->setPen(QPen(QColor(120, 120, 120), 2));
+        m_CustomPlot->graph(0)->setAdaptiveSampling(true);
+        m_CustomPlot->graph()->setName("zero");
+        m_plotNames << "zero";
+        
+        QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
+        timeTicker->setTimeFormat("%h:%m:%s");
+        m_CustomPlot->xAxis->setTicker(timeTicker);
+        m_CustomPlot->yAxis->setRange(0.0, 1.0);
+        m_CustomPlot->axisRect()->setupFullAxesBox(); //?
+        m_CustomPlot->yAxis->setRange(0.0, 1.0);
+
+        //make left and bottom axes transfer their ranges to right and top axes:
+        connect(m_CustomPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), m_CustomPlot->xAxis2, SLOT(setRange(QCPRange))); //?
+        connect(m_CustomPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), m_CustomPlot->yAxis2, SLOT(setRange(QCPRange))); //?
+
+
+        m_CustomPlot->xAxis->setLabel("Время, с");
+        m_CustomPlot->xAxis->setLabelColor(Qt::white);
+        m_CustomPlot->yAxis->setLabel("Давление, бар");
+        m_CustomPlot->yAxis->setLabelColor(Qt::white);
+        m_CustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+        //startTimer(500);
+
+        connect(m_CustomPlot, &QCustomPlot::afterReplot, this,
+                &CustomPlotItem::onCustomReplot);
+
+        qDebug() << QString("QCustomplot (%1) Initialized").arg(index);
+
+        // set some pens, brushes and backgrounds:
+        m_CustomPlot->xAxis->setBasePen(QPen(Qt::white, 1));
+        m_CustomPlot->yAxis->setBasePen(QPen(Qt::white, 1));
+        m_CustomPlot->xAxis->setTickPen(QPen(Qt::white, 1));
+        m_CustomPlot->yAxis->setTickPen(QPen(Qt::white, 1));
+        m_CustomPlot->xAxis->setSubTickPen(QPen(Qt::white, 1));
+        m_CustomPlot->yAxis->setSubTickPen(QPen(Qt::white, 1));
+        m_CustomPlot->xAxis->setTickLabelColor(Qt::white);
+        m_CustomPlot->yAxis->setTickLabelColor(Qt::white);
+        m_CustomPlot->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+        m_CustomPlot->yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+        m_CustomPlot->xAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
+        m_CustomPlot->yAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
+        m_CustomPlot->xAxis->grid()->setSubGridVisible(true);
+        m_CustomPlot->yAxis->grid()->setSubGridVisible(true);
+        m_CustomPlot->xAxis->grid()->setZeroLinePen(Qt::NoPen);
+        m_CustomPlot->yAxis->grid()->setZeroLinePen(Qt::NoPen);
+        m_CustomPlot->xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+        m_CustomPlot->yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+        QLinearGradient plotGradient;
+        plotGradient.setStart(0, 0);
+        plotGradient.setFinalStop(0, 350);
+        plotGradient.setColorAt(0, QColor(80, 80, 80));
+        plotGradient.setColorAt(1, QColor(50, 50, 50));
+        m_CustomPlot->setBackground(plotGradient);
+        QLinearGradient axisRectGradient;
+        axisRectGradient.setStart(0, 0);
+        axisRectGradient.setFinalStop(0, 350);
+        axisRectGradient.setColorAt(0, QColor(80, 80, 80));
+        axisRectGradient.setColorAt(1, QColor(30, 30, 30));
+        m_CustomPlot->axisRect()->setBackground(axisRectGradient);
+    }
+    m_CustomPlot->replot();
+}
+
+void CustomPlotItem::placeGraph(const QString &name){
     m_CustomPlot->addGraph();
-    m_CustomPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(Qt::black, 1.5), QBrush(Qt::white), 9));
-    m_CustomPlot->graph(0)->setPen(QPen(QColor(120, 120, 120), 2));
-    m_CustomPlot->graph(0)->setAdaptiveSampling(true);
-    //m_CustomPlot->addGraph();
-    //m_CustomPlot->graph(1)->setPen(QPen(Qt::black));
-
-    QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
-    timeTicker->setTimeFormat("%h:%m:%s");
-    m_CustomPlot->xAxis->setTicker(timeTicker);
-    m_CustomPlot->yAxis->setRange(0.0, 1.0);
-    m_CustomPlot->axisRect()->setupFullAxesBox(); //?
-    m_CustomPlot->yAxis->setRange(0.0, 1.0);
-
-    //make left and bottom axes transfer their ranges to right and top axes:
-    connect(m_CustomPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), m_CustomPlot->xAxis2, SLOT(setRange(QCPRange))); //?
-    connect(m_CustomPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), m_CustomPlot->yAxis2, SLOT(setRange(QCPRange))); //?
-
-
-    m_CustomPlot->xAxis->setLabel("Время, с");
-    m_CustomPlot->xAxis->setLabelColor(Qt::white);
-    m_CustomPlot->yAxis->setLabel("Поток, норм. л./мин");
-    m_CustomPlot->yAxis->setLabelColor(Qt::white);
-    m_CustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-    //startTimer(500);
-
-    connect(m_CustomPlot, &QCustomPlot::afterReplot, this,
-            &CustomPlotItem::onCustomReplot);
-
-    qDebug() << QString("QCustomplot (%1) Initialized").arg(index);
-
-    // set some pens, brushes and backgrounds:
-    m_CustomPlot->xAxis->setBasePen(QPen(Qt::white, 1));
-    m_CustomPlot->yAxis->setBasePen(QPen(Qt::white, 1));
-    m_CustomPlot->xAxis->setTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->yAxis->setTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->xAxis->setSubTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->yAxis->setSubTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->xAxis->setTickLabelColor(Qt::white);
-    m_CustomPlot->yAxis->setTickLabelColor(Qt::white);
-    m_CustomPlot->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-    m_CustomPlot->yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-    m_CustomPlot->xAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-    m_CustomPlot->yAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-    m_CustomPlot->xAxis->grid()->setSubGridVisible(true);
-    m_CustomPlot->yAxis->grid()->setSubGridVisible(true);
-    m_CustomPlot->xAxis->grid()->setZeroLinePen(Qt::NoPen);
-    m_CustomPlot->yAxis->grid()->setZeroLinePen(Qt::NoPen);
-    m_CustomPlot->xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
-    m_CustomPlot->yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
-    QLinearGradient plotGradient;
-    plotGradient.setStart(0, 0);
-    plotGradient.setFinalStop(0, 350);
-    plotGradient.setColorAt(0, QColor(80, 80, 80));
-    plotGradient.setColorAt(1, QColor(50, 50, 50));
-    m_CustomPlot->setBackground(plotGradient);
-    QLinearGradient axisRectGradient;
-    axisRectGradient.setStart(0, 0);
-    axisRectGradient.setFinalStop(0, 350);
-    axisRectGradient.setColorAt(0, QColor(80, 80, 80));
-    axisRectGradient.setColorAt(1, QColor(30, 30, 30));
-    m_CustomPlot->axisRect()->setBackground(axisRectGradient);
-  }
-  m_CustomPlot->replot();
+    // m_CustomPlot->graph() the Last 
+    QPen pen;
+    if(name == "DD311")
+        pen = QPen(Qt::darkBlue, 1.5);
+    else
+        pen = QPen(Qt::darkMagenta, 1.5);
+    m_CustomPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, pen, QBrush(Qt::white), 9));
+    m_CustomPlot->graph()->setPen(QPen(QColor(120, 120, 120), 2));
+    m_CustomPlot->graph()->setAdaptiveSampling(true);
+    m_CustomPlot->graph()->setName(name);
+    m_plotNames << name;
 }
 
 void CustomPlotItem::paint(QPainter *painter) {
@@ -139,20 +163,17 @@ void CustomPlotItem::wheelEvent(QWheelEvent *event) {
   routeWheelEvents(event); 
 }
 
-void CustomPlotItem::backendData(QList<double> x, QList<double> y){
-  static double lastPointKey = 0;
-  m_CustomPlot->graph(0)->setData(x, y);
-  lastPointKey = x.last();
-  if(rescalingON){
-    m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
-    m_CustomPlot->yAxis->rescale();
-    m_CustomPlot->yAxis->scaleRange(1.1);
-  }
-  m_CustomPlot->replot();
-  //m_CustomPlot->rescaleAxes();
-  //m_CustomPlot->yAxis->scaleRange(1.05, m_CustomPlot->yAxis->range().center());
-  //m_CustomPlot->graph(0)->rescaleValueAxis(false);
-  //m_CustomPlot->yAxis->scaleRange(1.1, m_CustomPlot->yAxis->range().center());
+void CustomPlotItem::backendData(const QString &name, QList<double> x, QList<double> y){
+    static double lastPointKey = 0;
+    m_CustomPlot->graph(0)->setData(x, y);
+    lastPointKey = x.last();
+    if(rescalingON){
+        m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
+        m_CustomPlot->yAxis->rescale();
+        if(y.last() != 0)
+            m_CustomPlot->yAxis->scaleRange(1.1);
+    }
+    m_CustomPlot->replot();
 }
 
 void CustomPlotItem::graphClicked(QCPAbstractPlottable *plottable) {

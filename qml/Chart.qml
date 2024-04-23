@@ -24,24 +24,28 @@ Item{
                 anchors.left: parent.left; anchors.top: parent.top
                 Layout.columnSpan: 3
                 Layout.rowSpan: 1
-                Component.onCompleted: initCustomPlot(0)
+                Component.onCompleted: {
+                    initCustomPlot(0)
+                }
                 Component.onDestruction: testJSString(0)
                 function testJSString(num) {
                     let text = "I have been destroyed_ %1"
                     console.log(text.arg(num))
                 }
-                
             }
-            
+            function addNewGraph(name){
+                customPlotPressure.placeGraph(name)
+            }
             Connections {
                 target: _myModel 
                 function onDataChanged() { 
                     //if start & end are inside scope if this sensor from sensorsList
-                    console.log(sensorsList[0])
-                    let valueMap = _myModel.getCurPressureValues()
-                    let firstSensor = sensorsList[0]
-                    console.log(valueMap[firstSensor])
-                    //customPlotPressure.backendData(x, y) 
+                    //console.log(sensorsList[0])
+                    //let valueMap = _myModel.getCurPressureValues()
+                    //let firstSensor = sensorsList[0]
+                    //console.log(valueMap[firstSensor])
+                    //customPlotPressure.backendData(sensorsList[0], x, y) 
+                    customPlotPressure.testPtrPlot()
                 }
             }
             
@@ -54,7 +58,7 @@ Item{
                 font.pixelSize: 18
                 //Material.background: Material.Red
                 //Material.roundedScale: Material.FullScale
-                onClicked: customPlotPressure.resetPos()
+                onClicked: customPlotPressure.testPassPointer(_myModel.getPtr(sensorsList))
             }
             RoundButton {
                 id: changeUnitBtn
@@ -111,7 +115,10 @@ Item{
         }
         Component.onCompleted: {
             let pressure = plotPressure.createObject()
+            // automate it!
+            pressure.addNewGraph(sensorsList[0])
             baseContainer.append(pressure)
+
             // let vacuum = plotVacuum.createObject()
             // baseContainer.append(vacuum)
         }

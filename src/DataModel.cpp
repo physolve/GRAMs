@@ -49,7 +49,6 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
 {
     if ( !index.isValid() )
         return QVariant();
-    
     QStringList allNames = m_controllersToSensors["pressure"] + m_controllersToSensors["temperature"];
 
     auto sensor = this->m_sensors[allNames.at(index.row())];
@@ -82,23 +81,27 @@ QHash<int, QByteArray> MyModel::roleNames() const
     return mapping;
 }
 
-QVariantMap MyModel::getCurPressureValues() const{
-    //QVector<double> curPressureValues;
-    QVariantMap curPressureValues;
-    for(const auto &name : m_controllersToSensors["pressure"]){
-        curPressureValues[name] = m_sensors[name].getCurValue();
-    } // its bad, try lambda 
-    return curPressureValues;//QVariant::fromValue(curPressureValues); 
+Sensor* MyModel::getPtr(const QStringList &names){
+    return &m_sensors[names[0]];
 }
-QVariantMap MyModel::getCurTempValues() const{
-    //QList<double> curTempValues;
-    QVariantMap curTempValues;
-    for(const auto &name : m_controllersToSensors["temperature"]){
-        curTempValues[name] = m_sensors[name].getCurValue();
-    }
-    // use lambda instead for!!! 
-    return curTempValues;//QVariant::fromValue(curTempValues); 
-}
+
+// QVariantMap MyModel::getCurPressureValues() const{
+//     //QVector<double> curPressureValues;
+//     QVariantMap curPressureValues;
+//     for(const auto &name : m_controllersToSensors["pressure"]){
+//         curPressureValues[name] = m_sensors[name].getCurValue();
+//     } // its bad, try lambda 
+//     return curPressureValues;//QVariant::fromValue(curPressureValues); 
+// }
+// QVariantMap MyModel::getCurTempValues() const{
+//     //QList<double> curTempValues;
+//     QVariantMap curTempValues;
+//     for(const auto &name : m_controllersToSensors["temperature"]){
+//         curTempValues[name] = m_sensors[name].getCurValue();
+//     }
+//     // use lambda instead for!!! 
+//     return curTempValues;//QVariant::fromValue(curTempValues); 
+// }
 
 void MyModel::appendData(const QMap<QString, QVector<double>> & dataMap){ // not tested
     if(m_sensors.isEmpty())
@@ -108,7 +111,7 @@ void MyModel::appendData(const QMap<QString, QVector<double>> & dataMap){ // not
         auto mappedNames = m_controllersToSensors[i.key()];
         auto values = i.value();
         for(auto j = 0; j<mappedNames.count(); ++j){
-            m_sensors[mappedNames.at(j)].appendData(time,values.at(j));
+            m_sensors[mappedNames.at(j)].appendData(time, values.at(j));
         }
         // use lambda instead of count method!!! 
     }

@@ -7,7 +7,7 @@
 
 class MyModel : public QAbstractListModel
 {
-    Q_OBJECT
+    Q_OBJECT 
 public:
     enum Roles {
         NameRole = Qt::UserRole,
@@ -23,8 +23,9 @@ public:
     QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
     //bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     QHash<int, QByteArray> roleNames() const override; // use QMultiHash
-    Q_INVOKABLE QVariantMap getCurPressureValues() const; // this is temporally, change to some ordinate way like map of names? or idx
-    Q_INVOKABLE QVariantMap getCurTempValues() const;
+    Q_INVOKABLE Sensor* getPtr(const QStringList &names);
+    // Q_INVOKABLE QVariantMap getCurPressureValues() const; // this is temporally, change to some ordinate way like map of names? or idx
+    // Q_INVOKABLE QVariantMap getCurTempValues() const;
     Q_INVOKABLE void appendProfileSensors(const QString &controllerPurpose, const QVariantList &sensors); // QVector<double>& data??
 
     void initializeAcquisition();

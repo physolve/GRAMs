@@ -14,7 +14,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(Qt6 6.2.4 COMPONENTS Quick QuickControls2 Charts PrintSupport OpenGL REQUIRED) # Charts QuickControls2   LinguistTools
+find_package(Qt6 6.2.4 COMPONENTS Core Quick QuickControls2 Charts PrintSupport OpenGL REQUIRED) # Charts QuickControls2   LinguistTools
 
 set(MY_UNITTESTS TRUE)
 include(config.cmake)
@@ -68,13 +68,14 @@ qt_add_executable(${EXECUTABLE_NAME}
 #target_include_directories(${EXECUTABLE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(${EXECUTABLE_NAME}
-    PRIVATE Qt6::Quick
+    PRIVATE Qt6::Core
+            Qt6::Quick
             Qt6::QuickControls2
             Qt6::Charts
             Qt6::PrintSupport
             Qt6::OpenGL
     #PRIVATE Qt6::QuickControls2
-    #PRIVATE Qt6::Charts
+    #PRIVA5TE Qt6::Charts
     #PRIVATE Qt6::PrintSupport
     #PRIVATE Controlsplugin
     #PRIVATE FirstPluginplugin

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtQuick>
+#include "Sensor.h"
 
 class QCustomPlot;
 class QCPAbstractPlottable;
@@ -13,8 +14,11 @@ public:
   virtual ~CustomPlotItem();
 
   void paint(QPainter *painter);
+  Q_INVOKABLE void testPassPointer(Sensor* sensor_ptr);
+  Q_INVOKABLE void testPtrPlot();
 
   Q_INVOKABLE void initCustomPlot(int index);
+  Q_INVOKABLE void placeGraph(const QString &name);
   Q_INVOKABLE void resetPos();
 
 protected:
@@ -31,9 +35,11 @@ private:
   int m_timerId;
   int testTimer;
   bool rescalingON;
+  QStringList m_plotNames;
+  QList<Sensor*> m_sensors;
 
 public slots:
-  void backendData(QList<double> x, QList<double> y);
+  void backendData(const QString &name, QList<double> x, QList<double> y);
 
 private slots:
   void graphClicked(QCPAbstractPlottable *plottable);
