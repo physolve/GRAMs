@@ -25,10 +25,6 @@ Window {
     JsonData {
         id: jsonData;
     }
-
-    // property var dataTest: {}
-    // property var cfgTest: {}
-
     Component.onCompleted: {
         // if (datastore) {
         //     jsonData.parse("data.json"); // работает

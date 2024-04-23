@@ -390,18 +390,7 @@ Window {
     function exitSave(){
         main.profileId = profileBox.currentIndex
         main.show()
+        main.initializeEnd()
         initialize.close()
-        backend.initializeReading()
     }
-    // onClosing:{ // make pages in main as default
-    //     main.profileId = profileBox.currentIndex
-        
-    //     if(true){ //cfgTest[0].start
-    //         let tabPage1 = page1.createObject(stackLayout); // работает
-    //         container.append(tabPage1);
-    //     }
-
-    //     main.show()
-    //     initialize.close()
-    // }
 }

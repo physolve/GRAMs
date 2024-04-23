@@ -25,7 +25,8 @@ Item{
                 Layout.columnSpan: 3
                 Layout.rowSpan: 1
                 Component.onCompleted: {
-                    initCustomPlot(0)
+                    initCustomPlot(0) // why 0?
+                    testPassPointer(_myModel.getPtr(sensorsList)) //customPlotPressure.
                 }
                 Component.onDestruction: testJSString(0)
                 function testJSString(num) {
@@ -58,7 +59,7 @@ Item{
                 font.pixelSize: 18
                 //Material.background: Material.Red
                 //Material.roundedScale: Material.FullScale
-                onClicked: customPlotPressure.testPassPointer(_myModel.getPtr(sensorsList))
+                onClicked: customPlotPressure.resetPos()
             }
             RoundButton {
                 id: changeUnitBtn

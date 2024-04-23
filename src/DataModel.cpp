@@ -106,7 +106,7 @@ Sensor* MyModel::getPtr(const QStringList &names){
 void MyModel::appendData(const QMap<QString, QVector<double>> & dataMap){ // not tested
     if(m_sensors.isEmpty())
         return;
-    auto time = m_time.elapsed()/1000;
+    qreal time = m_time.elapsed()/1000.0;
     for (auto i = dataMap.begin(), end = dataMap.end(); i != end; ++i){
         auto mappedNames = m_controllersToSensors[i.key()];
         auto values = i.value();

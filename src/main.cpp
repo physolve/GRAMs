@@ -51,10 +51,7 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setApplicationVersion("0.0.1");
     QCoreApplication::setOrganizationName(QStringLiteral("Tomsk Polytechnic University"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("tpu.ru"));
-    qputenv("QT_FONT_DPI", QByteArray("128"));
-    //QApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-    // QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    // QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+    qputenv("QT_FONT_DPI", QByteArray("128")); // set for High DPI screen
     Grams app(argc, argv);
     return app.exec();
 }

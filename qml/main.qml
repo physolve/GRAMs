@@ -13,7 +13,7 @@ ApplicationWindow {
     title: qsTr("GRAMs") //: some information
     Material.theme: Material.Dark
     Material.accent: Material.Indigo
-    property string datastore: ""
+    //property string datastore: ""
     property int profileId: 0
     // Settings {
     //     property alias datastore: main.datastore
@@ -75,13 +75,22 @@ ApplicationWindow {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        Page1 {
+        Repeater {
+            model: ObjectModel
+            {
+                id: mainPageContainer
+            }
         }
-        // Repeater {
-        //     model: ObjectModel
-        //     {
-        //         id: container
-        //     }
-        // }
     }
+
+    function initializeEnd(){
+        // check main.profileId to know which Page1 to load
+        // now put usual page 1 with GRAM50 mnemo
+        let tabPage1 = page1.createObject(stackLayout)
+        mainPageContainer.append(tabPage1)
+        
+        backend.initializeReading()
+
+    }
+
 }

@@ -3,7 +3,7 @@
 #include <QDebug>
 
 CustomPlotItem::CustomPlotItem(QQuickItem *parent)
-    : QQuickPaintedItem(parent), m_CustomPlot(nullptr), m_timerId(0), testTimer(0), rescalingON(true) {
+    : QQuickPaintedItem(parent), m_CustomPlot(nullptr), m_timerId(0), rescalingON(true) { //testTimer(0),
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
 
@@ -23,16 +23,6 @@ CustomPlotItem::~CustomPlotItem() {
     }
 
     qDebug() << "CustomPlotItem Destroyed"; 
-}
-
-void CustomPlotItem::testPassPointer(Sensor* sensor_ptr){
-    m_sensors << sensor_ptr;
-}
-
-void CustomPlotItem::testPtrPlot(){
-    if(!m_sensors.isEmpty()){
-        qDebug() << m_sensors[0]->m_name;
-    }
 }
 
 void CustomPlotItem::initCustomPlot(int index) {
@@ -161,6 +151,28 @@ void CustomPlotItem::mouseDoubleClickEvent(QMouseEvent *event) {
 void CustomPlotItem::wheelEvent(QWheelEvent *event) { 
   rescalingON = false;
   routeWheelEvents(event); 
+}
+
+void CustomPlotItem::testPassPointer(Sensor* sensor_ptr){
+    m_sensors << sensor_ptr;
+}
+
+void CustomPlotItem::testPtrPlot(){
+    if(m_sensors.isEmpty()){
+        return;
+    }
+    static double lastPointKey = 0;
+    // qreal lastPointKey = 50;
+    m_CustomPlot->graph(0)->setData(m_sensors[0]->getTime(), m_sensors[0]->getValue());
+    lastPointKey = m_sensors[0]->getTime().last();
+    if(rescalingON){
+        m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
+        m_CustomPlot->yAxis->rescale();
+        // if(m_sensors[0]->getValue().last() != 0)
+        //     m_CustomPlot->yAxis->scaleRange(1.1);
+    }
+    m_CustomPlot->replot();
+    // qDebug() << m_sensors[0]->m_name;
 }
 
 void CustomPlotItem::backendData(const QString &name, QList<double> x, QList<double> y){

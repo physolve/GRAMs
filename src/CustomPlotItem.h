@@ -33,7 +33,7 @@ protected:
 private:
   QCustomPlot *m_CustomPlot;
   int m_timerId;
-  int testTimer;
+  //int testTimer;
   bool rescalingON;
   QStringList m_plotNames;
   QList<Sensor*> m_sensors;

@@ -23,7 +23,6 @@ Grams::Grams(int &argc, char **argv):
     m_safeModule(),
     softTimer(new QTimer)
 {
-    this->setAttribute(Qt::AA_DisableHighDpiScaling);
     initGUI();
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
 }

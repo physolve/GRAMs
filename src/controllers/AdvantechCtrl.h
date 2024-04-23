@@ -27,7 +27,7 @@ public:
     virtual ~AdvantechAI();
     void Initialization() ; //override
     void initialInfo();
-    void ConfigureDeviceTest();
+    void ConfigureDeviceTest(); // rename TEST
 	void CheckError(ErrorCode errorCode);
     const AdvAIType& getInfo(); // move to base class
     void resizeDataVector(uint8_t size);
@@ -56,7 +56,7 @@ public:
     virtual ~AdvantechBuff();
     void Initialization() ; //override
     void initialInfo();
-    void ConfigureDeviceTest();
+    void ConfigureDeviceTest(); // rename TEST
 	void CheckError(ErrorCode errorCode);
     const AdvAIType& getInfo(); // move to base class
     void resizeDataVector(uint8_t size);
