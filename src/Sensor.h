@@ -14,7 +14,7 @@ public:
     void appendData(qreal x, double y);
     QVector<qreal> getTime();
     QVector<double> getValue();
-    quint64 getCurTime();
+    qreal getCurTime();
     double getCurValue();
 //signals:
 
@@ -25,7 +25,7 @@ public:
 private :
     QList<qreal> m_x; // one second data
     QList<double> m_y; // one second data
-    long long m_cX;
+    qreal m_cX;
     double m_cY;
 
     void filterData(double &data);

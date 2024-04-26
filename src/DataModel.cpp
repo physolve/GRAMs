@@ -81,8 +81,8 @@ QHash<int, QByteArray> MyModel::roleNames() const
     return mapping;
 }
 
-Sensor* MyModel::getPtr(const QStringList &names){
-    return &m_sensors[names[0]];
+Sensor* MyModel::getSensor(const QString &name){
+    return &m_sensors[name];
 }
 
 // QVariantMap MyModel::getCurPressureValues() const{

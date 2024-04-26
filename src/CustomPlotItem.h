@@ -14,13 +14,12 @@ public:
   virtual ~CustomPlotItem();
 
   void paint(QPainter *painter);
-  Q_INVOKABLE void testPassPointer(Sensor* sensor_ptr);
-  Q_INVOKABLE void testPtrPlot();
 
-  Q_INVOKABLE void initCustomPlot(int index);
-  Q_INVOKABLE void placeGraph(const QString &name);
+
+  Q_INVOKABLE void initCustomPlot(int index); // index as place in somewhere
+  Q_INVOKABLE void placePointerGraph(const QString &name, Sensor* sensor_ptr); // additional paramters 
+  Q_INVOKABLE void updatePlot();
   Q_INVOKABLE void resetPos();
-
 protected:
   void routeMouseEvents(QMouseEvent *event);
   void routeWheelEvents(QWheelEvent *event);
@@ -32,8 +31,8 @@ protected:
 
 private:
   QCustomPlot *m_CustomPlot;
-  int m_timerId;
-  //int testTimer;
+  int m_index;
+
   bool rescalingON;
   QStringList m_plotNames;
   QList<Sensor*> m_sensors;

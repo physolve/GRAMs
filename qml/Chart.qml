@@ -2,9 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import CustomPlot
-// Do I have to place Component in item?
+
 Item{
-    //id: graphItem
     required property var sensorsList
     ObjectModel
     {
@@ -13,20 +12,17 @@ Item{
     Component{
         id: plotPressure
         Item {
-            //id: itemPlotPressure
-            //width: 600
-            //height: 400
             CustomPlotItem {
                 id: customPlotPressure
                 width: parent.width;  height: parent.height-50 // resize
-                //width: 600
-                //height: 400
                 anchors.left: parent.left; anchors.top: parent.top
                 Layout.columnSpan: 3
                 Layout.rowSpan: 1
                 Component.onCompleted: {
-                    initCustomPlot(0) // why 0?
-                    testPassPointer(_myModel.getPtr(sensorsList)) //customPlotPressure.
+                    initCustomPlot(0) // why 0? to show place of hraph in mnemo
+                    for(const sensorName of sensorsList){
+                        placePointerGraph(sensorName, _myModel.getSensor(sensorName))
+                    }
                 }
                 Component.onDestruction: testJSString(0)
                 function testJSString(num) {
@@ -34,19 +30,10 @@ Item{
                     console.log(text.arg(num))
                 }
             }
-            function addNewGraph(name){
-                customPlotPressure.placeGraph(name)
-            }
             Connections {
                 target: _myModel 
                 function onDataChanged() { 
-                    //if start & end are inside scope if this sensor from sensorsList
-                    //console.log(sensorsList[0])
-                    //let valueMap = _myModel.getCurPressureValues()
-                    //let firstSensor = sensorsList[0]
-                    //console.log(valueMap[firstSensor])
-                    //customPlotPressure.backendData(sensorsList[0], x, y) 
-                    customPlotPressure.testPtrPlot()
+                    customPlotPressure.updatePlot()
                 }
             }
             
@@ -117,9 +104,8 @@ Item{
         Component.onCompleted: {
             let pressure = plotPressure.createObject()
             // automate it!
-            pressure.addNewGraph(sensorsList[0])
+            
             baseContainer.append(pressure)
-
             // let vacuum = plotVacuum.createObject()
             // baseContainer.append(vacuum)
         }

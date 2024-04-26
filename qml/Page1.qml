@@ -22,7 +22,7 @@ Page{
             id: customPlot
             width: 450
             height: 350
-            sensorsList: ["DD311"]
+            sensorsList: ["DD311", "DD312", "DD331", "DD332", "DD334"]
         }
     }
 }

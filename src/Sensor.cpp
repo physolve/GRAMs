@@ -3,6 +3,8 @@
 Sensor::Sensor(const QString &name, const QMap<QString,double> &parameters)://, QObject *parent) : QObject(parent),
 m_name(name), m_A(parameters["A"]), m_B(parameters["B"]), m_R(parameters["R"]), m_cX(0), m_cY(0)
 {
+    m_x.append(m_cX);
+    m_y.append(m_cY);
 }
 void Sensor::appendData(qreal x, double y){
     m_cX = x;
@@ -15,7 +17,7 @@ void Sensor::appendData(qreal x, double y){
 }
 
 void Sensor::filterData(double &data){
-    data = m_A * data / m_R - m_B;
+    data = m_A * data / m_R - m_B; // if not mA, then without m_R
 }
 
 QVector<qreal> Sensor::getTime(){
@@ -24,7 +26,7 @@ QVector<qreal> Sensor::getTime(){
 QVector<double> Sensor::getValue(){
     return m_y.toVector();
 }
-quint64 Sensor::getCurTime(){
+qreal Sensor::getCurTime(){
     return m_cX;
 }
 double Sensor::getCurValue(){
