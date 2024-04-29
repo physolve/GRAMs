@@ -12,10 +12,10 @@ public:
                                                                        
     QString m_name;
     void appendData(qreal x, double y);
-    QVector<qreal> getTime();
-    QVector<double> getValue();
-    qreal getCurTime();
-    double getCurValue();
+    QVector<qreal> getTime() const;
+    QVector<double> getValue() const;
+    qreal getCurTime() const;
+    double getCurValue() const;
 //signals:
 
 //public slots:

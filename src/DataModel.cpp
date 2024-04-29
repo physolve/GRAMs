@@ -49,21 +49,23 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
 {
     if ( !index.isValid() )
         return QVariant();
-    QStringList allNames = m_controllersToSensors["pressure"] + m_controllersToSensors["temperature"];
+    // QStringList allNames = m_controllersToSensors["pressure"] + m_controllersToSensors["temperature"];
 
-    auto sensor = this->m_sensors[allNames.at(index.row())];
+    // auto sensor = this->m_sensors[allNames.at(index.row())];
+
+    const auto it = m_sensors.begin() + index.row();
 
     if ( role == NameRole ){
-        return sensor.m_name;
+        return it.value().m_name;
     }
     else if ( role == Time )
-        return QVariant::fromValue(sensor.getTime());
+        return QVariant::fromValue(it.value().getTime());
     else if ( role == Value )
-        return QVariant::fromValue(sensor.getValue());
+        return QVariant::fromValue(it.value().getValue());
     else if ( role == CurTime)
-        return QVariant::fromValue(sensor.getCurTime());
+        return QVariant::fromValue(it.value().getCurTime());
     else if ( role == CurValue)
-        return QVariant::fromValue(sensor.getCurValue());
+        return QVariant::fromValue(it.value().getCurValue());
     else
         return QVariant();
 }

@@ -9,7 +9,7 @@ public:
     Initialize(QObject *parent = 0);
     Q_PROPERTY(QVariantMap profileJson MEMBER m_profileJson CONSTANT)
     Q_PROPERTY(QStringList profileNames MEMBER m_profileNames CONSTANT)
-    Q_PROPERTY(QVariantMap advantechDeviceMap MEMBER m_advantechDeviceMap NOTIFY advantechDeviceMapChanged)
+    Q_PROPERTY(QStringList advantechDeviceMap MEMBER m_advantechDeviceMap NOTIFY advantechDeviceMapChanged)
     Q_INVOKABLE QVariantMap advantechDeviceFill(const QString &description, const QString &type);
     
 signals:
@@ -25,7 +25,7 @@ private:
 
     QStringList m_profileNames;
 
-    QVariantMap m_advantechDeviceMap;
+    QStringList m_advantechDeviceMap;
 
     //QVariantMap m_advantechDeviceSettings;
 };
