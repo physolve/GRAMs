@@ -18,12 +18,19 @@ Page{
             GRAM50Mnemo {
             }
         }
-        Chart{
-            id: customPlot
-            width: 450
-            height: 350
-            sensorsList: ["DD311", "DD312", "DD331", "DD332", "DD334"]
+        ColumnLayout{
+            Chart{
+                id: customPlot
+                width: 450
+                height: 350
+                sensorsList: ["DD311", "DD312", "DD331", "DD332", "DD334"]
+            }
+            Chart{
+                id: customPlotTemp
+                width: 450
+                height: 350
+                sensorsList: ["DT341", "DT314"]
+            }
         }
-
     }
 }

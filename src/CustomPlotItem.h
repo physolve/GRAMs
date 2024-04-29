@@ -17,7 +17,7 @@ public:
 
 
   Q_INVOKABLE void initCustomPlot(int index); // index as place in somewhere
-  Q_INVOKABLE void placePointerGraph(const QString &name, Sensor* sensor_ptr); // additional paramters 
+  Q_INVOKABLE void placePointerGraph(const QString &name, QSharedPointer<Sensor> sensor_ptr); // additional paramters 
   Q_INVOKABLE void updatePlot();
   Q_INVOKABLE void resetPos();
 protected:
@@ -35,7 +35,7 @@ private:
 
   bool rescalingON;
   QStringList m_plotNames;
-  QList<Sensor*> m_sensors;
+  QList<QSharedPointer<Sensor>> m_sensors;
 
 public slots:
   void backendData(const QString &name, QList<double> x, QList<double> y);

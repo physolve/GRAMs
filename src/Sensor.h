@@ -9,7 +9,7 @@ class Sensor //: public QObject
     //Q_OBJECT
 public:
     explicit Sensor(const QString &name = "unknown", const QMap<QString, double> &parameters = QMap<QString, double>());  //QObject *parent = nullptr  //(if we are going to use qml )
-                                                                       
+    ~Sensor();                                                          
     QString m_name;
     void appendData(qreal x, double y);
     QVector<qreal> getTime() const;

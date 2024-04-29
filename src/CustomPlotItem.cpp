@@ -17,7 +17,13 @@ CustomPlotItem::CustomPlotItem(QQuickItem *parent)
 CustomPlotItem::~CustomPlotItem() {
     delete m_CustomPlot;
     m_CustomPlot = nullptr;
-    qDebug() << "CustomPlotItem Destroyed"; 
+    qDebug() << "CustomPlotItem Destroyed";
+    // for(auto sensor_ptr : m_sensors){
+    //     if(!sensor_ptr.isNull())
+    //         sensor_ptr.clear();
+    //     else 
+    //         ;
+    // }
 }
 
 void CustomPlotItem::initCustomPlot(int index) {
@@ -94,12 +100,12 @@ void CustomPlotItem::initCustomPlot(int index) {
     //m_CustomPlot->replot();
 }
 
-void CustomPlotItem::placePointerGraph(const QString &name, Sensor* sensor_ptr){
+void CustomPlotItem::placePointerGraph(const QString &name, QSharedPointer<Sensor> sensor_ptr){
     if(sensor_ptr->m_name != name){
         return;
     }
     qDebug() << "add " << name << " to plot " << m_index;
-    m_sensors << sensor_ptr;
+    m_sensors.append(sensor_ptr);
     m_CustomPlot->addGraph();
     QStringList lineColors = {"#cb8175", "#e2a97e", "#f0cf8e", "#f6edcd", "#a8c8a6", "#6d8d8a", "#655057" };
     
