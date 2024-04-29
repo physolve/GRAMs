@@ -1,22 +1,8 @@
-
-
-/*
-This is a UI file (.ui.qml) that is intended to be edited in Qt Design Studio only.
-It is supposed to be strictly declarative and only uses a subset of QML. If you edit
-this file manually, you might introduce QML code that is not supported by Qt Design Studio.
-Check out https://doc.qt.io/qtcreator/creator-quick-ui-forms.html for details on .ui.qml files.
-*/
 import QtQuick 6.2
 import QtQuick.Controls
 
-//import QtQuick.Studio.Components
-//import QtQuick.Shapes
-//import QtQuick.Layouts
-//import QtQuick.Studio.Effects
-
 import ".."
 Item {
-    id: item1 //?
     width: rectangle.width
     height: rectangle.height
     function setPresValues(presValues) {
@@ -76,6 +62,11 @@ Item {
     Connections {
         target: _myModel
         function onDataChanged(topLeft, bottomRight, roles) {
+            let valuesArray = {}
+            for(let i = 0; i < bottomRight.row; i++){
+                valuesArray[_myModel.data(_myModel.index(i,0),256)] = _myModel.data(_myModel.index(i,0),260) // shit models
+            }
+            setPresValues(valuesArray) // there all (fuck)
             //setPresValues(_myModel.getCurPressureValues()) //gRAMsMnemoForm  it's Working fine // NOW IT RERTURNS QVariantMap
             //setTempValues(_myModel.getCurTempValues())
         }

@@ -14,7 +14,7 @@ Page{
             id: schemeMnemo
             width: 1350
             height: 900
-            color: "transparent" 
+            color: "transparent"
             GRAM50Mnemo {
             }
         }
@@ -24,5 +24,6 @@ Page{
             height: 350
             sensorsList: ["DD311", "DD312", "DD331", "DD332", "DD334"]
         }
+
     }
 }

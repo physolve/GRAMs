@@ -20,15 +20,15 @@ void Sensor::filterData(double &data){
     data = m_A * data / m_R - m_B; // if not mA, then without m_R
 }
 
-QVector<qreal> Sensor::getTime(){
+QVector<qreal> Sensor::getTime() const{
     return m_x.toVector();
 }
-QVector<double> Sensor::getValue(){
+QVector<double> Sensor::getValue() const{
     return m_y.toVector();
 }
-qreal Sensor::getCurTime(){
+qreal Sensor::getCurTime() const{
     return m_cX;
 }
-double Sensor::getCurValue(){
+double Sensor::getCurValue() const{
     return m_cY;
 }

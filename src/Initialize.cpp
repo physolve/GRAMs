@@ -62,18 +62,18 @@ bool Initialize::advantechDeviceCheck(){
         qDebug() << "No advantech devices connected";
         return false;
     }
-    QVariantMap deviceMap;
+    QStringList deviceMap;
     for(int i = 0; i < allSupportedDevices->getCount(); i++){
         DeviceTreeNode const &node = allSupportedDevices->getItem(i);
         qDebug("%d, %ls", node.DeviceNumber, node.Description);
-        auto advantechDescription = QString::fromWCharArray(node.Description).split(',');
-        auto tempName = advantechDescription.value(0);
-        auto tempBID = advantechDescription.value(1);
+        // auto advantechDescription = QString::fromWCharArray(node.Description).split(',');
+        // auto tempName = advantechDescription.value(0);
+        // auto tempBID = advantechDescription.value(1);
 
         // it doesn't fit expectations (it should show virtual BID to distinguish from non-virtual and put into BID)
         //qDebug() << "CHECK INDEX FOR BID to SHOW Virtual " << node.ModulesIndex;
 
-        deviceMap.insert(tempBID,tempName);
+        deviceMap << QString::fromWCharArray(node.Description);
     }
     m_advantechDeviceMap = deviceMap;
     startCheckInstance->Dispose();

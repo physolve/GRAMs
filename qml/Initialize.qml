@@ -195,31 +195,39 @@ Window {
         itemModel.append(profileObj)
     }
     function realRequirements(){
-        let rsa = initSource.advantechDeviceMap // for now only advantech connected (key: BID, value: name)
+        let advDeviceArray = initSource.advantechDeviceMap // for now only advantech connected [description]
+        
         console.log("I see real devices")
-        console.log(Object.values(rsa))
+        
+        console.log(advDeviceArray)
+        
         console.log("\tI will compare those to profile")
+        
         let waitNames = advantechWait.map(a => a.name)
-        console.log(waitNames)
-        for(const [key, value] of Object.entries(rsa)){
-            if(waitNames.includes(value)){ //
-                let element = advantechWait[waitNames.indexOf(value)]
-                console.log("\tMatch! Asking for real data to fill setting " + value)
+        
+        console.log("Wait names:", waitNames)
+        
+        for(const deviceDescription of advDeviceArray){
+            let deviceName = deviceDescription.split(',')[0]
+            if(waitNames.includes(deviceName)){ //
+                let element = advantechWait[waitNames.indexOf(deviceName)]
+                console.log("\tMatch! Asking for real data to fill setting " + deviceName)
                 switch(element.type){
                 case "AI":
-                    advModuleAIReal(value+','+key, element.index)
+                    advModuleAIReal(deviceDescription, element.index)
                     break
                 case "DO":
-                    advModuleDOReal(value+','+key, element.index)
+                    advModuleDOReal(deviceDescription, element.index)
                     break
                 default: break
                 }
             }  
             else {
-                console.log("\tNo match, creating field for " + value)
-                fieldModule(value+','+key)
+                console.log("\tNo match, creating field for " + deviceDescription)
+                fieldModule(deviceDescription)
             }
         }
+
     }
     function advModuleAIReal(description, index){
         let t_profileObj = itemModel.get(index) // take i'th item
