@@ -4,12 +4,7 @@ import QtQuick.Layouts
 import CustomPlot
 
 Item{
-    // required property var sensorsList_first
-    // required property var sensorsList_second
     required property var testView
-    // ObjectModel{
-    //     id: testViewModel
-    // }
     width: 450
     height: 700
     // Chart Component Object
@@ -19,7 +14,9 @@ Item{
             required property string plotName 
             required property var sensorsList
             required property int m_index
-            anchors.left: parent.left; anchors.right: parent.right
+            property bool isDetachable: true
+            //anchors.left: parent.left; 
+            implicitWidth: 450
             implicitHeight: 350
             CustomPlotItem {
                 id: customPlotPressure
@@ -73,11 +70,12 @@ Item{
                 font.pixelSize: 18
                 font.bold: true
                 font.hintingPreference: Font.PreferNoHinting
+                visible: isDetachable
                 onClicked: detachPressure(m_index)
             }
-            function testFunction(b){
-                detachBtn.visible = b   
-            }
+            // function testFunction(b){
+            //     detachBtn.visible = b   
+            // }
             // ListView.onAdd: {
             //     console.log("item added to bin")
             // }
@@ -93,6 +91,7 @@ Item{
             anchors.fill: parent
             model: baseChartBin.contentModel
             snapMode: ListView.SnapOneItem
+            spacing: 5
         }
         Component.onCompleted:{
             for(const [key, value] of Object.entries(testView)) {
@@ -115,12 +114,7 @@ Item{
         let winComp = {}
         winComp[baseChartBin.itemAt(index).plotName] = {"sensors": baseChartBin.itemAt(index).sensorsList} 
         const window = plotComponent.createObject(parent, {winView: winComp})
-        //window.changeStack() //testViewModel.get(0)
         window.show()
-    }
-    function returnStack(smth){
-        smth.testFunction(true)
-        baseChartBin.addItem(smth) //testViewModel
     }
     Component{
         id: plotComponent
@@ -129,15 +123,20 @@ Item{
             id: plotWindow
             width: 600
             height: 450
-            StackView{
+            Pane {
                 anchors.fill: parent
-                Component.onCompleted:{
-                    for(const [key, value] of Object.entries(winView)) {
-                        console.log(key)
-                        console.log(value.sensors)
-                        push(plotPressure,{plotName: key,  sensorsList: value.sensors, m_index: 0})
-                    }
-                } 
+                Material.theme: Material.Dark
+                StackView{
+                    id: chartStack
+                    anchors.fill: parent
+                    Component.onCompleted:{
+                        for(const [key, value] of Object.entries(winView)) {
+                            console.log(key)
+                            console.log(value.sensors)
+                            push(plotPressure,{plotName: key,  sensorsList: value.sensors, m_index: 0, isDetachable: false})
+                        }
+                    } 
+                }
             }
             onClosing:{
                 // remove?
@@ -145,25 +144,3 @@ Item{
         }
     }
 }
-
-
-            // Pane {
-            //     anchors.fill: parent
-            //     Material.theme: Material.Dark
-            //     Container{
-            //         id: winChartBin
-            //         anchors.fill: parent
-            //         // contentItem: Repeater {
-            //         //     model: winChartBin.contentModel
-            //         // }
-            //         Component.onCompleted:{
-            //             for(const [key, value] of Object.entries(winView)) {
-            //                 console.log(key)
-            //                 console.log(value.sensors)
-            //                 let chart = plotPressure.createObject(winChartBin, {plotName: key,  sensorsList: value.sensors, m_index: 0})
-            //                 chart.testFunction(false)
-            //                 //baseChartBin.addItem(chart) 
-            //             }   
-            //         }
-            //     }
-            // }
