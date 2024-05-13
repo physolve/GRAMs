@@ -22,6 +22,11 @@ void Sensor::appendData(qreal x, double y){
     m_y.append(m_cY);
 }
 
+void Sensor::filterVoltage(double &voltage){
+    // implement of Kalman filter
+    
+}
+
 void Sensor::filterData(double &data){
     data = m_A * data / m_R - m_B; // if not mA, then without m_R
 }

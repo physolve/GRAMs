@@ -95,13 +95,14 @@ void Grams::readingEvent(){
     if(dataSource.getGRAMsIntegrity())
         dataSource.processEvents();
     dataModel.appendData(dataSource.getMeasures());
-    valveModel.appendData(dataSource.getValves());
+    valveModel.appendData(dataSource.getValves()); // always valve check? why
 }
 
 void Grams::setValveState(const QString &name, const bool &state){ // should be filtered
-    qDebug() << name << " " << state;
+    // find a way for force valve set (as SU)
     if(!dataSource.getGRAMsIntegrity())
         return;
+    qDebug() << name << " " << state;
     auto valveMap = valveModel.getValveMap();
     auto result = m_safeModule.checkValveAction(valveMap, name, state);
     valveModel.appendData(name,result);

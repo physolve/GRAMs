@@ -28,6 +28,8 @@ private :
     qreal m_cX;
     double m_cY;
 
+    void filterVoltage(double &voltage);
+
     void filterData(double &data);
 
     double m_A = 1;

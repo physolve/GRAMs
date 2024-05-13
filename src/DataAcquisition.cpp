@@ -38,6 +38,8 @@ void DataAcquisition::advantechDeviceSetting(const QString &description, const Q
 }
 
 void DataAcquisition::processEvents(){
+    // only [pressure] and [temperature] and [vacuum] and [furnace] and [ ] 
+    // without always [valve] read, only after change 
     for (auto i = m_controllerList.cbegin(), end = m_controllerList.cend(); i != end; ++i){
         i.value()->readData();
     } // it's okay?
