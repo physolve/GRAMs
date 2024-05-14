@@ -15,7 +15,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 
 find_package(Qt6 6.2.4 COMPONENTS Core Quick QuickControls2 Charts PrintSupport OpenGL REQUIRED) # Charts QuickControls2   LinguistTools
-
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 set(MY_UNITTESTS TRUE)
 include(config.cmake)
 
@@ -80,6 +81,7 @@ target_link_libraries(${EXECUTABLE_NAME}
     #PRIVATE Controlsplugin
     #PRIVATE FirstPluginplugin
     #PRIVATE SecondPluginplugin
+    Eigen3::Eigen
     PRIVATE Styleplugin
 )
 

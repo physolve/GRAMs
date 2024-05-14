@@ -88,7 +88,7 @@ QVariantMap Initialize::advantechDeviceFill(const QString &description, const QS
     }
     else{
         AdvAIType a(description);
-        auto demoPressure = AdvantechAI(a);
+        auto demoPressure = AdvantechBuff(a); //AdvantechAI(a); 
         demoPressure.Initialization();
         a = demoPressure.getInfo();
         advantechDeviceSettings = a.getSettings();

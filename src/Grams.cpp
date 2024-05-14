@@ -79,23 +79,27 @@ void Grams::initializeReading(){
     // for valves make different type
 
     // Add variable timer msec
-    softTimer->start(1000);
     dataModel.initializeAcquisition();
+    readingEvent(true);
+    softTimer->start(1000);
     qDebug() << "Now I'm updating every 1000 ms";
 }
 
 void Grams::softEvent(){
 
     //for now only reading event
-    readingEvent();
+    readingEvent(false);
 
 }
 
-void Grams::readingEvent(){
+void Grams::readingEvent(bool valveCheck){
     if(dataSource.getGRAMsIntegrity())
         dataSource.processEvents();
+
     dataModel.appendData(dataSource.getMeasures());
-    valveModel.appendData(dataSource.getValves()); // always valve check? why
+    
+    if(valveCheck)
+        valveModel.appendData(dataSource.getValves()); // always valve check? why
 }
 
 void Grams::setValveState(const QString &name, const bool &state){ // should be filtered
@@ -109,5 +113,5 @@ void Grams::setValveState(const QString &name, const bool &state){ // should be 
     auto valveVector = valveModel.getValveVector();
     qDebug() << valveVector;
     dataSource.setValves(valveVector);
-    readingEvent();
+    readingEvent(true);
 }

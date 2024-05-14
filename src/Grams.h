@@ -27,7 +27,7 @@ private:
 
     void initGUI();
 
-    void readingEvent();
+    void readingEvent(bool valveCheck);
 
     QQmlApplicationEngine m_engine;
     Initialize initSource;

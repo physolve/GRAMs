@@ -1,6 +1,7 @@
 #include "Sensor.h"
 #include <QDebug>
 
+
 Sensor::Sensor(const QString &name, const QMap<QString,double> &parameters)://, QObject *parent) : QObject(parent),
 m_name(name), m_A(parameters["A"]), m_B(parameters["B"]), m_R(parameters["R"]), m_cX(0), m_cY(0)
 {
@@ -20,11 +21,6 @@ void Sensor::appendData(qreal x, double y){
 
     m_x.append(m_cX);
     m_y.append(m_cY);
-}
-
-void Sensor::filterVoltage(double &voltage){
-    // implement of Kalman filter
-    
 }
 
 void Sensor::filterData(double &data){

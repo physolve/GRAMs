@@ -3,6 +3,9 @@
 #include <QtCore/QObject>
 #include "../../lib/bdaqctrl.h"
 #include "ControllerInfo.h"
+
+#include "../VoltageFilter.h"
+
 using namespace Automation::BDaq;
 
 
@@ -59,7 +62,7 @@ public:
     void ConfigureDeviceTest(); // rename TEST
 	void CheckError(ErrorCode errorCode);
     const AdvAIType& getInfo(); // move to base class
-    void resizeDataVector(uint8_t size);
+    
     void readData() override;
     const QVector<double> getData();
     static void BDAQCALL OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *userParam);
@@ -69,14 +72,18 @@ public slots:
     //void generateData(int type, int rowCount, int colCount);
 
 private:
-    AdvAIType m_info;
+    void resizeDataVector(uint8_t size);
+    void resizeVoltageFilterList(uint8_t size);
+    void setVoltageToFilter(const QVector<double> &voltageBuffer);
+    void doFilter();
     
+    AdvAIType m_info;
+    const int m_sectionLength = 512;
     ValueRange m_valueRange;
-    WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class 
+    WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class
     QVector<double> m_vector;
-	//double scaledData[16];
+	QList<VoltageFilter> m_voltageFilters;
 };
-
 
 
 class AdvantechDO : public AdvantechCtrl

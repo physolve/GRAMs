@@ -20,8 +20,9 @@ Item{
             implicitHeight: 350
             CustomPlotItem {
                 id: customPlotPressure
-                anchors.left: parent.left; anchors.right: parent.right
-                implicitHeight: 300
+                anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
+                width: parent.width;  height: parent.height-50
+                //implicitHeight: 300
                 Component.onCompleted: {
                     initCustomPlot(0) // why 0? to show place of hraph in mnemo (set name)
                     for(const sensorName of sensorsList){

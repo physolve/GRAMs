@@ -29,7 +29,7 @@ void DataAcquisition::advantechDeviceSetting(const QString &description, const Q
     else{
         AdvAIType a(description);
         a.setSettings(deviceSettings);
-        auto pressure = new AdvantechAI(a);
+        auto pressure = new AdvantechBuff(a); //AdvantechAI(a)
         pressure->ConfigureDeviceTest();
         controller = QSharedPointer<AdvantechCtrl>(pressure);
     }
@@ -53,7 +53,7 @@ QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
             dataMap.insert(type, defautl_val);
             continue;
         }
-        auto controller = m_controllerList[type].staticCast<AdvantechAI>(); // type of static_cast from profile?
+        auto controller = m_controllerList[type].staticCast<AdvantechBuff>(); //AdvantechAI  // type of static_cast from profile?
         // rewrite this somehow maybe using lambda or idk
         // if(controller.isNull()) 
         //     dataMap.insert(type, defautl_val); 
