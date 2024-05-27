@@ -95,8 +95,10 @@ void Grams::softEvent(){
 void Grams::readingEvent(bool valveCheck){
     if(dataSource.getGRAMsIntegrity())
         dataSource.processEvents();
+    
+    dataSource.processEvents("pressure");
 
-    dataModel.appendData(dataSource.getMeasures());
+    dataModel.appendData(dataSource.getMeasures()); // don't like it
     
     if(valveCheck)
         valveModel.appendData(dataSource.getValves()); // always valve check? why

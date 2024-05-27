@@ -45,6 +45,11 @@ void DataAcquisition::processEvents(){
     } // it's okay?
 }
 
+void DataAcquisition::processEvents(QString purpose){
+    if(GRAMsIntegrity[purpose]==ControllerConnection::Online)
+        m_controllerList[purpose]->readData();
+}
+
 QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
     QMap<QString,QVector<double>> dataMap;
     auto defautl_val = QVector<double>(8,0.0);

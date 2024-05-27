@@ -6,7 +6,7 @@ class VoltageFilter{
 public:
     VoltageFilter();
     void appendToBuffer(const double &value);
-    QVector<double> getFilteredVoltage();  
+    QVector<double> getFilteredVoltage(bool debug);
 private:
     QVector<double> m_voltageBuffer;
     int n, m;

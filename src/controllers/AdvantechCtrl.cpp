@@ -134,7 +134,8 @@ const QVector<double> AdvantechAI::getData(){ // const & ?
 /* Advantech Buffered Analog Input (pressure and temperature readings) */
 
 AdvantechBuff::AdvantechBuff(const AdvAIType &info, QObject *parent) :
-	AdvantechCtrl(info.m_deviceName,parent), m_info(info), m_waveformAiCtrl(NULL), m_vector(8,0.0)
+	AdvantechCtrl(info.m_deviceName,parent), m_info(info), m_waveformAiCtrl(NULL), m_vector(8,0.0),
+	filterView() //?
 {
 	m_waveformAiCtrl = WaveformAiCtrl::Create();
 	m_waveformAiCtrl->addStoppedHandler(OnStoppedEvent, this);
@@ -209,19 +210,19 @@ void AdvantechBuff::ConfigureDeviceTest(){ // after accept
 	CheckError(errorCode);
 	// add DIR ? profile
     std::wstring profile = m_info.m_profilePath.toStdWString();
-    errorCode = m_waveformAiCtrl->LoadProfile(profile.c_str());
-    CheckError(errorCode);
+    //errorCode = m_waveformAiCtrl->LoadProfile(profile.c_str());
+    //CheckError(errorCode);
 
 	errorCode = m_waveformAiCtrl->getConversion()->setChannelCount(m_info.m_channelCount);
 	CheckError(errorCode);
 	errorCode = m_waveformAiCtrl->getConversion()->setChannelStart(m_info.m_channelStart);
 	CheckError(errorCode);
 	// clockRate > 1 && clockRate < 100000000 
-	errorCode = m_waveformAiCtrl->getConversion()->setClockRate(32000); //first try 32 kHz
+	errorCode = m_waveformAiCtrl->getConversion()->setClockRate(500); //first try 32 kHz
 	CheckError(errorCode);
 	errorCode = m_waveformAiCtrl->getRecord()->setSectionLength(m_sectionLength);
 	CheckError(errorCode);
-	errorCode = m_waveformAiCtrl->getRecord()->setSectionCount(0);
+	errorCode = m_waveformAiCtrl->getRecord()->setSectionCount(1);
 	CheckError(errorCode);
 	//Get channel max number. set value range for every channel.
 	Array<AiChannel> *channels = m_waveformAiCtrl->getChannels();
@@ -239,6 +240,7 @@ void AdvantechBuff::ConfigureDeviceTest(){ // after accept
 	qDebug() << "INFO COUNT " << channels->getCount();
 	resizeDataVector(m_info.m_channelCount); // ?
 	resizeVoltageFilterList(m_info.m_channelCount);
+	filterView.setFilterSize(m_info.m_channelCount);
 }
 
 void AdvantechBuff::resizeDataVector(uint8_t size){
@@ -271,31 +273,42 @@ void AdvantechBuff::OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *use
 	int32 getDataCout = 0, returnedCount = 0;
 	int32 bufSize = uParam->m_sectionLength * uParam->m_info.m_channelCount;
 	QVector<double> kalmanBuffer;
-	kalmanBuffer.resize(uParam->m_info.m_channelCount);
+	kalmanBuffer.resize(bufSize);
 	do{
 		getDataCout = qMin(bufSize, remainingCount);
 		((WaveformAiCtrl*)sender)->GetData(args->Count, kalmanBuffer.data(), 0, &returnedCount, NULL, NULL, NULL);
 		remainingCount -= returnedCount;
 		uParam->setVoltageToFilter(kalmanBuffer);
-	} while (remainingCount > 0);
+	} while (remainingCount > 0); //Usually get full bufSize of data (m_sectionLength * m_channelCount)
 	uParam->doFilter();
 }
 
 void AdvantechBuff::setVoltageToFilter(const QVector<double> &voltageBuffer){
-	for(int i = 0; i < voltageBuffer.count(); i++){
-		m_voltageFilters[i].appendToBuffer(voltageBuffer[i]);
-	}
-}
-void AdvantechBuff::doFilter(){
-	for(int i = 0; i < m_voltageFilters.count(); i++){
-		auto allVoltage = m_voltageFilters[i].getFilteredVoltage();
-		qDebug() << allVoltage;
-		m_vector[i] = allVoltage.last();
+	for(int i = 0; i < m_sectionLength; i++){
+		for(int j = 0; j < m_info.m_channelCount; j++){
+			m_voltageFilters[j].appendToBuffer(voltageBuffer[i*m_info.m_channelCount + j]);
+		}
 	}
 }
 
+void AdvantechBuff::doFilter(){
+	// pass to FilterView
+	// update data in
+	// for(int i = 0; i < m_voltageFilters.count(); i++){
+		auto allVoltage = m_voltageFilters[0].getFilteredVoltage(true);
+		// qDebug() << allVoltage;
+		m_vector[0] = allVoltage.last();
+	// }
+}
+
+const QList<QVector<double>> AdvantechBuff::getBufferedData(QString key, bool debug){
+	auto allVoltage = m_voltageFilters[0].getFilteredVoltage(true);
+
+
+}
 
 const QVector<double> AdvantechBuff::getData(){ // const & ?
+	// get one second data from Filter View
 	return m_vector;
 }
 /*******************************/

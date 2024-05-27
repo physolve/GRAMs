@@ -5,6 +5,7 @@
 #include "ControllerInfo.h"
 
 #include "../VoltageFilter.h"
+#include "../FilterView.h"
 
 using namespace Automation::BDaq;
 
@@ -65,6 +66,7 @@ public:
     
     void readData() override;
     const QVector<double> getData();
+    const QList<QVector<double>> getBufferedData(QString key, bool debug);
     static void BDAQCALL OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *userParam);
 //Q_SIGNALS:
 public slots:
@@ -78,11 +80,14 @@ private:
     void doFilter();
     
     AdvAIType m_info;
-    const int m_sectionLength = 512;
+    const int m_sectionLength = 128;
     ValueRange m_valueRange;
     WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class
-    QVector<double> m_vector;
-	QList<VoltageFilter> m_voltageFilters;
+    QVector<double> m_vector; // should be list of values 
+
+    FilterView filterView;
+	QList<VoltageFilter> m_voltageFilters; // to filterView?
+    
 };
 
 

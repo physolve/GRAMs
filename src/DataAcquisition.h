@@ -14,6 +14,9 @@ public:
     explicit DataAcquisition(QObject *parent = 0);
     //QVariantMap profileJson ();
     void processEvents(); // wierdly written
+
+    void processEvents(QString purpose);
+
     QMap<QString,QVector<double>> getMeasures();
     QVector<bool> getValves();
     void setValves(const QVector<bool> &states);
