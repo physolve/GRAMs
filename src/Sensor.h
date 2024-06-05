@@ -12,6 +12,7 @@ public:
     ~Sensor();                                                          
     QString m_name;
     void appendData(qreal x, double y);
+    void setData(const QVector<qreal> &x, const QVector<double> &y);
     QVector<qreal> getTime() const;
     QVector<double> getValue() const;
     qreal getCurTime() const;
@@ -25,8 +26,8 @@ public:
 private :
     QList<qreal> m_x; // one second data
     QList<double> m_y; // one second data
-    qreal m_cX;
-    double m_cY;
+    //qreal m_cX;
+    //double m_cY;
 
     void filterVoltage(double &voltage);
 

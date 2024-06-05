@@ -1,11 +1,16 @@
 #include "DataAcquisition.h"
 
 DataAcquisition::DataAcquisition(QObject *parent) :
-    QObject(parent)
+    QObject(parent), filterView(), fastFilter(new QTimer)
 {
     GRAMsIntegrity["pressure"] = ControllerConnection::Offline;
     GRAMsIntegrity["temperature"] = ControllerConnection::Offline;
     GRAMsIntegrity["valves"] = ControllerConnection::Offline;
+    connect(fastFilter, &QTimer::timeout, this, &DataAcquisition::filterEvent);
+}
+
+FilterView* DataAcquisition::getFilterView(){
+    return &filterView;
 }
 
 bool DataAcquisition::getGRAMsIntegrity(){
@@ -24,14 +29,22 @@ void DataAcquisition::advantechDeviceSetting(const QString &description, const Q
         auto valves = new AdvantechDO(a);
         valves->ConfigureDeviceDO();
         valves->applyFeatures();
-        controller = QSharedPointer<AdvantechCtrl>(valves);
+        controller = QSharedPointer<AdvantechCtrl>(valves); // create?
     }
-    else{
+    else if (type == "pressure"){
         AdvAIType a(description);
         a.setSettings(deviceSettings);
         auto pressure = new AdvantechBuff(a); //AdvantechAI(a)
         pressure->ConfigureDeviceTest();
         controller = QSharedPointer<AdvantechCtrl>(pressure);
+        filterView.setFilterSize(a.m_channelCount);
+    }
+    else if (type == "temperature"){
+        AdvAIType a(description);
+        a.setSettings(deviceSettings);
+        auto temperature = new AdvantechAI(a);
+        temperature->ConfigureDeviceTest();
+        controller = QSharedPointer<AdvantechCtrl>(temperature);
     }
     m_controllerList.insert(type,controller);
     GRAMsIntegrity[type] = ControllerConnection::Online;
@@ -48,6 +61,16 @@ void DataAcquisition::processEvents(){
 void DataAcquisition::processEvents(QString purpose){
     if(GRAMsIntegrity[purpose]==ControllerConnection::Online)
         m_controllerList[purpose]->readData();
+}
+
+void DataAcquisition::turnOnFilterTimer(){
+    fastFilter->start(1000);
+}
+
+void DataAcquisition::filterEvent(){
+    auto controller = m_controllerList["pressure"].staticCast<AdvantechBuff>();
+    // only for first channel
+    filterView.appendDataToView(0, controller->getTimeBuffer(), controller->getBufferedData(0, true));
 }
 
 QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >

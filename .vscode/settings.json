@@ -82,6 +82,9 @@
         "xmemory": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "alignedvector3": "cpp",
+        "qdebug": "cpp",
+        "qstring": "cpp"
     }
 }

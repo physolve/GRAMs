@@ -88,7 +88,8 @@ ApplicationWindow {
         // now put usual page 1 with GRAM50 mnemo
         let tabPage1 = page1.createObject(stackLayout)
         mainPageContainer.append(tabPage1)
-        
+        let tabPage2 = page2.createObject(stackLayout)
+        mainPageContainer.append(tabPage2)
         backend.initializeReading()
 
     }

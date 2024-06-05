@@ -5,8 +5,8 @@ import CustomPlot
 
 Item{
     required property var testView
-    width: 450
-    height: 700
+    width: 450 //?
+    height: 700 //?
     // Chart Component Object
     Component{
         id: plotPressure
@@ -105,7 +105,7 @@ Item{
                 console.log(key)
                 console.log(value.sensors)
 
-                let chart = plotPressure.createObject(baseChartBin,{plotName: key,  sensorsList: value.sensors, m_index: baseChartBin.count})
+                let chart = plotPressure.createObject(baseChartBin,{plotName: key, sensorsList: value.sensors, m_index: baseChartBin.count})
                 // baseChartBin.addItem(chart) 
             }   
         }

@@ -1,5 +1,8 @@
 #pragma once
+
+#include <QTimer>
 #include "controllers/AdvantechCtrl.h"
+#include "FilterView.h"
 
 enum ControllerConnection{
     Offline,
@@ -22,8 +25,15 @@ public:
     void setValves(const QVector<bool> &states);
     bool getGRAMsIntegrity();
     Q_INVOKABLE void advantechDeviceSetting(const QString &description, const QString &type, const QVariantMap& deviceSettings);
+    Q_INVOKABLE void turnOnFilterTimer();
     //Q_INVOKABLE void testRead();
+    FilterView* getFilterView();
+private slots:
+    void filterEvent();
+
 private:
     QMap<QString, QSharedPointer<AdvantechCtrl>> m_controllerList; // for read
     QMap<QString, ControllerConnection> GRAMsIntegrity;
+    QTimer* fastFilter;
+    FilterView filterView;
 };

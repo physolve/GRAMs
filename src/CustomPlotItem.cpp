@@ -102,6 +102,7 @@ void CustomPlotItem::initCustomPlot(int index) {
 
 void CustomPlotItem::placePointerGraph(const QString &name, QSharedPointer<Sensor> sensor_ptr){
     if(sensor_ptr->m_name != name){
+        qDebug() << "You ruined " << name << " sensor in placePointerGraph"; 
         return;
     }
     qDebug() << "add " << name << " to plot " << m_index;
@@ -161,7 +162,8 @@ void CustomPlotItem::updatePlot(){
     if(m_sensors.isEmpty()){
         return;
     }
-    static double lastPointKey = 0;
+    // static double lastPointKey = 0; // making problems being static
+    qreal lastPointKey = 0;
     for(auto i = 0; i < m_CustomPlot->graphCount(); ++i){
         m_CustomPlot->graph(i)->setData(m_sensors[i]->getTime(), m_sensors[i]->getValue());
         if(lastPointKey < m_sensors[i]->getCurTime())
@@ -172,19 +174,6 @@ void CustomPlotItem::updatePlot(){
         m_CustomPlot->yAxis->rescale();
         // if(m_sensors[0]->getValue().last() != 0)
         //     m_CustomPlot->yAxis->scaleRange(1.1);
-    }
-    m_CustomPlot->replot();
-}
-
-void CustomPlotItem::backendData(const QString &name, QList<double> x, QList<double> y){
-    static double lastPointKey = 0;
-    m_CustomPlot->graph(0)->setData(x, y);
-    lastPointKey = x.last();
-    if(rescalingON){
-        m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
-        m_CustomPlot->yAxis->rescale();
-        if(y.last() != 0)
-            m_CustomPlot->yAxis->scaleRange(1.1);
     }
     m_CustomPlot->replot();
 }
@@ -214,6 +203,7 @@ void CustomPlotItem::routeWheelEvents(QWheelEvent *event) {
             event->angleDelta(), event->buttons(), event->modifiers(),
             event->phase(), event->inverted());
         QCoreApplication::postEvent(m_CustomPlot, newEvent);
+        m_CustomPlot->yAxis->rescale(); //?
     }
 }
 

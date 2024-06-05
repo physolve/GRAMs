@@ -71,6 +71,9 @@ void Grams::initGUI(){
     m_engine.rootContext()->setContextProperty("_valveModel", &valveModel);
     m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
     m_engine.rootContext()->setContextProperty("safeModule", &m_safeModule);
+
+    m_engine.rootContext()->setContextProperty("filterView", dataSource.getFilterView());
+
     m_engine.rootContext()->setContextProperty("backend", this);
     m_engine.load(url);
 }

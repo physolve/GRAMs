@@ -24,5 +24,6 @@
         <file>qml/VisualChannelMapping.qml</file>
         
         <file>qml/Chart.qml</file>
+        <file>qml/BuffChart.qml</file>
     </qresource>
 </RCC>

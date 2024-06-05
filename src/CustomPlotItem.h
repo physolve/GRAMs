@@ -37,9 +37,6 @@ private:
   QStringList m_plotNames;
   QList<QSharedPointer<Sensor>> m_sensors;
 
-public slots:
-  void backendData(const QString &name, QList<double> x, QList<double> y);
-
 private slots:
   void graphClicked(QCPAbstractPlottable *plottable);
   void onCustomReplot();

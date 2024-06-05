@@ -134,8 +134,7 @@ const QVector<double> AdvantechAI::getData(){ // const & ?
 /* Advantech Buffered Analog Input (pressure and temperature readings) */
 
 AdvantechBuff::AdvantechBuff(const AdvAIType &info, QObject *parent) :
-	AdvantechCtrl(info.m_deviceName,parent), m_info(info), m_waveformAiCtrl(NULL), m_vector(8,0.0),
-	filterView() //?
+	AdvantechCtrl(info.m_deviceName,parent), m_info(info), m_waveformAiCtrl(NULL), m_vector(8,0.0)
 {
 	m_waveformAiCtrl = WaveformAiCtrl::Create();
 	m_waveformAiCtrl->addStoppedHandler(OnStoppedEvent, this);
@@ -240,7 +239,6 @@ void AdvantechBuff::ConfigureDeviceTest(){ // after accept
 	qDebug() << "INFO COUNT " << channels->getCount();
 	resizeDataVector(m_info.m_channelCount); // ?
 	resizeVoltageFilterList(m_info.m_channelCount);
-	filterView.setFilterSize(m_info.m_channelCount);
 }
 
 void AdvantechBuff::resizeDataVector(uint8_t size){
@@ -295,16 +293,24 @@ void AdvantechBuff::doFilter(){
 	// pass to FilterView
 	// update data in
 	// for(int i = 0; i < m_voltageFilters.count(); i++){
-		auto allVoltage = m_voltageFilters[0].getFilteredVoltage(true);
+		auto allVoltage = m_voltageFilters[0].getFilteredVoltage(false);
 		// qDebug() << allVoltage;
 		m_vector[0] = allVoltage.last();
 	// }
 }
 
-const QList<QVector<double>> AdvantechBuff::getBufferedData(QString key, bool debug){
-	auto allVoltage = m_voltageFilters[0].getFilteredVoltage(true);
+const QVector<double> AdvantechBuff::getBufferedData(uint8_t channelN, bool debug){
+	if(channelN >=m_voltageFilters.count())
+		return QVector<double>();
+	return m_voltageFilters[channelN].lastFiltered();
+}
 
-
+const QVector<qreal> AdvantechBuff::getTimeBuffer(){
+	QVector<qreal> timeBuffer;
+	for(auto i = 0; i < m_sectionLength; ++i){
+		timeBuffer << i;
+	}
+	return timeBuffer;
 }
 
 const QVector<double> AdvantechBuff::getData(){ // const & ?
