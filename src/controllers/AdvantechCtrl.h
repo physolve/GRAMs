@@ -62,12 +62,14 @@ public:
     void ConfigureDeviceTest(); // rename TEST
 	void CheckError(ErrorCode errorCode);
     const AdvAIType& getInfo(); // move to base class
-    
+
     void readData() override;
     const QVector<double> getData();
     const QVector<double> getBufferedData(uint8_t channelN, bool debug);
     const QVector<qreal> getTimeBuffer();
     static void BDAQCALL OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *userParam);
+
+    void setVolageFilter(uint8_t channelN, const FilterMatrix &parameters);
 //Q_SIGNALS:
 public slots:
     //void settingAccepted();

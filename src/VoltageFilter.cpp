@@ -29,53 +29,21 @@ VoltageFilter::VoltageFilter(): n(3), m(1), dt(1.0/500) {
     qDebug() << "Kalman created";
 }
 
-void VoltageFilter::changeMatrixParameters(double n_dt){
-    dt = n_dt;
 
-    /*A: x = dt
-        1, x, 0
-        0, 1, x
-        0, 0, 1
-    */
-
-    /*C: x = ?
-        1, 0, 0
-    */
-
-    /*Q: x = ?
-        0.05, 0.05, 0.0
-        0.05, 0.05, 0.0
-        0.0, 0.0, 0.0
-    */
-
-    /*R: x = ?
-        5
-    */
-
-    /*P: x = ?
-        0.1, 0.1, 0.1
-        0.1, 10000, 10
-        0.1, 10, 100
-    */
-
-    Eigen::MatrixXd A(n, n); // System dynamics matrix
-    Eigen::MatrixXd C(m, n); // Output matrix
-    Eigen::MatrixXd Q(n, n); // Process noise covariance
+VoltageFilter::VoltageFilter(const FilterMatrix &parameters):n(3), m(1), dt(1.0/500) {
     Eigen::MatrixXd R(m, m); // Measurement noise covariance
-    Eigen::MatrixXd P(n, n); // Estimate error covariance
 
-    // Discrete LTI projectile motion, measuring position only
-    A << 1, dt, 0, 0, 1, dt, 0, 0, 1;
-    C << 1, 0, 0;
-
-    // Reasonable covariance matrices
-    Q << .05, .05, .0, .05, .05, .0, .0, .0, .0;
-    R << 5;
-    P << .1, .1, .1, .1, 10000, 10, .1, 10, 100;
-
-
+    std::vector<double> a(parameters.mA.constBegin(), parameters.mA.constEnd());
+    Eigen::MatrixXd A = Eigen::Map<Eigen::MatrixXd>(a.data(), n, n);
+    std::vector<double> c(parameters.mC.constBegin(), parameters.mC.constEnd());
+    Eigen::MatrixXd C = Eigen::Map<Eigen::MatrixXd>(c.data(), m, n);
+    std::vector<double> q(parameters.mQ.constBegin(), parameters.mQ.constEnd());
+    Eigen::MatrixXd Q = Eigen::Map<Eigen::MatrixXd>(q.data(), n, n);
+    R << parameters.mR;
+    std::vector<double> p(parameters.mP.constBegin(), parameters.mP.constEnd());
+    Eigen::MatrixXd P = Eigen::Map<Eigen::MatrixXd>(p.data(), n, n);
     kf = KalmanFilter (dt, A, C, Q, R, P);
-    qDebug() << "Kalman changed";
+    qDebug() << "Custom Kalman created";
 }
 
 void VoltageFilter::appendToBuffer(const double &value){ // change to replace Vector

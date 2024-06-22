@@ -66,7 +66,7 @@ Item{
             for(const [key, value] of Object.entries(testView)) {
                 console.log(key)
                 console.log(value.sensors)
-                push(plotVoltage,{plotName: key,  sensorsList: value.sensors, m_index: 0, isDetachable: false}) // change m_index to chartStack count
+                push(plotVoltage,{plotName: key,  sensorsList: value.sensors, m_index: 0}) // change m_index to chartStack count
             }
         } 
     }

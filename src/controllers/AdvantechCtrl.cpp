@@ -317,6 +317,12 @@ const QVector<double> AdvantechBuff::getData(){ // const & ?
 	// get one second data from Filter View
 	return m_vector;
 }
+
+void AdvantechBuff::setVolageFilter(uint8_t channelN, const FilterMatrix &parameters){
+	m_voltageFilters[channelN] = VoltageFilter(parameters);
+	// .replace(channelN, nFilter); for some reason is Shit
+}
+
 /*******************************/
 /*******************************/
 /*******************************/

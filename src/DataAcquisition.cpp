@@ -7,6 +7,7 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     GRAMsIntegrity["temperature"] = ControllerConnection::Offline;
     GRAMsIntegrity["valves"] = ControllerConnection::Offline;
     connect(fastFilter, &QTimer::timeout, this, &DataAcquisition::filterEvent);
+    connect(&filterView, &FilterView::matrixChanged, this, &DataAcquisition::setNewFilter);
 }
 
 FilterView* DataAcquisition::getFilterView(){
@@ -63,8 +64,13 @@ void DataAcquisition::processEvents(QString purpose){
         m_controllerList[purpose]->readData();
 }
 
-void DataAcquisition::turnOnFilterTimer(){
-    fastFilter->start(1000);
+void DataAcquisition::turnOnFilterTimer(bool s){
+    if(s){
+        fastFilter->start(1000);
+    }
+    else{
+        fastFilter->stop();
+    }
 }
 
 void DataAcquisition::filterEvent(){
@@ -110,3 +116,12 @@ void DataAcquisition::setValves(const QVector<bool> &states){
 //         processEvents();
 // }
 
+void DataAcquisition::setNewFilter(){
+    // if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
+    //     return;
+    auto controller = m_controllerList["pressure"].staticCast<AdvantechBuff>();
+
+    auto parameters = filterView.getNewFilterParameters();
+
+    controller->setVolageFilter(0, parameters);
+}

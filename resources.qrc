@@ -25,5 +25,7 @@
         
         <file>qml/Chart.qml</file>
         <file>qml/BuffChart.qml</file>
+        
+        <file>qml/KalmanTable.qml</file>
     </qresource>
 </RCC>
