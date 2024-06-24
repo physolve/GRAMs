@@ -85,6 +85,7 @@
         "xtree": "cpp",
         "alignedvector3": "cpp",
         "qdebug": "cpp",
-        "qstring": "cpp"
+        "qstring": "cpp",
+        "qvariant": "cpp"
     }
 }

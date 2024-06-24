@@ -19,6 +19,8 @@ void FilterView::setFilterSize(int channelCount){
     // argument put count to sensor container
     for(int i = 0; i < channelCount; ++i){
         m_channelsData << QSharedPointer<Sensor>::create(QString("voltage_ch%1").arg(i));
+        m_channelsXhatS << QSharedPointer<Sensor>::create(QString("XhatS_ch%1").arg(i));
+        m_channelsXhatT << QSharedPointer<Sensor>::create(QString("XhatT_ch%1").arg(i));
     }
 }
 
@@ -26,8 +28,23 @@ void FilterView::appendDataToView(int viewN, const QVector<qreal> &time, const Q
     m_channelsData[viewN]->setData(time, data);
     emit updateView();
 }
+void FilterView::appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data){
+    m_channelsXhatS[viewN]->setData(time, data);
+    emit updateXhatS();
+}
+void FilterView::appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data){
+    m_channelsXhatT[viewN]->setData(time, data);
+    emit updateXhatT();
+}
 
-QSharedPointer<Sensor> FilterView::getChannelSensor(int channel){
+QSharedPointer<Sensor> FilterView::getChannelSensor(int channel, QString a){
+    if(a == "view"){
+        return m_channelsData[channel];
+    }
+    else if( a == "xhats"){
+        return m_channelsXhatS[channel];
+    } 
+    else if(a == "xhatt") return m_channelsXhatT[channel];
     return m_channelsData[channel];
 }
 
@@ -37,7 +54,6 @@ void FilterView::setUiA(const QList<double> &ui_A)
         return;
     ui_mA = ui_A;
     emit uiAChanged(ui_A);
-    emit matrixChanged();
 }
 QList<double> FilterView::uiA() const{ 
     return ui_mA;

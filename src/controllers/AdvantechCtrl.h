@@ -65,7 +65,9 @@ public:
 
     void readData() override;
     const QVector<double> getData();
-    const QVector<double> getBufferedData(uint8_t channelN, bool debug);
+    const QVector<double> getBufferedData(uint8_t channelN);
+    const QVector<double> getXhatS(uint8_t channelN);
+    const QVector<double> getXhatT(uint8_t channelN);
     const QVector<qreal> getTimeBuffer();
     static void BDAQCALL OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *userParam);
 

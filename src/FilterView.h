@@ -16,10 +16,14 @@ public:
     explicit FilterView(QObject *parent  = nullptr);
     ~FilterView();
     void setFilterSize(int channelCount);
-    Q_INVOKABLE QSharedPointer<Sensor> getChannelSensor(int channel);
+    Q_INVOKABLE QSharedPointer<Sensor> getChannelSensor(int channel, QString a);
     // function to update values somewhere
     // function to link Kalman parameters with View
     void appendDataToView(int viewN, const QVector<qreal> &time, const QVector<double> &data);
+    void appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data);
+    void appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data);
+
+
     void setUiA(const QList<double> &ui_A);
     QList<double> uiA() const;
     void setUiC(const QList<double> &ui_C);
@@ -36,17 +40,20 @@ signals:
     void changeFilterMatrix();
 
     void updateView();
+    void updateXhatS();
+    void updateXhatT();
 
     void uiAChanged(QList<double>);
     void uiCChanged(QList<double> );
     void uiQChanged(QList<double>);
     void uiRChanged(double);
     void uiPChanged(QList<double>);
-    void matrixChanged();
 
 private:
     // should be separate window with Custom plot and Kalman Filter's parameters
     QList<QSharedPointer<Sensor>> m_channelsData;
+    QList<QSharedPointer<Sensor>> m_channelsXhatS;
+    QList<QSharedPointer<Sensor>> m_channelsXhatT;
     QList<double> ui_mA;
     QList<double> ui_mC;
     QList<double> ui_mQ;

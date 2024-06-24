@@ -299,10 +299,20 @@ void AdvantechBuff::doFilter(){
 	// }
 }
 
-const QVector<double> AdvantechBuff::getBufferedData(uint8_t channelN, bool debug){
+const QVector<double> AdvantechBuff::getBufferedData(uint8_t channelN){
 	if(channelN >=m_voltageFilters.count())
 		return QVector<double>();
 	return m_voltageFilters[channelN].lastFiltered();
+}
+const QVector<double> AdvantechBuff::getXhatS(uint8_t channelN){
+	if(channelN >=m_voltageFilters.count())
+		return QVector<double>();
+	return m_voltageFilters[channelN].lastXhatS();
+}
+const QVector<double> AdvantechBuff::getXhatT(uint8_t channelN){
+	if(channelN >=m_voltageFilters.count())
+		return QVector<double>();
+	return m_voltageFilters[channelN].lastXhatT();
 }
 
 const QVector<qreal> AdvantechBuff::getTimeBuffer(){

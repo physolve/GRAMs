@@ -9,7 +9,7 @@ Item{
     
 // private
     width: 150
-    height: 200
+    height: 150
     required property variant matrixList
     required property int dimension
     GridView{
@@ -34,7 +34,7 @@ Item{
                         font.pointSize: 12
                         color: 'white'
                         selectByMouse: true
-                        validator: DoubleValidator { bottom: 0.001; top: 10000; decimals: 3}
+                        validator: DoubleValidator { bottom: 0.000; top: 99999; decimals: 3}
                         anchors.verticalCenter: parent.verticalCenter
                         horizontalAlignment: TextInput.AlignHCenter
                         onEditingFinished:{

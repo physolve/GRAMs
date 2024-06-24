@@ -19,10 +19,14 @@ public:
     void appendToBuffer(const double &value);
     QVector<double> getFilteredVoltage(bool debug); // const?
     QVector<double> lastFiltered();
+    QVector<double> lastXhatS();
+    QVector<double> lastXhatT();
     void changeMatrixParameters(double n_dt = 1.0/500);
 private:
     QVector<double> m_voltageBuffer;
     QVector<double> m_filteredVoltage;
+    QVector<double> m_XhatS;
+    QVector<double> m_XhatT;
     int n, m;
     double dt;
     KalmanFilter kf;

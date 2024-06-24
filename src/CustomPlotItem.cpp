@@ -120,6 +120,10 @@ void CustomPlotItem::placePointerGraph(const QString &name, QSharedPointer<Senso
 
 }
 
+void CustomPlotItem::setCustomLabel(const QString &label){
+    m_CustomPlot->yAxis->setLabel(label);
+}
+
 void CustomPlotItem::paint(QPainter *painter) {
     if (m_CustomPlot) {
         QPixmap picture(boundingRect().size().toSize());

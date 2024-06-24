@@ -7,7 +7,6 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     GRAMsIntegrity["temperature"] = ControllerConnection::Offline;
     GRAMsIntegrity["valves"] = ControllerConnection::Offline;
     connect(fastFilter, &QTimer::timeout, this, &DataAcquisition::filterEvent);
-    connect(&filterView, &FilterView::matrixChanged, this, &DataAcquisition::setNewFilter);
 }
 
 FilterView* DataAcquisition::getFilterView(){
@@ -76,7 +75,9 @@ void DataAcquisition::turnOnFilterTimer(bool s){
 void DataAcquisition::filterEvent(){
     auto controller = m_controllerList["pressure"].staticCast<AdvantechBuff>();
     // only for first channel
-    filterView.appendDataToView(0, controller->getTimeBuffer(), controller->getBufferedData(0, true));
+    filterView.appendDataToView(0, controller->getTimeBuffer(), controller->getBufferedData(0));
+    filterView.appendDataToXhatS(0, controller->getTimeBuffer(), controller->getXhatS(0));
+    filterView.appendDataToXhatT(0, controller->getTimeBuffer(), controller->getXhatT(0));
 }
 
 QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >

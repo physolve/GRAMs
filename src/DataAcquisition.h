@@ -27,11 +27,10 @@ public:
     Q_INVOKABLE void advantechDeviceSetting(const QString &description, const QString &type, const QVariantMap& deviceSettings);
     Q_INVOKABLE void turnOnFilterTimer(bool s);
     //Q_INVOKABLE void testRead();
-    //Q_INVOKABLE void setNewFilter();
+    Q_INVOKABLE void setNewFilter();
     FilterView* getFilterView();
 private slots:
     void filterEvent();
-    void setNewFilter();
 private:
     QMap<QString, QSharedPointer<AdvantechCtrl>> m_controllerList; // for read
     QMap<QString, ControllerConnection> GRAMsIntegrity;

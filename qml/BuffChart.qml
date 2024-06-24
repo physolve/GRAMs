@@ -5,6 +5,7 @@ import CustomPlot
 
 Item{
     required property var testView
+    required property var typeView
     // Chart Component Object
     Component{
         id: plotVoltage
@@ -12,9 +13,11 @@ Item{
             required property string plotName 
             required property var sensorsList
             required property int m_index
+            required property var typeV
+            required property string label
             //anchors.left: parent.left; 
             implicitWidth: 1300
-            implicitHeight: 600
+            implicitHeight: 550
             CustomPlotItem {
                 id: customPlotVoltage
                 anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
@@ -22,7 +25,9 @@ Item{
                 //implicitHeight: 300
                 Component.onCompleted: {
                     initCustomPlot(2) // why 0? to show place of hraph in mnemo (set name)
-                    placePointerGraph(sensorsList[0], filterView.getChannelSensor(0))
+                    placePointerGraph(sensorsList[0], filterView.getChannelSensor(0, typeV))
+                    setCustomLabel(label)
+
                 }
                 Component.onDestruction: testJSString(0)
                 function testJSString(num) {
@@ -66,7 +71,7 @@ Item{
             for(const [key, value] of Object.entries(testView)) {
                 console.log(key)
                 console.log(value.sensors)
-                push(plotVoltage,{plotName: key,  sensorsList: value.sensors, m_index: 0}) // change m_index to chartStack count
+                push(plotVoltage, {plotName: key,  sensorsList: value.sensors, m_index: 0, typeV: typeView, label: value.first_y}) // change m_index to chartStack count
             }
         } 
     }
