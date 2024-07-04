@@ -68,6 +68,7 @@ public:
     const QVector<double> getBufferedData(uint8_t channelN);
     const QVector<double> getXhatS(uint8_t channelN);
     const QVector<double> getXhatT(uint8_t channelN);
+    const QVector<double> getOriginalData(uint8_t channelN);
     const QVector<qreal> getTimeBuffer();
     static void BDAQCALL OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *userParam);
 
@@ -85,7 +86,7 @@ private:
     void doFilter();
     
     AdvAIType m_info;
-    const int m_sectionLength = 128;
+    const int m_sectionLength = 512;
     ValueRange m_valueRange;
     WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class
     QVector<double> m_vector; // should be list of values 

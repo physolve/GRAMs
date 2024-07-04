@@ -34,7 +34,7 @@ Item{
                         font.pointSize: 12
                         color: 'white'
                         selectByMouse: true
-                        validator: DoubleValidator { bottom: 0.000; top: 99999; decimals: 3}
+                        // validator: DoubleValidator { bottom: 0.000; top: 99999; decimals: 3}
                         anchors.verticalCenter: parent.verticalCenter
                         horizontalAlignment: TextInput.AlignHCenter
                         onEditingFinished:{

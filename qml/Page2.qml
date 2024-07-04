@@ -149,7 +149,7 @@ Page {
         font.pointSize: 12
         color: 'white'
         selectByMouse: true
-        validator: DoubleValidator { bottom: 0.001; top: 10000; decimals: 3}
+        // validator: DoubleValidator { bottom: 0.001; top: 10000; decimals: 3}
         // anchors.verticalCenter: parent.verticalCenter
         horizontalAlignment: TextInput.AlignHCenter
         onEditingFinished:{
@@ -173,6 +173,16 @@ Page {
         text: "Применить"
         font.pixelSize: 12
         onClicked: dataSource.setNewFilter()
+    }
+    Switch{
+        id: appendResult
+        anchors.top: kmMatrixPlbl.bottom
+        anchors.left: saveResult.right
+        anchors.leftMargin: 30
+        anchors.topMargin: 30
+        text: "Сохранять"
+        font.pixelSize: 12
+        onToggled: filterView.startAppend(checked)
     }
     //THIS TableView works on new Qt (>6.5)
 

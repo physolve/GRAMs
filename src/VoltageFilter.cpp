@@ -7,7 +7,7 @@
 
     //let's try 500 Hz time step (1.0/500)
 
-VoltageFilter::VoltageFilter(): n(3), m(1), dt(1.0/500) {
+VoltageFilter::VoltageFilter(): n(3), m(1), dt(1.0/512) {
 
     Eigen::MatrixXd A(n, n); // System dynamics matrix
     Eigen::MatrixXd C(m, n); // Output matrix
@@ -27,13 +27,13 @@ VoltageFilter::VoltageFilter(): n(3), m(1), dt(1.0/500) {
     // Construct the filter
     kf = KalmanFilter (dt, A, C, Q, R, P);
     qDebug() << "Kalman created";
-    m_filteredVoltage.resize(128, 0.0);
-    m_XhatS.resize(128, 0.0);
-    m_XhatT.resize(128, 0.0);
+    m_filteredVoltage.resize(512, 0.0);
+    m_XhatS.resize(512, 0.0);
+    m_XhatT.resize(512, 0.0);
 }
 
 
-VoltageFilter::VoltageFilter(const FilterMatrix &parameters):n(3), m(1), dt(1.0/500) {
+VoltageFilter::VoltageFilter(const FilterMatrix &parameters):n(3), m(1), dt(1.0/512) {
     Eigen::MatrixXd R(m, m); // Measurement noise covariance
 
     std::vector<double> a(parameters.mA.constBegin(), parameters.mA.constEnd());
@@ -47,9 +47,9 @@ VoltageFilter::VoltageFilter(const FilterMatrix &parameters):n(3), m(1), dt(1.0/
     Eigen::MatrixXd P = Eigen::Map<Eigen::MatrixXd>(p.data(), n, n);
     kf = KalmanFilter (dt, A, C, Q, R, P);
     qDebug() << "Custom Kalman created";
-    m_filteredVoltage.resize(128, 0.0);
-    m_XhatS.resize(128, 0.0);
-    m_XhatT.resize(128, 0.0);
+    m_filteredVoltage.resize(512, 0.0);
+    m_XhatS.resize(512, 0.0);
+    m_XhatT.resize(512, 0.0);
 }
 
 void VoltageFilter::appendToBuffer(const double &value){ // change to replace Vector
@@ -60,7 +60,7 @@ QVector<double> VoltageFilter::getFilteredVoltage(bool debug) {
     // Best guess of initial states
     Eigen::VectorXd x0(n);
     double t = 0;
-    x0 << m_voltageBuffer[0], 0, -9.81;
+    x0 << m_voltageBuffer[0], 0, 0;
     kf.init(t, x0);
     // Feed measurements into filter, output estimated states
     QVector<double> filteredVoltage;
@@ -82,6 +82,7 @@ QVector<double> VoltageFilter::getFilteredVoltage(bool debug) {
     m_filteredVoltage = filteredVoltage;
     m_XhatS = debugXhatS;
     m_XhatT = debugXhatT;
+    m_saveOriginalBuffer = m_voltageBuffer;
     m_voltageBuffer.clear();
     return filteredVoltage;
 }
@@ -94,4 +95,7 @@ QVector<double> VoltageFilter::lastXhatS(){
 }
 QVector<double> VoltageFilter::lastXhatT(){
     return m_XhatT;
+}
+QVector<double> VoltageFilter::lastOriginalBuffer(){
+    return m_saveOriginalBuffer;
 }

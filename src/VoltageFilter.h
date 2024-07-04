@@ -21,12 +21,14 @@ public:
     QVector<double> lastFiltered();
     QVector<double> lastXhatS();
     QVector<double> lastXhatT();
-    void changeMatrixParameters(double n_dt = 1.0/500);
+    QVector<double> lastOriginalBuffer();
+    void changeMatrixParameters(double n_dt = 1.0/512);
 private:
     QVector<double> m_voltageBuffer;
     QVector<double> m_filteredVoltage;
     QVector<double> m_XhatS;
     QVector<double> m_XhatT;
+    QVector<double> m_saveOriginalBuffer;
     int n, m;
     double dt;
     KalmanFilter kf;

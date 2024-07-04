@@ -1,8 +1,10 @@
 #include "FilterView.h"
+#include <QFile>
+#include "QDir"
 
-FilterView::FilterView(QObject *parent) : QObject(parent)
+FilterView::FilterView(QObject *parent) : QObject(parent), safeCheck(false), appendCheck(false)
 {
-    auto dt = (1.0/500);
+    auto dt = (1.0/512);
     this->ui_mA = {1, dt, 0, 0, 1, dt, 0, 0, 1};
     this->ui_mC = {1, 0, 0};
 
@@ -22,6 +24,8 @@ void FilterView::setFilterSize(int channelCount){
         m_channelsXhatS << QSharedPointer<Sensor>::create(QString("XhatS_ch%1").arg(i));
         m_channelsXhatT << QSharedPointer<Sensor>::create(QString("XhatT_ch%1").arg(i));
     }
+    //if проверка на сохранить в файл
+    //если установлен тру, то вызывай сейф в файл и делай эту переменную фолс
 }
 
 void FilterView::appendDataToView(int viewN, const QVector<qreal> &time, const QVector<double> &data){
@@ -37,7 +41,85 @@ void FilterView::appendDataToXhatT(int viewN, const QVector<qreal> &time, const 
     emit updateXhatT();
 }
 
+void FilterView::safeCheckOn(){
+    this->safeCheck = true;
+}
+
+bool FilterView::getSafeCheck(){
+    return this->safeCheck;
+}
+
+void FilterView::saveToFile(const QVector<double> &data){
+    QDir dir("output");
+    int total_files = dir.count();
+    QFile file(QString("output\\output_%1.txt").arg(total_files));
+    if(!file.open(QIODevice::Append|QIODevice::Text))
+        return;
+    QTextStream out(&file);
+    
+    auto outLambda = [&out](const QList<double> &matrix){
+        for(const double &m : matrix){
+            out << QString::number(m) <<' ';            
+        }
+        out << '\n';
+    };
+
+    out << "A\t";
+    outLambda(ui_mA);
+    out << "C\t";
+    outLambda(ui_mC);
+    out << "Q\t";
+    outLambda(ui_mQ);
+    out << "P\t";
+    outLambda(ui_mP);
+
+    auto timeBuffer = m_channelsData[0]->getTime();
+    if(timeBuffer.isEmpty())
+        return;
+    out << "N" << "\t" << "Data" << "\t" << "Filtered data" << "\t" << "XhatS" << "\t" << "XhatT" << "\n";
+    auto bufferFiltered = m_channelsData[0]->getValue();
+    auto bufferSecond = m_channelsXhatS[0]->getValue();
+    auto bufferThird = m_channelsXhatT[0]->getValue();
+    
+    for(int i = 0; i < timeBuffer.count();++i){
+        out << i << "\t" << data[i] << "\t" << bufferFiltered[i] << "\t" << bufferSecond[i] << "\t" << bufferThird[i] << "\n";
+    }
+    file.close();
+    this->safeCheck = false;
+}
+
+void FilterView::appendToFile(const QVector<double> &data){\
+    QDir dir("output");
+    int total_files = dir.count();
+    QFile file(QString("output\\output_%1.txt").arg(total_files-1));
+    if(!file.open(QIODevice::Append|QIODevice::Text))
+        return;
+    QTextStream out(&file);
+    auto timeBuffer = m_channelsData[0]->getTime();
+    if(timeBuffer.isEmpty())
+        return;
+    auto bufferFiltered = m_channelsData[0]->getValue();
+    auto bufferSecond = m_channelsXhatS[0]->getValue();
+    auto bufferThird = m_channelsXhatT[0]->getValue();
+    
+    for(int i = 0; i < timeBuffer.count();++i){
+        out << i << "\t" << data[i] << "\t" << bufferFiltered[i] << "\t" << bufferSecond[i] << "\t" << bufferThird[i] << "\n";
+    }
+    file.close();
+}
+
+void FilterView::startAppend(bool state){
+    this->appendCheck = state;
+}
+
+bool FilterView::getAppendCheck(){
+    return this->appendCheck;
+}
+
 QSharedPointer<Sensor> FilterView::getChannelSensor(int channel, QString a){
+    if(m_channelsData.isEmpty()){
+        return QSharedPointer<Sensor>::create(QString("empty"));
+    }
     if(a == "view"){
         return m_channelsData[channel];
     }
@@ -45,7 +127,6 @@ QSharedPointer<Sensor> FilterView::getChannelSensor(int channel, QString a){
         return m_channelsXhatS[channel];
     } 
     else if(a == "xhatt") return m_channelsXhatT[channel];
-    return m_channelsData[channel];
 }
 
 void FilterView::setUiA(const QList<double> &ui_A)

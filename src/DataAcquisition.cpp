@@ -78,6 +78,18 @@ void DataAcquisition::filterEvent(){
     filterView.appendDataToView(0, controller->getTimeBuffer(), controller->getBufferedData(0));
     filterView.appendDataToXhatS(0, controller->getTimeBuffer(), controller->getXhatS(0));
     filterView.appendDataToXhatT(0, controller->getTimeBuffer(), controller->getXhatT(0));
+    if(filterView.getSafeCheck()){
+        auto originalBuffer = controller->getOriginalData(0);
+        if(originalBuffer.isEmpty())
+            return;
+        filterView.saveToFile(originalBuffer);
+    }
+    if(filterView.getAppendCheck()){
+        auto originalBuffer = controller->getOriginalData(0);
+        if(originalBuffer.isEmpty())
+            return;
+        filterView.appendToFile(originalBuffer); 
+    }
 }
 
 QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
@@ -123,6 +135,6 @@ void DataAcquisition::setNewFilter(){
     auto controller = m_controllerList["pressure"].staticCast<AdvantechBuff>();
 
     auto parameters = filterView.getNewFilterParameters();
-
     controller->setVolageFilter(0, parameters);
+    filterView.safeCheckOn();
 }

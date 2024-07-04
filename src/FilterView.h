@@ -11,18 +11,23 @@ class FilterView : public QObject
     Q_PROPERTY (QList<double> uiQ READ uiQ WRITE setUiQ NOTIFY uiQChanged)
     Q_PROPERTY (double uiR READ uiR WRITE setUiR NOTIFY uiRChanged)
     Q_PROPERTY (QList<double> uiP READ uiP WRITE setUiP NOTIFY uiPChanged)
-
 public:
     explicit FilterView(QObject *parent  = nullptr);
     ~FilterView();
     void setFilterSize(int channelCount);
     Q_INVOKABLE QSharedPointer<Sensor> getChannelSensor(int channel, QString a);
+    Q_INVOKABLE void startAppend(bool state);
     // function to update values somewhere
     // function to link Kalman parameters with View
     void appendDataToView(int viewN, const QVector<qreal> &time, const QVector<double> &data);
     void appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data);
     void appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data);
 
+    void safeCheckOn();
+    bool getSafeCheck();
+    void saveToFile(const QVector<double> &data);
+    bool getAppendCheck();
+    void appendToFile(const QVector<double> &data);
 
     void setUiA(const QList<double> &ui_A);
     QList<double> uiA() const;
@@ -59,4 +64,6 @@ private:
     QList<double> ui_mQ;
     double ui_mR;
     QList<double> ui_mP;
+    bool safeCheck;
+    bool appendCheck;
 };
