@@ -48,10 +48,10 @@ void myMessageHandler(QtMsgType type, const QMessageLogContext & context, const 
 int main(int argc, char *argv[]) {
     qInstallMessageHandler(myMessageHandler);
     QCoreApplication::setApplicationName("GRAMs");
-    QCoreApplication::setApplicationVersion("0.0.1");
+    QCoreApplication::setApplicationVersion("1.0.0");
     QCoreApplication::setOrganizationName(QStringLiteral("Tomsk Polytechnic University"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("tpu.ru"));
-    qputenv("QT_FONT_DPI", QByteArray("96")); //96/128 set for High DPI screen
+    // qputenv("QT_FONT_DPI", QByteArray("96")); //96/128 set for High DPI screen
     Grams app(argc, argv);
     int ret;
     try{

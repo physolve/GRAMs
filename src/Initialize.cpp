@@ -8,7 +8,7 @@
 #include <QVariantList>
 
 #include "controllers/AdvantechCtrl.h"
-#include "../lib/bdaqctrl.h"
+#include "lib/bdaqctrl.h"
 using namespace Automation::BDaq;
 
 Initialize::Initialize(QObject *parent) :

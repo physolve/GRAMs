@@ -1,10 +1,10 @@
 #pragma once
 
 #include <QtCore/QObject>
-#include "../../lib/bdaqctrl.h"
+#include "../lib/bdaqctrl.h"
 #include "ControllerInfo.h"
 
-#include "../VoltageFilter.h"
+#include "VoltageFilter.h"
 
 using namespace Automation::BDaq;
 

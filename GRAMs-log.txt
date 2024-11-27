@@ -1,0 +1,249 @@
+26.11.2024 13:30:51	Debug: 0, DemoDevice,BID#0
+26.11.2024 13:30:51	Debug: 1, DemoDevice,BID#1
+26.11.2024 13:30:51	Debug: 2, DemoDevice,BID#2
+26.11.2024 13:30:51	Debug: Security class is created
+qml: 26.11.2024 13:30:52	Debug: print
+26.11.2024 13:34:04	Debug: 0, DemoDevice,BID#0
+26.11.2024 13:34:04	Debug: 1, DemoDevice,BID#1
+26.11.2024 13:34:04	Debug: 2, DemoDevice,BID#2
+26.11.2024 13:34:04	Debug: Security class is created
+qml: 26.11.2024 13:34:05	Debug: print
+26.11.2024 13:34:46	Debug: 0, DemoDevice,BID#0
+26.11.2024 13:34:46	Debug: 1, DemoDevice,BID#1
+26.11.2024 13:34:46	Debug: 2, DemoDevice,BID#2
+26.11.2024 13:34:46	Debug: Security class is created
+qml: 26.11.2024 13:34:47	Debug: print
+26.11.2024 13:35:20	Debug: 0, DemoDevice,BID#0
+26.11.2024 13:35:20	Debug: 1, DemoDevice,BID#1
+26.11.2024 13:35:20	Debug: 2, DemoDevice,BID#2
+26.11.2024 13:35:20	Debug: Security class is created
+qml: 26.11.2024 13:35:20	Debug: print
+26.11.2024 13:55:51	Debug: 0, DemoDevice,BID#0
+26.11.2024 13:55:51	Debug: 1, DemoDevice,BID#1
+26.11.2024 13:55:51	Debug: 2, DemoDevice,BID#2
+26.11.2024 13:55:51	Debug: Security class is created
+qml: 26.11.2024 13:55:52	Debug: print
+26.11.2024 17:50:53	Debug: 0, DemoDevice,BID#0
+26.11.2024 17:50:53	Debug: 1, DemoDevice,BID#1
+26.11.2024 17:50:53	Debug: 2, DemoDevice,BID#2
+26.11.2024 17:50:53	Debug: Security class is created
+qml: 26.11.2024 17:50:55	Debug: print
+26.11.2024 18:29:54	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:29:54	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:29:54	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:29:54	Debug: Security class is created
+qml: 26.11.2024 18:29:55	Debug: print
+26.11.2024 18:39:40	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:39:40	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:39:40	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:39:40	Debug: Security class is created
+qml: 26.11.2024 18:39:40	Debug: print
+26.11.2024 18:44:28	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:44:28	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:44:28	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:44:28	Debug: Security class is created
+qml: 26.11.2024 18:44:29	Debug: print
+26.11.2024 18:48:40	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:48:40	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:48:40	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:48:40	Debug: Security class is created
+qml: 26.11.2024 18:48:41	Debug: print
+26.11.2024 18:49:09	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:49:09	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:49:09	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:49:09	Debug: Security class is created
+qml: 26.11.2024 18:49:10	Debug: print
+26.11.2024 18:49:45	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:49:45	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:49:45	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:49:45	Debug: Security class is created
+qml: 26.11.2024 18:49:46	Debug: print
+26.11.2024 18:50:23	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:50:23	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:50:23	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:50:23	Debug: Security class is created
+qml: 26.11.2024 18:50:24	Debug: print
+26.11.2024 18:50:39	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:50:39	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:50:39	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:50:39	Debug: Security class is created
+qml: 26.11.2024 18:50:39	Debug: print
+26.11.2024 18:50:52	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:50:52	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:50:52	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:50:52	Debug: Security class is created
+qml: 26.11.2024 18:50:53	Debug: print
+26.11.2024 18:52:38	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:52:38	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:52:38	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:52:38	Debug: Security class is created
+qml: 26.11.2024 18:52:39	Debug: print
+26.11.2024 18:54:44	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:54:44	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:54:44	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:54:44	Debug: Security class is created
+qml: 26.11.2024 18:54:45	Debug: print
+26.11.2024 18:56:49	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:56:49	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:56:49	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:56:49	Debug: Security class is created
+qml: 26.11.2024 18:56:49	Debug: print
+26.11.2024 18:57:15	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:57:15	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:57:15	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:57:15	Debug: Security class is created
+qml: 26.11.2024 18:57:16	Debug: print
+26.11.2024 18:57:53	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:57:53	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:57:53	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:57:53	Debug: Security class is created
+qml: 26.11.2024 18:57:53	Debug: print
+26.11.2024 18:58:38	Debug: 0, DemoDevice,BID#0
+26.11.2024 18:58:38	Debug: 1, DemoDevice,BID#1
+26.11.2024 18:58:38	Debug: 2, DemoDevice,BID#2
+26.11.2024 18:58:38	Debug: Security class is created
+qml: 26.11.2024 18:58:38	Debug: print
+26.11.2024 19:02:12	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:02:12	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:02:12	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:02:12	Debug: Security class is created
+qml: 26.11.2024 19:02:13	Debug: print
+26.11.2024 19:03:29	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:03:29	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:03:29	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:03:29	Debug: Security class is created
+qml: 26.11.2024 19:03:30	Debug: print
+26.11.2024 19:05:16	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:05:16	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:05:16	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:05:16	Debug: Security class is created
+qml: 26.11.2024 19:05:16	Debug: print
+26.11.2024 19:05:41	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:05:41	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:05:41	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:05:41	Debug: Security class is created
+qml: 26.11.2024 19:05:42	Debug: print
+26.11.2024 19:06:14	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:06:14	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:06:14	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:06:14	Debug: Security class is created
+26.11.2024 19:06:15	Warning: qrc:/GRAMs/qml/main.qml:69:13: QML TextArea: Possible anchor loop detected on fill.
+qml: 26.11.2024 19:06:15	Debug: print
+26.11.2024 19:07:59	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:07:59	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:07:59	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:07:59	Debug: Security class is created
+qml: 26.11.2024 19:08:00	Debug: print
+26.11.2024 19:08:13	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:08:13	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:08:13	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:08:13	Debug: Security class is created
+qml: 26.11.2024 19:08:14	Debug: print
+26.11.2024 19:08:44	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:08:44	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:08:44	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:08:44	Debug: Security class is created
+qml: 26.11.2024 19:08:44	Debug: print
+26.11.2024 19:11:02	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:11:02	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:11:02	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:11:02	Debug: Security class is created
+qml: 26.11.2024 19:11:02	Debug: print
+26.11.2024 19:13:52	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:13:52	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:13:52	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:13:52	Debug: Security class is created
+qml: 26.11.2024 19:13:53	Debug: print
+26.11.2024 19:14:18	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:14:18	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:14:18	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:14:18	Debug: Security class is created
+qml: 26.11.2024 19:14:18	Debug: print
+26.11.2024 19:16:15	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:16:15	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:16:15	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:16:15	Debug: Security class is created
+qml: 26.11.2024 19:16:16	Debug: print
+26.11.2024 19:16:56	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:16:56	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:16:56	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:16:56	Debug: Security class is created
+qml: 26.11.2024 19:16:57	Debug: print
+26.11.2024 19:17:48	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:17:48	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:17:48	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:17:48	Debug: Security class is created
+qml: 26.11.2024 19:17:49	Debug: print
+26.11.2024 19:20:04	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:20:04	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:20:04	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:20:04	Debug: Security class is created
+qml: 26.11.2024 19:20:05	Debug: print
+26.11.2024 19:21:43	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:21:43	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:21:43	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:21:43	Debug: Security class is created
+qml: 26.11.2024 19:21:44	Debug: print
+26.11.2024 19:22:22	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:22:22	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:22:22	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:22:22	Debug: Security class is created
+26.11.2024 19:22:22	Warning: QQmlApplicationEngine failed to load component
+26.11.2024 19:22:22	Warning: qrc:/GRAMs/qml/main.qml:101:21: Cannot assign to non-existent property "readOnly"
+26.11.2024 19:22:27	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:22:27	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:22:27	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:22:27	Debug: Security class is created
+qml: 26.11.2024 19:22:27	Debug: print
+26.11.2024 19:22:44	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:22:44	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:22:44	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:22:44	Debug: Security class is created
+qml: 26.11.2024 19:22:45	Debug: print
+26.11.2024 19:23:09	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:23:09	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:23:09	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:23:09	Debug: Security class is created
+qml: 26.11.2024 19:23:09	Debug: print
+26.11.2024 19:23:51	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:23:51	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:23:51	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:23:51	Debug: Security class is created
+qml: 26.11.2024 19:23:52	Debug: print
+26.11.2024 19:26:56	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:26:56	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:26:56	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:26:56	Debug: Security class is created
+qml: 26.11.2024 19:26:57	Debug: print
+26.11.2024 19:30:05	Debug: 0, DemoDevice,BID#0
+26.11.2024 19:30:05	Debug: 1, DemoDevice,BID#1
+26.11.2024 19:30:05	Debug: 2, DemoDevice,BID#2
+26.11.2024 19:30:05	Debug: Security class is created
+qml: 26.11.2024 19:30:05	Debug: print
+27.11.2024 11:00:17	Debug: 0, DemoDevice,BID#0
+27.11.2024 11:00:17	Debug: 1, DemoDevice,BID#1
+27.11.2024 11:00:17	Debug: 2, DemoDevice,BID#2
+27.11.2024 11:00:17	Debug: Security class is created
+qml: 27.11.2024 11:00:18	Debug: print
+27.11.2024 11:02:52	Debug: 0, DemoDevice,BID#0
+27.11.2024 11:02:52	Debug: 1, DemoDevice,BID#1
+27.11.2024 11:02:52	Debug: 2, DemoDevice,BID#2
+27.11.2024 11:02:52	Debug: Security class is created
+27.11.2024 11:02:52	Warning: QQmlApplicationEngine failed to load component
+27.11.2024 11:02:52	Warning: qrc:/GRAMs/qml/main.qml:102:47: Invalid property assignment: color expected
+27.11.2024 11:03:03	Debug: 0, DemoDevice,BID#0
+27.11.2024 11:03:03	Debug: 1, DemoDevice,BID#1
+27.11.2024 11:03:03	Debug: 2, DemoDevice,BID#2
+27.11.2024 11:03:03	Debug: Security class is created
+27.11.2024 11:03:03	Warning: QQmlApplicationEngine failed to load component
+27.11.2024 11:03:03	Warning: qrc:/GRAMs/qml/main.qml:102:47: Invalid property assignment: color expected
+27.11.2024 11:03:22	Debug: 0, DemoDevice,BID#0
+27.11.2024 11:03:22	Debug: 1, DemoDevice,BID#1
+27.11.2024 11:03:22	Debug: 2, DemoDevice,BID#2
+27.11.2024 11:03:22	Debug: Security class is created
+qml: 27.11.2024 11:03:23	Debug: print
+27.11.2024 11:03:41	Debug: 0, DemoDevice,BID#0
+27.11.2024 11:03:41	Debug: 1, DemoDevice,BID#1
+27.11.2024 11:03:41	Debug: 2, DemoDevice,BID#2
+27.11.2024 11:03:41	Debug: Security class is created
+qml: 27.11.2024 11:03:41	Debug: print

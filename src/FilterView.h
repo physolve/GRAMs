@@ -2,7 +2,7 @@
 #include <QDebug>
 #include <QVariant>
 #include "Sensor.h"
-#include "VoltageFilter.h"
+#include "controllers/VoltageFilter.h"
 class FilterView : public QObject
 {
     Q_OBJECT 

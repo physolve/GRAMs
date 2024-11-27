@@ -1,5 +1,5 @@
 #include "customplotitem.h"
-#include "../lib/qcustomplot.h"
+#include "lib/qcustomplot.h"
 #include <QDebug>
 
 CustomPlotItem::CustomPlotItem(QQuickItem *parent)
