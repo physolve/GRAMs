@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.qmlmodels
-import Style
+// import Style
 // Page with example Action, Buttons, Dialog, page loading, State change, Animation etc.
 Page {
     id: page2

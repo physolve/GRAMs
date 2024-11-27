@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Style
+// import Style
 import CustomPlot
 import "mnemo"
 import "mnemo/_GRAM350"

@@ -62,7 +62,7 @@ void Grams::initGUI(){
 
     // add the global styles module. Not sure why this has to be done here
     // explicitly, because we register the module in its qmldir file.
-    qmlRegisterSingletonType(QUrl("qrc:/Style/Style.qml"), "Style", 1, 0, "Style");
+    // qmlRegisterSingletonType(QUrl("qrc:/Style/Style.qml"), "Style", 1, 0, "Style");
     qmlRegisterType<CustomPlotItem>("CustomPlot", 1, 0, "CustomPlotItem");
 
     m_engine.rootContext()->setContextProperty("initSource", &initSource);

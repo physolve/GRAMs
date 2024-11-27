@@ -23,8 +23,8 @@ ApplicationWindow {
     //     ListElement { name: "test1"; value: 1 }
     // }
     Component.onCompleted: {
-        main.hide()
-        winld.active = true
+        //main.hide()
+        //winld.active = true
     }
     Loader {
         id: winld

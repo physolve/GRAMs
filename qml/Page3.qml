@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.qmlmodels
 import CustomPlot
-import Style
+// import Style
 
 // Page with some external items defined in separate modules placed in a GridLayout
 Page {

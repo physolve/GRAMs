@@ -14,7 +14,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(Qt6 6.2.4 COMPONENTS Core Quick QuickControls2 Charts PrintSupport OpenGL REQUIRED) # Charts QuickControls2   LinguistTools
+find_package(Qt6 6.8.0 COMPONENTS Core Quick QuickControls2 Charts PrintSupport OpenGL REQUIRED) # Charts QuickControls2   LinguistTools
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 set(MY_UNITTESTS TRUE)
@@ -24,7 +24,7 @@ include(config.cmake)
 #add_subdirectory(modules/SecondPlugin)
 #add_subdirectory(modules/Controls)
 
-add_subdirectory(modules/Style)
+# add_subdirectory(modules/Style)
 
 # if(${MY_UNITTESTS})
 #     add_subdirectory(tests/UnitTestQML)
@@ -82,7 +82,7 @@ target_link_libraries(${EXECUTABLE_NAME}
     #PRIVATE FirstPluginplugin
     #PRIVATE SecondPluginplugin
     Eigen3::Eigen
-    PRIVATE Styleplugin
+    # PRIVATE Styleplugin
 )
 
 #file(GLOB_RECURSE QML_SOURCES2 RELATIVE ${CMAKE_SOURCE_DIR} *.qml)

@@ -73,13 +73,13 @@ void FilterView::saveToFile(const QVector<double> &data){
     out << "P\t";
     outLambda(ui_mP);
 
-    auto timeBuffer = m_channelsData[0]->getTime();
+    const auto& timeBuffer = m_channelsData[0]->getTime();
     if(timeBuffer.isEmpty())
         return;
     out << "N" << "\t" << "Data" << "\t" << "Filtered data" << "\t" << "XhatS" << "\t" << "XhatT" << "\n";
-    auto bufferFiltered = m_channelsData[0]->getValue();
-    auto bufferSecond = m_channelsXhatS[0]->getValue();
-    auto bufferThird = m_channelsXhatT[0]->getValue();
+    const auto& bufferFiltered = m_channelsData[0]->getValue();
+    const auto& bufferSecond = m_channelsXhatS[0]->getValue();
+    const auto& bufferThird = m_channelsXhatT[0]->getValue();
     
     for(int i = 0; i < timeBuffer.count();++i){
         out << i << "\t" << data[i] << "\t" << bufferFiltered[i] << "\t" << bufferSecond[i] << "\t" << bufferThird[i] << "\n";
@@ -95,12 +95,12 @@ void FilterView::appendToFile(const QVector<double> &data){\
     if(!file.open(QIODevice::Append|QIODevice::Text))
         return;
     QTextStream out(&file);
-    auto timeBuffer = m_channelsData[0]->getTime();
+    const auto& timeBuffer = m_channelsData[0]->getTime();
     if(timeBuffer.isEmpty())
         return;
-    auto bufferFiltered = m_channelsData[0]->getValue();
-    auto bufferSecond = m_channelsXhatS[0]->getValue();
-    auto bufferThird = m_channelsXhatT[0]->getValue();
+    const auto& bufferFiltered = m_channelsData[0]->getValue();
+    const auto& bufferSecond = m_channelsXhatS[0]->getValue();
+    const auto& bufferThird = m_channelsXhatT[0]->getValue();
     
     for(int i = 0; i < timeBuffer.count();++i){
         out << i << "\t" << data[i] << "\t" << bufferFiltered[i] << "\t" << bufferSecond[i] << "\t" << bufferThird[i] << "\n";
