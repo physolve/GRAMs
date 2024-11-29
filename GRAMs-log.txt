@@ -247,3 +247,434 @@ qml: 27.11.2024 11:03:23	Debug: print
 27.11.2024 11:03:41	Debug: 2, DemoDevice,BID#2
 27.11.2024 11:03:41	Debug: Security class is created
 qml: 27.11.2024 11:03:41	Debug: print
+27.11.2024 12:32:59	Debug: 0, DemoDevice,BID#0
+27.11.2024 12:32:59	Debug: 1, DemoDevice,BID#1
+27.11.2024 12:32:59	Debug: 2, DemoDevice,BID#2
+27.11.2024 12:32:59	Debug: Security class is created
+qml: 27.11.2024 12:32:59	Debug: print
+27.11.2024 12:35:17	Debug: 0, DemoDevice,BID#0
+27.11.2024 12:35:17	Debug: 1, DemoDevice,BID#1
+27.11.2024 12:35:17	Debug: 2, DemoDevice,BID#2
+27.11.2024 12:35:17	Debug: Security class is created
+qml: 27.11.2024 12:35:18	Debug: print
+27.11.2024 13:04:19	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:04:19	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:04:19	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:04:19	Debug: Security class is created
+qml: 27.11.2024 13:04:19	Debug: print
+27.11.2024 13:16:07	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:16:07	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:16:07	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:16:07	Debug: Security class is created
+qml: 27.11.2024 13:16:08	Debug: print
+27.11.2024 13:31:00	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:31:00	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:31:00	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:31:00	Debug: Security class is created
+27.11.2024 13:31:00	Warning: QQmlApplicationEngine failed to load component
+27.11.2024 13:31:00	Warning: qrc:/GRAMs/qml/main.qml:171:21: Type SettingsWindow unavailable
+27.11.2024 13:31:00	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:12:9: Cannot assign to non-existent property "parent"
+27.11.2024 13:34:45	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:34:45	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:34:45	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:34:45	Debug: Security class is created
+qml: 27.11.2024 13:34:46	Debug: print
+27.11.2024 13:36:37	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:36:37	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:36:37	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:36:37	Debug: Security class is created
+qml: 27.11.2024 13:36:38	Debug: print
+27.11.2024 13:36:38	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:7: ReferenceError: foreignWindow is not defined
+27.11.2024 13:39:29	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:39:29	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:39:29	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:39:29	Debug: Security class is created
+qml: 27.11.2024 13:39:30	Debug: print
+27.11.2024 13:42:05	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:42:05	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:42:05	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:42:05	Debug: Security class is created
+qml: 27.11.2024 13:42:06	Debug: print
+27.11.2024 13:46:53	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:46:53	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:46:53	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:46:53	Debug: Security class is created
+qml: 27.11.2024 13:46:54	Debug: print
+27.11.2024 13:54:16	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:54:16	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:54:16	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:54:16	Debug: Security class is created
+qml: 27.11.2024 13:54:17	Debug: print
+27.11.2024 13:55:34	Debug: 0, DemoDevice,BID#0
+27.11.2024 13:55:34	Debug: 1, DemoDevice,BID#1
+27.11.2024 13:55:34	Debug: 2, DemoDevice,BID#2
+27.11.2024 13:55:34	Debug: Security class is created
+qml: 27.11.2024 13:55:35	Debug: print
+27.11.2024 14:01:20	Debug: 0, DemoDevice,BID#0
+27.11.2024 14:01:20	Debug: 1, DemoDevice,BID#1
+27.11.2024 14:01:20	Debug: 2, DemoDevice,BID#2
+27.11.2024 14:01:20	Debug: Security class is created
+qml: 27.11.2024 14:01:20	Debug: print
+27.11.2024 14:53:14	Debug: 0, DemoDevice,BID#0
+27.11.2024 14:53:15	Debug: 1, DemoDevice,BID#1
+27.11.2024 14:53:15	Debug: 2, DemoDevice,BID#2
+27.11.2024 14:53:15	Debug: Security class is created
+qml: 27.11.2024 14:53:15	Debug: print
+27.11.2024 14:53:47	Debug: 0, DemoDevice,BID#0
+27.11.2024 14:53:47	Debug: 1, DemoDevice,BID#1
+27.11.2024 14:53:47	Debug: 2, DemoDevice,BID#2
+27.11.2024 14:53:47	Debug: Security class is created
+qml: 27.11.2024 14:53:48	Debug: print
+27.11.2024 14:56:41	Debug: 0, DemoDevice,BID#0
+27.11.2024 14:56:41	Debug: 1, DemoDevice,BID#1
+27.11.2024 14:56:41	Debug: 2, DemoDevice,BID#2
+27.11.2024 14:56:41	Debug: Security class is created
+qml: 27.11.2024 14:56:42	Debug: print
+27.11.2024 14:59:30	Debug: 0, DemoDevice,BID#0
+27.11.2024 14:59:30	Debug: 1, DemoDevice,BID#1
+27.11.2024 14:59:30	Debug: 2, DemoDevice,BID#2
+27.11.2024 14:59:30	Debug: Security class is created
+qml: 27.11.2024 14:59:31	Debug: print
+27.11.2024 15:03:10	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:03:10	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:03:10	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:03:10	Debug: Security class is created
+qml: 27.11.2024 15:03:10	Debug: print
+27.11.2024 15:03:51	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:03:51	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:03:51	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:03:51	Debug: Security class is created
+qml: 27.11.2024 15:03:52	Debug: print
+27.11.2024 15:04:03	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:04:03	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:04:03	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:04:03	Debug: Security class is created
+qml: 27.11.2024 15:04:04	Debug: print
+27.11.2024 15:04:51	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:04:51	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:04:51	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:04:51	Debug: Security class is created
+qml: 27.11.2024 15:04:52	Debug: print
+27.11.2024 15:04:52	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:53:9: Unable to assign QQuickItem to QWindow
+27.11.2024 15:08:34	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:08:34	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:08:34	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:08:34	Debug: Security class is created
+qml: 27.11.2024 15:08:35	Debug: print
+27.11.2024 15:16:35	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:16:35	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:16:35	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:16:35	Debug: Security class is created
+qml: 27.11.2024 15:16:36	Debug: print
+27.11.2024 15:27:56	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:27:56	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:27:56	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:27:56	Debug: Security class is created
+qml: 27.11.2024 15:27:57	Debug: print
+27.11.2024 15:27:57	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:16:13: Unable to assign QQuickItem to QWindow
+27.11.2024 15:27:57	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:54:9: Unable to assign [undefined] to QWindow*
+27.11.2024 15:37:38	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:37:38	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:37:38	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:37:38	Debug: Security class is created
+qml: 27.11.2024 15:37:39	Debug: print
+27.11.2024 15:38:05	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:38:05	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:38:05	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:38:05	Debug: Security class is created
+qml: 27.11.2024 15:38:05	Debug: print
+27.11.2024 15:44:17	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:44:17	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:44:17	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:44:17	Debug: Security class is created
+27.11.2024 15:44:17	Warning: QQmlApplicationEngine failed to load component
+27.11.2024 15:44:17	Warning: qrc:/GRAMs/qml/main.qml:171:21: Type SettingsWindow unavailable
+27.11.2024 15:44:17	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:46:13: Cannot assign to non-existent property "parent"
+27.11.2024 15:48:52	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:48:52	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:48:52	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:48:52	Debug: Security class is created
+qml: 27.11.2024 15:48:53	Debug: print
+27.11.2024 15:49:23	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:49:23	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:49:23	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:49:23	Debug: Security class is created
+qml: 27.11.2024 15:49:24	Debug: print
+27.11.2024 15:49:55	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:49:55	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:49:55	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:49:55	Debug: Security class is created
+qml: 27.11.2024 15:49:56	Debug: print
+27.11.2024 15:50:34	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:50:34	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:50:34	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:50:34	Debug: Security class is created
+qml: 27.11.2024 15:50:35	Debug: print
+27.11.2024 15:51:30	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:51:30	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:51:30	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:51:30	Debug: Security class is created
+qml: 27.11.2024 15:51:31	Debug: print
+27.11.2024 15:58:49	Debug: 0, DemoDevice,BID#0
+27.11.2024 15:58:49	Debug: 1, DemoDevice,BID#1
+27.11.2024 15:58:49	Debug: 2, DemoDevice,BID#2
+27.11.2024 15:58:49	Debug: Security class is created
+qml: 27.11.2024 15:58:50	Debug: print
+27.11.2024 16:00:22	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:00:22	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:00:22	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:00:22	Debug: Security class is created
+qml: 27.11.2024 16:00:23	Debug: print
+27.11.2024 16:01:09	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:01:09	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:01:09	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:01:09	Debug: Security class is created
+qml: 27.11.2024 16:01:09	Debug: print
+27.11.2024 16:06:01	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:06:01	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:06:01	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:06:01	Debug: Security class is created
+qml: 27.11.2024 16:06:02	Debug: print
+27.11.2024 16:06:52	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:06:52	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:06:52	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:06:52	Debug: Security class is created
+qml: 27.11.2024 16:06:53	Debug: print
+27.11.2024 16:08:12	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:08:12	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:08:12	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:08:12	Debug: Security class is created
+qml: 27.11.2024 16:08:12	Debug: print
+27.11.2024 16:09:39	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:09:39	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:09:39	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:09:39	Debug: Security class is created
+qml: 27.11.2024 16:09:39	Debug: print
+27.11.2024 16:09:54	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:09:54	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:09:54	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:09:54	Debug: Security class is created
+qml: 27.11.2024 16:09:54	Debug: print
+27.11.2024 16:10:19	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:10:19	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:10:19	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:10:19	Debug: Security class is created
+qml: 27.11.2024 16:10:20	Debug: print
+27.11.2024 16:30:47	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:30:47	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:30:47	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:30:47	Debug: Security class is created
+qml: 27.11.2024 16:30:48	Debug: print
+27.11.2024 16:33:21	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:33:21	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:33:21	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:33:21	Debug: Security class is created
+qml: 27.11.2024 16:33:21	Debug: print
+27.11.2024 16:34:09	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:34:09	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:34:09	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:34:09	Debug: Security class is created
+qml: 27.11.2024 16:34:09	Debug: print
+27.11.2024 16:35:23	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:35:23	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:35:23	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:35:23	Debug: Security class is created
+qml: 27.11.2024 16:35:24	Debug: print
+27.11.2024 16:36:43	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:36:43	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:36:43	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:36:43	Debug: Security class is created
+27.11.2024 16:36:44	Warning: qrc:/GRAMs/qml/main.qml:169:17: QML SettingsWindow: Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead.
+qml: 27.11.2024 16:36:44	Debug: print
+27.11.2024 16:37:23	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:37:23	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:37:23	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:37:23	Debug: Security class is created
+27.11.2024 16:37:24	Warning: qrc:/GRAMs/qml/main.qml:169:17: QML SettingsWindow: Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead.
+qml: 27.11.2024 16:37:24	Debug: print
+27.11.2024 16:39:18	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:39:18	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:39:18	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:39:18	Debug: Security class is created
+27.11.2024 16:39:19	Warning: qrc:/GRAMs/qml/main.qml:169:17: QML SettingsWindow: Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead.
+qml: 27.11.2024 16:39:19	Debug: print
+27.11.2024 16:41:23	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:41:23	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:41:23	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:41:23	Debug: Security class is created
+qml: 27.11.2024 16:41:24	Debug: print
+27.11.2024 16:43:40	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:43:40	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:43:40	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:43:40	Debug: Security class is created
+qml: 27.11.2024 16:43:40	Debug: print
+27.11.2024 16:44:11	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:44:11	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:44:11	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:44:11	Debug: Security class is created
+qml: 27.11.2024 16:44:12	Debug: print
+27.11.2024 16:46:53	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:46:53	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:46:53	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:46:53	Debug: Security class is created
+qml: 27.11.2024 16:46:54	Debug: print
+27.11.2024 16:47:06	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:47:06	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:47:06	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:47:06	Debug: Security class is created
+qml: 27.11.2024 16:47:07	Debug: print
+27.11.2024 16:47:07	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:8:5: QML WindowContainer: Binding loop detected for property "window":
+qrc:/GRAMs/qml/SettingsWindow.qml:12:9
+27.11.2024 16:47:15	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:8:5: QML WindowContainer: Binding loop detected for property "window":
+qrc:/GRAMs/qml/SettingsWindow.qml:12:9
+27.11.2024 16:48:56	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:48:56	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:48:56	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:48:56	Debug: Security class is created
+qml: 27.11.2024 16:48:57	Debug: print
+27.11.2024 16:48:57	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:48:57	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:48:57	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:48:57	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:48:57	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:48:57	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:48:58	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:12:5: QML WindowContainer: Binding loop detected for property "window":
+qrc:/GRAMs/qml/SettingsWindow.qml:16:9
+27.11.2024 16:49:03	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:12:5: QML WindowContainer: Binding loop detected for property "window":
+qrc:/GRAMs/qml/SettingsWindow.qml:16:9
+27.11.2024 16:50:51	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:50:51	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:50:51	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:50:51	Debug: Security class is created
+qml: 27.11.2024 16:50:52	Debug: print
+27.11.2024 16:50:52	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:50:52	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:50:52	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:50:52	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:50:52	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:50:52	Warning: QWindowsWindow::setGeometry: Unable to set geometry -20x-20+1406+103 (frame: -4x19+1398+72) on QQuickWindowQmlImpl/"" on "2281W". Resulting geometry: -16x-20+1406+103 (frame: 0x19+1398+72) margins: 8, 31, 8, 8)
+27.11.2024 16:50:54	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:12:5: QML WindowContainer: Binding loop detected for property "window":
+qrc:/GRAMs/qml/SettingsWindow.qml:16:9
+27.11.2024 16:51:02	Warning: qrc:/GRAMs/qml/SettingsWindow.qml:12:5: QML WindowContainer: Binding loop detected for property "window":
+qrc:/GRAMs/qml/SettingsWindow.qml:16:9
+27.11.2024 16:54:18	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:54:18	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:54:18	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:54:18	Debug: Security class is created
+qml: 27.11.2024 16:54:19	Debug: print
+27.11.2024 16:56:08	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:56:08	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:56:08	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:56:08	Debug: Security class is created
+qml: 27.11.2024 16:56:08	Debug: print
+27.11.2024 16:57:00	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:57:00	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:57:00	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:57:00	Debug: Security class is created
+qml: 27.11.2024 16:57:01	Debug: print
+27.11.2024 16:57:36	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:57:36	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:57:36	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:57:36	Debug: Security class is created
+qml: 27.11.2024 16:57:37	Debug: print
+27.11.2024 16:59:01	Debug: 0, DemoDevice,BID#0
+27.11.2024 16:59:01	Debug: 1, DemoDevice,BID#1
+27.11.2024 16:59:01	Debug: 2, DemoDevice,BID#2
+27.11.2024 16:59:01	Debug: Security class is created
+qml: 27.11.2024 16:59:02	Debug: print
+27.11.2024 17:00:26	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:00:26	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:00:26	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:00:26	Debug: Security class is created
+qml: 27.11.2024 17:00:26	Debug: print
+27.11.2024 17:01:22	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:01:22	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:01:22	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:01:22	Debug: Security class is created
+qml: 27.11.2024 17:01:22	Debug: print
+27.11.2024 17:03:29	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:03:29	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:03:29	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:03:29	Debug: Security class is created
+qml: 27.11.2024 17:03:30	Debug: print
+27.11.2024 17:03:57	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:03:57	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:03:57	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:03:57	Debug: Security class is created
+qml: 27.11.2024 17:03:58	Debug: print
+27.11.2024 17:29:20	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:29:20	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:29:20	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:29:20	Debug: Security class is created
+qml: 27.11.2024 17:29:20	Debug: print
+27.11.2024 17:30:40	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:30:40	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:30:40	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:30:40	Debug: Security class is created
+qml: 27.11.2024 17:30:40	Debug: print
+27.11.2024 17:31:34	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:31:34	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:31:34	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:31:34	Debug: Security class is created
+qml: 27.11.2024 17:31:35	Debug: print
+27.11.2024 17:33:49	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:33:49	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:33:49	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:33:49	Debug: Security class is created
+qml: 27.11.2024 17:33:50	Debug: print
+27.11.2024 17:36:29	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:36:29	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:36:29	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:36:29	Debug: Security class is created
+qml: 27.11.2024 17:36:29	Debug: print
+27.11.2024 17:37:24	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:37:24	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:37:24	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:37:24	Debug: Security class is created
+qml: 27.11.2024 17:37:24	Debug: print
+27.11.2024 17:39:16	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:39:16	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:39:16	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:39:16	Debug: Security class is created
+qml: 27.11.2024 17:39:17	Debug: print
+27.11.2024 17:40:26	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:40:26	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:40:26	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:40:26	Debug: Security class is created
+qml: 27.11.2024 17:40:27	Debug: print
+qml: 27.11.2024 17:40:29	Debug: 859
+qml: 27.11.2024 17:40:29	Debug: 484
+qml: 27.11.2024 17:40:42	Debug: 859
+qml: 27.11.2024 17:40:42	Debug: 237
+qml: 27.11.2024 17:40:53	Debug: 859
+qml: 27.11.2024 17:40:53	Debug: 484
+27.11.2024 17:45:09	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:45:09	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:45:09	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:45:09	Debug: Security class is created
+qml: 27.11.2024 17:45:10	Debug: print
+27.11.2024 17:46:30	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:46:30	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:46:30	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:46:30	Debug: Security class is created
+qml: 27.11.2024 17:46:31	Debug: print
+27.11.2024 17:47:56	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:47:56	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:47:56	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:47:56	Debug: Security class is created
+qml: 27.11.2024 17:47:57	Debug: print
+27.11.2024 17:49:27	Debug: 0, DemoDevice,BID#0
+27.11.2024 17:49:27	Debug: 1, DemoDevice,BID#1
+27.11.2024 17:49:27	Debug: 2, DemoDevice,BID#2
+27.11.2024 17:49:27	Debug: Security class is created
+qml: 27.11.2024 17:49:28	Debug: print
+27.11.2024 18:09:18	Debug: 0, DemoDevice,BID#0
+27.11.2024 18:09:18	Debug: 1, DemoDevice,BID#1
+27.11.2024 18:09:18	Debug: 2, DemoDevice,BID#2
+27.11.2024 18:09:18	Debug: Security class is created
+qml: 27.11.2024 18:09:19	Debug: print
+27.11.2024 18:15:10	Debug: 0, DemoDevice,BID#0
+27.11.2024 18:15:12	Debug: 1, DemoDevice,BID#1
+27.11.2024 18:15:15	Debug: 2, DemoDevice,BID#2
+27.11.2024 18:15:22	Debug: Security class is created
+qml: 27.11.2024 18:15:22	Debug: print

@@ -14,7 +14,7 @@ class Grams : public QApplication
     Q_OBJECT
 
 public:
-    Grams(int &argc, char **argv);
+    Grams(int &argc, char **argvm, const QString &curInitProfile);
     ~Grams();
     Q_INVOKABLE void initializeReading();
     //Q_INVOKABLE void testRead();
@@ -26,6 +26,7 @@ private slots:
 private:
 
     void initGUI();
+
 
     void readingEvent(bool valveCheck);
 

@@ -49,6 +49,7 @@ bool Initialize::jsonParser(QString &rawData){
     QMap<int, QString> m;
     for(auto s : jsonObject.keys()) // it is just sorting thing
         m[jsonObject[s].toObject()["profileId"].toInt()] = s;
+    
     m_profileNames = m.values();
     m_profileJson = jsonObject.toVariantMap();
     return true;
@@ -79,6 +80,11 @@ bool Initialize::advantechDeviceCheck(){
     startCheckInstance->Dispose();
     allSupportedDevices->Dispose();
     return true;
+}
+
+
+void Initialize::visualRepresentation(){
+    
 }
 
 QVariantMap Initialize::advantechDeviceFill(const QString &description, const QString &type){

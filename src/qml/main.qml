@@ -165,12 +165,11 @@ ApplicationWindow {
                         width: 100; height: 100
                     }
                 }
-                Item{
-                    //Layout.fillHeight: true
-                    Rectangle{
-                        id: test3
-                        width: 100; height: 100
-                    }
+                
+                SettingsWindow{
+                    id: test3
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
             } 
         }

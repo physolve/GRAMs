@@ -13,7 +13,7 @@ public:
     QString m_name;
     void appendData(qreal x, double y);
     void setData(const QVector<qreal> &x, const QVector<double> &y);
-    QVector<qreal> getTime() const;
+    QVector<qreal> getTime() const; 
     QVector<double> getValue() const;
     qreal getCurTime() const;
     double getCurValue() const;

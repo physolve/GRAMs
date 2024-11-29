@@ -14,7 +14,7 @@
 #include <QQuickStyle>
 #include "CustomPlotItem.h"
 
-Grams::Grams(int &argc, char **argv): 
+Grams::Grams(int &argc, char **argv, const QString &curInitProfile): 
     QApplication(argc, argv),
     initSource(),
     dataSource(),
