@@ -57,7 +57,7 @@ typedef unsigned short uint16;
 
 #ifdef __cplusplus
 #   define BDAQINL __inline
-#else 
+#else
 #   define BDAQINL static
 #endif
 
@@ -112,9 +112,9 @@ typedef enum ProgressCode {
    OperationFinished = 100,
 
    // [-100, -1]: The operation will probably succeed if try it again( nothing need to be changed)!
-   UnexpectedTermination = -1,  // The operation is terminated due to some unknown reason, such as disconnect, power off, etc. 
+   UnexpectedTermination = -1,  // The operation is terminated due to some unknown reason, such as disconnect, power off, etc.
 
-   // [-1000, -101]: The material is correct, but software check finds some problem, 
+   // [-1000, -101]: The material is correct, but software check finds some problem,
    FileVersionTooSmall = -101,  // Firmware File version is less than the HW's firmware version.
    ModuleTypeNotMatch  = -102,  // The target module type of firmware file does not match with the current one.
 
@@ -261,6 +261,19 @@ typedef enum FilterType {
    FilterUnknown = 0xffffffff,
 } FilterType;
 
+//##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+// Buffered AI Down-Sampling
+//##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+typedef enum DownsamplingMethod {
+   Average     = 0,
+   RangeMinMax,
+   RMS,
+
+   /*----------------------------------------------------------------------*/
+   /*Dummy ID, to ensure the type is compiled as 'int' by various compiler */
+   UnkonwnDownsamplingMethod = 0xFFFFFFFF,
+} DownsamplingMethod;
+
 typedef enum DioPortType {
    PortDi = 0,        /*the port number references to a DI port*/
    PortDo,            /*the port number references to a DO port*/
@@ -348,7 +361,8 @@ typedef enum ValueUnit {
    Milliampere,   /* mA */
    Microampere,   /* uA */
    CelsiusUnit,   /* Celsius */
-
+   Kilogram,      /* Kg */
+   Strain,
    /*----------------------------------------------------------------------*/
    /*Dummy ID, to ensure the type is compiled as 'int' by various compiler */
    UnitUnknown = 0xffffffff,
@@ -400,6 +414,8 @@ typedef enum ValueRange {
    V_Neg2To2,              /* +/- 2 V */
    V_Neg4To4,              /* +/- 4 V */
    V_Neg20To20,            /* +/- 20 V */
+
+   V_InternalRef_2pt5,
 
    Jtype_0To760C = 0x8000, /* T/C J type 0~760 'C */
    Ktype_0To1370C,         /* T/C K type 0~1370 'C */
@@ -458,14 +474,14 @@ typedef enum ValueRange {
    Pt100_0To400,				/* Pt100 0~400 'C */
    Btype_300To1820C,       /* T/C B type 300~1820 'C */
 
-   V_Neg12pt5To12pt5, 
+   V_Neg12pt5To12pt5,
    V_Neg6To6,              /* +/- 6 V */
    V_Neg3To3,              /* +/- 3 V */
    V_Neg1pt5To1pt5,        /* +/- 1.5 V */
    mV_Neg750To750,         /* +/- 750 mV */
    mV_Neg375To375,         /* +/- 375 mV */
    mV_Neg187pt5To187pt5,   /* +/- 187.5 mV */
-   
+
    Pt100_385_3Wire,        /* Pt100     Mode:3 Wire     Type:0.385    */
    Pt100_385_24Wire,       /* Pt100     Mode:2/4 Wire   Type:0.385    */
    Pt100_392_3Wire,        /* Pt100     Mode:3 Wire     Type:0.392    */
@@ -476,8 +492,12 @@ typedef enum ValueRange {
    NiFe604_518_24Wire,     /* NiFe604   Mode:2/4 Wire   Type:0.518    */
    Balco500_518_3Wire,     /* Balco500  Mode:3 Wire     Type:0.518    */
    Balco500_518_24Wire,    /* Balco500  Mode:2/4 Wire   Type:0.518    */
+
    V_Neg12To12,            /* +/- 12 V */
 
+   Ntype_Neg270To1300C,    /* T/C N type -270~1300 'C, Voltage Range: -4.345mV~47.513mV */
+   Rtype_200To1300C,       /* T/C R type 200~1300 'C */
+   Ntype_Neg200To1300C,    /* T/C N type -200~1300 'C */
 
    /* 0xC000 ~ 0xF000 : user customized value range type */
    UserCustomizedVrgStart = 0xC000,
@@ -516,7 +536,7 @@ typedef enum CountingType {
    CountingUnknown = 0xffffffff,
 } CountingType;
 /*for compatible*/
-typedef CountingType SignalCountingType; 
+typedef CountingType SignalCountingType;
 
 typedef enum OutSignalType{
    SignalOutNone = 0,  /* no output or output is 'disabled' */
@@ -697,13 +717,13 @@ typedef enum SignalDrop {
 
    /*Signal source or target on the connector*/
    /*AI channel pins*/
-   SigAi0,  SigAi1,  SigAi2,  SigAi3,  SigAi4,  SigAi5,  SigAi6,  SigAi7, 
+   SigAi0,  SigAi1,  SigAi2,  SigAi3,  SigAi4,  SigAi5,  SigAi6,  SigAi7,
    SigAi8,  SigAi9,  SigAi10, SigAi11, SigAi12, SigAi13, SigAi14, SigAi15,
    SigAi16, SigAi17, SigAi18, SigAi19, SigAi20, SigAi21, SigAi22, SigAi23,
-   SigAi24, SigAi25, SigAi26, SigAi27, SigAi28, SigAi29, SigAi30, SigAi31, 
+   SigAi24, SigAi25, SigAi26, SigAi27, SigAi28, SigAi29, SigAi30, SigAi31,
    SigAi32, SigAi33, SigAi34, SigAi35, SigAi36, SigAi37, SigAi38, SigAi39,
    SigAi40, SigAi41, SigAi42, SigAi43, SigAi44, SigAi45, SigAi46, SigAi47,
-   SigAi48, SigAi49, SigAi50, SigAi51, SigAi52, SigAi53, SigAi54, SigAi55, 
+   SigAi48, SigAi49, SigAi50, SigAi51, SigAi52, SigAi53, SigAi54, SigAi55,
    SigAi56, SigAi57, SigAi58, SigAi59, SigAi60, SigAi61, SigAi62, SigAi63,
 
    /*AO channel pins*/
@@ -843,10 +863,10 @@ typedef enum SignalDrop {
    SigInternal16384KHz,       /* Device built-in clock, 16.384MHz */
 
    /*signals for fusion device*/
-   SigSyncJunction,          
+   SigSyncJunction,
    SigConvClkJunction,
    SigClkDivJunction,
-   SigTrgStrJunction, 
+   SigTrgStrJunction,
    SigTrgStpJunction,
    SigAcqStaJunction,
 
@@ -870,6 +890,9 @@ typedef enum SignalDrop {
 
    SigClkGen0, SigClkGen1, SigClkGen2, SigClkGen3,
 
+   /*Buffered Counter Sample Clock pins*/
+   SigCntSClk0, SigCntSClk1, SigCntSClk2, SigCntSClk3, SigCntSClk4, SigCntSClk5, SigCntSClk6, SigCntSClk7,
+
    /*----------------------------------------------------------------------*/
    /*Dummy ID, to ensure the type is compiled as 'int' by various compiler */
    SigDropUnknown = 0xffffffff,
@@ -885,7 +908,7 @@ typedef enum EventId {
    /*-----------------------------------------------------------------
    * AI events
    *-----------------------------------------------------------------*/
-   EvtBufferedAiDataReady, 
+   EvtBufferedAiDataReady,
    EvtBufferedAiOverrun,
    EvtBufferedAiCacheOverflow,
    EvtBufferedAiStopped,
@@ -900,9 +923,9 @@ typedef enum EventId {
    EvtBufferedAoStopped,
 
    /*-----------------------------------------------------------------
-   * DIO event IDs 
+   * DIO event IDs
    *-----------------------------------------------------------------*/
-   EvtDiInterrupt,     EvtDiintChannel000 = EvtDiInterrupt, 
+   EvtDiInterrupt,     EvtDiintChannel000 = EvtDiInterrupt,
                        EvtDiintChannel001, EvtDiintChannel002, EvtDiintChannel003,
    EvtDiintChannel004, EvtDiintChannel005, EvtDiintChannel006, EvtDiintChannel007,
    EvtDiintChannel008, EvtDiintChannel009, EvtDiintChannel010, EvtDiintChannel011,
@@ -968,7 +991,7 @@ typedef enum EventId {
    EvtDiintChannel248, EvtDiintChannel249, EvtDiintChannel250, EvtDiintChannel251,
    EvtDiintChannel252, EvtDiintChannel253, EvtDiintChannel254, EvtDiintChannel255,
 
-   EvtDiStatusChange,  EvtDiCosintPort000 = EvtDiStatusChange, 
+   EvtDiStatusChange,  EvtDiCosintPort000 = EvtDiStatusChange,
                        EvtDiCosintPort001, EvtDiCosintPort002, EvtDiCosintPort003,
    EvtDiCosintPort004, EvtDiCosintPort005, EvtDiCosintPort006, EvtDiCosintPort007,
    EvtDiCosintPort008, EvtDiCosintPort009, EvtDiCosintPort010, EvtDiCosintPort011,
@@ -978,7 +1001,7 @@ typedef enum EventId {
    EvtDiCosintPort024, EvtDiCosintPort025, EvtDiCosintPort026, EvtDiCosintPort027,
    EvtDiCosintPort028, EvtDiCosintPort029, EvtDiCosintPort030, EvtDiCosintPort031,
 
-   EvtDiPatternMatch,  EvtDiPmintPort000 = EvtDiPatternMatch,  
+   EvtDiPatternMatch,  EvtDiPmintPort000 = EvtDiPatternMatch,
                        EvtDiPmintPort001,  EvtDiPmintPort002,  EvtDiPmintPort003,
    EvtDiPmintPort004,  EvtDiPmintPort005,  EvtDiPmintPort006,  EvtDiPmintPort007,
    EvtDiPmintPort008,  EvtDiPmintPort009,  EvtDiPmintPort010,  EvtDiPmintPort011,
@@ -1048,63 +1071,65 @@ typedef enum EventId {
    /*##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx*/
    /*v1.2: new event of Buffered Counter             */
    /*##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx*/
-   EvtCiDataReady,  EvtCiDataReady0 = EvtCiDataReady, EvtCiDataReady1, EvtCiDataReady2, 
+   EvtCiDataReady,  EvtCiDataReady0 = EvtCiDataReady, EvtCiDataReady1, EvtCiDataReady2,
    EvtCiDataReady3, EvtCiDataReady4, EvtCiDataReady5, EvtCiDataReady6, EvtCiDataReady7,
 
    EvtCiOverrun,  EvtCiOverrun0 = EvtCiOverrun, EvtCiOverrun1, EvtCiOverrun2,
    EvtCiOverrun3, EvtCiOverrun4, EvtCiOverrun5, EvtCiOverrun6, EvtCiOverrun7,
 
-   EvtCiCacheOverflow,  EvtCiCacheOverflow0 = EvtCiCacheOverflow, EvtCiCacheOverflow1, EvtCiCacheOverflow2, 
+   EvtCiCacheOverflow,  EvtCiCacheOverflow0 = EvtCiCacheOverflow, EvtCiCacheOverflow1, EvtCiCacheOverflow2,
    EvtCiCacheOverflow3, EvtCiCacheOverflow4, EvtCiCacheOverflow5, EvtCiCacheOverflow6, EvtCiCacheOverflow7,
 
-   EvtCoDataTransmitted,  EvtCoDataTransmitted0 = EvtCoDataTransmitted, EvtCoDataTransmitted1, EvtCoDataTransmitted2, 
+   EvtCoDataTransmitted,  EvtCoDataTransmitted0 = EvtCoDataTransmitted, EvtCoDataTransmitted1, EvtCoDataTransmitted2,
    EvtCoDataTransmitted3, EvtCoDataTransmitted4, EvtCoDataTransmitted5, EvtCoDataTransmitted6, EvtCoDataTransmitted7,
 
-   EvtCoUnderrun,  EvtCoUnderrun0 = EvtCoUnderrun, EvtCoUnderrun1, EvtCoUnderrun2, 
+   EvtCoUnderrun,  EvtCoUnderrun0 = EvtCoUnderrun, EvtCoUnderrun1, EvtCoUnderrun2,
    EvtCoUnderrun3, EvtCoUnderrun4, EvtCoUnderrun5, EvtCoUnderrun6, EvtCoUnderrun7,
 
-   EvtCoCacheEmptied,  EvtCoCacheEmptied0 = EvtCoCacheEmptied, EvtCoCacheEmptied1, EvtCoCacheEmptied2, 
+   EvtCoCacheEmptied,  EvtCoCacheEmptied0 = EvtCoCacheEmptied, EvtCoCacheEmptied1, EvtCoCacheEmptied2,
    EvtCoCacheEmptied3, EvtCoCacheEmptied4, EvtCoCacheEmptied5, EvtCoCacheEmptied6, EvtCoCacheEmptied7,
 
-   EvtCoTransStopped,  EvtCoTransStopped0 = EvtCoTransStopped, EvtCoTransStopped1, EvtCoTransStopped2, 
+   EvtCoTransStopped,  EvtCoTransStopped0 = EvtCoTransStopped, EvtCoTransStopped1, EvtCoTransStopped2,
    EvtCoTransStopped3, EvtCoTransStopped4, EvtCoTransStopped5, EvtCoTransStopped6, EvtCoTransStopped7,
 
-   EvtCntrStopped,  EvtCntrStopped0 = EvtCntrStopped, EvtCntrStopped1, EvtCntrStopped2, 
+   EvtCntrStopped,  EvtCntrStopped0 = EvtCntrStopped, EvtCntrStopped1, EvtCntrStopped2,
    EvtCntrStopped3, EvtCntrStopped4, EvtCntrStopped5, EvtCntrStopped6, EvtCntrStopped7,
 
+   EvtCntrLatched0, EvtCntrLatched1, EvtCntrLatched2, EvtCntrLatched3,
+   EvtCntrLatched4, EvtCntrLatched5, EvtCntrLatched6, EvtCntrLatched7,
    /*----------------------------------------------------------------------*/
    /*Dummy ID, to ensure the type is compiled as 'int' by various compiler */
    EventUnknown = 0xffffffff,
 } EventId ;
 
-#define BioFailed(c)  ((unsigned)(c) >= (unsigned)0xC0000000)   
+#define BioFailed(c)  ((unsigned)(c) >= (unsigned)0xC0000000)
 
 typedef enum ErrorCode {
    /// <summary>
-   /// The operation is completed successfully. 
+   /// The operation is completed successfully.
    /// </summary>
-   Success = 0, 
+   Success = 0,
 
    ///************************************************************************
-   /// warning                                                              
+   /// warning
    ///************************************************************************
    /// <summary>
-   /// The interrupt resource is not available. 
+   /// The interrupt resource is not available.
    /// </summary>
    WarningIntrNotAvailable = 0xA0000000,
 
    /// <summary>
-   /// The parameter is out of the range. 
+   /// The parameter is out of the range.
    /// </summary>
    WarningParamOutOfRange = 0xA0000001,
 
    /// <summary>
-   /// The property value is out of range. 
+   /// The property value is out of range.
    /// </summary>
    WarningPropValueOutOfRange = 0xA0000002,
 
    /// <summary>
-   /// The property value is not supported. 
+   /// The property value is not supported.
    /// </summary>
    WarningPropValueNotSpted = 0xA0000003,
 
@@ -1114,50 +1139,50 @@ typedef enum ErrorCode {
    WarningPropValueConflict = 0xA0000004,
 
    /// <summary>
-   /// The value range of all channels in a group should be same, 
+   /// The value range of all channels in a group should be same,
    /// such as 4~20mA of PCI-1724.
    /// </summary>
    WarningVrgOfGroupNotSame = 0xA0000005,
 
    /// <summary>
    /// Some properties of a property set are failed to be written into device.
-   /// 
+   ///
    /// </summary>
    WarningPropPartialFailed = 0xA0000006,
 
    /// <summary>
    /// The operation had been stopped.
-   /// 
+   ///
    /// </summary>
    WarningFuncStopped = 0xA0000007,
 
    /// <summary>
    /// The operation is time-out.
-   /// 
+   ///
    /// </summary>
    WarningFuncTimeout = 0xA0000008,
 
    /// <summary>
    /// The cache is over-run.
-   /// 
+   ///
    /// </summary>
    WarningCacheOverflow = 0xA0000009,
 
    /// <summary>
    /// The channel is burn-out.
-   /// 
+   ///
    /// </summary>
    WarningBurnout = 0xA000000A,
 
    /// <summary>
    /// The current data record is end.
-   /// 
+   ///
    /// </summary>
    WarningRecordEnd = 0xA000000B,
 
    /// <summary>
-   /// The specified profile is not valid. 
-   /// 
+   /// The specified profile is not valid.
+   ///
    /// </summary>
    WarningProfileNotValid = 0xA000000C,
 
@@ -1169,10 +1194,10 @@ typedef enum ErrorCode {
 
 
    ///***********************************************************************
-   /// error                                                                
+   /// error
    ///***********************************************************************
    /// <summary>
-   /// The handle is NULL or its type doesn't match the required operation. 
+   /// The handle is NULL or its type doesn't match the required operation.
    /// </summary>
    ErrorHandleNotValid = 0xE0000000,
 
@@ -1187,47 +1212,47 @@ typedef enum ErrorCode {
    ErrorParamNotSpted = 0xE0000002,
 
    /// <summary>
-   /// The parameter value format is not the expected. 
+   /// The parameter value format is not the expected.
    /// </summary>
    ErrorParamFmtUnexpted = 0xE0000003,
 
    /// <summary>
-   /// Not enough memory is available to complete the operation. 
+   /// Not enough memory is available to complete the operation.
    /// </summary>
    ErrorMemoryNotEnough = 0xE0000004,
 
    /// <summary>
-   /// The data buffer is null. 
+   /// The data buffer is null.
    /// </summary>
    ErrorBufferIsNull = 0xE0000005,
 
    /// <summary>
-   /// The data buffer is too small for the operation. 
+   /// The data buffer is too small for the operation.
    /// </summary>
    ErrorBufferTooSmall = 0xE0000006,
 
    /// <summary>
-   /// The data length exceeded the limitation. 
+   /// The data length exceeded the limitation.
    /// </summary>
    ErrorDataLenExceedLimit = 0xE0000007,
 
    /// <summary>
-   /// The required function is not supported. 
+   /// The required function is not supported.
    /// </summary>
    ErrorFuncNotSpted = 0xE0000008,
 
    /// <summary>
-   /// The required event is not supported. 
+   /// The required event is not supported.
    /// </summary>
    ErrorEventNotSpted = 0xE0000009,
 
    /// <summary>
-   /// The required property is not supported. 
+   /// The required property is not supported.
    /// </summary>
-   ErrorPropNotSpted = 0xE000000A, 
+   ErrorPropNotSpted = 0xE000000A,
 
    /// <summary>
-   /// The required property is read-only. 
+   /// The required property is read-only.
    /// </summary>
    ErrorPropReadOnly = 0xE000000B,
 
@@ -1242,77 +1267,77 @@ typedef enum ErrorCode {
    ErrorPropValueOutOfRange = 0xE000000D,
 
    /// <summary>
-   /// The specified property value is not supported. 
+   /// The specified property value is not supported.
    /// </summary>
    ErrorPropValueNotSpted = 0xE000000E,
 
    /// <summary>
-   /// The handle hasn't own the privilege of the operation the user wanted. 
+   /// The handle hasn't own the privilege of the operation the user wanted.
    /// </summary>
    ErrorPrivilegeNotHeld = 0xE000000F,
 
    /// <summary>
-   /// The required privilege is not available because someone else had own it. 
+   /// The required privilege is not available because someone else had own it.
    /// </summary>
    ErrorPrivilegeNotAvailable = 0xE0000010,
 
    /// <summary>
-   /// The driver of specified device was not found. 
+   /// The driver of specified device was not found.
    /// </summary>
    ErrorDriverNotFound = 0xE0000011,
 
    /// <summary>
-   /// The driver version of the specified device mismatched. 
+   /// The driver version of the specified device mismatched.
    /// </summary>
    ErrorDriverVerMismatch = 0xE0000012,
 
    /// <summary>
-   /// The loaded driver count exceeded the limitation. 
+   /// The loaded driver count exceeded the limitation.
    /// </summary>
    ErrorDriverCountExceedLimit = 0xE0000013,
 
    /// <summary>
-   /// The device is not opened. 
+   /// The device is not opened.
    /// </summary>
-   ErrorDeviceNotOpened = 0xE0000014,      
+   ErrorDeviceNotOpened = 0xE0000014,
 
    /// <summary>
-   /// The required device does not exist. 
+   /// The required device does not exist.
    /// </summary>
    ErrorDeviceNotExist = 0xE0000015,
 
    /// <summary>
-   /// The required device is unrecognized by driver. 
+   /// The required device is unrecognized by driver.
    /// </summary>
    ErrorDeviceUnrecognized = 0xE0000016,
 
    /// <summary>
-   /// The configuration data of the specified device is lost or unavailable. 
+   /// The configuration data of the specified device is lost or unavailable.
    /// </summary>
    ErrorConfigDataLost = 0xE0000017,
 
    /// <summary>
-   /// The function is not initialized and can't be started. 
+   /// The function is not initialized and can't be started.
    /// </summary>
    ErrorFuncNotInited = 0xE0000018,
 
    /// <summary>
-   /// The function is busy. 
+   /// The function is busy.
    /// </summary>
    ErrorFuncBusy = 0xE0000019,
 
    /// <summary>
-   /// The interrupt resource is not available. 
+   /// The interrupt resource is not available.
    /// </summary>
    ErrorIntrNotAvailable = 0xE000001A,
 
    /// <summary>
-   /// The DMA channel is not available. 
+   /// The DMA channel is not available.
    /// </summary>
    ErrorDmaNotAvailable = 0xE000001B,
 
    /// <summary>
-   /// Time out when reading/writing the device. 
+   /// Time out when reading/writing the device.
    /// </summary>
    ErrorDeviceIoTimeOut = 0xE000001C,
 
@@ -1360,7 +1385,7 @@ typedef enum ErrorCode {
    /// The Trigger source conflicted with other trigger configuration
    /// </summary>
    ErrorTrigSrcConflict = 0xE0000025,
-	
+
    /// <summary>
    /// All properties of a property set are failed to be written into device.
    /// </summary>
@@ -1378,12 +1403,12 @@ typedef enum ErrorCode {
    ErrorNotCompatible   =  0xE0000029,
 
    /// <summary>
-   /// Undefined error 
+   /// Undefined error
    /// </summary>
    ErrorUndefined = 0xE000FFFF,
 } ErrorCode;
 
-// Advantech CardType ID 
+// Advantech CardType ID
 typedef enum ProductId {
    BD_DEMO   = 0x00,       // demo board
    BD_PCL818 = 0x05,       // PCL-818 board
@@ -1400,7 +1425,7 @@ typedef enum ProductId {
    BD_PCI1712 = 0x61,      // PCI-1712
    BD_PCI1710HG = 0x67,    // PCI-1710HG
    BD_PCI1711 = 0x73,      // PCI-1711
-   BD_PCI1711L = 0x75,     // PCI-1711L 
+   BD_PCI1711L = 0x75,     // PCI-1711L
    BD_PCI1713 = 0x68,      // PCI-1713
    BD_PCI1753 = 0x69,      // PCI-1753
    BD_PCI1760 = 0x6a,      // PCI-1760
@@ -1437,7 +1462,7 @@ typedef enum ProductId {
    BD_PCI1758UDI = 0xA3,   // PCI-1758UDI
    BD_PCI1758UDO = 0xA4,   // PCI-1758UDO
    BD_PCI1747 = 0xA5,      // PCI-1747
-   BD_PCM3780 = 0xA6,      // PCM-3780 
+   BD_PCM3780 = 0xA6,      // PCM-3780
    BD_MIC3747 = 0xA7,      // MIC-3747
    BD_PCI1758UDIO = 0xA8,  // PCI-1758UDIO
    BD_PCI1712L = 0xA9,     // PCI-1712L
@@ -1447,7 +1472,7 @@ typedef enum ProductId {
    BD_MIC3714 = 0xAF,      // MIC-3714
    BD_PCM3718HO = 0xB1,    // PCM-3718HO
    BD_PCI1741U = 0xB3,     // PCI-1741U
-   BD_MIC3723 = 0xB4,      // MIC-3723 
+   BD_MIC3723 = 0xB4,      // MIC-3723
    BD_PCI1718HDU = 0xB5,   // PCI-1718HDU
    BD_MIC3758DIO = 0xB6,   // MIC-3758DIO
    BD_PCI1727U = 0xB7,     // PCI-1727U
@@ -1485,7 +1510,7 @@ typedef enum ProductId {
    BD_USB4702  = 0xEA,     // USB4702
    BD_USB4704  = 0xEB,     // USB4704
    BD_PCM3810I_HG = 0xEC,  // PCM-3810I_HG
-   BD_PCI1713U = 0xED,     // PCI-1713U 
+   BD_PCI1713U = 0xED,     // PCI-1713U
 
    // !!!BioDAQ only Product ID starts from here!!!
    BD_PCI1706U   = 0x800,
@@ -1544,13 +1569,13 @@ typedef enum ProductId {
 
    //
    BD_USB5817     = 0x835,
-   BD_USB5801     = 0x836, 
-   BD_PCM2731     = 0x837, 
-   BD_MOS1110     = 0x838, 
+   BD_USB5801     = 0x836,
+   BD_PCM2731     = 0x837,
+   BD_MOS1110     = 0x838,
    BD_PCIE1750UH  = 0x839,
    BD_PCIE1750U   = 0x83A,
    BD_USB5820     = 0x83B,
-   
+
    //
    BD_THK1710R    = 0x83C,
    BD_PCIE1803    = 0x83D,
@@ -1558,7 +1583,7 @@ typedef enum ProductId {
    BD_PCIE1805    = 0x83F,
 
    //
-   BD_MIOE1747    = 0x840, 
+   BD_MIOE1747    = 0x840,
    BD_ECUP1710    = 0x841,
    BD_PCIE1824L   = 0x842,
 
@@ -1583,7 +1608,7 @@ typedef enum ProductId {
 
    //
    BD_EAPIGPIO   = 0x84C,
-   
+
    // iDAQ series
    BD_IDAQ841    = 0x84D,
    BD_IDAQ801    = 0x84E,
@@ -1633,6 +1658,16 @@ typedef enum ProductId {
    BD_PCIE1753B  = 0x86C,
 
    BD_IDAQ871    = 0x86D,
+   BD_IDAQ784    = 0x86E,
+
+   BD_THK1710RB  = 0x86F,
+   BD_IDAQ873    = 0x870,
+   BD_IDAQ868    = 0x871,
+
+   BD_PCI1716B1  = 0x872,
+   BD_PCI1716LB1 = 0x873,
+
+   BD_PCI1780B   = 0x874,
 
    // WISE-5000 starts from here
    BD_WISE5051   = 0x901,
@@ -1667,15 +1702,17 @@ typedef enum ProductId {
    BD_AMAX5057SO = 0x91D,
    BD_AMAX5017C  = 0x91E,
    BD_AMAX5017V  = 0x91F,
-   BD_AMAX5079   = 0x920,   
-   BD_AMAX5017H  = 0x921, 
+   BD_AMAX5079   = 0x920,
+   BD_AMAX5017H  = 0x921,
    BD_AMAX5082   = 0x923,
    BD_AMAX5060   = 0x924,
+   BD_AMAXGROUP  = 0x925,
+   BD_AMAX5081   = 0x926,
 
 } ProductId;
 
 typedef struct MathInterval {
-   int32  Type; 
+   int32  Type;
    double Min;
    double Max;
 } MathInterval, * PMathInterval;
@@ -1702,7 +1739,7 @@ typedef struct CalibrationData {
 
 /*Absolute counter related definitions*/
 typedef enum Baudrate {
-   Baudrate2000KHz = 2000000,  //2MHz 
+   Baudrate2000KHz = 2000000,  //2MHz
    Baudrate1500KHz = 1500000,  //1.5MHz
    Baudrate1000KHz = 1000000,  //1MHz
    Baudrate500KHz  =  500000,  //500KHz
@@ -1789,7 +1826,7 @@ typedef struct DeviceInformation{
    int32      DeviceNumber;
    AccessMode DeviceMode;
    int32      ModuleIndex;
-   wchar_t    Description[MAX_DEVICE_DESC_LEN]; 
+   wchar_t    Description[MAX_DEVICE_DESC_LEN];
 
 #if defined(__cplusplus)
    explicit DeviceInformation(int32 deviceNumber = -1, AccessMode mode = ModeWrite, int32 moduleIndex = 0)
@@ -1822,7 +1859,7 @@ typedef struct DeviceTreeNode {
 
 typedef struct DeviceEventArgs {
    EventId Id;
-} DeviceEventArgs; 
+} DeviceEventArgs;
 
 typedef struct BfdAiEventArgs {
    EventId Id;
@@ -1864,15 +1901,13 @@ typedef struct CntrEventArgs {
 
 typedef struct UdCntrEventArgs {
    EventId Id;
+   int32   Length;
 
    union {
-      struct {
-         int32   Length;
-         int32   Data[MAX_CNTR_CH_COUNT];
-      };
+      int32   Data[MAX_CNTR_CH_COUNT];
 
       struct {
-         uint32  MatchedCount;
+         int32   MatchedCount;
          int32   MatchedValue;
       };
    };
@@ -1987,7 +2022,7 @@ class Record;
 class NosFltChannel;
 class DeviceCtrl;
 class DaqCtrlBase;
-              
+
 class CjcSetting;
 class AiChannel;
 class AiFeatures;
@@ -1995,13 +2030,13 @@ class AiCtrlBase;
 class InstantAiCtrl;
 class BufferedAiCtrl;
 class WaveformAiCtrl;
-                              
+
 class AoChannel;
 class AoFeatures;
 class AoCtrlBase;
 class InstantAoCtrl;
 class BufferedAoCtrl;
-                              
+
 class DioPort;
 class ScanPort;
 class DiintChannel;
@@ -2013,7 +2048,7 @@ class InstantDiCtrl;
 class InstantDoCtrl;
 class BufferedDiCtrl;
 class BufferedDoCtrl;
-                              
+
 class CntrFeatures;
 class CntrCtrlBase;
 class EcChannel;
@@ -2078,8 +2113,8 @@ typedef void (BDAQCALL * BfdDoEventProc )(void  *sender, BfdDoEventArgs  *args, 
    BDAQINL HMODULE DNL_Instance()
    {
       static HMODULE instance = NULL;
-      if (instance == NULL) { 
-         instance = LoadLibrary(TEXT("biodaq.dll")); 
+      if (instance == NULL) {
+         instance = LoadLibrary(TEXT("biodaq.dll"));
       }
       return instance;
    }
@@ -2147,68 +2182,68 @@ typedef void (BDAQCALL * BfdDoEventProc )(void  *sender, BfdDoEventArgs  *args, 
 /* ----------------------------------------------------------*/
 BDAQINL ErrorCode AdxGetValueRangeInformation(ValueRange vrg, int32 sizeofDesc, wchar_t *description, MathInterval *range, ValueUnit *unit)
 {
-   DNL_Initialize(); 
+   DNL_Initialize();
    return DAQFN_GBL_ETTTTT(DNLAPI_GBL, 0, ValueRange, int32, wchar_t *, MathInterval *, ValueUnit *)(vrg, sizeofDesc, description, range, unit);
 }
 BDAQINL ErrorCode AdxGetSignalConnectionInformation(SignalDrop signalType, int32 sizeofDesc, wchar_t *description, SignalPosition *position)
 {
-   DNL_Initialize(); 
+   DNL_Initialize();
    return DAQFN_GBL_ETTTT(DNLAPI_GBL, 1, SignalDrop, int32, wchar_t *, SignalPosition *)(signalType, sizeofDesc, description, position);
 }
 BDAQINL double AdxTranslateTemperatureScale(TemperatureDegree degreeType, double degreeCelsius )
 {
-   DNL_Initialize(); 
+   DNL_Initialize();
    return DAQFN_GBL_TTT(DNLAPI_GBL, 2, double, TemperatureDegree, double)(degreeType, degreeCelsius);
 }
 BDAQINL ErrorCode AdxEnumToString(wchar_t const *enumName, int32 enumValue, int32 strLength, wchar_t *strBuffer)
 {
-   DNL_Initialize(); 
+   DNL_Initialize();
    return DAQFN_GBL_ETTTT(DNLAPI_GBL, 3, wchar_t const *, int32, int32, wchar_t *)(enumName, enumValue, strLength, strBuffer);
 }
 
 BDAQINL ErrorCode AdxStringToEnum(wchar_t const *enumName, wchar_t const *enumString, int32 *enumValue)
 {
-   DNL_Initialize(); 
+   DNL_Initialize();
    return DAQFN_GBL_ETTT(DNLAPI_GBL, 4, wchar_t const *, wchar_t const *, int32 *)(enumName, enumString, enumValue);
 }
 BDAQINL ErrorCode AdxDeviceGetLinkageInfo(int32 parent, int32 index, int32 *devNumber, wchar_t *description, int32 *subCount)
 {
-   DNL_Initialize(); 
+   DNL_Initialize();
    return DAQFN_GBL_ETTTTT(DNLAPI_GBL, 5, int32, int32, int32 *, wchar_t *, int32 *)(parent, index, devNumber, description, subCount);
 }
 BDAQINL ErrorCode AdxEventClearFlag(HANDLE handle, int32 id, int32 flagLParam, int32 flagRParam)
-{  
+{
    return DAQFN_GBL_ETTTT(DNLAPI_GBL, 6, HANDLE, int32, int32, int32)(handle, id, flagLParam, flagRParam);
 }
 
 BDAQINL ErrorCode AdxFusionDeviceCreate(int32 count, int32 children[], int32 *fusionNumber)
-{  
-   DNL_Initialize(); 
+{
+   DNL_Initialize();
    return DAQFN_GBL_ETTT(DNLAPI_GBL, 9, int32, int32 *, int32 *)(count, children, fusionNumber);
 }
 BDAQINL ErrorCode AdxFusionDeviceAddChildren(int32 fusionNumber, int32 count, int32 children[])
-{  
-   DNL_Initialize(); 
+{
+   DNL_Initialize();
    return DAQFN_GBL_ETTT(DNLAPI_GBL, 10, int32, int32, int32 *)(fusionNumber, count, children);
 }
 BDAQINL ErrorCode AdxFusionDeviceDeleteChildren(int32 fusionNumber, int32 count, int32 children[])
-{  
-   DNL_Initialize(); 
+{
+   DNL_Initialize();
    return DAQFN_GBL_ETTT(DNLAPI_GBL, 11, int32, int32, int32 *)(fusionNumber, count, children);
 }
 BDAQINL ErrorCode AdxFusionDeviceGetChildren(int32 fusionNumber, int32 *count, int32 children[])
-{  
-   DNL_Initialize(); 
+{
+   DNL_Initialize();
    return DAQFN_GBL_ETTT(DNLAPI_GBL, 12, int32, int32 *, int32 *)(fusionNumber, count, children);
 }
 BDAQINL ErrorCode AdxDeviceFusionableCheck(int32 fusionNumber, int32 count, int32 children[])
-{  
-   DNL_Initialize(); 
+{
+   DNL_Initialize();
    return DAQFN_GBL_ETTT(DNLAPI_GBL, 13, int32, int32, int32 *)(fusionNumber, count, children);
 }
 BDAQINL ErrorCode AdxIsFusionDevice(int32 fusionNumber)
-{  
-   DNL_Initialize(); 
+{
+   DNL_Initialize();
    return DAQFN_GBL_ET(DNLAPI_GBL, 14, int32)(fusionNumber);
 }
 
@@ -2239,9 +2274,9 @@ BDAQINL ErrorCode         ConvertClock_setSource(ConvertClock *obj, SignalDrop v
 BDAQINL double            ConvertClock_getRate(ConvertClock *obj)                                                                        { return DAQFN_TV(DNLAPI_BASE, 13, double)(obj);           }
 BDAQINL ErrorCode         ConvertClock_setRate(ConvertClock *obj, double value)                                                          { return DAQFN_ET(DNLAPI_BASE, 14, double)(obj, value);    }
 
-/* ----------------------------------------------------------*/                                                                              
-/*common classes : ScanClock                                 */                                                                              
-/* ----------------------------------------------------------*/                                                                              
+/* ----------------------------------------------------------*/
+/*common classes : ScanClock                                 */
+/* ----------------------------------------------------------*/
 BDAQINL SignalDrop        ScanClock_getSource(ScanClock *obj)                                                                            { return DAQFN_TV(DNLAPI_BASE, 15, SignalDrop)(obj);        }
 BDAQINL ErrorCode         ScanClock_setSource(ScanClock *obj, SignalDrop value)                                                          { return DAQFN_ET(DNLAPI_BASE, 16, SignalDrop)(obj, value); }
 BDAQINL double            ScanClock_getRate(ScanClock *obj)                                                                              { return DAQFN_TV(DNLAPI_BASE, 17, double)(obj);            }
@@ -2292,7 +2327,7 @@ BDAQINL int32             Record_getSectionCount(Record *obj)                   
 BDAQINL ErrorCode         Record_setSectionCount(Record *obj, int32 value)                                                               { return DAQFN_ET(DNLAPI_BASE, 46, int32)(obj, value); }
 BDAQINL int32             Record_getCycles(Record *obj)                                                                                  { return DAQFN_TV(DNLAPI_BASE, 47, int32)(obj);        }
 BDAQINL ErrorCode         Record_setCycles(Record *obj, int32 value)                                                                     { return DAQFN_ET(DNLAPI_BASE, 48, int32)(obj, value); }
-                                                                                                                                
+
 /* ----------------------------------------------------------*/
 /* common classes : NosFltChannel                            */
 /* ----------------------------------------------------------*/
@@ -2304,20 +2339,20 @@ BDAQINL ErrorCode         NosFltChannel_setEnabled(NosFltChannel *obj, int8 valu
 /* ctrl class : device ctrl class                            */
 /* ----------------------------------------------------------*/
 /* Event */
-BDAQINL void              DeviceCtrl_addEventHandler(DeviceCtrl *obj, EventId id, DeviceEventProc proc, void *userParam)                 { DAQFN_VTTT(DNLAPI_BASE, 52, EventId, DeviceEventProc, void *)(obj, id, proc, userParam);} 
+BDAQINL void              DeviceCtrl_addEventHandler(DeviceCtrl *obj, EventId id, DeviceEventProc proc, void *userParam)                 { DAQFN_VTTT(DNLAPI_BASE, 52, EventId, DeviceEventProc, void *)(obj, id, proc, userParam);}
 BDAQINL void              DeviceCtrl_removeEventHandler(DeviceCtrl *obj, EventId id, DeviceEventProc proc, void *userParam)              { DAQFN_VTTT(DNLAPI_BASE, 53, EventId, DeviceEventProc, void *)(obj, id, proc, userParam);}
-/* Method */                                                                                                                                 
+/* Method */
 BDAQINL ErrorCode         DeviceCtrl_Refresh(DeviceCtrl *obj)                                                                            { return DAQFN_EV(DNLAPI_BASE, 54)(obj); }
 BDAQINL ErrorCode         DeviceCtrl_ReadRegister(DeviceCtrl *obj, int32 space, int32 offset, int32 length, void *data)                  { return DAQFN_ETTTT(DNLAPI_BASE, 55, int32, int32, int32, void *)(obj, space, offset, length, data); }
 BDAQINL ErrorCode         DeviceCtrl_WriteRegister(DeviceCtrl *obj, int32 space, int32 offset, int32 length, void *data)                 { return DAQFN_ETTTT(DNLAPI_BASE, 56, int32, int32, int32, void *)(obj, space, offset, length, data); }
-BDAQINL ErrorCode         DeviceCtrl_ReadPrivateRegion(DeviceCtrl *obj, int32 signature, int32 length, uint8 *data)                      { return DAQFN_ETTT(DNLAPI_BASE, 57, int32, int32, uint8*)(obj, signature, length, data);    } 
+BDAQINL ErrorCode         DeviceCtrl_ReadPrivateRegion(DeviceCtrl *obj, int32 signature, int32 length, uint8 *data)                      { return DAQFN_ETTT(DNLAPI_BASE, 57, int32, int32, uint8*)(obj, signature, length, data);    }
 BDAQINL ErrorCode         DeviceCtrl_WritePrivateRegion(DeviceCtrl *obj, int32 signature, int32 length, uint8 *data)                     { return DAQFN_ETTT(DNLAPI_BASE, 58, int32, int32, uint8*)(obj, signature, length, data);    }
-BDAQINL ErrorCode         DeviceCtrl_SynchronizeTimebase(DeviceCtrl *obj)                                                                { return DAQFN_EV(DNLAPI_BASE, 101)(obj);                               } 
-BDAQINL double            DeviceCtrl_CalculateAbsoluteTime(DeviceCtrl *obj, double relativeTime)                                         { return DAQFN_TT(DNLAPI_BASE, 102, double, double)(obj, relativeTime); } 
+BDAQINL ErrorCode         DeviceCtrl_SynchronizeTimebase(DeviceCtrl *obj)                                                                { return DAQFN_EV(DNLAPI_BASE, 101)(obj);                               }
+BDAQINL double            DeviceCtrl_CalculateAbsoluteTime(DeviceCtrl *obj, double relativeTime)                                         { return DAQFN_TT(DNLAPI_BASE, 102, double, double)(obj, relativeTime); }
 BDAQINL void              DeviceCtrl_Dispose(DeviceCtrl *obj)                                                                            { DAQFN_VV(DNLAPI_BASE, 79)(obj);                                       }
 
-/* Property */                                                                                                                                                                                                                             
-BDAQINL int32             DeviceCtrl_getDeviceNumber(DeviceCtrl *obj)                                                                    { return DAQFN_TV(DNLAPI_BASE, 59, int32)(obj);                          }                                            
+/* Property */
+BDAQINL int32             DeviceCtrl_getDeviceNumber(DeviceCtrl *obj)                                                                    { return DAQFN_TV(DNLAPI_BASE, 59, int32)(obj);                          }
 BDAQINL ErrorCode         DeviceCtrl_getDescription(DeviceCtrl *obj, int32 length, wchar_t *desc)                                        { return DAQFN_ETT(DNLAPI_BASE, 60, int32, wchar_t *)(obj, length, desc);}
 BDAQINL ErrorCode         DeviceCtrl_setDescription(DeviceCtrl *obj, int32 length, wchar_t *desc)                                        { return DAQFN_ETT(DNLAPI_BASE, 76, int32, wchar_t *)(obj, length, desc);}
 BDAQINL AccessMode        DeviceCtrl_getAccessMode(DeviceCtrl *obj)                                                                      { return DAQFN_TV(DNLAPI_BASE, 61, AccessMode)(obj);                     }
@@ -2334,28 +2369,28 @@ BDAQINL int32             DeviceCtrl_getBusSlot(DeviceCtrl *obj)                
 BDAQINL IArray *          DeviceCtrl_getBaseAddresses(DeviceCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_BASE, 70, IArray *)(obj);                       }
 BDAQINL IArray *          DeviceCtrl_getInterrupts(DeviceCtrl *obj)                                                                      { return DAQFN_TV(DNLAPI_BASE, 71, IArray *)(obj);                       }
 BDAQINL IArray *          DeviceCtrl_getSupportedTerminalBoard(DeviceCtrl *obj)                                                          { return DAQFN_TV(DNLAPI_BASE, 72, IArray *)(obj);                       }
-BDAQINL IArray *          DeviceCtrl_getSupportedEvents(DeviceCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_BASE, 73, IArray *)(obj);                       } 
+BDAQINL IArray *          DeviceCtrl_getSupportedEvents(DeviceCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_BASE, 73, IArray *)(obj);                       }
 BDAQINL TerminalBoard     DeviceCtrl_getTerminalBoard(DeviceCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_BASE, 74, TerminalBoard)(obj);                  }
 BDAQINL ErrorCode         DeviceCtrl_setTerminalBoard(DeviceCtrl *obj, TerminalBoard value)                                              { return DAQFN_ET(DNLAPI_BASE, 75, TerminalBoard)(obj, value);           }
 BDAQINL ErrorCode         DeviceCtrl_setLocateEnabled(DeviceCtrl *obj, int32 value)                                                      { return DAQFN_ET(DNLAPI_BASE, 99, int32)(obj, value);                   }
 BDAQINL int32             DeviceCtrl_getSupportedScenarios(DeviceCtrl *obj)                                                              { return DAQFN_TV(DNLAPI_BASE, 78, int32)(obj);                          }
-BDAQINL HANDLE            DeviceCtrl_getDevice(DeviceCtrl *obj)                                                                          { return DAQFN_TV(DNLAPI_BASE, 92, HANDLE)(obj);                         }   
-BDAQINL ErrorCode         DeviceCtrl_getHwSpecific(DeviceCtrl *obj, wchar_t *name, int32 *size, void *buffer)                            { return DAQFN_ETTT(DNLAPI_BASE, 103, wchar_t *, int32 *, void*)(obj, name, size, buffer); }   
-BDAQINL ErrorCode         DeviceCtrl_setHwSpecific(DeviceCtrl *obj, wchar_t *name, int32 size, void *buffer)                             { return DAQFN_ETTT(DNLAPI_BASE, 104, wchar_t *, int32,   void*)(obj, name, size, buffer); }   
-BDAQINL IArray *          DeviceCtrl_getSupportedFusionTypes(DeviceCtrl *obj)                                                            { return DAQFN_TV(DNLAPI_BASE, 138, IArray *)(obj);                      } 
-BDAQINL IArray *          DeviceCtrl_getProgrammableSignals(DeviceCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 139, IArray *)(obj);                      } 
+BDAQINL HANDLE            DeviceCtrl_getDevice(DeviceCtrl *obj)                                                                          { return DAQFN_TV(DNLAPI_BASE, 92, HANDLE)(obj);                         }
+BDAQINL ErrorCode         DeviceCtrl_getHwSpecific(DeviceCtrl *obj, wchar_t *name, int32 *size, void *buffer)                            { return DAQFN_ETTT(DNLAPI_BASE, 103, wchar_t *, int32 *, void*)(obj, name, size, buffer); }
+BDAQINL ErrorCode         DeviceCtrl_setHwSpecific(DeviceCtrl *obj, wchar_t *name, int32 size, void *buffer)                             { return DAQFN_ETTT(DNLAPI_BASE, 104, wchar_t *, int32,   void*)(obj, name, size, buffer); }
+BDAQINL IArray *          DeviceCtrl_getSupportedFusionTypes(DeviceCtrl *obj)                                                            { return DAQFN_TV(DNLAPI_BASE, 138, IArray *)(obj);                      }
+BDAQINL IArray *          DeviceCtrl_getProgrammableSignals(DeviceCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 139, IArray *)(obj);                      }
 BDAQINL ErrorCode         DeviceCtrl_getProgrammableSignalsDirection(DeviceCtrl *obj, int32 length, SignalDirection dir[])               { return DAQFN_ETT(DNLAPI_BASE, 140, int32, SignalDirection *)(obj, length, dir); }
 BDAQINL ErrorCode         DeviceCtrl_setProgrammableSignalsDirection(DeviceCtrl *obj, int32 length, SignalDirection dir[])               { return DAQFN_ETT(DNLAPI_BASE, 141, int32, SignalDirection *)(obj, length, dir); }
 BDAQINL double            DeviceCtrl_getSignalNoiseFilterBlockTime(DeviceCtrl *obj)                                                      { return DAQFN_TV(DNLAPI_BASE, 150, double)(obj);                                 }
 BDAQINL ErrorCode         DeviceCtrl_setSignalNoiseFilterBlockTime(DeviceCtrl *obj, double blkTime)                                      { return DAQFN_ET(DNLAPI_BASE, 151, double)(obj, blkTime);                        }
-BDAQINL IArray *          DeviceCtrl_getRtSignalEndpoints(DeviceCtrl *obj)                                                               { return DAQFN_TV(DNLAPI_BASE, 142, IArray *)(obj);                           } 
-BDAQINL IArray *          DeviceCtrl_getRtEndpointXSupportedSources(DeviceCtrl *obj, SignalDrop rep)                                     { return DAQFN_TT(DNLAPI_BASE, 143, IArray *,   SignalDrop)(obj, rep);        } 
+BDAQINL IArray *          DeviceCtrl_getRtSignalEndpoints(DeviceCtrl *obj)                                                               { return DAQFN_TV(DNLAPI_BASE, 142, IArray *)(obj);                           }
+BDAQINL IArray *          DeviceCtrl_getRtEndpointXSupportedSources(DeviceCtrl *obj, SignalDrop rep)                                     { return DAQFN_TT(DNLAPI_BASE, 143, IArray *,   SignalDrop)(obj, rep);        }
 BDAQINL SignalDrop        DeviceCtrl_getRtEndpointXSource(DeviceCtrl *obj, SignalDrop rep)                                               { return DAQFN_TT(DNLAPI_BASE, 144, SignalDrop, SignalDrop)(obj, rep);        }
 BDAQINL ErrorCode         DeviceCtrl_setRtEndpointXSource(DeviceCtrl *obj, SignalDrop rep, SignalDrop source)                            { return DAQFN_ETT(DNLAPI_BASE,145, SignalDrop, SignalDrop)(obj, rep, source);}
 
 /*Creator*/
-BDAQINL DeviceCtrl *      DeviceCtrl_Create(int32 devNumber, wchar_t const *desc, AccessMode mode)                                       { DNL_Initialize(); return DAQFN_GBL_TTTT(DNLAPI_BASE, 80, DeviceCtrl *, int32, wchar_t const *, AccessMode)(devNumber, desc, mode); } 
-BDAQINL IArray *          DeviceCtrl_getInstalledDevices()                                                                               { DNL_Initialize(); return DAQFN_GBL_T(DNLAPI_BASE, 100, IArray *)(); } 
+BDAQINL DeviceCtrl *      DeviceCtrl_Create(int32 devNumber, wchar_t const *desc, AccessMode mode)                                       { DNL_Initialize(); return DAQFN_GBL_TTTT(DNLAPI_BASE, 80, DeviceCtrl *, int32, wchar_t const *, AccessMode)(devNumber, desc, mode); }
+BDAQINL IArray *          DeviceCtrl_getInstalledDevices()                                                                               { DNL_Initialize(); return DAQFN_GBL_T(DNLAPI_BASE, 100, IArray *)(); }
 
 /*Helpers*/
 BDAQINL void              DeviceCtrl_addRemovedHandler(DeviceCtrl *obj, DeviceEventProc proc, void *userParam)                           { DeviceCtrl_addEventHandler   (obj, EvtDeviceRemoved,     proc, userParam); }
@@ -2370,9 +2405,9 @@ BDAQINL void              DeviceCtrl_removePropertyChangedHandler(DeviceCtrl *ob
 /* ----------------------------------------------------------*/
 /* Event */
 typedef void (BDAQCALL * DaqEventProc)(void *sender, void *args, void *userParam);
-BDAQINL void              DaqCtrlBase_addEventHandler(DaqCtrlBase *obj, EventId id, DaqEventProc proc, void *userParam)                  { DAQFN_VTTT(DNLAPI_BASE, 81, EventId, DaqEventProc, void *)(obj, id, proc, userParam); } 
+BDAQINL void              DaqCtrlBase_addEventHandler(DaqCtrlBase *obj, EventId id, DaqEventProc proc, void *userParam)                  { DAQFN_VTTT(DNLAPI_BASE, 81, EventId, DaqEventProc, void *)(obj, id, proc, userParam); }
 BDAQINL void              DaqCtrlBase_removeEventHandler(DaqCtrlBase *obj, EventId id, DaqEventProc proc, void *userParam)               { DAQFN_VTTT(DNLAPI_BASE, 82, EventId, DaqEventProc, void *)(obj, id, proc, userParam); }
-BDAQINL DaqCtrlBase *     DaqCtrlBase_Create(Scenario type)                                                                              { DNL_Initialize(); return DAQFN_GBL_TT(DNLAPI_BASE, 91, DaqCtrlBase *, Scenario)(type);}  
+BDAQINL DaqCtrlBase *     DaqCtrlBase_Create(Scenario type)                                                                              { DNL_Initialize(); return DAQFN_GBL_TT(DNLAPI_BASE, 91, DaqCtrlBase *, Scenario)(type);}
 
 /*************************************************************/
 /* ctrl class : AI related                                   */
@@ -2421,8 +2456,8 @@ BDAQINL ErrorCode         AiChannel_setSensorDescription(AiChannel *obj, int32 s
 BDAQINL ErrorCode         AiChannel_getScaleTable(AiChannel *obj, int32 *size, MapFuncPiece table[])                                     { return DAQFN_ETT(DNLAPI_AI, 53, int32 *, MapFuncPiece *)(obj, size, table); }
 BDAQINL ErrorCode         AiChannel_setScaleTable(AiChannel *obj, int32 size, MapFuncPiece table[])                                      { return DAQFN_ETT(DNLAPI_AI, 54, int32  , MapFuncPiece *)(obj, size, table); }
 
-/* ----------------------------------------------------------*/                                                                                                
-/* AI features                                               */                                                                                                                                                      
+/* ----------------------------------------------------------*/
+/* AI features                                               */
 /* ----------------------------------------------------------*/
 /*ADC features*/
 BDAQINL int32             AiFeatures_getResolution(AiFeatures *obj)                                                                      { return DAQFN_TV(DNLAPI_AI, 22, int32)(obj); }
@@ -2430,7 +2465,7 @@ BDAQINL int32             AiFeatures_getDataSize(AiFeatures *obj)               
 BDAQINL int32             AiFeatures_getDataMask(AiFeatures *obj)                                                                        { return DAQFN_TV(DNLAPI_AI, 24, int32)(obj); }
 BDAQINL double            AiFeatures_getTimestampResolution(AiFeatures *obj)                                                             { return DAQFN_TV(DNLAPI_AI, 108, int32)(obj); }
 
-/*channel features*/                                                         
+/*channel features*/
 BDAQINL int32             AiFeatures_getChannelCountMax(AiFeatures *obj)                                                                 { return DAQFN_TV(DNLAPI_AI, 25, int32)(obj);         }
 BDAQINL AiChannelType     AiFeatures_getChannelType(AiFeatures *obj)                                                                     { return DAQFN_TV(DNLAPI_AI, 26, AiChannelType)(obj); }
 BDAQINL int8              AiFeatures_getOverallValueRange(AiFeatures *obj)                                                               { return DAQFN_TV(DNLAPI_AI, 27, int8)(obj);          }
@@ -2442,13 +2477,13 @@ BDAQINL IArray *          AiFeatures_getCouplingTypes(AiFeatures *obj)          
 BDAQINL IArray *          AiFeatures_getIepeTypes(AiFeatures *obj)                                                                       { return DAQFN_TV(DNLAPI_AI, 102,  IArray *)(obj);    }
 BDAQINL IArray *          AiFeatures_getImpedanceTypes(AiFeatures *obj)                                                                  { return DAQFN_TV(DNLAPI_AI, 103,  IArray *)(obj);    }
 
-/*filter*/             
+/*filter*/
 BDAQINL IArray *          AiFeatures_getFilterTypes(AiFeatures *obj)                                                                     { return DAQFN_TV(DNLAPI_AI, 30, IArray *)(obj);         }
 BDAQINL void              AiFeatures_getFilterCutoffFreqRange(AiFeatures *obj, MathInterval *x)                                          {        DAQFN_VT(DNLAPI_AI, 31, MathInterval *)(obj, x);}
 BDAQINL void              AiFeatures_getFilterCutoffFreq1Range(AiFeatures *obj, MathInterval *x)                                         {        DAQFN_VT(DNLAPI_AI, 32, MathInterval *)(obj, x);}
 
-/*CJC features */                                                                                                                             
-BDAQINL int8              AiFeatures_getThermoSupported(AiFeatures *obj)                                                                 { return DAQFN_TV(DNLAPI_AI, 33, int8)(obj);    }    
+/*CJC features */
+BDAQINL int8              AiFeatures_getThermoSupported(AiFeatures *obj)                                                                 { return DAQFN_TV(DNLAPI_AI, 33, int8)(obj);    }
 BDAQINL IArray *          AiFeatures_getCjcChannels(AiFeatures *obj)                                                                     { return DAQFN_TV(DNLAPI_AI, 34, IArray *)(obj);}
 
 /*buffered ai->basic features*/
@@ -2480,21 +2515,21 @@ BDAQINL IArray *          AiFeatures_getTriggerSources(AiFeatures *obj)         
 BDAQINL ValueRange        AiFeatures_getTriggerSourceVrg(AiFeatures *obj)                                                                { return DAQFN_TT(DNLAPI_AI,  50,  ValueRange, int32)(obj, 0);       }
 BDAQINL double            AiFeatures_getTriggerHysteresisIndexMax(AiFeatures *obj)                                                       { return DAQFN_TT(DNLAPI_AI,  51,  double, int32)(obj, 0);           }
 BDAQINL int32             AiFeatures_getTriggerHysteresisIndexStep(AiFeatures *obj)                                                      { return DAQFN_TT(DNLAPI_AI,  52,  int32, int32)(obj, 0);            }
-/*buffered ai->trigger1 features*/                                                                  
+/*buffered ai->trigger1 features*/
 BDAQINL IArray *          AiFeatures_getTrigger1Actions(AiFeatures *obj)                                                                 { return DAQFN_TT(DNLAPI_AI,  47,  IArray *, int32)(obj, 1);         }
 BDAQINL void              AiFeatures_getTrigger1DelayRange(AiFeatures *obj, MathInterval *x)                                             {        DAQFN_VTT(DNLAPI_AI, 48,  int32, MathInterval *)(obj, 1, x);}
 BDAQINL IArray *          AiFeatures_getTrigger1Sources(AiFeatures *obj)                                                                 { return DAQFN_TT(DNLAPI_AI,  49,  IArray *, int32)(obj, 1);         }
 BDAQINL ValueRange        AiFeatures_getTrigger1SourceVrg(AiFeatures *obj)                                                               { return DAQFN_TT(DNLAPI_AI,  50,  ValueRange, int32)(obj, 1);       }
 BDAQINL double            AiFeatures_getTrigger1HysteresisIndexMax(AiFeatures *obj)                                                      { return DAQFN_TT(DNLAPI_AI,  51,  double, int32)(obj, 1);           }
 BDAQINL int32             AiFeatures_getTrigger1HysteresisIndexStep(AiFeatures *obj)                                                     { return DAQFN_TT(DNLAPI_AI,  52,  int32, int32)(obj, 1);            }
-/*buffered ai->trigger2 features*/                                                                  
+/*buffered ai->trigger2 features*/
 BDAQINL IArray *          AiFeatures_getTrigger2Actions(AiFeatures *obj)                                                                 { return DAQFN_TT(DNLAPI_AI,  47,  IArray *, int32)(obj, 2);         }
 BDAQINL void              AiFeatures_getTrigger2DelayRange(AiFeatures *obj, MathInterval *x)                                             {        DAQFN_VTT(DNLAPI_AI, 48,  int32, MathInterval *)(obj, 2, x);}
 BDAQINL IArray *          AiFeatures_getTrigger2Sources(AiFeatures *obj)                                                                 { return DAQFN_TT(DNLAPI_AI,  49,  IArray *, int32)(obj, 2);         }
 BDAQINL ValueRange        AiFeatures_getTrigger2SourceVrg(AiFeatures *obj)                                                               { return DAQFN_TT(DNLAPI_AI,  50,  ValueRange, int32)(obj, 2);       }
 BDAQINL double            AiFeatures_getTrigger2HysteresisIndexMax(AiFeatures *obj)                                                      { return DAQFN_TT(DNLAPI_AI,  51,  double, int32)(obj, 2);           }
 BDAQINL int32             AiFeatures_getTrigger2HysteresisIndexStep(AiFeatures *obj)                                                     { return DAQFN_TT(DNLAPI_AI,  52,  int32, int32)(obj, 2);            }
-/*buffered ai->trigger3 features*/                                                                  
+/*buffered ai->trigger3 features*/
 BDAQINL IArray *          AiFeatures_getTrigger3Actions(AiFeatures *obj)                                                                 { return DAQFN_TT(DNLAPI_AI,  47,  IArray *, int32)(obj, 3);         }
 BDAQINL void              AiFeatures_getTrigger3DelayRange(AiFeatures *obj, MathInterval *x)                                             {        DAQFN_VTT(DNLAPI_AI, 48,  int32, MathInterval *)(obj, 3, x);}
 BDAQINL IArray *          AiFeatures_getTrigger3Sources(AiFeatures *obj)                                                                 { return DAQFN_TT(DNLAPI_AI,  49,  IArray *, int32)(obj, 3);         }
@@ -2506,11 +2541,18 @@ BDAQINL IArray *          AiFeatures_getMeasureTypes(AiFeatures *obj)           
 BDAQINL IArray *          AiFeatures_getBridgeResistances(AiFeatures *obj)                                                               { return DAQFN_TV(DNLAPI_AI,  113,  IArray *)(obj);                  }
 BDAQINL void              AiFeatures_getExcitingVoltageRange(AiFeatures *obj, MathInterval *x)                                           {        DAQFN_VT(DNLAPI_AI,  114,  MathInterval *)(obj, x);         }
 
+/* Buffered AI Down-Sampling */
+BDAQINL IArray *           AiFeatures_getDownsamplingMethods(AiFeatures *obj)                                                            { return DAQFN_TV(DNLAPI_AI,  117,  IArray *)(obj);                  }
+BDAQINL DownsamplingMethod AiChannel_getDownsamplingMethod(AiChannel* obj)                                                               { return DAQFN_TV(DNLAPI_AI,  118,  DownsamplingMethod)(obj);        }
+BDAQINL ErrorCode          AiChannel_setDownsamplingMethod(AiChannel* obj, DownsamplingMethod value)                                     { return DAQFN_ET(DNLAPI_AI,  119,  DownsamplingMethod)(obj, value); }
+BDAQINL int32              AiChannel_getDownsamplingCount(AiChannel* obj)                                                                { return DAQFN_TV(DNLAPI_AI,  120,  int32)(obj);                     }
+BDAQINL ErrorCode          AiChannel_setDownsamplingCount(AiChannel* obj, int32 value)                                                   { return DAQFN_ET(DNLAPI_AI,  121,  int32)(obj, value);              }
+
 /* ----------------------------------------------------------*/
 /*InstantAiCtrl                                              */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         InstantAiCtrl_LoadProfile(InstantAiCtrl *obj, wchar_t const *fileName)                                          { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         InstantAiCtrl_LoadProfile(InstantAiCtrl *obj, wchar_t const *fileName)                                          { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              InstantAiCtrl_Cleanup(InstantAiCtrl *obj)                                                                       {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              InstantAiCtrl_Dispose(InstantAiCtrl *obj)                                                                       {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              InstantAiCtrl_getSelectedDevice(InstantAiCtrl *obj, DeviceInformation *x)                                       {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -2519,12 +2561,12 @@ BDAQINL ControlState      InstantAiCtrl_getState(void *obj)                     
 BDAQINL DeviceCtrl *      InstantAiCtrl_getDevice(InstantAiCtrl *obj)                                                                     { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);  }
 BDAQINL IArray *          InstantAiCtrl_getSupportedDevices(InstantAiCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);      }
 BDAQINL IArray *          InstantAiCtrl_getSupportedModes(InstantAiCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);      }
-/*base2*/                                                                                                                                    
+/*base2*/
 BDAQINL AiFeatures *      InstantAiCtrl_getFeatures(InstantAiCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_AI, 58, AiFeatures *)(obj); }
 BDAQINL IArray *          InstantAiCtrl_getChannels(InstantAiCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_AI, 59, IArray *    )(obj); }
 BDAQINL int32             InstantAiCtrl_getChannelCount(InstantAiCtrl *obj)                                                               { return DAQFN_TV(DNLAPI_AI, 60, int32       )(obj); }
 BDAQINL ErrorCode         InstantAiCtrl_runSensorCalibration(InstantAiCtrl *obj, int32 ch, CalibrationData const *data)                   { return DAQFN_ETT(DNLAPI_AI, 111, int32, CalibrationData const*)(obj, ch, data);   }
-/* InstantAiCtrl Methods & Properties*/                                                                                                      
+/* InstantAiCtrl Methods & Properties*/
 BDAQINL ErrorCode         InstantAiCtrl_ReadAny(InstantAiCtrl *obj, int32 chStart, int32 chCount, void *dataRaw, double *dataScaled)      { return DAQFN_ETTTT(DNLAPI_AI, 61, int32, int32, void *, double *)(obj, chStart, chCount, dataRaw, dataScaled); }
 BDAQINL CjcSetting *      InstantAiCtrl_getCjc(InstantAiCtrl *obj)                                                                        { return DAQFN_TV(DNLAPI_AI, 62, CjcSetting *)(obj);  }
 BDAQINL double            InstantAiCtrl_getAutoConvertClockRate(InstantAiCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_AI, 63, double)(obj);        }
@@ -2534,13 +2576,13 @@ BDAQINL ErrorCode         InstantAiCtrl_setAutoConvertChannelStart(InstantAiCtrl
 BDAQINL int32             InstantAiCtrl_getAutoConvertChannelCount(InstantAiCtrl *obj)                                                    { return DAQFN_TV(DNLAPI_AI, 67, int32)(obj);         }
 BDAQINL ErrorCode         InstantAiCtrl_setAutoConvertChannelCount(InstantAiCtrl *obj, int32 value)                                       { return DAQFN_ET(DNLAPI_AI, 68, int32)(obj, value);  }
 /*creator*/
-BDAQINL InstantAiCtrl *   InstantAiCtrl_Create(void)                                                                                      { return (InstantAiCtrl*)DaqCtrlBase_Create(SceInstantAi); } 
+BDAQINL InstantAiCtrl *   InstantAiCtrl_Create(void)                                                                                      { return (InstantAiCtrl*)DaqCtrlBase_Create(SceInstantAi); }
 
 /* ----------------------------------------------------------*/
 /*BufferedAiCtrl                                             */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         BufferedAiCtrl_LoadProfile(BufferedAiCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         BufferedAiCtrl_LoadProfile(BufferedAiCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              BufferedAiCtrl_Cleanup(BufferedAiCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              BufferedAiCtrl_Dispose(BufferedAiCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              BufferedAiCtrl_getSelectedDevice(BufferedAiCtrl *obj, DeviceInformation *x)                                     {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -2549,7 +2591,7 @@ BDAQINL ControlState      BufferedAiCtrl_getState(void *obj)                    
 BDAQINL DeviceCtrl *      BufferedAiCtrl_getDevice(BufferedAiCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);}
 BDAQINL IArray *          BufferedAiCtrl_getSupportedDevices(BufferedAiCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);    }
 BDAQINL IArray *          BufferedAiCtrl_getSupportedModes(BufferedAiCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);    }
-/*base2*/                
+/*base2*/
 BDAQINL AiFeatures *      BufferedAiCtrl_getFeatures(BufferedAiCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_AI, 58, AiFeatures *)(obj);}
 BDAQINL IArray *          BufferedAiCtrl_getChannels(BufferedAiCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_AI, 59, IArray *)(obj);    }
 BDAQINL int32             BufferedAiCtrl_getChannelCount(BufferedAiCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_AI, 60, int32 )(obj);      }
@@ -2560,7 +2602,7 @@ BDAQINL ErrorCode         BufferedAiCtrl_RunOnce(BufferedAiCtrl *obj)           
 BDAQINL ErrorCode         BufferedAiCtrl_Start(BufferedAiCtrl *obj)                                                                       { return DAQFN_EV(DNLAPI_AI, 71)(obj);   }
 BDAQINL ErrorCode         BufferedAiCtrl_Stop(BufferedAiCtrl *obj)                                                                        { return DAQFN_EV(DNLAPI_AI, 72)(obj);   }
 BDAQINL void              BufferedAiCtrl_Release(BufferedAiCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_AI, 73)(obj);   }
-BDAQINL int8              BufferedAiCtrl_GetBufferStatus(BufferedAiCtrl *obj, int32 *count, int32 *offset)                                { return DAQFN_TTT(DNLAPI_AI, 74, int8, int32 *, int32 *)(obj, count, offset);    }  
+BDAQINL int8              BufferedAiCtrl_GetBufferStatus(BufferedAiCtrl *obj, int32 *count, int32 *offset)                                { return DAQFN_TTT(DNLAPI_AI, 74, int8, int32 *, int32 *)(obj, count, offset);    }
 BDAQINL ErrorCode         BufferedAiCtrl_GetDataI16(BufferedAiCtrl *obj, int32 count, int16 rawData[])                                    { return DAQFN_ETTT(DNLAPI_AI, 75, int32, int32, void*)(obj, sizeof(int16), count, rawData);    }
 BDAQINL ErrorCode         BufferedAiCtrl_GetDataI32(BufferedAiCtrl *obj, int32 count, int32 rawData[])                                    { return DAQFN_ETTT(DNLAPI_AI, 75, int32, int32, void*)(obj, sizeof(int32), count, rawData);    }
 BDAQINL ErrorCode         BufferedAiCtrl_GetDataF64(BufferedAiCtrl *obj, int32 count, double scaledData[])                                { return DAQFN_ETTT(DNLAPI_AI, 75, int32, int32, void*)(obj, sizeof(double),count, scaledData); }
@@ -2576,7 +2618,7 @@ BDAQINL Trigger *         BufferedAiCtrl_getTrigger3(BufferedAiCtrl *obj)       
 BDAQINL int8              BufferedAiCtrl_getStreaming(BufferedAiCtrl *obj)                                                                { return DAQFN_TV(DNLAPI_AI, 82, int8)(obj);                }
 BDAQINL ErrorCode         BufferedAiCtrl_setStreaming(BufferedAiCtrl *obj, int8 value)                                                    { return DAQFN_ET(DNLAPI_AI, 83, int8)(obj, value);         }
 /*creator*/
-BDAQINL BufferedAiCtrl *  BufferedAiCtrl_Create(void)                                                                                     { return (BufferedAiCtrl *)DaqCtrlBase_Create(SceBufferedAi); } 
+BDAQINL BufferedAiCtrl *  BufferedAiCtrl_Create(void)                                                                                     { return (BufferedAiCtrl *)DaqCtrlBase_Create(SceBufferedAi); }
 
 /*Helpers*/
 BDAQINL void              BufferedAiCtrl_addDataReadyHandler(BufferedAiCtrl *obj, BfdAiEventProc proc, void *userParam)                   { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtBufferedAiDataReady,     (DaqEventProc)proc, userParam);}
@@ -2594,7 +2636,7 @@ BDAQINL void              BufferedAiCtrl_removeBurnOutHandler(BufferedAiCtrl *ob
 /*WaveformAiCtrl                                             */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         WaveformAiCtrl_LoadProfile(WaveformAiCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         WaveformAiCtrl_LoadProfile(WaveformAiCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              WaveformAiCtrl_Cleanup(WaveformAiCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              WaveformAiCtrl_Dispose(WaveformAiCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              WaveformAiCtrl_getSelectedDevice(WaveformAiCtrl *obj, DeviceInformation *x)                                     {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -2603,7 +2645,7 @@ BDAQINL ControlState      WaveformAiCtrl_getState(void *obj)                    
 BDAQINL DeviceCtrl *      WaveformAiCtrl_getDevice(WaveformAiCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);}
 BDAQINL IArray *          WaveformAiCtrl_getSupportedDevices(WaveformAiCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);    }
 BDAQINL IArray *          WaveformAiCtrl_getSupportedModes(WaveformAiCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);    }
-/*base2*/                
+/*base2*/
 BDAQINL AiFeatures *      WaveformAiCtrl_getFeatures(WaveformAiCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_AI, 58, AiFeatures *)(obj);}
 BDAQINL IArray *          WaveformAiCtrl_getChannels(WaveformAiCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_AI, 59, IArray *)(obj);    }
 BDAQINL int32             WaveformAiCtrl_getChannelCount(WaveformAiCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_AI, 60, int32 )(obj);      }
@@ -2613,25 +2655,25 @@ BDAQINL ErrorCode         WaveformAiCtrl_Prepare(WaveformAiCtrl *obj)           
 BDAQINL ErrorCode         WaveformAiCtrl_Start(WaveformAiCtrl *obj)                                                                       { return DAQFN_EV(DNLAPI_AI, 85)(obj);   }
 BDAQINL ErrorCode         WaveformAiCtrl_Stop(WaveformAiCtrl *obj)                                                                        { return DAQFN_EV(DNLAPI_AI, 86)(obj);   }
 BDAQINL void              WaveformAiCtrl_Release(WaveformAiCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_AI, 87)(obj);   }
-BDAQINL int8              WaveformAiCtrl_GetBufferStatus(WaveformAiCtrl *obj, int32 *count, int32 *offset)                                { return DAQFN_TTT(DNLAPI_AI, 88, int8, int32 *, int32 *)(obj, count, offset); }  
+BDAQINL int8              WaveformAiCtrl_GetBufferStatus(WaveformAiCtrl *obj, int32 *count, int32 *offset)                                { return DAQFN_TTT(DNLAPI_AI, 88, int8, int32 *, int32 *)(obj, count, offset); }
 
-BDAQINL ErrorCode WaveformAiCtrl_GetDataI16(WaveformAiCtrl *obj, int32 count, int16 dataBuf[], 
+BDAQINL ErrorCode WaveformAiCtrl_GetDataI16(WaveformAiCtrl *obj, int32 count, int16 dataBuf[],
    int32 timeout, int32 *returned, double * startTime, int32 *markCount, DataMark *markBuf)
-{ 
+{
    typedef ErrorCode (BDAQCALL *FNGETDATA)(void *, int32, int32, void *, int32, int32 *, double *, int32 *, DataMark *);
-   return ((FNGETDATA)DNLAPI_AI[89])(obj, sizeof(int16), count, dataBuf, timeout, returned, startTime, markCount, markBuf);        
+   return ((FNGETDATA)DNLAPI_AI[89])(obj, sizeof(int16), count, dataBuf, timeout, returned, startTime, markCount, markBuf);
 }
-BDAQINL ErrorCode WaveformAiCtrl_GetDataI32(WaveformAiCtrl *obj, int32 count, int32 dataBuf[], 
+BDAQINL ErrorCode WaveformAiCtrl_GetDataI32(WaveformAiCtrl *obj, int32 count, int32 dataBuf[],
    int32 timeout, int32 *returned, double * startTime, int32 *markCount, DataMark *markBuf)
-{ 
+{
    typedef ErrorCode (BDAQCALL *FNGETDATA)(void *, int32, int32, void *, int32, int32 *, double *, int32 *, DataMark *);
-   return ((FNGETDATA)DNLAPI_AI[89])(obj, sizeof(int32), count, dataBuf, timeout, returned, startTime, markCount, markBuf);        
+   return ((FNGETDATA)DNLAPI_AI[89])(obj, sizeof(int32), count, dataBuf, timeout, returned, startTime, markCount, markBuf);
 }
-BDAQINL ErrorCode WaveformAiCtrl_GetDataF64(WaveformAiCtrl *obj, int32 count, double dataBuf[], 
-   int32 timeout, int32 *returned, double * startTime, int32 *markCount, DataMark *markBuf) 
-{ 
+BDAQINL ErrorCode WaveformAiCtrl_GetDataF64(WaveformAiCtrl *obj, int32 count, double dataBuf[],
+   int32 timeout, int32 *returned, double * startTime, int32 *markCount, DataMark *markBuf)
+{
    typedef ErrorCode (BDAQCALL *FNGETDATA)(void *, int32, int32, void *, int32, int32 *, double *, int32 *, DataMark *);
-   return ((FNGETDATA)DNLAPI_AI[89])(obj, sizeof(double), count, dataBuf, timeout, returned, startTime, markCount, markBuf);        
+   return ((FNGETDATA)DNLAPI_AI[89])(obj, sizeof(double), count, dataBuf, timeout, returned, startTime, markCount, markBuf);
 }
 
 BDAQINL void*             WaveformAiCtrl_getBuffer(WaveformAiCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_AI, 90, void*)(obj);        }
@@ -2643,7 +2685,7 @@ BDAQINL Trigger *         WaveformAiCtrl_getTrigger1(WaveformAiCtrl *obj)       
 BDAQINL Trigger *         WaveformAiCtrl_getTrigger2(WaveformAiCtrl *obj)                                                                 { return DAQFN_TT(DNLAPI_AI, 94, Trigger *, int32)(obj, 2); }
 BDAQINL Trigger *         WaveformAiCtrl_getTrigger3(WaveformAiCtrl *obj)                                                                 { return DAQFN_TT(DNLAPI_AI, 94, Trigger *, int32)(obj, 3); }
 /*creator*/
-BDAQINL WaveformAiCtrl *  WaveformAiCtrl_Create(void)                                                                                     { return (WaveformAiCtrl *)DaqCtrlBase_Create(SceWaveformAi); } 
+BDAQINL WaveformAiCtrl *  WaveformAiCtrl_Create(void)                                                                                     { return (WaveformAiCtrl *)DaqCtrlBase_Create(SceWaveformAi); }
 
 /*Helpers*/
 BDAQINL void              WaveformAiCtrl_addDataReadyHandler(WaveformAiCtrl *obj, BfdAiEventProc proc, void *userParam)                   { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtBufferedAiDataReady,     (DaqEventProc)proc, userParam);}
@@ -2680,15 +2722,15 @@ BDAQINL ErrorCode         AoChannel_setExtRefUnipolar(AoChannel *obj, double val
 BDAQINL ErrorCode         AoChannel_getScaleTable(AoChannel *obj, int32 *size, MapFuncPiece table[])                                      { return DAQFN_ETT(DNLAPI_AO, 22, int32 *, MapFuncPiece *)(obj, size, table); }
 BDAQINL ErrorCode         AoChannel_setScaleTable(AoChannel *obj, int32 size, MapFuncPiece table[])                                       { return DAQFN_ETT(DNLAPI_AO, 23, int32  , MapFuncPiece *)(obj, size, table); }
 
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 /*AO features                                                */
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 /*DAC features  */
 BDAQINL int32             AoFeatures_getResolution(AoFeatures *obj)                                                                       { return DAQFN_TV(DNLAPI_AO, 5, int32)(obj); }
 BDAQINL int32             AoFeatures_getDataSize(AoFeatures *obj)                                                                         { return DAQFN_TV(DNLAPI_AO, 6, int32)(obj); }
 BDAQINL int32             AoFeatures_getDataMask(AoFeatures *obj)                                                                         { return DAQFN_TV(DNLAPI_AO, 7, int32)(obj); }
 
-/*channel features  */   
+/*channel features  */
 BDAQINL int32             AoFeatures_getChannelCountMax(AoFeatures *obj)                                                                  { return DAQFN_TV(DNLAPI_AO, 8, int32)(obj);   }
 BDAQINL IArray *          AoFeatures_getValueRanges(AoFeatures *obj)                                                                      { return DAQFN_TV(DNLAPI_AO, 9, IArray *)(obj);}
 BDAQINL int8              AoFeatures_getExternalRefAntiPolar(AoFeatures *obj)                                                             { return DAQFN_TV(DNLAPI_AO, 10, int8)(obj);   }
@@ -2722,7 +2764,7 @@ BDAQINL void              AoFeatures_getTrigger1DelayRange(AoFeatures *obj, Math
 /*InstantAoCtrl                                              */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         InstantAoCtrl_LoadProfile(InstantAoCtrl *obj, wchar_t const *fileName)                                          { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         InstantAoCtrl_LoadProfile(InstantAoCtrl *obj, wchar_t const *fileName)                                          { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              InstantAoCtrl_Cleanup(InstantAoCtrl *obj)                                                                       {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              InstantAoCtrl_Dispose(InstantAoCtrl *obj)                                                                       {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              InstantAoCtrl_getSelectedDevice(InstantAoCtrl *obj, DeviceInformation *x)                                       {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -2731,7 +2773,7 @@ BDAQINL ControlState      InstantAoCtrl_getState(void *obj)                     
 BDAQINL DeviceCtrl *      InstantAoCtrl_getDevice(InstantAoCtrl *obj)                                                                     { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);}
 BDAQINL IArray *          InstantAoCtrl_getSupportedDevices(InstantAoCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);    }
 BDAQINL IArray *          InstantAoCtrl_getSupportedModes(InstantAoCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);    }
-/* base2*/                                                                                                                                    
+/* base2*/
 BDAQINL AoFeatures *      InstantAoCtrl_getFeatures(InstantAoCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_AO, 25, AoFeatures *)(obj); }
 BDAQINL IArray *          InstantAoCtrl_getChannels(InstantAoCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_AO, 26, IArray *)(obj);     }
 BDAQINL int32             InstantAoCtrl_getChannelCount(InstantAoCtrl *obj)                                                               { return DAQFN_TV(DNLAPI_AO, 27, int32 )(obj);       }
@@ -2739,16 +2781,16 @@ BDAQINL double            InstantAoCtrl_getExtRefValueForUnipolar(InstantAoCtrl 
 BDAQINL ErrorCode         InstantAoCtrl_setExtRefValueForUnipolar(InstantAoCtrl *obj, double value)                                       { return DAQFN_ET(DNLAPI_AO, 29, double)(obj, value);}
 BDAQINL double            InstantAoCtrl_getExtRefValueForBipolar(InstantAoCtrl *obj)                                                      { return DAQFN_TV(DNLAPI_AO, 30, double)(obj);       }
 BDAQINL ErrorCode         InstantAoCtrl_setExtRefValueForBipolar(InstantAoCtrl *obj, double value)                                        { return DAQFN_ET(DNLAPI_AO, 31, double)(obj, value);}
-/* InstantAoCtrl methods */                                                                                                                 
+/* InstantAoCtrl methods */
 BDAQINL ErrorCode         InstantAoCtrl_WriteAny(InstantAoCtrl *obj, int32 chStart, int32 chCount, void *dataRaw, double *dataScaled)     { return DAQFN_ETTTT(DNLAPI_AO, 32, int32, int32, void *, double *)(obj, chStart, chCount, dataRaw, dataScaled); }
 /*creator*/
-BDAQINL InstantAoCtrl *   InstantAoCtrl_Create(void)                                                                                      { return (InstantAoCtrl *)DaqCtrlBase_Create(SceInstantAo); } 
+BDAQINL InstantAoCtrl *   InstantAoCtrl_Create(void)                                                                                      { return (InstantAoCtrl *)DaqCtrlBase_Create(SceInstantAo); }
 
 /* ----------------------------------------------------------*/
 /*BufferedAoCtrl                                             */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         BufferedAoCtrl_LoadProfile(BufferedAoCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         BufferedAoCtrl_LoadProfile(BufferedAoCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              BufferedAoCtrl_Cleanup(BufferedAoCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              BufferedAoCtrl_Dispose(BufferedAoCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              BufferedAoCtrl_getSelectedDevice(BufferedAoCtrl *obj, DeviceInformation *x)                                     {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -2757,7 +2799,7 @@ BDAQINL ControlState      BufferedAoCtrl_getState(void *obj)                    
 BDAQINL DeviceCtrl *      BufferedAoCtrl_getDevice(BufferedAoCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);}
 BDAQINL IArray *          BufferedAoCtrl_getSupportedDevices(BufferedAoCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);    }
 BDAQINL IArray *          BufferedAoCtrl_getSupportedModes(BufferedAoCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);    }
-/* base2*/                                                                                                                                  
+/* base2*/
 BDAQINL AoFeatures *      BufferedAoCtrl_getFeatures(BufferedAoCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_AO, 25, AoFeatures *)(obj); }
 BDAQINL IArray *          BufferedAoCtrl_getChannels(BufferedAoCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_AO, 26, IArray *)(obj);     }
 BDAQINL int32             BufferedAoCtrl_getChannelCount(BufferedAoCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_AO, 27, int32 )(obj);       }
@@ -2765,13 +2807,13 @@ BDAQINL double            BufferedAoCtrl_getExtRefValueForUnipolar(BufferedAoCtr
 BDAQINL ErrorCode         BufferedAoCtrl_setExtRefValueForUnipolar(BufferedAoCtrl *obj, double value)                                     { return DAQFN_ET(DNLAPI_AO, 29, double)(obj, value);}
 BDAQINL double            BufferedAoCtrl_getExtRefValueForBipolar(BufferedAoCtrl *obj)                                                    { return DAQFN_TV(DNLAPI_AO, 30, double)(obj);       }
 BDAQINL ErrorCode         BufferedAoCtrl_setExtRefValueForBipolar(BufferedAoCtrl *obj, double value)                                      { return DAQFN_ET(DNLAPI_AO, 31, double)(obj, value);}
-/* BufferedAoCtrl Methods & Properties */                                                                                                   
+/* BufferedAoCtrl Methods & Properties */
 BDAQINL ErrorCode         BufferedAoCtrl_Prepare(BufferedAoCtrl *obj)                                                                     { return DAQFN_EV(DNLAPI_AO, 33)(obj);   }
 BDAQINL ErrorCode         BufferedAoCtrl_RunOnce(BufferedAoCtrl *obj)                                                                     { return DAQFN_EV(DNLAPI_AO, 34)(obj);   }
 BDAQINL ErrorCode         BufferedAoCtrl_Start(BufferedAoCtrl *obj)                                                                       { return DAQFN_EV(DNLAPI_AO, 35)(obj);   }
 BDAQINL ErrorCode         BufferedAoCtrl_Stop(BufferedAoCtrl *obj, int32 action)                                                          { return DAQFN_ET(DNLAPI_AO, 36, int32)(obj, action); }
 BDAQINL void              BufferedAoCtrl_Release(BufferedAoCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_AO, 37)(obj);                }
-BDAQINL int8              BufferedAoCtrl_GetBufferStatus(BufferedAoCtrl *obj, int32 *count, int32 *offset)                                { return DAQFN_TTT(DNLAPI_AO, 38, int8, int32 *, int32 *)(obj, count, offset);    }  
+BDAQINL int8              BufferedAoCtrl_GetBufferStatus(BufferedAoCtrl *obj, int32 *count, int32 *offset)                                { return DAQFN_TTT(DNLAPI_AO, 38, int8, int32 *, int32 *)(obj, count, offset);    }
 BDAQINL ErrorCode         BufferedAoCtrl_SetDataI16(BufferedAoCtrl *obj, int32 count, int16 rawData[])                                    { return DAQFN_ETTT(DNLAPI_AO, 39, int32, int32, void*)(obj, sizeof(int16), count, rawData);     }
 BDAQINL ErrorCode         BufferedAoCtrl_SetDataI32(BufferedAoCtrl *obj, int32 count, int32 rawData[])                                    { return DAQFN_ETTT(DNLAPI_AO, 39, int32, int32, void*)(obj, sizeof(int32), count, rawData);     }
 BDAQINL ErrorCode         BufferedAoCtrl_SetDataF64(BufferedAoCtrl *obj, int32 count, double scaledData[])                                { return DAQFN_ETTT(DNLAPI_AO, 39, int32, int32, void*)(obj, sizeof(double), count, scaledData); }
@@ -2784,7 +2826,7 @@ BDAQINL Trigger *         BufferedAoCtrl_getTrigger1(BufferedAoCtrl *obj)       
 BDAQINL int8              BufferedAoCtrl_getStreaming(BufferedAoCtrl *obj)                                                                { return DAQFN_TV(DNLAPI_AO, 45, int8)(obj);                }
 BDAQINL ErrorCode         BufferedAoCtrl_setStreaming(BufferedAoCtrl *obj, int8 value)                                                    { return DAQFN_ET(DNLAPI_AO, 46, int8)(obj, value);         }
 /*creator*/
-BDAQINL BufferedAoCtrl *  BufferedAoCtrl_Create(void)                                                                                     { return (BufferedAoCtrl *)DaqCtrlBase_Create(SceBufferedAo); } 
+BDAQINL BufferedAoCtrl *  BufferedAoCtrl_Create(void)                                                                                     { return (BufferedAoCtrl *)DaqCtrlBase_Create(SceBufferedAo); }
 
 /*Helpers*/
 BDAQINL void              BufferedAoCtrl_addDataTransmittedHandler(BufferedAoCtrl *obj, BfdAoEventProc proc, void *userParam)             { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtBufferedAoDataTransmitted, (DaqEventProc)proc, userParam); }
@@ -2798,7 +2840,7 @@ BDAQINL void              BufferedAoCtrl_removeTransitStoppedHandler(BufferedAoC
 BDAQINL void              BufferedAoCtrl_addStoppedHandler(BufferedAoCtrl *obj, BfdAoEventProc proc, void *userParam)                     { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtBufferedAoStopped,         (DaqEventProc)proc, userParam); }
 BDAQINL void              BufferedAoCtrl_removeStoppedHandler(BufferedAoCtrl *obj, BfdAoEventProc proc, void *userParam)                  { DaqCtrlBase_removeEventHandler((DaqCtrlBase*)obj, EvtBufferedAoStopped,         (DaqEventProc)proc, userParam); }
 
-/*************************************************************/                                                                              
+/*************************************************************/
 /*ctrl class : DIO related classes                           */
 /* ----------------------------------------------------------*/
 /*DioPort*/
@@ -2806,12 +2848,12 @@ BDAQINL void              BufferedAoCtrl_removeStoppedHandler(BufferedAoCtrl *ob
 BDAQINL int32             DioPort_getPort(DioPort *obj)                                                                                 { return DAQFN_TV(DNLAPI_DIO, 0, int32)(obj);        }
 BDAQINL uint8             DioPort_getDirectionMask(DioPort *obj)                                                                        { return (uint8)DAQFN_TV(DNLAPI_DIO, 1, int32)(obj); }
 BDAQINL ErrorCode         DioPort_setDirectionMask(DioPort *obj, uint8 value)                                                           { return DAQFN_ET(DNLAPI_DIO, 2, int32)(obj, value); }
-/*DI port property*/     
+/*DI port property*/
 BDAQINL uint8             DioPort_getDiInversePort(DioPort *obj)                                                                        { return DAQFN_TV(DNLAPI_DIO, 3, uint8)(obj);        }
 BDAQINL ErrorCode         DioPort_setDiInversePort(DioPort *obj, uint8 value)                                                           { return DAQFN_ET(DNLAPI_DIO, 4, uint8)(obj, value); }
 BDAQINL uint8             DioPort_getDiOpenState(DioPort *obj)                                                                          { return DAQFN_TV(DNLAPI_DIO, 133, uint8)(obj);        }
 BDAQINL ErrorCode         DioPort_setDiOpenState(DioPort *obj, uint8 value)                                                             { return DAQFN_ET(DNLAPI_DIO, 134, uint8)(obj, value); }
-/*DO port property*/     
+/*DO port property*/
 BDAQINL uint8             DioPort_getDoPresetValue(DioPort *obj)                                                                        { return DAQFN_TV(DNLAPI_DIO, 64, uint8)(obj);       }
 BDAQINL ErrorCode         DioPort_setDoPresetValue(DioPort *obj, uint8 value)                                                           { return DAQFN_ET(DNLAPI_DIO, 65, uint8)(obj, value);}
 BDAQINL DoCircuitType     DioPort_getDoCircuitType(DioPort *obj)                                                                        { return DAQFN_TV(DNLAPI_DIO, 67, DoCircuitType)(obj);       }
@@ -2821,9 +2863,9 @@ BDAQINL ErrorCode         DioPort_setDoCircuitType(DioPort *obj, DoCircuitType v
 #define DioPort_getDirection(obj)        (DioPortDir)DioPort_getDirectionMask(obj)
 #define DioPort_setDirection(obj, value) DioPort_setDirectionMask(obj, (uint8)value)
 
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 /*DiintChannel*/
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 BDAQINL int32             DiintChannel_getChannel(DiintChannel *obj)                                                                    { return DAQFN_TV(DNLAPI_DIO, 7 , int32)(obj);       }
 BDAQINL int8              DiintChannel_getEnabled(DiintChannel *obj)                                                                    { return DAQFN_TV(DNLAPI_DIO, 8 , int8)(obj);        }
 BDAQINL ErrorCode         DiintChannel_setEnabled(DiintChannel *obj, int8 value)                                                        { return DAQFN_ET(DNLAPI_DIO, 9 , int8)(obj, value); }
@@ -2832,23 +2874,23 @@ BDAQINL ErrorCode         DiintChannel_setGated(DiintChannel *obj, int8 value)  
 BDAQINL ActiveSignal      DiintChannel_getTrigEdge(DiintChannel *obj)                                                                   { return DAQFN_TV(DNLAPI_DIO, 12, ActiveSignal)(obj);}
 BDAQINL ErrorCode         DiintChannel_setTrigEdge(DiintChannel *obj, ActiveSignal value)                                               { return DAQFN_ET(DNLAPI_DIO, 13, ActiveSignal)(obj, value);}
 
-/* ----------------------------------------------------------*/                                          
-/*DiCosintPort                                               */                                          
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
+/*DiCosintPort                                               */
+/* ----------------------------------------------------------*/
 BDAQINL int32             DiCosintPort_getPort(DiCosintPort *obj)                                                                       { return DAQFN_TV(DNLAPI_DIO, 14, int32)(obj);       }
 BDAQINL uint8             DiCosintPort_getMask(DiCosintPort *obj)                                                                       { return DAQFN_TV(DNLAPI_DIO, 15, uint8)(obj);       }
 BDAQINL ErrorCode         DiCosintPort_setMask(DiCosintPort *obj, uint8 value)                                                          { return DAQFN_ET(DNLAPI_DIO, 16, uint8)(obj, value);}
 
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 /*DiPmintPort                                                */
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 BDAQINL int32             DiPmintPort_getPort(DiPmintPort *obj)                                                                         { return DAQFN_TV(DNLAPI_DIO, 17, int32)(obj);       }
 BDAQINL uint8             DiPmintPort_getMask(DiPmintPort *obj)                                                                         { return DAQFN_TV(DNLAPI_DIO, 18, uint8)(obj);       }
 BDAQINL ErrorCode         DiPmintPort_setMask(DiPmintPort *obj, uint8 value)                                                            { return DAQFN_ET(DNLAPI_DIO, 19, uint8)(obj, value);}
 BDAQINL uint8             DiPmintPort_getPattern(DiPmintPort *obj)                                                                      { return DAQFN_TV(DNLAPI_DIO, 20, uint8)(obj);       }
 BDAQINL ErrorCode         DiPmintPort_setPattern(DiPmintPort *obj, uint8 value)                                                         { return DAQFN_ET(DNLAPI_DIO, 21, uint8)(obj, value);}
 
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 /*DIO features                                               */
 /* ----------------------------------------------------------*/
 /*Common*/
@@ -2859,7 +2901,7 @@ BDAQINL IArray *          DioFeatures_getPortsType(DioFeatures *obj)            
 BDAQINL int8              DioFeatures_getDiSupported(DioFeatures *obj)                                                                  { return DAQFN_TV(DNLAPI_DIO, 26, int8)(obj);   }
 BDAQINL int8              DioFeatures_getDoSupported(DioFeatures *obj)                                                                  { return DAQFN_TV(DNLAPI_DIO, 27, int8)(obj);   }
 
-/*DI Features*/          
+/*DI Features*/
 BDAQINL IArray *          DioFeatures_getDiDataMask(DioFeatures *obj)                                                                   { return DAQFN_TV(DNLAPI_DIO, 28, IArray *)(obj); }
 
 /*di noise filter features*/
@@ -2879,12 +2921,12 @@ BDAQINL IArray *          DioFeatures_getDiCosintOfPorts(DioFeatures *obj)      
 BDAQINL IArray *          DioFeatures_getDiPmintOfPorts(DioFeatures *obj)                                                               { return DAQFN_TV(DNLAPI_DIO, 40, IArray *)(obj); }
 BDAQINL IArray *          DioFeatures_getDiSnapEventSources(DioFeatures *obj)                                                           { return DAQFN_TV(DNLAPI_DIO, 41, IArray *)(obj); }
 
-/*DO features */     
+/*DO features */
 BDAQINL IArray *          DioFeatures_getDoDataMask(DioFeatures *obj)                                                                   { return DAQFN_TV(DNLAPI_DIO, 42, IArray *)(obj);         }
 BDAQINL IArray *          DioFeatures_getDoFreezeSignalSources(DioFeatures *obj)                                                        { return DAQFN_TV(DNLAPI_DIO, 43, IArray *)(obj);         }
 BDAQINL void              DioFeatures_getDoReflectWdtFeedIntervalRange(DioFeatures *obj, MathInterval *x)                               {        DAQFN_VT(DNLAPI_DIO, 44, MathInterval *)(obj, x);}
 BDAQINL Depository        DioFeatures_getDoPresetValueDepository(DioFeatures *obj)                                                      { return DAQFN_TV(DNLAPI_DIO, 63, Depository)(obj);       }
-BDAQINL IArray *          DioFeatures_getDoCircuitSelectableTypes(DioFeatures *obj)                                                     { return DAQFN_TV(DNLAPI_DIO, 66, IArray *)(obj);         } 
+BDAQINL IArray *          DioFeatures_getDoCircuitSelectableTypes(DioFeatures *obj)                                                     { return DAQFN_TV(DNLAPI_DIO, 66, IArray *)(obj);         }
 
 /*For compatible*/
 BDAQINL IArray *          DioFeatures_getDataMask(DioFeatures *obj)                                                                     { return DAQFN_TV(DNLAPI_DIO, 62, IArray *)(obj); }
@@ -2908,7 +2950,7 @@ BDAQINL IArray *          DioFeatures_getDiTriggerSources(DioFeatures *obj)     
 BDAQINL ValueRange        DioFeatures_getDiTriggerSourceVrg(DioFeatures *obj)                                                          { return DAQFN_TT(DNLAPI_DIO,  78,  ValueRange, int32)(obj, 0);       }
 BDAQINL double            DioFeatures_getDiTriggerHysteresisIndexMax(DioFeatures *obj)                                                 { return DAQFN_TT(DNLAPI_DIO,  79,  double, int32)(obj, 0);           }
 BDAQINL int32             DioFeatures_getDiTriggerHysteresisIndexStep(DioFeatures *obj)                                                { return DAQFN_TT(DNLAPI_DIO,  80,  int32, int32)(obj, 0);            }
-/*buffered di->trigger1 features*/                                                                  
+/*buffered di->trigger1 features*/
 BDAQINL IArray *          DioFeatures_getDiTrigger1Actions(DioFeatures *obj)                                                           { return DAQFN_TT(DNLAPI_DIO,  75,  IArray *, int32)(obj, 1);         }
 BDAQINL void              DioFeatures_getDiTrigger1DelayRange(DioFeatures *obj, MathInterval *x)                                       {        DAQFN_VTT(DNLAPI_DIO, 76,  int32, MathInterval *)(obj, 1, x);}
 BDAQINL IArray *          DioFeatures_getDiTrigger1Sources(DioFeatures *obj)                                                           { return DAQFN_TT(DNLAPI_DIO,  77,  IArray *, int32)(obj, 1);         }
@@ -2939,7 +2981,7 @@ BDAQINL IArray *          DioFeatures_getDoTriggerSources(DioFeatures *obj)     
 BDAQINL ValueRange        DioFeatures_getDoTriggerSourceVrg(DioFeatures *obj)                                                          { return DAQFN_TT(DNLAPI_DIO,  103,  ValueRange, int32)(obj, 0);       }
 BDAQINL double            DioFeatures_getDoTriggerHysteresisIndexMax(DioFeatures *obj)                                                 { return DAQFN_TT(DNLAPI_DIO,  104,  double, int32)(obj, 0);           }
 BDAQINL int32             DioFeatures_getDoTriggerHysteresisIndexStep(DioFeatures *obj)                                                { return DAQFN_TT(DNLAPI_DIO,  105,  int32, int32)(obj, 0);            }
-/*buffered do->trigger1 features*/                                                                  
+/*buffered do->trigger1 features*/
 BDAQINL IArray *          DioFeatures_getDoTrigger1Actions(DioFeatures *obj)                                                           { return DAQFN_TT(DNLAPI_DIO,  100,  IArray *, int32)(obj, 1);         }
 BDAQINL void              DioFeatures_getDoTrigger1DelayRange(DioFeatures *obj, MathInterval *x)                                       {        DAQFN_VTT(DNLAPI_DIO, 101,  int32, MathInterval *)(obj, 1, x);}
 BDAQINL IArray *          DioFeatures_getDoTrigger1Sources(DioFeatures *obj)                                                           { return DAQFN_TT(DNLAPI_DIO,  102,  IArray *, int32)(obj, 1);         }
@@ -2951,7 +2993,7 @@ BDAQINL int32             DioFeatures_getDoTrigger1HysteresisIndexStep(DioFeatur
 /*InstantDiCtrl                                              */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         InstantDiCtrl_LoadProfile(InstantDiCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         InstantDiCtrl_LoadProfile(InstantDiCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              InstantDiCtrl_Cleanup(InstantDiCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              InstantDiCtrl_Dispose(InstantDiCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              InstantDiCtrl_getSelectedDevice(InstantDiCtrl *obj, DeviceInformation *x)                                     {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -2960,7 +3002,7 @@ BDAQINL ControlState      InstantDiCtrl_getState(void *obj)                     
 BDAQINL DeviceCtrl *      InstantDiCtrl_getDevice(InstantDiCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj); }
 BDAQINL IArray *          InstantDiCtrl_getSupportedDevices(InstantDiCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);     }
 BDAQINL IArray *          InstantDiCtrl_getSupportedModes(InstantDiCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);     }
-/*base2*/                
+/*base2*/
 BDAQINL DioFeatures *     InstantDiCtrl_getFeatures(InstantDiCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_DIO, 45, DioFeatures *)(obj); }
 BDAQINL int32             InstantDiCtrl_getPortCount(InstantDiCtrl *obj)                                                                { return DAQFN_TV(DNLAPI_DIO, 46, int32)(obj);         }
 BDAQINL IArray *          InstantDiCtrl_getPorts(InstantDiCtrl *obj)                                                                    { return DAQFN_TV(DNLAPI_DIO, 47, IArray *)(obj);      }
@@ -2976,7 +3018,7 @@ BDAQINL IArray *          InstantDiCtrl_getDiintChannels(InstantDiCtrl *obj)    
 BDAQINL IArray *          InstantDiCtrl_getDiCosintPorts(InstantDiCtrl *obj)                                                            { return DAQFN_TV(DNLAPI_DIO, 56, IArray *)(obj);      }
 BDAQINL IArray *          InstantDiCtrl_getDiPmintPorts(InstantDiCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_DIO, 57, IArray *)(obj);      }
 /*creator*/
-BDAQINL InstantDiCtrl *   InstantDiCtrl_Create(void)                                                                                    { return (InstantDiCtrl *)DaqCtrlBase_Create(SceInstantDi); } 
+BDAQINL InstantDiCtrl *   InstantDiCtrl_Create(void)                                                                                    { return (InstantDiCtrl *)DaqCtrlBase_Create(SceInstantDi); }
 
 /*Helpers*/
 BDAQINL void              InstantDiCtrl_addInterruptHandler(InstantDiCtrl *obj,DiSnapEventProc proc, void *userParam)                   { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtDiInterrupt,    (DaqEventProc)proc, userParam);}
@@ -2990,7 +3032,7 @@ BDAQINL void              InstantDiCtrl_removePatternMatchHandler(InstantDiCtrl 
 /*BufferedDiCtrl                                             */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         BufferedDiCtrl_LoadProfile(BufferedDiCtrl *obj, wchar_t const *fileName)                                     { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         BufferedDiCtrl_LoadProfile(BufferedDiCtrl *obj, wchar_t const *fileName)                                     { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              BufferedDiCtrl_Cleanup(BufferedDiCtrl *obj)                                                                  {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              BufferedDiCtrl_Dispose(BufferedDiCtrl *obj)                                                                  {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              BufferedDiCtrl_getSelectedDevice(BufferedDiCtrl *obj, DeviceInformation *x)                                  {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3000,7 +3042,7 @@ BDAQINL DeviceCtrl *      BufferedDiCtrl_getDevice(BufferedDiCtrl *obj)         
 BDAQINL IArray *          BufferedDiCtrl_getSupportedDevices(BufferedDiCtrl *obj)                                                      { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);    }
 BDAQINL IArray *          BufferedDiCtrl_getSupportedModes(BufferedDiCtrl *obj)                                                        { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);    }
 
-/*base2*/                
+/*base2*/
 BDAQINL DioFeatures *     BufferedDiCtrl_getFeatures(BufferedDiCtrl *obj)                                                              { return DAQFN_TV(DNLAPI_DIO, 45, DioFeatures *)(obj); }
 BDAQINL int32             BufferedDiCtrl_getPortCount(BufferedDiCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_DIO, 46, int32)(obj);         }
 BDAQINL IArray *          BufferedDiCtrl_getPorts(BufferedDiCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_DIO, 47, IArray *)(obj);      }
@@ -3010,13 +3052,13 @@ BDAQINL ErrorCode         BufferedDiCtrl_Prepare(BufferedDiCtrl *obj)           
 BDAQINL ErrorCode         BufferedDiCtrl_Start(BufferedDiCtrl *obj)                                                                    { return DAQFN_EV(DNLAPI_DIO, 82)(obj);   }
 BDAQINL ErrorCode         BufferedDiCtrl_Stop(BufferedDiCtrl *obj)                                                                     { return DAQFN_EV(DNLAPI_DIO, 83)(obj);   }
 BDAQINL void              BufferedDiCtrl_Release(BufferedDiCtrl *obj)                                                                  {        DAQFN_VV(DNLAPI_DIO, 84)(obj);   }
-BDAQINL int8              BufferedDiCtrl_GetBufferStatus(BufferedDiCtrl *obj, int32 *count, int32 *offset)                             { return DAQFN_TTT(DNLAPI_DIO, 85, int8, int32 *, int32 *)(obj, count, offset); }  
+BDAQINL int8              BufferedDiCtrl_GetBufferStatus(BufferedDiCtrl *obj, int32 *count, int32 *offset)                             { return DAQFN_TTT(DNLAPI_DIO, 85, int8, int32 *, int32 *)(obj, count, offset); }
 
-BDAQINL ErrorCode BufferedDiCtrl_GetData(BufferedDiCtrl *obj, int32 count, int8 dataBuf[], 
+BDAQINL ErrorCode BufferedDiCtrl_GetData(BufferedDiCtrl *obj, int32 count, int8 dataBuf[],
                                             int32 timeout, int32 *returned, double * startTime, int32 *markCount, DataMark *markBuf)
-{ 
+{
    typedef ErrorCode (BDAQCALL *FNGETDATA)(void *, int32, void *, int32, int32 *, double *, int32 *, DataMark *);
-   return ((FNGETDATA)DNLAPI_DIO[86])(obj, count, dataBuf, timeout, returned, startTime, markCount, markBuf);        
+   return ((FNGETDATA)DNLAPI_DIO[86])(obj, count, dataBuf, timeout, returned, startTime, markCount, markBuf);
 }
 
 BDAQINL void*             BufferedDiCtrl_getBuffer(BufferedDiCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_DIO, 87, void*)(obj);               }
@@ -3026,7 +3068,7 @@ BDAQINL ConvertClock*     BufferedDiCtrl_getConvertClock(BufferedDiCtrl *obj)   
 BDAQINL Trigger *         BufferedDiCtrl_getTrigger(BufferedDiCtrl *obj)                                                                  { return DAQFN_TT(DNLAPI_DIO, 91, Trigger *, int32)(obj, 0); }
 BDAQINL Trigger *         BufferedDiCtrl_getTrigger1(BufferedDiCtrl *obj)                                                                 { return DAQFN_TT(DNLAPI_DIO, 91, Trigger *, int32)(obj, 1); }
 
-BDAQINL BufferedDiCtrl *  BufferedDiCtrl_Create(void)                                                                                     { return (BufferedDiCtrl *)DaqCtrlBase_Create(SceBufferedDi); } 
+BDAQINL BufferedDiCtrl *  BufferedDiCtrl_Create(void)                                                                                     { return (BufferedDiCtrl *)DaqCtrlBase_Create(SceBufferedDi); }
 
 /*Helpers*/
 BDAQINL void              BufferedDiCtrl_addDataReadyHandler(BufferedDiCtrl *obj, BfdDiEventProc proc, void *userParam)                   { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtBufferedDiDataReady,     (DaqEventProc)proc, userParam);}
@@ -3042,7 +3084,7 @@ BDAQINL void              BufferedDiCtrl_removeStoppedHandler(BufferedDiCtrl *ob
 /*InstantDoCtrl                                              */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         InstantDoCtrl_LoadProfile(InstantDoCtrl *obj, wchar_t const *fileName)                                           { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         InstantDoCtrl_LoadProfile(InstantDoCtrl *obj, wchar_t const *fileName)                                           { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              InstantDoCtrl_Cleanup(InstantDoCtrl *obj)                                                                        {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              InstantDoCtrl_Dispose(InstantDoCtrl *obj)                                                                        {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              InstantDoCtrl_getSelectedDevice(InstantDoCtrl *obj, DeviceInformation *x)                                        {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3051,24 +3093,24 @@ BDAQINL ControlState      InstantDoCtrl_getState(void *obj)                     
 BDAQINL DeviceCtrl *      InstantDoCtrl_getDevice(InstantDoCtrl *obj)                                                                      { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj); }
 BDAQINL IArray *          InstantDoCtrl_getSupportedDevices(InstantDoCtrl *obj)                                                            { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);     }
 BDAQINL IArray *          InstantDoCtrl_getSupportedModes(InstantDoCtrl *obj)                                                              { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);     }
-/*base2*/                
+/*base2*/
 BDAQINL DioFeatures *     InstantDoCtrl_getFeatures(InstantDoCtrl *obj)                                                                    { return DAQFN_TV(DNLAPI_DIO, 45, DioFeatures *)(obj); }
 BDAQINL int32             InstantDoCtrl_getPortCount(InstantDoCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_DIO, 46, int32)(obj);         }
 BDAQINL IArray *          InstantDoCtrl_getPorts(InstantDoCtrl *obj)                                                                       { return DAQFN_TV(DNLAPI_DIO, 47, IArray *)(obj);      }
-/* Instant DO methods */ 
+/* Instant DO methods */
 BDAQINL ErrorCode         InstantDoCtrl_WriteAny(InstantDoCtrl *obj, int32 portStart, int32 portCount, uint8 data[])                       { return DAQFN_ETTT(DNLAPI_DIO, 58, int32, int32, uint8 *)(obj, portStart, portCount, data); }
 BDAQINL ErrorCode         InstantDoCtrl_ReadAny(InstantDoCtrl *obj, int32 portStart, int32 portCount, uint8 data[])                        { return DAQFN_ETTT(DNLAPI_DIO, 59, int32, int32, uint8 *)(obj, portStart, portCount, data); }
 BDAQINL ErrorCode         InstantDoCtrl_WriteBit(InstantDoCtrl *obj, int32 port, int32 bit, uint8 data)                                    { return DAQFN_ETTT(DNLAPI_DIO, 60, int32, int32, uint8  )(obj, port, bit, data);            }
 BDAQINL ErrorCode         InstantDoCtrl_ReadBit(InstantDoCtrl *obj, int32 port, int32 bit, uint8* data)                                    { return DAQFN_ETTT(DNLAPI_DIO, 61, int32, int32, uint8 *)(obj, port, bit, data);            }
 /*creator*/
-BDAQINL InstantDoCtrl *   InstantDoCtrl_Create(void)                                                                                       { return (InstantDoCtrl *)DaqCtrlBase_Create(SceInstantDo); } 
+BDAQINL InstantDoCtrl *   InstantDoCtrl_Create(void)                                                                                       { return (InstantDoCtrl *)DaqCtrlBase_Create(SceInstantDo); }
 
 
 /* ----------------------------------------------------------*/
 /*BufferedDoCtrl                                             */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         BufferedDoCtrl_LoadProfile(BufferedDoCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         BufferedDoCtrl_LoadProfile(BufferedDoCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              BufferedDoCtrl_Cleanup(BufferedDoCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              BufferedDoCtrl_Dispose(BufferedDoCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              BufferedDoCtrl_getSelectedDevice(BufferedDoCtrl *obj, DeviceInformation *x)                                     {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3077,18 +3119,18 @@ BDAQINL ControlState      BufferedDoCtrl_getState(void *obj)                    
 BDAQINL DeviceCtrl *      BufferedDoCtrl_getDevice(BufferedDoCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);}
 BDAQINL IArray *          BufferedDoCtrl_getSupportedDevices(BufferedDoCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);    }
 BDAQINL IArray *          BufferedDoCtrl_getSupportedModes(BufferedDoCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);    }
-/* base2*/                                                                                                                                  
+/* base2*/
 BDAQINL DioFeatures *     BufferedDoCtrl_getFeatures(BufferedDoCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_DIO, 45, DioFeatures *)(obj); }
 BDAQINL int32             BufferedDoCtrl_getPortCount(BufferedDoCtrl *obj)                                                                { return DAQFN_TV(DNLAPI_DIO, 46, int32)(obj);         }
 BDAQINL IArray *          BufferedDoCtrl_getPorts(BufferedDoCtrl *obj)                                                                    { return DAQFN_TV(DNLAPI_DIO, 47, IArray *)(obj);      }
 
-/* BufferedDoCtrl Methods & Properties */                                                                                                   
+/* BufferedDoCtrl Methods & Properties */
 BDAQINL ErrorCode         BufferedDoCtrl_Prepare(BufferedDoCtrl *obj)                                                                     { return DAQFN_EV(DNLAPI_DIO, 106)(obj);   }
 BDAQINL ErrorCode         BufferedDoCtrl_RunOnce(BufferedDoCtrl *obj)                                                                     { return DAQFN_EV(DNLAPI_DIO, 107)(obj);   }
 BDAQINL ErrorCode         BufferedDoCtrl_Start(BufferedDoCtrl *obj)                                                                       { return DAQFN_EV(DNLAPI_DIO, 108)(obj);   }
 BDAQINL ErrorCode         BufferedDoCtrl_Stop(BufferedDoCtrl *obj, int32 action)                                                          { return DAQFN_ET(DNLAPI_DIO, 109, int32)(obj, action); }
 BDAQINL void              BufferedDoCtrl_Release(BufferedDoCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_DIO, 110)(obj);                }
-BDAQINL int8              BufferedDoCtrl_GetBufferStatus(BufferedDoCtrl *obj, int32 *count, int32 *offset)                                { return DAQFN_TTT(DNLAPI_DIO, 111, int8, int32 *, int32 *)(obj, count, offset);    }  
+BDAQINL int8              BufferedDoCtrl_GetBufferStatus(BufferedDoCtrl *obj, int32 *count, int32 *offset)                                { return DAQFN_TTT(DNLAPI_DIO, 111, int8, int32 *, int32 *)(obj, count, offset);    }
 BDAQINL ErrorCode         BufferedDoCtrl_SetData(BufferedDoCtrl *obj, int32 count, int8 rawData[])                                        { return DAQFN_ETT(DNLAPI_DIO, 112, int32, void*)(obj, count, rawData);     }
 BDAQINL void*             BufferedDoCtrl_getBuffer(BufferedDoCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_DIO, 113, void*)(obj);               }
 BDAQINL int32             BufferedDoCtrl_getBufferCapacity(BufferedDoCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_DIO, 114, int32)(obj);               }
@@ -3116,7 +3158,7 @@ BDAQINL ErrorCode         ScanPort_setCycles(ScanPort *obj, int32 value)        
 
 
 /*creator*/
-BDAQINL BufferedDoCtrl *  BufferedDoCtrl_Create(void)                                                                                     { return (BufferedDoCtrl *)DaqCtrlBase_Create(SceBufferedDo); } 
+BDAQINL BufferedDoCtrl *  BufferedDoCtrl_Create(void)                                                                                     { return (BufferedDoCtrl *)DaqCtrlBase_Create(SceBufferedDo); }
 
 /*Helpers*/
 BDAQINL void              BufferedDoCtrl_addDataTransmittedHandler(BufferedDoCtrl *obj, BfdDoEventProc proc, void *userParam)             { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtBufferedDoDataTransmitted, (DaqEventProc)proc, userParam); }
@@ -3152,7 +3194,7 @@ BDAQINL ICounterIndexer * CntrFeatures_getCapabilities(CntrFeatures *obj)       
 /*noise filter features*/
 BDAQINL int8              CntrFeatures_getNoiseFilterSupported(CntrFeatures *obj)                                                       { return DAQFN_TV(DNLAPI_CNTR, 7, int8)(obj);     }
 BDAQINL IArray *          CntrFeatures_getNoiseFilterOfChannels(CntrFeatures *obj)                                                      { return DAQFN_TV(DNLAPI_CNTR, 8, IArray *)(obj); }
-BDAQINL void              CntrFeatures_getNoiseFilterBlockTimeRange(CntrFeatures *obj, MathInterval *x)                                 {        DAQFN_VT(DNLAPI_CNTR, 9, MathInterval *)(obj, x); } 
+BDAQINL void              CntrFeatures_getNoiseFilterBlockTimeRange(CntrFeatures *obj, MathInterval *x)                                 {        DAQFN_VT(DNLAPI_CNTR, 9, MathInterval *)(obj, x); }
 
 /*new: measurement timeout range*/
 BDAQINL void              CntrFeatures_getMeasurementTimeoutRange(CntrFeatures *obj, MathInterval *x)                                   {        DAQFN_VT(DNLAPI_CNTR, 129, MathInterval *)(obj, x); }
@@ -3163,10 +3205,10 @@ BDAQINL IArray *          CntrFeatures_getEcClockPolarities(CntrFeatures *obj)  
 BDAQINL IArray *          CntrFeatures_getEcGatePolarities(CntrFeatures *obj)                                                           { return DAQFN_TV(DNLAPI_CNTR, 11, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getEcGateControlOfChannels(CntrFeatures *obj)                                                    { return DAQFN_TV(DNLAPI_CNTR, 12, IArray *)(obj); }
 
-/*frequency measurement features*/                                                                      
+/*frequency measurement features*/
 BDAQINL IArray *          CntrFeatures_getFmMethods(CntrFeatures *obj)                                                                  { return DAQFN_TV(DNLAPI_CNTR, 13, IArray *)(obj); }
 
-/*one-shot features*/                                                                                   
+/*one-shot features*/
 BDAQINL ICounterIndexer * CntrFeatures_getOsClockSources(CntrFeatures *obj)                                                             { return DAQFN_TV(DNLAPI_CNTR, 14, ICounterIndexer *)(obj);}
 BDAQINL IArray *          CntrFeatures_getOsClockPolarities(CntrFeatures *obj)                                                          { return DAQFN_TV(DNLAPI_CNTR, 15, IArray *)(obj);      }
 BDAQINL ICounterIndexer * CntrFeatures_getOsGateSources(CntrFeatures *obj)                                                              { return DAQFN_TV(DNLAPI_CNTR, 16, ICounterIndexer *)(obj);}
@@ -3174,21 +3216,21 @@ BDAQINL IArray *          CntrFeatures_getOsGatePolarities(CntrFeatures *obj)   
 BDAQINL IArray *          CntrFeatures_getOsOutSignals(CntrFeatures *obj)                                                               { return DAQFN_TV(DNLAPI_CNTR, 18, IArray *)(obj);      }
 BDAQINL void              CntrFeatures_getOsDelayCountRange(CntrFeatures *obj, MathInterval *x)                                         {        DAQFN_VT(DNLAPI_CNTR, 19, MathInterval *)(obj, x); }
 
-/*timer/pulse features */                                                                               
+/*timer/pulse features */
 BDAQINL IArray *          CntrFeatures_getTmrGateControlOfChannels(CntrFeatures *obj)                                                   { return DAQFN_TV(DNLAPI_CNTR, 20, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getTmrGatePolarities(CntrFeatures *obj)                                                          { return DAQFN_TV(DNLAPI_CNTR, 21, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getTmrOutSignals(CntrFeatures *obj)                                                              { return DAQFN_TV(DNLAPI_CNTR, 22, IArray *)(obj); }
 BDAQINL void              CntrFeatures_getTmrFrequencyRange(CntrFeatures *obj, MathInterval *x)                                         {        DAQFN_VT(DNLAPI_CNTR, 23, MathInterval *)(obj, x); }
 
-/*pulse width measurement features*/                                                                    
+/*pulse width measurement features*/
 BDAQINL IArray *          CntrFeatures_getPiCascadeGroup(CntrFeatures *obj)                                                             { return DAQFN_TV(DNLAPI_CNTR, 24, IArray *)(obj); }
 
-/*pulse width modulation features*/                                                                     
+/*pulse width modulation features*/
 BDAQINL IArray *          CntrFeatures_getPoGateControlOfChannels(CntrFeatures *obj)                                                    { return DAQFN_TV(DNLAPI_CNTR, 25, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getPoGatePolarities(CntrFeatures *obj)                                                           { return DAQFN_TV(DNLAPI_CNTR, 26, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getPoOutSignals(CntrFeatures *obj)                                                               { return DAQFN_TV(DNLAPI_CNTR, 27, IArray *)(obj); }
-BDAQINL void              CntrFeatures_getPoHiPeriodRange(CntrFeatures *obj, MathInterval *x)                                           {        DAQFN_VT(DNLAPI_CNTR, 28, MathInterval *)(obj, x); } 
-BDAQINL void              CntrFeatures_getPoLoPeriodRange(CntrFeatures *obj, MathInterval *x)                                           {        DAQFN_VT(DNLAPI_CNTR, 29, MathInterval *)(obj, x); } 
+BDAQINL void              CntrFeatures_getPoHiPeriodRange(CntrFeatures *obj, MathInterval *x)                                           {        DAQFN_VT(DNLAPI_CNTR, 28, MathInterval *)(obj, x); }
+BDAQINL void              CntrFeatures_getPoLoPeriodRange(CntrFeatures *obj, MathInterval *x)                                           {        DAQFN_VT(DNLAPI_CNTR, 29, MathInterval *)(obj, x); }
 BDAQINL void              CntrFeatures_getPoOutCountRange(CntrFeatures *obj, MathInterval *x)                                           {        DAQFN_VT(DNLAPI_CNTR, 30, MathInterval *)(obj, x); }
 
 /* new trigger features for pulse width modulation*/
@@ -3203,14 +3245,15 @@ BDAQINL IArray *          CntrFeatures_getUdInitialValues(CntrFeatures *obj)    
 BDAQINL IArray *          CntrFeatures_getUdSnapEventSources(CntrFeatures *obj)                                                         { return DAQFN_TV(DNLAPI_CNTR, 33, IArray *)(obj); }
 BDAQINL void              CntrFeatures_getUdValueResetTimes(CntrFeatures *obj, MathInterval *x)                                         {        DAQFN_VT(DNLAPI_CNTR, 192, MathInterval *)(obj, x); }
 
-// new features for Counter continue comparing: outputting pulse settings 
+// new features for Counter continue comparing: outputting pulse settings
 BDAQINL IArray *          CntrFeatures_getCcpGateControlOfChannels(CntrFeatures *obj)                                                   { return DAQFN_TV(DNLAPI_CNTR, 196, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getCcpGatePolarities(CntrFeatures *obj)                                                          { return DAQFN_TV(DNLAPI_CNTR, 197, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getCcpOutSignals(CntrFeatures *obj)                                                              { return DAQFN_TV(DNLAPI_CNTR, 198, IArray *)(obj); }
-BDAQINL void              CntrFeatures_getCcpHiPeriodRange(CntrFeatures *obj, MathInterval *x)                                          {        DAQFN_VT(DNLAPI_CNTR, 199, MathInterval *)(obj, x); } 
-BDAQINL void              CntrFeatures_getCcpLoPeriodRange(CntrFeatures *obj, MathInterval *x)                                          {        DAQFN_VT(DNLAPI_CNTR, 200, MathInterval *)(obj, x); } 
+BDAQINL void              CntrFeatures_getCcpHiPeriodRange(CntrFeatures *obj, MathInterval *x)                                          {        DAQFN_VT(DNLAPI_CNTR, 199, MathInterval *)(obj, x); }
+BDAQINL void              CntrFeatures_getCcpLoPeriodRange(CntrFeatures *obj, MathInterval *x)                                          {        DAQFN_VT(DNLAPI_CNTR, 200, MathInterval *)(obj, x); }
 BDAQINL void              CntrFeatures_getCcpOutCountRange(CntrFeatures *obj, MathInterval *x)                                          {        DAQFN_VT(DNLAPI_CNTR, 201, MathInterval *)(obj, x); }
- 
+BDAQINL int8              CntrFeatures_getCcpDataCtrlCodeSupported(CntrFeatures *obj)                                                   { return DAQFN_TV(DNLAPI_CNTR, 262, int8)(obj);              }
+
 /*buffered counter*/
 BDAQINL int32             CntrFeatures_getTriggerCount(CntrFeatures *obj)                                                               { return DAQFN_TV(DNLAPI_CNTR, 132, int32)(obj);              }
 BDAQINL IArray *          CntrFeatures_getTriggerSources(CntrFeatures *obj)                                                             { return DAQFN_TT(DNLAPI_CNTR, 133, IArray *, int32)(obj, 0); }
@@ -3221,7 +3264,7 @@ BDAQINL ICounterIndexer * CntrFeatures_getPoSampleClockSources(CntrFeatures *obj
 BDAQINL ICounterIndexer * CntrFeatures_getUdSampleClockSources(CntrFeatures *obj)                                                       { return DAQFN_TV(DNLAPI_CNTR, 138, ICounterIndexer *)(obj);  }
 
 /*absolute counter*/
-BDAQINL IArray *          CntrFeatures_getAbsCodingTypes(CntrFeatures *obj)                                                             { return DAQFN_TV(DNLAPI_CNTR, 228, IArray *)(obj); }  
+BDAQINL IArray *          CntrFeatures_getAbsCodingTypes(CntrFeatures *obj)                                                             { return DAQFN_TV(DNLAPI_CNTR, 228, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getAbsBaudrates(CntrFeatures *obj)                                                               { return DAQFN_TV(DNLAPI_CNTR, 229, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getAbsErrorRetTypes(CntrFeatures *obj)                                                           { return DAQFN_TV(DNLAPI_CNTR, 230, IArray *)(obj); }
 BDAQINL IArray *          CntrFeatures_getAbsOutSignals(CntrFeatures *obj)                                                              { return DAQFN_TV(DNLAPI_CNTR, 231, IArray *)(obj); }
@@ -3242,11 +3285,11 @@ BDAQINL ErrorCode         EcChannel_setGatePolarity(EcChannel *obj, SignalPolari
 BDAQINL int8              EcChannel_getGated(EcChannel *obj)                                                                            { return DAQFN_TV(DNLAPI_CNTR, 52, int8)(obj);                  }
 BDAQINL ErrorCode         EcChannel_setGated(EcChannel *obj, int8 value)                                                                { return DAQFN_ET(DNLAPI_CNTR, 53, int8)(obj, value);           }
 
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 /*EventCounterCtrl                                           */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         EventCounterCtrl_LoadProfile(EventCounterCtrl *obj, wchar_t const *fileName)                                  { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         EventCounterCtrl_LoadProfile(EventCounterCtrl *obj, wchar_t const *fileName)                                  { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              EventCounterCtrl_Cleanup(EventCounterCtrl *obj)                                                               {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              EventCounterCtrl_Dispose(EventCounterCtrl *obj)                                                               {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              EventCounterCtrl_getSelectedDevice(EventCounterCtrl *obj, DeviceInformation *x)                               {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3255,7 +3298,7 @@ BDAQINL ControlState      EventCounterCtrl_getState(void *obj)                  
 BDAQINL DeviceCtrl *      EventCounterCtrl_getDevice(EventCounterCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          EventCounterCtrl_getSupportedDevices(EventCounterCtrl *obj)                                                   { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          EventCounterCtrl_getSupportedModes(EventCounterCtrl *obj)                                                     { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                 
+/*base2*/
 BDAQINL CntrFeatures *    EventCounterCtrl_getFeatures(EventCounterCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             EventCounterCtrl_getChannelStart(EventCounterCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         EventCounterCtrl_setChannelStart(EventCounterCtrl *obj, int32 value)                                          { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3273,12 +3316,12 @@ BDAQINL ErrorCode         EventCounterCtrl_setMeasurementTimeout(EventCounterCtr
 BDAQINL ErrorCode         EventCounterCtrl_Read(EventCounterCtrl *obj, int32 count, int32 *buffer)                                      { return DAQFN_ETT(DNLAPI_CNTR, 54, int32, int32 *)(obj, count, buffer); }
 BDAQINL IArray *          EventCounterCtrl_getChannels(EventCounterCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_CNTR, 55, IArray *)(obj);                       }
 /*creator*/
-BDAQINL EventCounterCtrl* EventCounterCtrl_Create(void)                                                                                 { return (EventCounterCtrl *)DaqCtrlBase_Create(SceEventCounter); } 
+BDAQINL EventCounterCtrl* EventCounterCtrl_Create(void)                                                                                 { return (EventCounterCtrl *)DaqCtrlBase_Create(SceEventCounter); }
 
 /*BufferedEventCounterCtrl                                   */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         BufferedEventCounterCtrl_LoadProfile(BufferedEventCounterCtrl *obj, wchar_t const *fileName)                                  { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         BufferedEventCounterCtrl_LoadProfile(BufferedEventCounterCtrl *obj, wchar_t const *fileName)                                  { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              BufferedEventCounterCtrl_Cleanup(BufferedEventCounterCtrl *obj)                                                               {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              BufferedEventCounterCtrl_Dispose(BufferedEventCounterCtrl *obj)                                                               {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              BufferedEventCounterCtrl_getSelectedDevice(BufferedEventCounterCtrl *obj, DeviceInformation *x)                               {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3321,7 +3364,7 @@ BDAQINL ErrorCode         BufferedEventCounterCtrl_GetDataI32(BufferedEventCount
 }
 
 /*creator*/
-BDAQINL BufferedEventCounterCtrl* BufferedEventCounterCtrl_Create(void)                                                                                 { return (BufferedEventCounterCtrl *)DaqCtrlBase_Create(SceBufferedEventCounter); } 
+BDAQINL BufferedEventCounterCtrl* BufferedEventCounterCtrl_Create(void)                                                                                 { return (BufferedEventCounterCtrl *)DaqCtrlBase_Create(SceBufferedEventCounter); }
 
 /*Helpers*/
 BDAQINL void              BufferedEventCounterCtrl_addDataReadyHandler(BufferedEventCounterCtrl *obj, BfdCntrEventProc proc, void *userParam)                   { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtCiDataReady,     (DaqEventProc)proc, userParam);}
@@ -3333,10 +3376,10 @@ BDAQINL void              BufferedEventCounterCtrl_removeCacheOverflowHandler(Bu
 BDAQINL void              BufferedEventCounterCtrl_addStoppedHandler(BufferedEventCounterCtrl *obj, BfdCntrEventProc proc, void *userParam)                     { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtCntrStopped,     (DaqEventProc)proc, userParam);}
 BDAQINL void              BufferedEventCounterCtrl_removeStoppedHandler(BufferedEventCounterCtrl *obj, BfdCntrEventProc proc, void *userParam)                  { DaqCtrlBase_removeEventHandler((DaqCtrlBase*)obj, EvtCntrStopped,     (DaqEventProc)proc, userParam);}
 
-/* ----------------------------------------------------------*/                                          
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
+/* ----------------------------------------------------------*/
 /*FmChannel                                                  */
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 BDAQINL int32             FmChannel_getChannel(FmChannel *obj)                                                                          { return DAQFN_TV(DNLAPI_CNTR, 56, int32)(obj);                   }
 BDAQINL int8              FmChannel_getNoiseFiltered(FmChannel *obj)                                                                    { return DAQFN_TV(DNLAPI_CNTR, 57, int8)(obj);                    }
 BDAQINL ErrorCode         FmChannel_setNoiseFiltered(FmChannel *obj, int8 value)                                                        { return DAQFN_ET(DNLAPI_CNTR, 58, int8)(obj, value);             }
@@ -3347,11 +3390,11 @@ BDAQINL ErrorCode         FmChannel_setCollectionPeriod(FmChannel *obj, double v
 BDAQINL double            FmChannel_getTimeup(FmChannel *obj)                                                                           { return DAQFN_TV(DNLAPI_CNTR, 226,double)(obj);                  }
 BDAQINL ErrorCode         FmChannel_setTimeup(FmChannel *obj, double value)                                                              { return DAQFN_ET(DNLAPI_CNTR, 227,double)(obj, value);           }
 
-/* ----------------------------------------------------------*/                                        
+/* ----------------------------------------------------------*/
 /*FreqMeterCtrl                                              */
-/* ----------------------------------------------------------*/   
+/* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         FreqMeterCtrl_LoadProfile(FreqMeterCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         FreqMeterCtrl_LoadProfile(FreqMeterCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              FreqMeterCtrl_Cleanup(FreqMeterCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              FreqMeterCtrl_Dispose(FreqMeterCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              FreqMeterCtrl_getSelectedDevice(FreqMeterCtrl *obj, DeviceInformation *x)                                     {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3360,7 +3403,7 @@ BDAQINL ControlState      FreqMeterCtrl_getState(void *obj)                     
 BDAQINL DeviceCtrl *      FreqMeterCtrl_getDevice(FreqMeterCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          FreqMeterCtrl_getSupportedDevices(FreqMeterCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          FreqMeterCtrl_getSupportedModes(FreqMeterCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                        
+/*base2*/
 BDAQINL CntrFeatures *    FreqMeterCtrl_getFeatures(FreqMeterCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             FreqMeterCtrl_getChannelStart(FreqMeterCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         FreqMeterCtrl_setChannelStart(FreqMeterCtrl *obj, int32 value)                                                { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3374,11 +3417,11 @@ BDAQINL ErrorCode         FreqMeterCtrl_setNoiseFilterBlockTime(FreqMeterCtrl *o
 BDAQINL NosFltChannel *   FreqMeterCtrl_getNoiseFilter(FreqMeterCtrl *obj)                                                              { return DAQFN_TV(DNLAPI_CNTR, 44, NosFltChannel *)(obj);}
 BDAQINL double            FreqMeterCtrl_getMeasurementTimeout(FreqMeterCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_CNTR, 130, double)(obj);        }
 BDAQINL ErrorCode         FreqMeterCtrl_setMeasurementTimeout(FreqMeterCtrl *obj, double value)                                         { return DAQFN_ET(DNLAPI_CNTR, 131, double)(obj, value); }
-/* Frequency meter methods */                                                                                    
+/* Frequency meter methods */
 BDAQINL ErrorCode         FreqMeterCtrl_Read(FreqMeterCtrl *obj, int32 count, double *buffer)                                           { return DAQFN_ETT(DNLAPI_CNTR, 63, int32, double *)(obj, count, buffer); }
 BDAQINL IArray *          FreqMeterCtrl_getChannels(FreqMeterCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_CNTR, 64, IArray *)(obj);                        }
 /*creator*/
-BDAQINL FreqMeterCtrl*    FreqMeterCtrl_Create(void)                                                                                    { return (FreqMeterCtrl *)DaqCtrlBase_Create(SceFreqMeter); } 
+BDAQINL FreqMeterCtrl*    FreqMeterCtrl_Create(void)                                                                                    { return (FreqMeterCtrl *)DaqCtrlBase_Create(SceFreqMeter); }
 
 /* ----------------------------------------------------------*/
 /*OsChannel                                                  */
@@ -3399,11 +3442,11 @@ BDAQINL ErrorCode         OsChannel_setGatePolarity(OsChannel *obj, SignalPolari
 BDAQINL OutSignalType     OsChannel_getOutSignal(OsChannel *obj)                                                                        { return DAQFN_TV(DNLAPI_CNTR, 78, OutSignalType)(obj);         }
 BDAQINL ErrorCode         OsChannel_setOutSignal(OsChannel *obj, OutSignalType value)                                                   { return DAQFN_ET(DNLAPI_CNTR, 79, OutSignalType)(obj, value);  }
 
-/* ----------------------------------------------------------*/                                                                          
-/*OneShotCtrl                                                */                                                                          
-/* ----------------------------------------------------------*/                                                                          
-/*base1*/                                                                                                                                
-BDAQINL ErrorCode         OneShotCtrl_LoadProfile(OneShotCtrl *obj, wchar_t const *fileName)                                            { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+/* ----------------------------------------------------------*/
+/*OneShotCtrl                                                */
+/* ----------------------------------------------------------*/
+/*base1*/
+BDAQINL ErrorCode         OneShotCtrl_LoadProfile(OneShotCtrl *obj, wchar_t const *fileName)                                            { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              OneShotCtrl_Cleanup(OneShotCtrl *obj)                                                                         {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              OneShotCtrl_Dispose(OneShotCtrl *obj)                                                                         {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              OneShotCtrl_getSelectedDevice(OneShotCtrl *obj, DeviceInformation *x)                                         {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3412,7 +3455,7 @@ BDAQINL ControlState      OneShotCtrl_getState(void *obj)                       
 BDAQINL DeviceCtrl *      OneShotCtrl_getDevice(OneShotCtrl *obj)                                                                       { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          OneShotCtrl_getSupportedDevices(OneShotCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          OneShotCtrl_getSupportedModes(OneShotCtrl *obj)                                                               { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                                                   
+/*base2*/
 BDAQINL CntrFeatures *    OneShotCtrl_getFeatures(OneShotCtrl *obj)                                                                     { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             OneShotCtrl_getChannelStart(OneShotCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         OneShotCtrl_setChannelStart(OneShotCtrl *obj, int32 value)                                                    { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3424,10 +3467,10 @@ BDAQINL int8              OneShotCtrl_getRunning(OneShotCtrl *obj)              
 BDAQINL double            OneShotCtrl_getNoiseFilterBlockTime(OneShotCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_CNTR, 42, double)(obj);         }
 BDAQINL ErrorCode         OneShotCtrl_setNoiseFilterBlockTime(OneShotCtrl *obj, double value)                                           { return DAQFN_ET(DNLAPI_CNTR, 43, double)(obj, value);  }
 BDAQINL NosFltChannel *   OneShotCtrl_getNoiseFilter(OneShotCtrl *obj)                                                                  { return DAQFN_TV(DNLAPI_CNTR, 44, NosFltChannel *)(obj);}
-/* one shot methods */                                                                                                                      
+/* one shot methods */
 BDAQINL IArray *          OneShotCtrl_getChannels(OneShotCtrl *obj)                                                                     { return DAQFN_TV(DNLAPI_CNTR, 80, IArray *)(obj); }
 /*creator*/
-BDAQINL OneShotCtrl*      OneShotCtrl_Create(void)                                                                                      { return (OneShotCtrl *)DaqCtrlBase_Create(SceOneShot); } 
+BDAQINL OneShotCtrl*      OneShotCtrl_Create(void)                                                                                      { return (OneShotCtrl *)DaqCtrlBase_Create(SceOneShot); }
 
 /*Helpers*/
 BDAQINL void              OneShotCtrl_addOneShotHandler(OneShotCtrl *obj, CntrEventProc proc, void *userParam)                          { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtCntOneShot0, (DaqEventProc)proc, userParam);}
@@ -3448,11 +3491,11 @@ BDAQINL ErrorCode         TmrChannel_setGatePolarity(TmrChannel *obj, SignalPola
 BDAQINL OutSignalType     TmrChannel_getOutSignal(TmrChannel *obj)                                                                      { return DAQFN_TV(DNLAPI_CNTR, 90, OutSignalType)(obj);         }
 BDAQINL ErrorCode         TmrChannel_setOutSignal(TmrChannel *obj, OutSignalType value)                                                 { return DAQFN_ET(DNLAPI_CNTR, 91, OutSignalType)(obj, value);  }
 
-/* ----------------------------------------------------------*/                                                                             
-/*TimerPulseCtrl                                             */                                                                             
-/* ----------------------------------------------------------*/                                                                             
-/*base1*/                                                                                                                                      
-BDAQINL ErrorCode         TimerPulseCtrl_LoadProfile(TimerPulseCtrl *obj, wchar_t const *fileName)                                      { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+/* ----------------------------------------------------------*/
+/*TimerPulseCtrl                                             */
+/* ----------------------------------------------------------*/
+/*base1*/
+BDAQINL ErrorCode         TimerPulseCtrl_LoadProfile(TimerPulseCtrl *obj, wchar_t const *fileName)                                      { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              TimerPulseCtrl_Cleanup(TimerPulseCtrl *obj)                                                                   {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              TimerPulseCtrl_Dispose(TimerPulseCtrl *obj)                                                                   {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              TimerPulseCtrl_getSelectedDevice(TimerPulseCtrl *obj, DeviceInformation *x)                                   {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3461,7 +3504,7 @@ BDAQINL ControlState      TimerPulseCtrl_getState(void *obj)                    
 BDAQINL DeviceCtrl *      TimerPulseCtrl_getDevice(TimerPulseCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          TimerPulseCtrl_getSupportedDevices(TimerPulseCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          TimerPulseCtrl_getSupportedModes(TimerPulseCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                                                   
+/*base2*/
 BDAQINL CntrFeatures *    TimerPulseCtrl_getFeatures(TimerPulseCtrl *obj)                                                               { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             TimerPulseCtrl_getChannelStart(TimerPulseCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         TimerPulseCtrl_setChannelStart(TimerPulseCtrl *obj, int32 value)                                              { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3473,29 +3516,29 @@ BDAQINL int8              TimerPulseCtrl_getRunning(TimerPulseCtrl *obj)        
 BDAQINL double            TimerPulseCtrl_getNoiseFilterBlockTime(TimerPulseCtrl *obj)                                                   { return DAQFN_TV(DNLAPI_CNTR, 42, double)(obj);         }
 BDAQINL ErrorCode         TimerPulseCtrl_setNoiseFilterBlockTime(TimerPulseCtrl *obj, double value)                                     { return DAQFN_ET(DNLAPI_CNTR, 43, double)(obj, value);  }
 BDAQINL NosFltChannel *   TimerPulseCtrl_getNoiseFilter(TimerPulseCtrl *obj)                                                            { return DAQFN_TV(DNLAPI_CNTR, 44, NosFltChannel *)(obj);}
-/* Timer/Pulse methods */                                                                                                                   
+/* Timer/Pulse methods */
 BDAQINL IArray *          TimerPulseCtrl_getChannels(TimerPulseCtrl *obj)                                                               { return DAQFN_TV(DNLAPI_CNTR, 92, IArray *)(obj);       }
 /*creator*/
-BDAQINL TimerPulseCtrl*   TimerPulseCtrl_Create(void)                                                                                   { return (TimerPulseCtrl *)DaqCtrlBase_Create(SceTimerPulse); } 
+BDAQINL TimerPulseCtrl*   TimerPulseCtrl_Create(void)                                                                                   { return (TimerPulseCtrl *)DaqCtrlBase_Create(SceTimerPulse); }
 
 /*Helper*/
 BDAQINL void              TimerPulseCtrl_addTimerTickHandler(TimerPulseCtrl *obj, CntrEventProc proc, void *userParam)                  { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtCntTimer0, (DaqEventProc)proc, userParam); }
 BDAQINL void              TimerPulseCtrl_removeTimerTickHandler(TimerPulseCtrl *obj, CntrEventProc proc, void *userParam)               { DaqCtrlBase_removeEventHandler((DaqCtrlBase*)obj, EvtCntTimer0, (DaqEventProc)proc, userParam); }
 
-/* ----------------------------------------------------------*/                                            
+/* ----------------------------------------------------------*/
 /*PiChannel                                                  */
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 BDAQINL int32             PiChannel_getChannel(PiChannel *obj)                                                                          { return DAQFN_TV(DNLAPI_CNTR, 93, int32)(obj);        }
 BDAQINL int8              PiChannel_getNoiseFiltered(PiChannel *obj)                                                                    { return DAQFN_TV(DNLAPI_CNTR, 94, int8)(obj);         }
 BDAQINL ErrorCode         PiChannel_setNoiseFiltered(PiChannel *obj, int8 value)                                                        { return DAQFN_ET(DNLAPI_CNTR, 95, int8)(obj, value);  }
 BDAQINL double            PiChannel_getTimeup(PiChannel *obj)                                                                           { return DAQFN_TV(DNLAPI_CNTR, 260,double)(obj);       }
 BDAQINL ErrorCode         PiChannel_setTimeup(PiChannel *obj, double value)                                                             { return DAQFN_ET(DNLAPI_CNTR, 261,double)(obj, value);}
 
-/* ----------------------------------------------------------*/                                                                              
-/*PwMeterCtrl                                                */                                                                              
-/* ----------------------------------------------------------*/                                                                              
-/*base1*/                                                                                                                                      
-BDAQINL ErrorCode         PwMeterCtrl_LoadProfile(PwMeterCtrl *obj, wchar_t const *fileName)                                            { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+/* ----------------------------------------------------------*/
+/*PwMeterCtrl                                                */
+/* ----------------------------------------------------------*/
+/*base1*/
+BDAQINL ErrorCode         PwMeterCtrl_LoadProfile(PwMeterCtrl *obj, wchar_t const *fileName)                                            { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              PwMeterCtrl_Cleanup(PwMeterCtrl *obj)                                                                         {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              PwMeterCtrl_Dispose(PwMeterCtrl *obj)                                                                         {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              PwMeterCtrl_getSelectedDevice(PwMeterCtrl *obj, DeviceInformation *x)                                         {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3504,7 +3547,7 @@ BDAQINL ControlState      PwMeterCtrl_getState(void *obj)                       
 BDAQINL DeviceCtrl *      PwMeterCtrl_getDevice(PwMeterCtrl *obj)                                                                       { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          PwMeterCtrl_getSupportedDevices(PwMeterCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          PwMeterCtrl_getSupportedModes(PwMeterCtrl *obj)                                                               { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                                                     
+/*base2*/
 BDAQINL CntrFeatures *    PwMeterCtrl_getFeatures(PwMeterCtrl *obj)                                                                     { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             PwMeterCtrl_getChannelStart(PwMeterCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         PwMeterCtrl_setChannelStart(PwMeterCtrl *obj, int32 value)                                                    { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3518,21 +3561,21 @@ BDAQINL ErrorCode         PwMeterCtrl_setNoiseFilterBlockTime(PwMeterCtrl *obj, 
 BDAQINL NosFltChannel *   PwMeterCtrl_getNoiseFilter(PwMeterCtrl *obj)                                                                  { return DAQFN_TV(DNLAPI_CNTR, 44, NosFltChannel *)(obj);}
 BDAQINL double            PwMeterCtrl_getMeasurementTimeout(PwMeterCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_CNTR, 130, double)(obj);        }
 BDAQINL ErrorCode         PwMeterCtrl_setMeasurementTimeout(PwMeterCtrl *obj, double value)                                             { return DAQFN_ET(DNLAPI_CNTR, 131, double)(obj, value); }
-/* PwMeterCtrl Method */                                                                                                                     
+/* PwMeterCtrl Method */
 BDAQINL IArray *          PwMeterCtrl_getChannels(PwMeterCtrl *obj)                                                                     { return DAQFN_TV(DNLAPI_CNTR, 96, IArray *)(obj);                            }
 BDAQINL ErrorCode         PwMeterCtrl_Read(PwMeterCtrl *obj, int32 count, PulseWidth *buffer)                                           { return DAQFN_ETT(DNLAPI_CNTR, 97, int32, PulseWidth *)(obj, count, buffer); }
 /*creator*/
-BDAQINL PwMeterCtrl*      PwMeterCtrl_Create(void)                                                                                      { return (PwMeterCtrl *)DaqCtrlBase_Create(ScePwMeter); } 
+BDAQINL PwMeterCtrl*      PwMeterCtrl_Create(void)                                                                                      { return (PwMeterCtrl *)DaqCtrlBase_Create(ScePwMeter); }
 
 /*Helpers*/
 BDAQINL void              PwMeterCtrl_addOverflowHandler(PwMeterCtrl *obj, CntrEventProc proc, void *userParam)                         { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtCntPwmInOverflow0, (DaqEventProc)proc, userParam);}
-BDAQINL void              PwMeterCtrl_removeOverflowHandler(PwMeterCtrl *obj, CntrEventProc proc, void *userParam)                      { DaqCtrlBase_removeEventHandler((DaqCtrlBase*)obj, EvtCntPwmInOverflow0, (DaqEventProc)proc, userParam);}   
+BDAQINL void              PwMeterCtrl_removeOverflowHandler(PwMeterCtrl *obj, CntrEventProc proc, void *userParam)                      { DaqCtrlBase_removeEventHandler((DaqCtrlBase*)obj, EvtCntPwmInOverflow0, (DaqEventProc)proc, userParam);}
 
-/* ----------------------------------------------------------*/                                                                              
-/*BufferedPwMeterCtrl                                        */                                                                              
-/* ----------------------------------------------------------*/                                                                              
-/*base1*/                                                                                                                                      
-BDAQINL ErrorCode         BufferedPwMeterCtrl_LoadProfile(BufferedPwMeterCtrl *obj, wchar_t const *fileName)                           { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+/* ----------------------------------------------------------*/
+/*BufferedPwMeterCtrl                                        */
+/* ----------------------------------------------------------*/
+/*base1*/
+BDAQINL ErrorCode         BufferedPwMeterCtrl_LoadProfile(BufferedPwMeterCtrl *obj, wchar_t const *fileName)                           { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              BufferedPwMeterCtrl_Cleanup(BufferedPwMeterCtrl *obj)                                                        {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              BufferedPwMeterCtrl_Dispose(BufferedPwMeterCtrl *obj)                                                        {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              BufferedPwMeterCtrl_getSelectedDevice(BufferedPwMeterCtrl *obj, DeviceInformation *x)                        {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3541,7 +3584,7 @@ BDAQINL ControlState      BufferedPwMeterCtrl_getState(void *obj)               
 BDAQINL DeviceCtrl *      BufferedPwMeterCtrl_getDevice(BufferedPwMeterCtrl *obj)                                                      { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          BufferedPwMeterCtrl_getSupportedDevices(BufferedPwMeterCtrl *obj)                                            { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          BufferedPwMeterCtrl_getSupportedModes(BufferedPwMeterCtrl *obj)                                              { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                                                     
+/*base2*/
 BDAQINL CntrFeatures *    BufferedPwMeterCtrl_getFeatures(BufferedPwMeterCtrl *obj)                                                    { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             BufferedPwMeterCtrl_getChannelStart(BufferedPwMeterCtrl *obj)                                                { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         BufferedPwMeterCtrl_setChannelStart(BufferedPwMeterCtrl *obj, int32 value)                                   { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3556,7 +3599,7 @@ BDAQINL NosFltChannel *   BufferedPwMeterCtrl_getNoiseFilter(BufferedPwMeterCtrl
 BDAQINL double            BufferedPwMeterCtrl_getMeasurementTimeout(BufferedPwMeterCtrl *obj)                                          { return DAQFN_TV(DNLAPI_CNTR, 130, double)(obj);        }
 BDAQINL ErrorCode         BufferedPwMeterCtrl_setMeasurementTimeout(BufferedPwMeterCtrl *obj, double value)                            { return DAQFN_ET(DNLAPI_CNTR, 131, double)(obj, value); }
 
-/* Buffered PwMeterCtrl Method */     
+/* Buffered PwMeterCtrl Method */
 BDAQINL int32             BufferedPwMeterCtrl_getBufferCapacity(BufferedPwMeterCtrl *obj)                                              { return DAQFN_TV(DNLAPI_CNTR,  184,  int32)(obj);              }
 BDAQINL int8              BufferedPwMeterCtrl_getBufferStatus(BufferedPwMeterCtrl *obj, int32 ch, int32 *count, int32 *offset)         { return DAQFN_TTTT(DNLAPI_CNTR, 189, int8, int32, int32 *, int32 *)(obj, ch, count, offset); }
 BDAQINL Trigger*          BufferedPwMeterCtrl_getTrigger(BufferedPwMeterCtrl *obj)                                                     { return DAQFN_TT(DNLAPI_CNTR,  151, Trigger *, int32)(obj, 0); }
@@ -3575,7 +3618,7 @@ BDAQINL ErrorCode         BufferedPwMeterCtrl_GetData(BufferedPwMeterCtrl *obj, 
 }
 
 /*creator*/
-BDAQINL BufferedPwMeterCtrl*      BufferedPwMeterCtrl_Create(void)                                                                     { return (BufferedPwMeterCtrl *)DaqCtrlBase_Create(SceBufferedPwMeter); } 
+BDAQINL BufferedPwMeterCtrl*      BufferedPwMeterCtrl_Create(void)                                                                     { return (BufferedPwMeterCtrl *)DaqCtrlBase_Create(SceBufferedPwMeter); }
 
 /*Helpers*/
 BDAQINL void              BufferedPwMeterCtrl_addDataReadyHandler(BufferedPwMeterCtrl *obj, BfdCntrEventProc proc, void *userParam)             { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtCiDataReady,     (DaqEventProc)proc, userParam);}
@@ -3587,9 +3630,9 @@ BDAQINL void              BufferedPwMeterCtrl_removeCacheOverflowHandler(Buffere
 BDAQINL void              BufferedPwMeterCtrl_addStoppedHandler(BufferedPwMeterCtrl *obj, BfdCntrEventProc proc, void *userParam)               { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtCntrStopped,     (DaqEventProc)proc, userParam);}
 BDAQINL void              BufferedPwMeterCtrl_removeStoppedHandler(BufferedPwMeterCtrl *obj, BfdCntrEventProc proc, void *userParam)            { DaqCtrlBase_removeEventHandler((DaqCtrlBase*)obj, EvtCntrStopped,     (DaqEventProc)proc, userParam);}
 
-/* ----------------------------------------------------------*/                                                                              
-/*PoChannel                                                  */                                                                              
-/* ----------------------------------------------------------*/                                                                       
+/* ----------------------------------------------------------*/
+/*PoChannel                                                  */
+/* ----------------------------------------------------------*/
 BDAQINL int32             PoChannel_getChannel(PoChannel *obj)                                                                          { return DAQFN_TV(DNLAPI_CNTR, 98, int32)(obj);                  }
 BDAQINL int8              PoChannel_getNoiseFiltered(PoChannel *obj)                                                                    { return DAQFN_TV(DNLAPI_CNTR, 99, int8)(obj);                   }
 BDAQINL ErrorCode         PoChannel_setNoiseFiltered(PoChannel *obj, int8 value)                                                        { return DAQFN_ET(DNLAPI_CNTR, 100, int8)(obj, value);           }
@@ -3607,17 +3650,17 @@ BDAQINL ErrorCode         PoChannel_setOutCount(PoChannel *obj, int32 value)    
 BDAQINL SignalDrop        PoChannel_getTriggerSource(PoChannel *obj)                                                                    { return DAQFN_TV(DNLAPI_CNTR, 216, SignalDrop)(obj);           }
 BDAQINL ErrorCode         PoChannel_setTriggerSource(PoChannel *obj, SignalDrop value)                                                  { return DAQFN_ET(DNLAPI_CNTR, 217, SignalDrop)(obj, value);    }
 BDAQINL ActiveSignal      PoChannel_getTriggerEdge(PoChannel *obj)                                                                      { return DAQFN_TV(DNLAPI_CNTR, 218, ActiveSignal)(obj);         }
-BDAQINL ErrorCode         PoChannel_setTriggerEdge(PoChannel *obj, ActiveSignal value)                                                  { return DAQFN_ET(DNLAPI_CNTR, 219, ActiveSignal)(obj, value);  } 
+BDAQINL ErrorCode         PoChannel_setTriggerEdge(PoChannel *obj, ActiveSignal value)                                                  { return DAQFN_ET(DNLAPI_CNTR, 219, ActiveSignal)(obj, value);  }
 BDAQINL TriggerAction     PoChannel_getTriggerAction(PoChannel *obj)                                                                    { return DAQFN_TV(DNLAPI_CNTR, 220, TriggerAction)(obj);        }
-BDAQINL ErrorCode         PoChannel_setTriggerAction(PoChannel *obj, TriggerAction value)                                               { return DAQFN_ET(DNLAPI_CNTR, 221, TriggerAction)(obj, value); } 
+BDAQINL ErrorCode         PoChannel_setTriggerAction(PoChannel *obj, TriggerAction value)                                               { return DAQFN_ET(DNLAPI_CNTR, 221, TriggerAction)(obj, value); }
 BDAQINL double            PoChannel_getTriggerDelayCount(PoChannel *obj)                                                                { return DAQFN_TV(DNLAPI_CNTR, 222, double)(obj);               }
-BDAQINL ErrorCode         PoChannel_setTriggerDelayCount(PoChannel *obj, double value)                                                  { return DAQFN_ET(DNLAPI_CNTR, 223, double)(obj, value);        } 
+BDAQINL ErrorCode         PoChannel_setTriggerDelayCount(PoChannel *obj, double value)                                                  { return DAQFN_ET(DNLAPI_CNTR, 223, double)(obj, value);        }
 
-/* ----------------------------------------------------------*/                                         
+/* ----------------------------------------------------------*/
 /*PwModulatorCtrl                                            */
-/* ----------------------------------------------------------*/  
-/*base1*/                                                                                                                                      
-BDAQINL ErrorCode         PwModulatorCtrl_LoadProfile(PwModulatorCtrl *obj, wchar_t const *fileName)                                    { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+/* ----------------------------------------------------------*/
+/*base1*/
+BDAQINL ErrorCode         PwModulatorCtrl_LoadProfile(PwModulatorCtrl *obj, wchar_t const *fileName)                                    { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              PwModulatorCtrl_Cleanup(PwModulatorCtrl *obj)                                                                 {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              PwModulatorCtrl_Dispose(PwModulatorCtrl *obj)                                                                 {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              PwModulatorCtrl_getSelectedDevice(PwModulatorCtrl *obj, DeviceInformation *x)                                 {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3626,7 +3669,7 @@ BDAQINL ControlState      PwModulatorCtrl_getState(void *obj)                   
 BDAQINL DeviceCtrl *      PwModulatorCtrl_getDevice(PwModulatorCtrl *obj)                                                               { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          PwModulatorCtrl_getSupportedDevices(PwModulatorCtrl *obj)                                                     { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          PwModulatorCtrl_getSupportedModes(PwModulatorCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                                            
+/*base2*/
 BDAQINL CntrFeatures *    PwModulatorCtrl_getFeatures(PwModulatorCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             PwModulatorCtrl_getChannelStart(PwModulatorCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         PwModulatorCtrl_setChannelStart(PwModulatorCtrl *obj, int32 value)                                            { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3638,16 +3681,16 @@ BDAQINL int8              PwModulatorCtrl_getRunning(PwModulatorCtrl *obj)      
 BDAQINL double            PwModulatorCtrl_getNoiseFilterBlockTime(PwModulatorCtrl *obj)                                                 { return DAQFN_TV(DNLAPI_CNTR, 42, double)(obj);         }
 BDAQINL ErrorCode         PwModulatorCtrl_setNoiseFilterBlockTime(PwModulatorCtrl *obj, double value)                                   { return DAQFN_ET(DNLAPI_CNTR, 43, double)(obj, value);  }
 BDAQINL NosFltChannel *   PwModulatorCtrl_getNoiseFilter(PwModulatorCtrl *obj)                                                          { return DAQFN_TV(DNLAPI_CNTR, 44, NosFltChannel *)(obj);}
-/* Pulse width modulator methods */                                                                   
+/* Pulse width modulator methods */
 BDAQINL IArray *          PwModulatorCtrl_getChannels(PwModulatorCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_CNTR, 111, IArray *)(obj); }
 /*creator*/
-BDAQINL PwModulatorCtrl*  PwModulatorCtrl_Create(void)                                                                                  { return (PwModulatorCtrl *)DaqCtrlBase_Create(ScePwModulator); } 
+BDAQINL PwModulatorCtrl*  PwModulatorCtrl_Create(void)                                                                                  { return (PwModulatorCtrl *)DaqCtrlBase_Create(ScePwModulator); }
 
-/* ----------------------------------------------------------*/                                         
+/* ----------------------------------------------------------*/
 /*BufferedPwModulatorCtrl                                    */
-/* ----------------------------------------------------------*/  
-/*base1*/                                                                                                                                      
-BDAQINL ErrorCode         BufferedPwModulatorCtrl_LoadProfile(BufferedPwModulatorCtrl *obj, wchar_t const *fileName)                     { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+/* ----------------------------------------------------------*/
+/*base1*/
+BDAQINL ErrorCode         BufferedPwModulatorCtrl_LoadProfile(BufferedPwModulatorCtrl *obj, wchar_t const *fileName)                     { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              BufferedPwModulatorCtrl_Cleanup(BufferedPwModulatorCtrl *obj)                                                  {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              BufferedPwModulatorCtrl_Dispose(BufferedPwModulatorCtrl *obj)                                                  {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              BufferedPwModulatorCtrl_getSelectedDevice(BufferedPwModulatorCtrl *obj, DeviceInformation *x)                  {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3656,7 +3699,7 @@ BDAQINL ControlState      BufferedPwModulatorCtrl_getState(void *obj)           
 BDAQINL DeviceCtrl *      BufferedPwModulatorCtrl_getDevice(BufferedPwModulatorCtrl *obj)                                                { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          BufferedPwModulatorCtrl_getSupportedDevices(BufferedPwModulatorCtrl *obj)                                      { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          BufferedPwModulatorCtrl_getSupportedModes(BufferedPwModulatorCtrl *obj)                                        { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                                            
+/*base2*/
 BDAQINL CntrFeatures *    BufferedPwModulatorCtrl_getFeatures(BufferedPwModulatorCtrl *obj)                                              { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             BufferedPwModulatorCtrl_getChannelStart(BufferedPwModulatorCtrl *obj)                                          { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         BufferedPwModulatorCtrl_setChannelStart(BufferedPwModulatorCtrl *obj, int32 value)                             { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3669,11 +3712,11 @@ BDAQINL double            BufferedPwModulatorCtrl_getNoiseFilterBlockTime(Buffer
 BDAQINL ErrorCode         BufferedPwModulatorCtrl_setNoiseFilterBlockTime(BufferedPwModulatorCtrl *obj, double value)                    { return DAQFN_ET(DNLAPI_CNTR, 43, double)(obj, value);  }
 BDAQINL NosFltChannel *   BufferedPwModulatorCtrl_getNoiseFilter(BufferedPwModulatorCtrl *obj)                                           { return DAQFN_TV(DNLAPI_CNTR, 44, NosFltChannel *)(obj);}
 
-/* Buffered Pulse width modulator methods */ 
+/* Buffered Pulse width modulator methods */
 BDAQINL int32             BufferedPwModulatorCtrl_getBufferCapacity(BufferedPwModulatorCtrl *obj)                                        { return DAQFN_TV(DNLAPI_CNTR,  186,  int32)(obj);              }
 BDAQINL int8              BufferedPwModulatorCtrl_getBufferStatus(BufferedPwModulatorCtrl *obj, int32 ch, int32 *count, int32 *offset)   { return DAQFN_TTTT(DNLAPI_CNTR, 191, int8, int32, int32 *, int32 *)(obj, ch, count, offset); }
 BDAQINL Trigger*          BufferedPwModulatorCtrl_getTrigger(BufferedPwModulatorCtrl *obj)                                               { return DAQFN_TT(DNLAPI_CNTR,  171, Trigger *, int32)(obj, 0); }
-BDAQINL int32             BufferedPwModulatorCtrl_getSamples(BufferedPwModulatorCtrl *obj)                                               { return DAQFN_TV(DNLAPI_CNTR,  172, int32)(obj);               } 
+BDAQINL int32             BufferedPwModulatorCtrl_getSamples(BufferedPwModulatorCtrl *obj)                                               { return DAQFN_TV(DNLAPI_CNTR,  172, int32)(obj);               }
 BDAQINL ErrorCode         BufferedPwModulatorCtrl_setSamples(BufferedPwModulatorCtrl *obj, int32 value)                                  { return DAQFN_ET(DNLAPI_CNTR,  173, int32)(obj, value);        }
 BDAQINL int32             BufferedPwModulatorCtrl_getIntervalCount(BufferedPwModulatorCtrl *obj)                                         { return DAQFN_TV(DNLAPI_CNTR,  174, int32)(obj);               }
 BDAQINL ErrorCode         BufferedPwModulatorCtrl_setIntervalCount(BufferedPwModulatorCtrl *obj, int32 value)                            { return DAQFN_ET(DNLAPI_CNTR,  175, int32)(obj, value);        }
@@ -3694,7 +3737,7 @@ BDAQINL ErrorCode         BufferedPwModulatorCtrl_SetData(BufferedPwModulatorCtr
 }
 
 /*creator*/
-BDAQINL BufferedPwModulatorCtrl*  BufferedPwModulatorCtrl_Create(void)                                                                   { return (BufferedPwModulatorCtrl *)DaqCtrlBase_Create(SceBufferedPwModulator); } 
+BDAQINL BufferedPwModulatorCtrl*  BufferedPwModulatorCtrl_Create(void)                                                                   { return (BufferedPwModulatorCtrl *)DaqCtrlBase_Create(SceBufferedPwModulator); }
 
 /*Helpers*/
 /*event*/
@@ -3722,7 +3765,7 @@ BDAQINL ErrorCode         UdChannel_setInitialValue(UdChannel *obj, int32 value)
 BDAQINL int32             UdChannel_getResetTimesByIndex(UdChannel *obj)                                                                { return DAQFN_TV(DNLAPI_CNTR, 119, int32)(obj);              }
 BDAQINL ErrorCode         UdChannel_setResetTimesByIndex(UdChannel *obj, int32 value)                                                   { return DAQFN_ET(DNLAPI_CNTR, 120, int32)(obj, value);       }
 
-// new properties for Counter continue comparing: outputting pulse settings 
+// new properties for Counter continue comparing: outputting pulse settings
 BDAQINL void              UdChannel_getPulseWidth(UdChannel *obj, PulseWidth *x)                                                        {        DAQFN_VT(DNLAPI_CNTR, 202, PulseWidth *)(obj, x);       }
 BDAQINL ErrorCode         UdChannel_setPulseWidth(UdChannel *obj, PulseWidth const *x)                                                  { return DAQFN_ET(DNLAPI_CNTR, 203, PulseWidth const*)(obj, x);  }
 BDAQINL int8              UdChannel_getGated(UdChannel *obj)                                                                            { return DAQFN_TV(DNLAPI_CNTR, 204, int8)(obj);                  }
@@ -3737,8 +3780,8 @@ BDAQINL ErrorCode         UdChannel_setOutCount(UdChannel *obj, int32 value)    
 /* ----------------------------------------------------------*/
 /*UdCounterCtrl                                              */
 /* ----------------------------------------------------------*/
-/*base1*/                                                                                                                               
-BDAQINL ErrorCode         UdCounterCtrl_LoadProfile(UdCounterCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+/*base1*/
+BDAQINL ErrorCode         UdCounterCtrl_LoadProfile(UdCounterCtrl *obj, wchar_t const *fileName)                                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              UdCounterCtrl_Cleanup(UdCounterCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              UdCounterCtrl_Dispose(UdCounterCtrl *obj)                                                                     {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              UdCounterCtrl_getSelectedDevice(UdCounterCtrl *obj, DeviceInformation *x)                                     {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3747,7 +3790,7 @@ BDAQINL ControlState      UdCounterCtrl_getState(void *obj)                     
 BDAQINL DeviceCtrl *      UdCounterCtrl_getDevice(UdCounterCtrl *obj)                                                                   { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          UdCounterCtrl_getSupportedDevices(UdCounterCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          UdCounterCtrl_getSupportedModes(UdCounterCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                                              
+/*base2*/
 BDAQINL CntrFeatures *    UdCounterCtrl_getFeatures(UdCounterCtrl *obj)                                                                 { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             UdCounterCtrl_getChannelStart(UdCounterCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         UdCounterCtrl_setChannelStart(UdCounterCtrl *obj, int32 value)                                                { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3770,8 +3813,11 @@ BDAQINL ErrorCode         UdCounterCtrl_CompareClear(UdCounterCtrl *obj, int32 c
 BDAQINL ErrorCode         UdCounterCtrl_ValueReset(UdCounterCtrl *obj)                                                                     { return DAQFN_EV(DNLAPI_CNTR, 126)(obj);                                 }
 BDAQINL ErrorCode         UdCounterCtrl_Read(UdCounterCtrl *obj, int32 count, int32 *buffer)                                               { return DAQFN_ETT(DNLAPI_CNTR, 127, int32, int32 *)(obj, count, buffer); }
 BDAQINL IArray *          UdCounterCtrl_getChannels(UdCounterCtrl *obj)                                                                    { return DAQFN_TV(DNLAPI_CNTR, 128, IArray *)(obj);                       }
+BDAQINL int8              UdCounterCtrl_getCcpDatCtrlCodeEnabled(UdCounterCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_CNTR, 263, int8)(obj);                           }
+BDAQINL ErrorCode         UdCounterCtrl_setCcpDatCtrlCodeEnabled(UdCounterCtrl *obj, int8 value)                                           { return DAQFN_ET(DNLAPI_CNTR, 264, int8)(obj, value);                    }
+
 /*creator*/
-BDAQINL UdCounterCtrl*    UdCounterCtrl_Create(void)                                                                                       { return (UdCounterCtrl *)DaqCtrlBase_Create(SceUdCounter); } 
+BDAQINL UdCounterCtrl*    UdCounterCtrl_Create(void)                                                                                       { return (UdCounterCtrl *)DaqCtrlBase_Create(SceUdCounter); }
 
 /*Helpers*/
 BDAQINL void              UdCounterCtrl_addUdCntrEventHandler(UdCounterCtrl *obj, UdCntrEventProc proc, void *userParam)                   { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtUdIndex0, (DaqEventProc)proc, userParam);}
@@ -3780,8 +3826,8 @@ BDAQINL void              UdCounterCtrl_removeUdCntrEventHandler(UdCounterCtrl *
 /* ----------------------------------------------------------*/
 /*BufferedUdCounterCtrl                                      */
 /* ----------------------------------------------------------*/
-/*base1*/                                                                                                                               
-BDAQINL ErrorCode         BufferedUdCounterCtrl_LoadProfile(BufferedUdCounterCtrl *obj, wchar_t const *fileName)                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+/*base1*/
+BDAQINL ErrorCode         BufferedUdCounterCtrl_LoadProfile(BufferedUdCounterCtrl *obj, wchar_t const *fileName)                        { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              BufferedUdCounterCtrl_Cleanup(BufferedUdCounterCtrl *obj)                                                     {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              BufferedUdCounterCtrl_Dispose(BufferedUdCounterCtrl *obj)                                                     {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              BufferedUdCounterCtrl_getSelectedDevice(BufferedUdCounterCtrl *obj, DeviceInformation *x)                     {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3790,7 +3836,7 @@ BDAQINL ControlState      BufferedUdCounterCtrl_getState(void *obj)             
 BDAQINL DeviceCtrl *      BufferedUdCounterCtrl_getDevice(BufferedUdCounterCtrl *obj)                                                   { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          BufferedUdCounterCtrl_getSupportedDevices(BufferedUdCounterCtrl *obj)                                         { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          BufferedUdCounterCtrl_getSupportedModes(BufferedUdCounterCtrl *obj)                                           { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                                              
+/*base2*/
 BDAQINL CntrFeatures *    BufferedUdCounterCtrl_getFeatures(BufferedUdCounterCtrl *obj)                                                 { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             BufferedUdCounterCtrl_getChannelStart(BufferedUdCounterCtrl *obj)                                             { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         BufferedUdCounterCtrl_setChannelStart(BufferedUdCounterCtrl *obj, int32 value)                                { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3804,7 +3850,7 @@ BDAQINL ErrorCode         BufferedUdCounterCtrl_setNoiseFilterBlockTime(Buffered
 BDAQINL NosFltChannel *   BufferedUdCounterCtrl_getNoiseFilter(BufferedUdCounterCtrl *obj)                                              { return DAQFN_TV(DNLAPI_CNTR, 44, NosFltChannel *)(obj);}
 /* Buffered UdCounterCtrl methods */
 BDAQINL int32             BufferedUdCounterCtrl_getBufferCapacity(BufferedUdCounterCtrl *obj)                                           { return DAQFN_TV(DNLAPI_CNTR,  185, int32)(obj);              }
-BDAQINL int8              BufferedUdCounterCtrl_getBufferStatus(BufferedUdCounterCtrl *obj, int32 ch, int32 *count, int32 *offset)      { return DAQFN_TTTT(DNLAPI_CNTR, 190, int8, int32, int32 *, int32 *)(obj, ch, count, offset); }  
+BDAQINL int8              BufferedUdCounterCtrl_getBufferStatus(BufferedUdCounterCtrl *obj, int32 ch, int32 *count, int32 *offset)      { return DAQFN_TTTT(DNLAPI_CNTR, 190, int8, int32, int32 *, int32 *)(obj, ch, count, offset); }
 BDAQINL Trigger*          BufferedUdCounterCtrl_getTrigger(BufferedUdCounterCtrl *obj)                                                  { return DAQFN_TT(DNLAPI_CNTR,  161, Trigger *, int32)(obj, 0); }
 BDAQINL Record*           BufferedUdCounterCtrl_getRecord(BufferedUdCounterCtrl *obj)                                                   { return DAQFN_TV(DNLAPI_CNTR,  162, Record *)(obj);            }
 BDAQINL ErrorCode         BufferedUdCounterCtrl_setSampleClkSrc(BufferedUdCounterCtrl *obj, SignalDrop drop)                            { return DAQFN_ET(DNLAPI_CNTR,  163, SignalDrop)(obj, drop);    }
@@ -3821,7 +3867,7 @@ BDAQINL ErrorCode         BufferedUdCounterCtrl_GetDataI32(BufferedUdCounterCtrl
 }
 
 /*creator*/
-BDAQINL BufferedUdCounterCtrl*    BufferedUdCounterCtrl_Create(void)                                                                    { return (BufferedUdCounterCtrl *)DaqCtrlBase_Create(SceBufferedUdCounter); } 
+BDAQINL BufferedUdCounterCtrl*    BufferedUdCounterCtrl_Create(void)                                                                    { return (BufferedUdCounterCtrl *)DaqCtrlBase_Create(SceBufferedUdCounter); }
 
 /*Helpers*/
 BDAQINL void              BufferedUdCounterCtrl_addDataReadyHandler(BufferedUdCounterCtrl *obj, BfdCntrEventProc proc, void *userParam)        { DaqCtrlBase_addEventHandler   ((DaqCtrlBase*)obj, EvtCiDataReady,     (DaqEventProc)proc, userParam);}
@@ -3861,11 +3907,11 @@ BDAQINL int8              AbsChannel_getCompare1Enabled(AbsChannel *obj)        
 BDAQINL ErrorCode         AbsChannel_setCompare1Enabled(AbsChannel *obj, int8 value)                                                      { return DAQFN_ET(DNLAPI_CNTR, 255, int8)(obj, value);        }
 BDAQINL int32             AbsChannel_getLatchedValue(AbsChannel *obj)                                                                     { return DAQFN_TV(DNLAPI_CNTR, 256, int32)(obj);              }
 
-/* ----------------------------------------------------------*/                                          
+/* ----------------------------------------------------------*/
 /*AbsCounterCtrl                                           */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode         AbsCounterCtrl_LoadProfile(AbsCounterCtrl *obj, wchar_t const *fileName)                                  { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode         AbsCounterCtrl_LoadProfile(AbsCounterCtrl *obj, wchar_t const *fileName)                                  { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void              AbsCounterCtrl_Cleanup(AbsCounterCtrl *obj)                                                               {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void              AbsCounterCtrl_Dispose(AbsCounterCtrl *obj)                                                               {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void              AbsCounterCtrl_getSelectedDevice(AbsCounterCtrl *obj, DeviceInformation *x)                               {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3874,7 +3920,7 @@ BDAQINL ControlState      AbsCounterCtrl_getState(void *obj)                    
 BDAQINL DeviceCtrl *      AbsCounterCtrl_getDevice(AbsCounterCtrl *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *          AbsCounterCtrl_getSupportedDevices(AbsCounterCtrl *obj)                                                   { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *          AbsCounterCtrl_getSupportedModes(AbsCounterCtrl *obj)                                                     { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                 
+/*base2*/
 BDAQINL CntrFeatures *    AbsCounterCtrl_getFeatures(AbsCounterCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32             AbsCounterCtrl_getChannelStart(AbsCounterCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode         AbsCounterCtrl_setChannelStart(AbsCounterCtrl *obj, int32 value)                                          { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3893,7 +3939,7 @@ BDAQINL IArray *          AbsCounterCtrl_getChannels(AbsCounterCtrl *obj)       
 BDAQINL ErrorCode         AbsCounterCtrl_Read(AbsCounterCtrl *obj, int32 count, int32 *buffer)                                      { return DAQFN_ETT(DNLAPI_CNTR, 258, int32, int32 *)(obj, count, buffer); }
 BDAQINL ErrorCode         AbsCounterCtrl_StatusRead(AbsCounterCtrl *obj, int32 count, int32 *buffer)                                { return DAQFN_ETT(DNLAPI_CNTR, 259, int32, int32 *)(obj, count, buffer); }
 /*creator*/
-BDAQINL AbsCounterCtrl*   AbsCounterCtrl_Create(void)                                                                               { return (AbsCounterCtrl *)DaqCtrlBase_Create(SceAbsCounter); } 
+BDAQINL AbsCounterCtrl*   AbsCounterCtrl_Create(void)                                                                               { return (AbsCounterCtrl *)DaqCtrlBase_Create(SceAbsCounter); }
 
 /* ----------------------------------------------------------*/
 /*EsChannel                                                  */
@@ -3906,11 +3952,11 @@ BDAQINL ErrorCode         EsChannel_setStartCountingEdge(EsChannel *obj, ActiveS
 BDAQINL ActiveSignal      EsChannel_getStopCountingEdge(EsChannel *obj)                                                                 { return DAQFN_TV(DNLAPI_CNTR, 197, ActiveSignal)(obj);       }
 BDAQINL ErrorCode         EsChannel_setStopCountingEdge(EsChannel *obj, ActiveSignal value)                                             { return DAQFN_ET(DNLAPI_CNTR, 198, ActiveSignal)(obj, value);}
 
-/* ----------------------------------------------------------*/                                        
+/* ----------------------------------------------------------*/
 /*EdgeSeparationCtrl                                         */
-/* ----------------------------------------------------------*/   
+/* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode              EdgeSeparationCtrl_LoadProfile(EdgeSeparationCtrl *obj, wchar_t const *fileName)                         { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode              EdgeSeparationCtrl_LoadProfile(EdgeSeparationCtrl *obj, wchar_t const *fileName)                         { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void                   EdgeSeparationCtrl_Cleanup(EdgeSeparationCtrl *obj)                                                      {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void                   EdgeSeparationCtrl_Dispose(EdgeSeparationCtrl *obj)                                                      {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void                   EdgeSeparationCtrl_getSelectedDevice(EdgeSeparationCtrl *obj, DeviceInformation *x)                      {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3919,7 +3965,7 @@ BDAQINL ControlState           EdgeSeparationCtrl_getState(void *obj)           
 BDAQINL DeviceCtrl *           EdgeSeparationCtrl_getDevice(EdgeSeparationCtrl *obj)                                                    { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);   }
 BDAQINL IArray *               EdgeSeparationCtrl_getSupportedDevices(EdgeSeparationCtrl *obj)                                          { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);       }
 BDAQINL IArray *               EdgeSeparationCtrl_getSupportedModes(EdgeSeparationCtrl *obj)                                            { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);       }
-/*base2*/                                                                                                        
+/*base2*/
 BDAQINL CntrFeatures *         EdgeSeparationCtrl_getFeatures(EdgeSeparationCtrl *obj)                                                  { return DAQFN_TV(DNLAPI_CNTR, 34, CntrFeatures *)(obj); }
 BDAQINL int32                  EdgeSeparationCtrl_getChannelStart(EdgeSeparationCtrl *obj)                                              { return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);          }
 BDAQINL ErrorCode              EdgeSeparationCtrl_setChannelStart(EdgeSeparationCtrl *obj, int32 value)                                 { return DAQFN_ET(DNLAPI_CNTR, 36, int32)(obj, value);   }
@@ -3931,11 +3977,11 @@ BDAQINL int8                   EdgeSeparationCtrl_getRunning(EdgeSeparationCtrl 
 BDAQINL double                 EdgeSeparationCtrl_getNoiseFilterBlockTime(EdgeSeparationCtrl *obj)                                      { return DAQFN_TV(DNLAPI_CNTR, 42, double)(obj);         }
 BDAQINL ErrorCode              EdgeSeparationCtrl_setNoiseFilterBlockTime(EdgeSeparationCtrl *obj, double value)                        { return DAQFN_ET(DNLAPI_CNTR, 43, double)(obj, value);  }
 BDAQINL NosFltChannel *        EdgeSeparationCtrl_getNoiseFilter_getNoiseFilter(EdgeSeparationCtrl *obj)                                { return DAQFN_TV(DNLAPI_CNTR, 44, NosFltChannel *)(obj);}
-/* Edge Separation methods */                                                                                    
+/* Edge Separation methods */
 BDAQINL ErrorCode              EdgeSeparationCtrl_Read(EdgeSeparationCtrl *obj, int32 count, double *buffer)                            { return DAQFN_ETT(DNLAPI_CNTR, 199, int32, double *)(obj, count, buffer); }
 BDAQINL IArray *               EdgeSeparationCtrl_getChannels(EdgeSeparationCtrl *obj)                                                  { return DAQFN_TV(DNLAPI_CNTR, 200, IArray *)(obj);                        }
 /*creator*/
-BDAQINL EdgeSeparationCtrl*    EdgeSeparationCtrl_Create(void)                                                                          { return (EdgeSeparationCtrl *)DaqCtrlBase_Create(SceEdgeSeparation);     } 
+BDAQINL EdgeSeparationCtrl*    EdgeSeparationCtrl_Create(void)                                                                          { return (EdgeSeparationCtrl *)DaqCtrlBase_Create(SceEdgeSeparation);     }
 
 
 /*************************************************************/
@@ -3943,45 +3989,45 @@ BDAQINL EdgeSeparationCtrl*    EdgeSeparationCtrl_Create(void)                  
 /* ----------------------------------------------------------*/
 /* CaliSubject                                               */
 /* ----------------------------------------------------------*/
-BDAQINL wchar_t const *        CaliSubject_getDescription(CaliSubject *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 105, wchar_t const *)(obj);}  
-BDAQINL wchar_t const *        CaliSubject_getInstruction(CaliSubject *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 106, wchar_t const *)(obj);}    
-BDAQINL wchar_t const *        CaliSubject_getTargetRange(CaliSubject *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 107, wchar_t const *)(obj);}    
+BDAQINL wchar_t const *        CaliSubject_getDescription(CaliSubject *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 105, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        CaliSubject_getInstruction(CaliSubject *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 106, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        CaliSubject_getTargetRange(CaliSubject *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 107, wchar_t const *)(obj);}
 
-BDAQINL CaliState              CaliSubject_AdjCodeGetCurrentState(CaliSubject *obj,double *value, int32 *count, int32 code[])           { return DAQFN_TTTT(DNLAPI_BASE, 108, CaliState, double *, int32 *, int32 *)(obj, value, count, code);}    
-BDAQINL void                   CaliSubject_AdjCodeGetRange(CaliSubject *obj, int32 lower[], int32 upper[])                              {        DAQFN_VTT(DNLAPI_BASE, 109, int32 *, int32 *)(obj, lower, upper);}    
-BDAQINL ErrorCode              CaliSubject_ManualAdjStart(CaliSubject *obj)                                                             { return DAQFN_EV(DNLAPI_BASE, 110)(obj);                                 }    
-BDAQINL ErrorCode              CaliSubject_ManualAdjStop(CaliSubject *obj)                                                              { return DAQFN_EV(DNLAPI_BASE, 111)(obj);                                 }       
-BDAQINL ErrorCode              CaliSubject_ManualAdjSetCode(CaliSubject *obj, int32 count, int32 code[])                                { return DAQFN_ETT(DNLAPI_BASE, 112, int32, int32 *)(obj, count, code);   }    
+BDAQINL CaliState              CaliSubject_AdjCodeGetCurrentState(CaliSubject *obj,double *value, int32 *count, int32 code[])           { return DAQFN_TTTT(DNLAPI_BASE, 108, CaliState, double *, int32 *, int32 *)(obj, value, count, code);}
+BDAQINL void                   CaliSubject_AdjCodeGetRange(CaliSubject *obj, int32 lower[], int32 upper[])                              {        DAQFN_VTT(DNLAPI_BASE, 109, int32 *, int32 *)(obj, lower, upper);}
+BDAQINL ErrorCode              CaliSubject_ManualAdjStart(CaliSubject *obj)                                                             { return DAQFN_EV(DNLAPI_BASE, 110)(obj);                                 }
+BDAQINL ErrorCode              CaliSubject_ManualAdjStop(CaliSubject *obj)                                                              { return DAQFN_EV(DNLAPI_BASE, 111)(obj);                                 }
+BDAQINL ErrorCode              CaliSubject_ManualAdjSetCode(CaliSubject *obj, int32 count, int32 code[])                                { return DAQFN_ETT(DNLAPI_BASE, 112, int32, int32 *)(obj, count, code);   }
 
 /* ----------------------------------------------------------*/
 /* CaliSection                                               */
 /* ----------------------------------------------------------*/
-BDAQINL wchar_t const *        CaliSection_getTypeName(CaliSection *obj)                                                                { return DAQFN_TV(DNLAPI_BASE, 113, wchar_t const *)(obj);}      
-BDAQINL wchar_t const *        CaliSection_getDescription(CaliSection *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 114, wchar_t const *)(obj);}   
-BDAQINL wchar_t const *        CaliSection_getInstruction(CaliSection *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 115, wchar_t const *)(obj);}    
-BDAQINL IArray *               CaliSection_getSubjects(CaliSection *obj)                                                                { return DAQFN_TV(DNLAPI_BASE,  116, IArray *)(obj);      }   
+BDAQINL wchar_t const *        CaliSection_getTypeName(CaliSection *obj)                                                                { return DAQFN_TV(DNLAPI_BASE, 113, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        CaliSection_getDescription(CaliSection *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 114, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        CaliSection_getInstruction(CaliSection *obj)                                                             { return DAQFN_TV(DNLAPI_BASE, 115, wchar_t const *)(obj);}
+BDAQINL IArray *               CaliSection_getSubjects(CaliSection *obj)                                                                { return DAQFN_TV(DNLAPI_BASE,  116, IArray *)(obj);      }
 BDAQINL ErrorCode              CaliSection_Prepare(CaliSection *obj)                                                                    { return DAQFN_EV(DNLAPI_BASE, 146)(obj);                 }
 BDAQINL ErrorCode              CaliSection_BatchStart(CaliSection *obj)                                                                 { return DAQFN_EV(DNLAPI_BASE, 117)(obj);                 }
-BDAQINL void                   CaliSection_BatchTerminate(CaliSection *obj)                                                             {        DAQFN_VV(DNLAPI_BASE, 118)(obj);                 }     
+BDAQINL void                   CaliSection_BatchTerminate(CaliSection *obj)                                                             {        DAQFN_VV(DNLAPI_BASE, 118)(obj);                 }
 
 /* ----------------------------------------------------------*/
 /* CaliSolution                                              */
 /* ----------------------------------------------------------*/
-BDAQINL wchar_t const *        CaliSolution_getTypeName(CaliSolution *obj)                                                              { return DAQFN_TV(DNLAPI_BASE, 119, wchar_t const *)(obj);}      
-BDAQINL wchar_t const *        CaliSolution_getDescription(CaliSolution *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 120, wchar_t const *)(obj);}  
-BDAQINL wchar_t const *        CaliSolution_getInstruction(CaliSolution *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 121, wchar_t const *)(obj);}    
-BDAQINL int8    const *        CaliSolution_getAuxiliaryImage(CaliSolution *obj, int32 *size)                                           { return DAQFN_TT(DNLAPI_BASE, 122, int8 const*, int32 *)(obj, size); }    
-BDAQINL IArray *               CaliSolution_getSections(CaliSolution *obj)                                                              { return DAQFN_TV(DNLAPI_BASE, 123, IArray *)(obj);       }   
-BDAQINL ErrorCode              CaliSolution_AdjCodesSave(CaliSolution *obj)                                                             { return DAQFN_EV(DNLAPI_BASE, 124)(obj);                 }    
-BDAQINL ErrorCode              CaliSolution_AdjCodesLoad(CaliSolution *obj)                                                             { return DAQFN_EV(DNLAPI_BASE, 125)(obj);                 }    
-BDAQINL ErrorCode              CaliSolution_AdjCodesSaveToGoldBackup(CaliSolution *obj)                                                 { return DAQFN_EV(DNLAPI_BASE, 126)(obj);                 }    
-BDAQINL ErrorCode              CaliSolution_AdjCodesLoadFromGoldBackup(CaliSolution *obj, int32 action)                                 { return DAQFN_ET(DNLAPI_BASE, 127, int32)(obj, action);  }    
+BDAQINL wchar_t const *        CaliSolution_getTypeName(CaliSolution *obj)                                                              { return DAQFN_TV(DNLAPI_BASE, 119, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        CaliSolution_getDescription(CaliSolution *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 120, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        CaliSolution_getInstruction(CaliSolution *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 121, wchar_t const *)(obj);}
+BDAQINL int8    const *        CaliSolution_getAuxiliaryImage(CaliSolution *obj, int32 *size)                                           { return DAQFN_TT(DNLAPI_BASE, 122, int8 const*, int32 *)(obj, size); }
+BDAQINL IArray *               CaliSolution_getSections(CaliSolution *obj)                                                              { return DAQFN_TV(DNLAPI_BASE, 123, IArray *)(obj);       }
+BDAQINL ErrorCode              CaliSolution_AdjCodesSave(CaliSolution *obj)                                                             { return DAQFN_EV(DNLAPI_BASE, 124)(obj);                 }
+BDAQINL ErrorCode              CaliSolution_AdjCodesLoad(CaliSolution *obj)                                                             { return DAQFN_EV(DNLAPI_BASE, 125)(obj);                 }
+BDAQINL ErrorCode              CaliSolution_AdjCodesSaveToGoldBackup(CaliSolution *obj)                                                 { return DAQFN_EV(DNLAPI_BASE, 126)(obj);                 }
+BDAQINL ErrorCode              CaliSolution_AdjCodesLoadFromGoldBackup(CaliSolution *obj, int32 action)                                 { return DAQFN_ET(DNLAPI_BASE, 127, int32)(obj, action);  }
 
-/* ----------------------------------------------------------*/                                        
+/* ----------------------------------------------------------*/
 /*CalibrationCtrl                                            */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode              CalibrationCtrl_LoadProfile(CalibrationCtrl *obj, wchar_t const *fileName)                               { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode              CalibrationCtrl_LoadProfile(CalibrationCtrl *obj, wchar_t const *fileName)                               { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void                   CalibrationCtrl_Cleanup(CalibrationCtrl *obj)                                                            {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void                   CalibrationCtrl_Dispose(CalibrationCtrl *obj)                                                            {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void                   CalibrationCtrl_getSelectedDevice(CalibrationCtrl *obj, DeviceInformation *x)                            {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -3990,31 +4036,31 @@ BDAQINL ControlState           CalibrationCtrl_getState(void *obj)              
 BDAQINL DeviceCtrl *           CalibrationCtrl_getDevice(CalibrationCtrl *obj)                                                          { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);                }
 BDAQINL IArray *               CalibrationCtrl_getSupportedDevices(CalibrationCtrl *obj)                                                { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);                    }
 BDAQINL IArray *               CalibrationCtrl_getSupportedModes(CalibrationCtrl *obj)                                                  { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);                    }
-/* CalibrationCtrl methods */                                                                                                                                                                   
+/* CalibrationCtrl methods */
 BDAQINL IArray *               CalibrationCtrl_getSolutions(CalibrationCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_BASE, 128, IArray *)(obj);                   }
 BDAQINL ErrorCode              CalibrationCtrl_setLanguageType(CalibrationCtrl *obj, int32 type)                                        { return DAQFN_ET(DNLAPI_BASE, 149, int32)(obj, type);                }
 /*creator*/
-BDAQINL CalibrationCtrl *      CalibrationCtrl_Create(void)                                                                             { return (CalibrationCtrl *)DaqCtrlBase_Create(SceCalibration);       } 
+BDAQINL CalibrationCtrl *      CalibrationCtrl_Create(void)                                                                             { return (CalibrationCtrl *)DaqCtrlBase_Create(SceCalibration);       }
 
 /*************************************************************/
 /* ctrl class : Firmware download related                    */
 /* ----------------------------------------------------------*/
 /* FirmwareCtrl                                              */
 /* ----------------------------------------------------------*/
-BDAQINL wchar_t const *        FirmwareCtrl_getDescription(FirmwareCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 129, wchar_t const *)(obj);}  
-BDAQINL wchar_t const *        FirmwareCtrl_getNotice(FirmwareCtrl *obj)                                                                { return DAQFN_TV(DNLAPI_BASE, 130, wchar_t const *)(obj);}      
-BDAQINL wchar_t const *        FirmwareCtrl_getActivationTitle(FirmwareCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_BASE, 131, wchar_t const *)(obj);}      
-BDAQINL wchar_t const *        FirmwareCtrl_getVersionOnDevice(FirmwareCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_BASE, 132, wchar_t const *)(obj);}    
-BDAQINL wchar_t const *        FirmwareCtrl_getVersionOnFile(FirmwareCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 133, wchar_t const *)(obj);}    
-BDAQINL int32                  FirmwareCtrl_getOverwriteProgressing(FirmwareCtrl *obj)                                                  { return DAQFN_TV(DNLAPI_BASE, 134, int32)(obj);          }   
-BDAQINL ErrorCode              FirmwareCtrl_LoadFwFile(FirmwareCtrl *obj, wchar_t const *filePath)                                      { return DAQFN_ET(DNLAPI_BASE, 135, wchar_t const *)(obj, filePath); }    
-BDAQINL ErrorCode              FirmwareCtrl_Overwrite(FirmwareCtrl *obj, FwAction action, wchar_t const *activationCode)                { return DAQFN_ETT(DNLAPI_BASE,136, FwAction, wchar_t const *)(obj, action, activationCode);  }    
+BDAQINL wchar_t const *        FirmwareCtrl_getDescription(FirmwareCtrl *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 129, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        FirmwareCtrl_getNotice(FirmwareCtrl *obj)                                                                { return DAQFN_TV(DNLAPI_BASE, 130, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        FirmwareCtrl_getActivationTitle(FirmwareCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_BASE, 131, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        FirmwareCtrl_getVersionOnDevice(FirmwareCtrl *obj)                                                       { return DAQFN_TV(DNLAPI_BASE, 132, wchar_t const *)(obj);}
+BDAQINL wchar_t const *        FirmwareCtrl_getVersionOnFile(FirmwareCtrl *obj)                                                         { return DAQFN_TV(DNLAPI_BASE, 133, wchar_t const *)(obj);}
+BDAQINL int32                  FirmwareCtrl_getOverwriteProgressing(FirmwareCtrl *obj)                                                  { return DAQFN_TV(DNLAPI_BASE, 134, int32)(obj);          }
+BDAQINL ErrorCode              FirmwareCtrl_LoadFwFile(FirmwareCtrl *obj, wchar_t const *filePath)                                      { return DAQFN_ET(DNLAPI_BASE, 135, wchar_t const *)(obj, filePath); }
+BDAQINL ErrorCode              FirmwareCtrl_Overwrite(FirmwareCtrl *obj, FwAction action, wchar_t const *activationCode)                { return DAQFN_ETT(DNLAPI_BASE,136, FwAction, wchar_t const *)(obj, action, activationCode);  }
 
-/* ----------------------------------------------------------*/                                        
+/* ----------------------------------------------------------*/
 /*FirmwareCtrls                                              */
 /* ----------------------------------------------------------*/
 /*base1*/
-BDAQINL ErrorCode              FirmwareCtrls_LoadProfile(FirmwareCtrls *obj, wchar_t const *fileName)                                   { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }  
+BDAQINL ErrorCode              FirmwareCtrls_LoadProfile(FirmwareCtrls *obj, wchar_t const *fileName)                                   { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(obj, fileName);   }
 BDAQINL void                   FirmwareCtrls_Cleanup(FirmwareCtrls *obj)                                                                {        DAQFN_VV(DNLAPI_BASE, 83)(obj);                              }
 BDAQINL void                   FirmwareCtrls_Dispose(FirmwareCtrls *obj)                                                                {        DAQFN_VV(DNLAPI_BASE, 84)(obj);                              }
 BDAQINL void                   FirmwareCtrls_getSelectedDevice(FirmwareCtrls *obj, DeviceInformation *x)                                {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(obj, x);       }
@@ -4023,12 +4069,12 @@ BDAQINL ControlState           FirmwareCtrls_getState(void *obj)                
 BDAQINL DeviceCtrl *           FirmwareCtrls_getDevice(FirmwareCtrls *obj)                                                              { return DAQFN_TV(DNLAPI_BASE, 88, DeviceCtrl *)(obj);                }
 BDAQINL IArray *               FirmwareCtrls_getSupportedDevices(FirmwareCtrls *obj)                                                    { return DAQFN_TV(DNLAPI_BASE, 89, IArray *)(obj);                    }
 BDAQINL IArray *               FirmwareCtrls_getSupportedModes(FirmwareCtrls *obj)                                                      { return DAQFN_TV(DNLAPI_BASE, 90, IArray *)(obj);                    }
-/* FirmwareCtrls methods */                                                                                                                                                                       
+/* FirmwareCtrls methods */
 BDAQINL IArray *               FirmwareCtrls_getFirmwares(FirmwareCtrls *obj)                                                           { return DAQFN_TV(DNLAPI_BASE, 137, IArray *)(obj);                   }
 BDAQINL ErrorCode              FirmwareCtrls_setLanguageType(FirmwareCtrls *obj, int32 type)                                            { return DAQFN_ET(DNLAPI_BASE, 148, int32)(obj, type);                }
-/*creator*/                                                                                                                         
-BDAQINL FirmwareCtrls *        FirmwareCtrls_Create(void)                                                                               { return (FirmwareCtrls *)DaqCtrlBase_Create(SceFirmware);            } 
-                                                                                                                                    
+/*creator*/
+BDAQINL FirmwareCtrls *        FirmwareCtrls_Create(void)                                                                               { return (FirmwareCtrls *)DaqCtrlBase_Create(SceFirmware);            }
+
 /**********************************************************/
 /* For compatible                                         */
 /**********************************************************/
@@ -4195,7 +4241,7 @@ BDAQINL ErrorCode xxxCtrl_UpdateProperties(void *obj)
    return dev ? DeviceCtrl_Refresh(dev) : ErrorFuncNotInited;
 }
 
-BDAQINL int32 xxxCntrCtrl_getChannel(void *obj) 
+BDAQINL int32 xxxCntrCtrl_getChannel(void *obj)
 {
    return DAQFN_TV(DNLAPI_CNTR, 35, int32)(obj);
 }
@@ -4207,8 +4253,8 @@ BDAQINL int32 xxxCntrCtrl_setChannel(void *obj, int32 ch)
 
 BDAQINL int32 EventCounterCtrl_getValue(EventCounterCtrl *obj)
 {
-   int32 value = 0; 
-   EventCounterCtrl_Read(obj, 1, &value); 
+   int32 value = 0;
+   EventCounterCtrl_Read(obj, 1, &value);
    return value;
 }
 
@@ -4217,12 +4263,12 @@ BDAQINL FmChannel * FreqMeterCtrl_getCHPtr(FreqMeterCtrl *obj)
    IArray *chs = FreqMeterCtrl_getChannels(obj);
    return chs ? (FmChannel *)Array_getItem(chs, xxxCntrCtrl_getChannel(obj)) : NULL;
 }
-BDAQINL FreqMeasureMethod FreqMeterCtrl_getMethod(FreqMeterCtrl *obj)  
+BDAQINL FreqMeasureMethod FreqMeterCtrl_getMethod(FreqMeterCtrl *obj)
 {
    FmChannel *ch = FreqMeterCtrl_getCHPtr(obj);
    return ch ? FmChannel_getFmMethod(ch) : AutoAdaptive;
 }
-BDAQINL ErrorCode FreqMeterCtrl_setMethod(FreqMeterCtrl *obj, FreqMeasureMethod value) 
+BDAQINL ErrorCode FreqMeterCtrl_setMethod(FreqMeterCtrl *obj, FreqMeasureMethod value)
 {
    FmChannel *ch = FreqMeterCtrl_getCHPtr(obj);
    return ch ? FmChannel_setFmMethod(ch, value) : ErrorFuncNotInited;
@@ -4232,7 +4278,7 @@ BDAQINL double FreqMeterCtrl_getCollectionPeriod(FreqMeterCtrl *obj)
    FmChannel *ch = FreqMeterCtrl_getCHPtr(obj);
    return ch ? FmChannel_getCollectionPeriod(ch) : 0;
 }
-BDAQINL ErrorCode FreqMeterCtrl_setCollectionPeriod(FreqMeterCtrl *obj, double value)  
+BDAQINL ErrorCode FreqMeterCtrl_setCollectionPeriod(FreqMeterCtrl *obj, double value)
 {
    FmChannel *ch = FreqMeterCtrl_getCHPtr(obj);
    return ch ? FmChannel_setCollectionPeriod(ch, value) : ErrorFuncNotInited;
@@ -4249,7 +4295,7 @@ BDAQINL OsChannel * OneShotCtrl_getCHPtr(OneShotCtrl *obj)
    IArray *chs = OneShotCtrl_getChannels(obj);
    return chs ? (OsChannel *)Array_getItem(chs, xxxCntrCtrl_getChannel(obj)) : NULL;
 }
-BDAQINL int32 OneShotCtrl_getDelayCount(OneShotCtrl *obj) 
+BDAQINL int32 OneShotCtrl_getDelayCount(OneShotCtrl *obj)
 {
    OsChannel *ch = OneShotCtrl_getCHPtr(obj);
    return ch ? OsChannel_getDelayCount(ch) : 0;
@@ -4292,7 +4338,7 @@ BDAQINL void PwModulatorCtrl_getPulseWidth(PwModulatorCtrl *obj, PulseWidth *wid
    if (ch) { PoChannel_getPulseWidth(ch, width);      }
    else    { width->HiPeriod = width->LoPeriod = 0.0; }
 }
-BDAQINL ErrorCode PwModulatorCtrl_setPulseWidth(PwModulatorCtrl *obj, PulseWidth const *width) 
+BDAQINL ErrorCode PwModulatorCtrl_setPulseWidth(PwModulatorCtrl *obj, PulseWidth const *width)
 {
    PoChannel *ch = PwModulatorCtrl_getCHPtr(obj);
    return ch ? PoChannel_setPulseWidth(ch, width) : ErrorFuncNotInited;
@@ -4302,7 +4348,7 @@ BDAQINL UdChannel * UdCounterCtrl_getCHPtr(UdCounterCtrl *obj)
 {
    int32 ch = xxxCntrCtrl_getChannel(obj);
    IArray *chs = UdCounterCtrl_getChannels(obj);
-   
+
    if (ch < 0) { return NULL; }
    return chs ? (UdChannel *)Array_getItem(chs, ch) : NULL;
 }
@@ -4311,7 +4357,7 @@ BDAQINL SignalCountingType  UdCounterCtrl_getCountingType(UdCounterCtrl *obj)
    UdChannel *ch = UdCounterCtrl_getCHPtr(obj);
    return ch ? UdChannel_getCountingType(ch) : CountingNone;
 }
-BDAQINL ErrorCode UdCounterCtrl_setCountingType(UdCounterCtrl *obj, SignalCountingType value) 
+BDAQINL ErrorCode UdCounterCtrl_setCountingType(UdCounterCtrl *obj, SignalCountingType value)
 {
    UdChannel *ch = UdCounterCtrl_getCHPtr(obj);
    return ch ? UdChannel_setCountingType(ch, value) : ErrorFuncNotInited;
@@ -4321,7 +4367,7 @@ BDAQINL int32 UdCounterCtrl_getInitialValue(UdCounterCtrl *obj)
    UdChannel *ch = UdCounterCtrl_getCHPtr(obj);
    return ch ? UdChannel_getInitialValue(ch) : 0;
 }
-BDAQINL ErrorCode UdCounterCtrl_setInitialValue(UdCounterCtrl *obj, int32 value)  
+BDAQINL ErrorCode UdCounterCtrl_setInitialValue(UdCounterCtrl *obj, int32 value)
 {
    UdChannel *ch = UdCounterCtrl_getCHPtr(obj);
    return ch ? UdChannel_setInitialValue(ch, value) : ErrorFuncNotInited;
@@ -4348,17 +4394,17 @@ For compatible : Global
 */
 #define  AdxInstantAiCtrlCreate       InstantAiCtrl_Create
 #define  AdxBufferedAiCtrlCreate      BufferedAiCtrl_Create
-#define  AdxInstantAoCtrlCreate       InstantAoCtrl_Create     
-#define  AdxBufferedAoCtrlCreate      BufferedAoCtrl_Create  
-#define  AdxInstantDiCtrlCreate       InstantDiCtrl_Create   
-#define  AdxInstantDoCtrlCreate       InstantDoCtrl_Create   
+#define  AdxInstantAoCtrlCreate       InstantAoCtrl_Create
+#define  AdxBufferedAoCtrlCreate      BufferedAoCtrl_Create
+#define  AdxInstantDiCtrlCreate       InstantDiCtrl_Create
+#define  AdxInstantDoCtrlCreate       InstantDoCtrl_Create
 #define  AdxEventCounterCtrlCreate    EventCounterCtrl_Create
-#define  AdxFreqMeterCtrlCreate       FreqMeterCtrl_Create   
-#define  AdxOneShotCtrlCreate         OneShotCtrl_Create     
-#define  AdxPwMeterCtrlCreate         PwMeterCtrl_Create     
-#define  AdxPwModulatorCtrlCreate     PwModulatorCtrl_Create 
-#define  AdxTimerPulseCtrlCreate      TimerPulseCtrl_Create  
-#define  AdxUdCounterCtrlCreate       UdCounterCtrl_Create   
+#define  AdxFreqMeterCtrlCreate       FreqMeterCtrl_Create
+#define  AdxOneShotCtrlCreate         OneShotCtrl_Create
+#define  AdxPwMeterCtrlCreate         PwMeterCtrl_Create
+#define  AdxPwModulatorCtrlCreate     PwModulatorCtrl_Create
+#define  AdxTimerPulseCtrlCreate      TimerPulseCtrl_Create
+#define  AdxUdCounterCtrlCreate       UdCounterCtrl_Create
 
 /*
 For compatible : ICollection
@@ -4403,19 +4449,19 @@ For compatible : AnalogChannel
 /*
 For compatible : PortDirection
 */
-#define PortDirection_getPort                    DioPort_getPort     
+#define PortDirection_getPort                    DioPort_getPort
 #define PortDirection_getDirection               DioPort_getDirection
 #define PortDirection_setDirection               DioPort_setDirection
 
 /*
 For compatible : Counter Capability Indexer
 */
-#define CounterCapabilityIndexer_Dispose        CounterIndexer_Dispose       
-#define CounterCapabilityIndexer_getCount       CounterIndexer_getLength       
+#define CounterCapabilityIndexer_Dispose        CounterIndexer_Dispose
+#define CounterCapabilityIndexer_getCount       CounterIndexer_getLength
 #define CounterCapabilityIndexer_getItem        CounterIndexer_getItem
 
 /*
-For compatible : 
+For compatible :
 */
 #define InstantAiCtrl_getInitialized(obj)                                (InstantAiCtrl_getState(obj) != Uninited)
 #define InstantAiCtrl_getCanEditProperty(obj)                            InstantAiCtrl_getInitialized(obj)
@@ -4776,13 +4822,13 @@ public:
    T &   getItem(int32 index)                               { return *(T *) Array_getItem((IArray *)this, index);}
 
 public: /*for compatible*/
-   int32 getCount()                                         { return getLength(); } 
+   int32 getCount()                                         { return getLength(); }
 
 private:
    DAQCLS_DISABLE_CONSTRUCT(Array)
 };
 /*for compatible*/
-#define ICollection Array  
+#define ICollection Array
 
 /* Interface ScanChannel */
 class ScanChannel
@@ -4925,7 +4971,7 @@ private:
 /* ----------------------------------------------------------*/
 /*device ctrl class                                          */
 /* ----------------------------------------------------------*/
-/* Interface DeviceCtrl */   
+/* Interface DeviceCtrl */
 class DeviceCtrl
 {
    /*event*/
@@ -4940,7 +4986,7 @@ public:
    ErrorCode WritePrivateRegion(int32 signature, int32 length, uint8 *data)    { return DeviceCtrl_WritePrivateRegion(this, signature, length, data); }
    ErrorCode SynchronizeTimebase()                                             { return DeviceCtrl_SynchronizeTimebase(this);                         }
    double    CalculateAbsoluteTime(double const &relativeTime)                 { return DeviceCtrl_CalculateAbsoluteTime(this, relativeTime);         }
-   
+
    /*property*/
    int32                 getDeviceNumber()                                    { return DeviceCtrl_getDeviceNumber(this);               }
    ErrorCode             getDescription(int32 length, wchar_t *desc)          { return DeviceCtrl_getDescription(this, length, desc);  }
@@ -4959,10 +5005,10 @@ public:
    Array<int64>*         getBaseAddresses()                                   { return (Array<int64>*)DeviceCtrl_getBaseAddresses(this);              }
    Array<int32>*         getInterrupts()                                      { return (Array<int32>*)DeviceCtrl_getInterrupts(this);                 }
    Array<TerminalBoard>* getSupportedTerminalBoard()                          { return (Array<TerminalBoard>*)DeviceCtrl_getSupportedTerminalBoard(this); }
-   Array<EventId>*       getSupportedEvents()                                 { return (Array<EventId>*)DeviceCtrl_getSupportedEvents(this);            } 
+   Array<EventId>*       getSupportedEvents()                                 { return (Array<EventId>*)DeviceCtrl_getSupportedEvents(this);            }
    int32                 getSupportedScenarios()                              { return DeviceCtrl_getSupportedScenarios(this);         }
    HANDLE                getDevice()                                          { return DeviceCtrl_getDevice(this);                     }
-   
+
    TerminalBoard         getTerminalBoard()                                   { return DeviceCtrl_getTerminalBoard(this);              }
    ErrorCode             setTerminalBoard(TerminalBoard board)                { return DeviceCtrl_setTerminalBoard(this, board);       }
    ErrorCode             setLocateEnabled(bool value)                         { return DeviceCtrl_setLocateEnabled(this, value);       }
@@ -4974,8 +5020,8 @@ public:
    ErrorCode             getHwSpecific(wchar_t *name, int32 &size, uint8 buffer[]) { return DeviceCtrl_getHwSpecific(this, name, &size, buffer); }
    ErrorCode             setHwSpecific(wchar_t *name, int32  size, uint8 buffer[]) { return DeviceCtrl_setHwSpecific(this, name, size,  buffer); }
    // I32
-   ErrorCode getHwSpecific(wchar_t *name, int32 &value) 
-   { 
+   ErrorCode getHwSpecific(wchar_t *name, int32 &value)
+   {
       int32 size = sizeof(int32);
       return getHwSpecific(name, size, (uint8*)&value);
    }
@@ -4984,8 +5030,8 @@ public:
       return setHwSpecific(name, sizeof(int32), (uint8*)&value);
    }
    // F64
-   ErrorCode getHwSpecific(wchar_t *name, double &value) 
-   { 
+   ErrorCode getHwSpecific(wchar_t *name, double &value)
+   {
       int32 size = sizeof(double);
       return getHwSpecific(name, size, (uint8*)&value);
    }
@@ -4995,19 +5041,19 @@ public:
    }
 
    //  new: fusion device properties ----------------------------------------------
-   Array<ProductId>*  getSupportedFusionTypes()                                            { return (Array<ProductId>*)DeviceCtrl_getSupportedFusionTypes(this); }      
+   Array<ProductId>*  getSupportedFusionTypes()                                            { return (Array<ProductId>*)DeviceCtrl_getSupportedFusionTypes(this); }
 
    //  new: programmable pin properties--------------------------------------------
-   Array<SignalDrop>* getProgrammableSignals()                                             { return (Array<SignalDrop>*)DeviceCtrl_getProgrammableSignals(this);   }      
+   Array<SignalDrop>* getProgrammableSignals()                                             { return (Array<SignalDrop>*)DeviceCtrl_getProgrammableSignals(this);   }
    ErrorCode          getProgrammableSignalsDirection(int32 length, SignalDirection dir[]) { return DeviceCtrl_getProgrammableSignalsDirection(this, length, dir); }
    ErrorCode          setProgrammableSignalsDirection(int32 length, SignalDirection dir[]) { return DeviceCtrl_setProgrammableSignalsDirection(this, length, dir); }
    double             getSignalNoiseFilterBlockTime()                                      { return DeviceCtrl_getSignalNoiseFilterBlockTime(this);                }
    ErrorCode          setSignalNoiseFilterBlockTime(double blkTime)                        { return DeviceCtrl_setSignalNoiseFilterBlockTime(this, blkTime);       }
    // new: features & properties for signal routing--------------------------------
-   Array<SignalDrop>* getRtSignalEndpoints()                                               { return (Array<SignalDrop>*)DeviceCtrl_getRtSignalEndpoints(this); }      
-   Array<SignalDrop>* getRtEndpointXSupportedSources(SignalDrop rep)                       { return (Array<SignalDrop>*)DeviceCtrl_getRtEndpointXSupportedSources(this, rep); }      
-   SignalDrop         getRtEndpointXSource(SignalDrop rep)                                 { return DeviceCtrl_getRtEndpointXSource(this, rep);         }      
-   ErrorCode          setRtEndpointXSource(SignalDrop rep, SignalDrop source)              { return DeviceCtrl_setRtEndpointXSource(this, rep, source); }      
+   Array<SignalDrop>* getRtSignalEndpoints()                                               { return (Array<SignalDrop>*)DeviceCtrl_getRtSignalEndpoints(this); }
+   Array<SignalDrop>* getRtEndpointXSupportedSources(SignalDrop rep)                       { return (Array<SignalDrop>*)DeviceCtrl_getRtEndpointXSupportedSources(this, rep); }
+   SignalDrop         getRtEndpointXSource(SignalDrop rep)                                 { return DeviceCtrl_getRtEndpointXSource(this, rep);         }
+   ErrorCode          setRtEndpointXSource(SignalDrop rep, SignalDrop source)              { return DeviceCtrl_setRtEndpointXSource(this, rep, source); }
 
 public:
    /*Create an independent device ctrl if necessary. Note: Use 'dispose' to free the object*/
@@ -5029,16 +5075,16 @@ private:
 /* ----------------------------------------------------------*/
 /*daq ctrl base class                                        */
 /* ----------------------------------------------------------*/
-/* Interface DaqCtrlBase */   
+/* Interface DaqCtrlBase */
 class DaqCtrlBase
 {
 public:
    /*DAQ Control Common Method*/
-   ErrorCode    LoadProfile(wchar_t const *fileName)                       { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(this, fileName);   }  
+   ErrorCode    LoadProfile(wchar_t const *fileName)                       { return DAQFN_ET(DNLAPI_BASE, 98, wchar_t const *)(this, fileName);   }
    void         Cleanup()                                                  { DAQFN_VV(DNLAPI_BASE, 83)(this); } /*release the resources allocated.*/
    void         Dispose()                                                  { DAQFN_VV(DNLAPI_BASE, 84)(this); } /*destroy the instance*/
-                                                               
-   /*DAQ Control Common Property*/                             
+
+   /*DAQ Control Common Property*/
    void         getSelectedDevice(DeviceInformation &x)                    {        DAQFN_VT(DNLAPI_BASE, 85, DeviceInformation*)(this, &x);        }
    ErrorCode    setSelectedDevice(DeviceInformation const &x)              { return DAQFN_ET(DNLAPI_BASE, 86, DeviceInformation const*)(this, &x);  }
    ControlState getState()                                                 { return DAQFN_TV(DNLAPI_BASE, 87, ControlState)(this);   }
@@ -5096,7 +5142,7 @@ public:
    double         getBurnShortRetValue()                             { return AiChannel_getBurnShortRetValue(this);         }
    ErrorCode      setBurnShortRetValue(double value)                 { return AiChannel_setBurnShortRetValue(this, value);  }
 
-   /**/                                                                
+   /**/
    FilterType     getFilterType()                                    { return AiChannel_getFilterType(this);                }
    ErrorCode      setFilterType(FilterType value)                    { return AiChannel_setFilterType(this, value);         }
    double         getFilterCutoffFreq()                              { return AiChannel_getFilterCutoffFreq(this);          }
@@ -5118,13 +5164,19 @@ public:
    ErrorCode      getScaleTable(int32 &size, MapFuncPiece table[])   { return AiChannel_getScaleTable(this, &size, table);      }
    ErrorCode      setScaleTable(int32  size, MapFuncPiece table[])   { return AiChannel_setScaleTable(this,  size, table);      }
 
+   // Buffered AI Down-Sampling
+   DownsamplingMethod getDownsamplingMethod()                         { return AiChannel_getDownsamplingMethod(this);        }
+   ErrorCode          setDownsamplingMethod(DownsamplingMethod value) { return AiChannel_setDownsamplingMethod(this, value); }
+   int32              getDownsamplingCount()                          { return AiChannel_getDownsamplingCount(this);         }
+   ErrorCode          setDownsamplingCount(int32 value)               { return AiChannel_setDownsamplingCount(this, value);  }
+
 private:
    DAQCLS_DISABLE_CONSTRUCT(AiChannel)
 };
 typedef Array<AiChannel>  AiChannelCollection; /*for compatible*/
 typedef AiChannel         AnalogInputChannel;  /*for compatible*/
 
-/* Interface AiFeatures */ 
+/* Interface AiFeatures */
 class AiFeatures
 {
 public:
@@ -5132,38 +5184,38 @@ public:
    int32                  getResolution()                            { return AiFeatures_getResolution(this);                }
    int32                  getDataSize()                              { return AiFeatures_getDataSize(this);                  }
    int32                  getDataMask()                              { return AiFeatures_getDataMask(this);                  }
-   double                 getTimestampResolution()                   { return AiFeatures_getTimestampResolution(this);       }                                                                       
-   /*channel features*/                                                
+   double                 getTimestampResolution()                   { return AiFeatures_getTimestampResolution(this);       }
+   /*channel features*/
    int32                  getChannelCountMax()                       { return AiFeatures_getChannelCountMax(this);           }
    bool                   getOverallValueRange()                     { return !!AiFeatures_getOverallValueRange(this);       }
    Array<ValueRange>*     getValueRanges()                           { return (Array<ValueRange>*    )AiFeatures_getValueRanges(this);       }
    Array<BurnoutRetType>* getBurnoutReturnTypes()                    { return (Array<BurnoutRetType>*)AiFeatures_getBurnoutReturnTypes(this);}
-   Array<AiSignalType>*   getConnectionTypes()                       { return (Array<AiSignalType>*)AiFeatures_getConnectionTypes(this);     }                                                                    
+   Array<AiSignalType>*   getConnectionTypes()                       { return (Array<AiSignalType>*)AiFeatures_getConnectionTypes(this);     }
    bool                   getOverallConnection()                     { return !!AiFeatures_getOverallConnection(this);                       }
-   Array<CouplingType>*   getCouplingTypes()                         { return (Array<CouplingType>*)AiFeatures_getCouplingTypes(this);       }                                                                    
-   Array<IepeType>*       getIepeTypes()                             { return (Array<IepeType>*)AiFeatures_getIepeTypes(this);               }                                                                    
-   Array<ImpedanceType>*  getImpedanceTypes()                        { return (Array<ImpedanceType>*)AiFeatures_getImpedanceTypes(this);     }                                                                    
+   Array<CouplingType>*   getCouplingTypes()                         { return (Array<CouplingType>*)AiFeatures_getCouplingTypes(this);       }
+   Array<IepeType>*       getIepeTypes()                             { return (Array<IepeType>*)AiFeatures_getIepeTypes(this);               }
+   Array<ImpedanceType>*  getImpedanceTypes()                        { return (Array<ImpedanceType>*)AiFeatures_getImpedanceTypes(this);     }
 
-   /*filter*/                                                          
+   /*filter*/
    Array<FilterType>*     getFilterTypes()                           { return (Array<FilterType>*)AiFeatures_getFilterTypes(this); }
    void                   getFilterCutoffFreqRange(MathInterval &x)  {        AiFeatures_getFilterCutoffFreqRange(this, &x); }
    void                   getFilterCutoffFreq1Range(MathInterval &x) {        AiFeatures_getFilterCutoffFreq1Range(this, &x);}
-                                                                       
-   /*CJC features*/                                                    
+
+   /*CJC features*/
    bool                   getThermoSupported()                       { return !!AiFeatures_getThermoSupported(this);         }
    Array<int32>*          getCjcChannels()                           { return (Array<int32>*)AiFeatures_getCjcChannels(this);}
-                                                                       
-   /*buffered ai->basic features*/                                     
+
+   /*buffered ai->basic features*/
    bool                   getBufferedAiSupported()                   { return !!AiFeatures_getBufferedAiSupported(this);     }
    SamplingMethod         getSamplingMethod()                        { return AiFeatures_getSamplingMethod(this);            }
    int32                  getChannelStartBase()                      { return AiFeatures_getChannelStartBase(this);          }
    int32                  getChannelCountBase()                      { return AiFeatures_getChannelCountBase(this);          }
-                                                                       
-   /*buffered ai->conversion clock features*/                          
+
+   /*buffered ai->conversion clock features*/
    Array<SignalDrop>*     getConvertClockSources()                   { return (Array<SignalDrop>*)AiFeatures_getConvertClockSources(this);}
    void                   getConvertClockRange(MathInterval &x)      {        AiFeatures_getConvertClockRange(this, &x);     }
-                                                                       
-   /*buffered ai->burst scan*/                                         
+
+   /*buffered ai->burst scan*/
    bool                   getBurstScanSupported()                    { return !!AiFeatures_getBurstScanSupported(this);      }
    Array<SignalDrop>*     getScanClockSources()                      { return (Array<SignalDrop>*)AiFeatures_getScanClockSources(this); }
    void                   getScanClockRange(MathInterval &x)         {        AiFeatures_getScanClockRange(this, &x);        }
@@ -5174,16 +5226,16 @@ public:
    int32                  getTriggerCount()                          { return AiFeatures_getTriggerCount(this);               }
    Array<FilterType>*     getTriggerFilterTypes()                    { return (Array<FilterType>*)AiFeatures_getTriggerFilterTypes(this);}
    void                   getTriggerFilterCutoffFreq(MathInterval &x){        AiFeatures_getTriggerFilterCutoffFreq(this, &x);           }
-   
-   /*trigger 0*/                                                       
+
+   /*trigger 0*/
    Array<TriggerAction>*  getTriggerActions()                        { return (Array<TriggerAction>*)AiFeatures_getTriggerActions(this);        }
    void                   getTriggerDelayRange(MathInterval &x)      {        AiFeatures_getTriggerDelayRange(this, &x);                        }
    Array<SignalDrop>*     getTriggerSources()                        { return (Array<SignalDrop>*)AiFeatures_getTriggerSources(this);           }
    ValueRange             getTriggerSourceVrg()                      { return AiFeatures_getTriggerSourceVrg(this);                             }
    double                 getTriggerHysteresisIndexMax()             { return AiFeatures_getTriggerHysteresisIndexMax(this);                    }
    int32                  getTriggerHysteresisIndexStep()            { return AiFeatures_getTriggerHysteresisIndexStep(this);                   }
-   
-   /*trigger 1*/                                                       
+
+   /*trigger 1*/
    Array<TriggerAction>*  getTrigger1Actions()                       { return (Array<TriggerAction>*)AiFeatures_getTrigger1Actions(this);       }
    void                   getTrigger1DelayRange(MathInterval &x)     {        AiFeatures_getTrigger1DelayRange(this, &x);                       }
    Array<SignalDrop>*     getTrigger1Sources()                       { return (Array<SignalDrop>*)AiFeatures_getTrigger1Sources(this);          }
@@ -5191,7 +5243,7 @@ public:
    double                 getTrigger1HysteresisIndexMax()            { return AiFeatures_getTrigger1HysteresisIndexMax(this);                   }
    int32                  getTrigger1HysteresisIndexStep()           { return AiFeatures_getTrigger1HysteresisIndexStep(this);                  }
 
-   /*trigger 2*/                                                       
+   /*trigger 2*/
    Array<TriggerAction>*  getTrigger2Actions()                       { return (Array<TriggerAction>*)AiFeatures_getTrigger2Actions(this);       }
    void                   getTrigger2DelayRange(MathInterval &x)     {        AiFeatures_getTrigger2DelayRange(this, &x);                       }
    Array<SignalDrop>*     getTrigger2Sources()                       { return (Array<SignalDrop>*)AiFeatures_getTrigger2Sources(this);          }
@@ -5199,7 +5251,7 @@ public:
    double                 getTrigger2HysteresisIndexMax()            { return AiFeatures_getTrigger2HysteresisIndexMax(this);                   }
    int32                  getTrigger2HysteresisIndexStep()           { return AiFeatures_getTrigger2HysteresisIndexStep(this);                  }
 
-   /*trigger 3*/                                                       
+   /*trigger 3*/
    Array<TriggerAction>*  getTrigger3Actions()                       { return (Array<TriggerAction>*)AiFeatures_getTrigger3Actions(this);       }
    void                   getTrigger3DelayRange(MathInterval &x)     {        AiFeatures_getTrigger3DelayRange(this, &x);                       }
    Array<SignalDrop>*     getTrigger3Sources()                       { return (Array<SignalDrop>*)AiFeatures_getTrigger3Sources(this);          }
@@ -5212,8 +5264,11 @@ public:
    Array<int32>*          getBridgeResistances()                     { return (Array<int32>*)AiFeatures_getBridgeResistances(this);             }
    void                   getExcitingVoltageRange(MathInterval &x)   { AiFeatures_getExcitingVoltageRange(this, &x);                            }
 
+   /* Buffered AI Down-Sampling */
+   Array<DownsamplingMethod>* getDownsamplingMethods()               { return (Array<DownsamplingMethod>*)AiFeatures_getDownsamplingMethods(this); }
+
 public: /*for compatible*/
-   MathInterval getConvertClockRange() 
+   MathInterval getConvertClockRange()
    {
       MathInterval x;
       getConvertClockRange(x);
@@ -5247,8 +5302,8 @@ public: /*for compatible*/
    }
 
    AiChannelType getChannelType()
-   { 
-      return AiFeatures_getChannelType(this);               
+   {
+      return AiFeatures_getChannelType(this);
    }
 
 private:
@@ -5316,8 +5371,8 @@ public:
    ErrorCode     GetData(int32 count, int16 rawData[])                                    { return BufferedAiCtrl_GetDataI16(this, count, rawData);    }
    ErrorCode     GetData(int32 count, int32 rawData[])                                    { return BufferedAiCtrl_GetDataI32(this, count, rawData);    }
    ErrorCode     GetData(int32 count, double scaledData[])                                { return BufferedAiCtrl_GetDataF64(this, count, scaledData); }
-   
-   /*Buffered AI Property*/                                                                 
+
+   /*Buffered AI Property*/
    void*         getBuffer()                                                              { return BufferedAiCtrl_getBuffer(this);         }
    int32         getBufferCapacity()                                                      { return BufferedAiCtrl_getBufferCapacity(this); }
    ScanChannel*  getScanChannel()                                                         { return BufferedAiCtrl_getScanChannel(this);    }
@@ -5372,23 +5427,23 @@ public:
    void          Release()                                                                {        WaveformAiCtrl_Release(this); }
    bool          GetBufferStatus(int32 *count, int32 *offset)                             { return !!WaveformAiCtrl_GetBufferStatus(this, count, offset);}
 
-   ErrorCode GetData(int32 count, int16 rawData[], 
+   ErrorCode GetData(int32 count, int16 rawData[],
       int32 timeout = 0, int32 *returned = NULL, double *startTime = NULL, int32 *markCount = NULL, DataMark *markBuf = NULL)
-   { 
-      return WaveformAiCtrl_GetDataI16(this, count, rawData, timeout, returned, startTime, markCount, markBuf);    
+   {
+      return WaveformAiCtrl_GetDataI16(this, count, rawData, timeout, returned, startTime, markCount, markBuf);
    }
-   ErrorCode GetData(int32 count, int32 rawData[], 
+   ErrorCode GetData(int32 count, int32 rawData[],
       int32 timeout = 0, int32 *returned = NULL, double *startTime = NULL, int32 *markCount = NULL, DataMark *markBuf = NULL)
-   { 
-      return WaveformAiCtrl_GetDataI32(this, count, rawData, timeout, returned, startTime, markCount, markBuf);    
+   {
+      return WaveformAiCtrl_GetDataI32(this, count, rawData, timeout, returned, startTime, markCount, markBuf);
    }
-   ErrorCode GetData(int32 count, double scaledData[], 
+   ErrorCode GetData(int32 count, double scaledData[],
       int32 timeout = 0, int32 *returned = NULL, double *startTime = NULL, int32 *markCount = NULL, DataMark *markBuf = NULL)
-   { 
-      return WaveformAiCtrl_GetDataF64(this, count, scaledData, timeout, returned, startTime, markCount, markBuf); 
+   {
+      return WaveformAiCtrl_GetDataF64(this, count, scaledData, timeout, returned, startTime, markCount, markBuf);
    }
 
-   /*Waveform AI Property*/                                                                 
+   /*Waveform AI Property*/
    void*         getBuffer()                                                              { return WaveformAiCtrl_getBuffer(this);         }
    int32         getBufferCapacity()                                                      { return WaveformAiCtrl_getBufferCapacity(this); }
    Conversion*   getConversion()                                                          { return WaveformAiCtrl_getConversion(this);     }
@@ -5437,10 +5492,10 @@ public:
    ValueRange getValueRange()                                    { return AoChannel_getValueRange(this);           }
    ErrorCode  setValueRange(ValueRange value)                    { return AoChannel_setValueRange(this, value);    }
 
-   double     getExtRefBipolar()                                 { return AoChannel_getExtRefBipolar(this);        } 
-   ErrorCode  setExtRefBipolar(double value)                     { return AoChannel_setExtRefBipolar(this, value); } 
-   double     getExtRefUnipolar()                                { return AoChannel_getExtRefUnipolar(this);       } 
-   ErrorCode  setExtRefUnipolar(double value)                    { return AoChannel_setExtRefUnipolar(this, value);} 
+   double     getExtRefBipolar()                                 { return AoChannel_getExtRefBipolar(this);        }
+   ErrorCode  setExtRefBipolar(double value)                     { return AoChannel_setExtRefBipolar(this, value); }
+   double     getExtRefUnipolar()                                { return AoChannel_getExtRefUnipolar(this);       }
+   ErrorCode  setExtRefUnipolar(double value)                    { return AoChannel_setExtRefUnipolar(this, value);}
 
    ErrorCode  getScaleTable(int32 &size, MapFuncPiece table[])   { return AoChannel_getScaleTable(this, &size, table); }
    ErrorCode  setScaleTable(int32  size, MapFuncPiece table[])   { return AoChannel_setScaleTable(this,  size, table); }
@@ -5460,30 +5515,30 @@ public:
    int32                 getDataSize()                               { return AoFeatures_getDataSize(this);               }
    int32                 getDataMask()                               { return AoFeatures_getDataMask(this);               }
 
-   /*channel features*/                                                
+   /*channel features*/
    int32                 getChannelCountMax()                        { return AoFeatures_getChannelCountMax(this);        }
    Array<ValueRange>*    getValueRanges()                            { return (Array<ValueRange>*)AoFeatures_getValueRanges(this); }
    bool                  getExternalRefAntiPolar()                   { return !!AoFeatures_getExternalRefAntiPolar(this); }
    void                  getExternalRefRange(MathInterval &x)        {        AoFeatures_getExternalRefRange(this, &x);   }
 
-   /*buffered ao->basic features*/                                     
+   /*buffered ao->basic features*/
    bool                  getBufferedAoSupported()                    { return !!AoFeatures_getBufferedAoSupported(this);  }
    SamplingMethod        getSamplingMethod()                         { return AoFeatures_getSamplingMethod(this);         }
    int32                 getChannelStartBase()                       { return AoFeatures_getChannelStartBase(this);       }
    int32                 getChannelCountBase()                       { return AoFeatures_getChannelCountBase(this);       }
 
-   /*buffered ao->conversion clock features*/                          
+   /*buffered ao->conversion clock features*/
    Array<SignalDrop>*    getConvertClockSources()                    { return (Array<SignalDrop>*)AoFeatures_getConvertClockSources(this);}
    void                  getConvertClockRange(MathInterval &x)       {        AoFeatures_getConvertClockRange(this, &x);  }
 
-   /*buffered ao->trigger features*/                                   
+   /*buffered ao->trigger features*/
    int32                 getTriggerCount()                           { return AoFeatures_getTriggerCount(this);           }
    bool                  getRetriggerable()                          { return !!AoFeatures_getRetriggerable(this);        }
-   /*trigger 0*/                                                       
+   /*trigger 0*/
    Array<SignalDrop>*    getTriggerSources()                         { return (Array<SignalDrop>*)AoFeatures_getTriggerSources(this);   }
    Array<TriggerAction>* getTriggerActions()                         { return (Array<TriggerAction>*)AoFeatures_getTriggerActions(this);}
    void                  getTriggerDelayRange(MathInterval &x)       {        AoFeatures_getTriggerDelayRange(this, &x);  }
-   /*trigger 1*/                                                       
+   /*trigger 1*/
    Array<SignalDrop>*    getTrigger1Sources()                        { return (Array<SignalDrop>*)AoFeatures_getTrigger1Sources(this);  }
    Array<TriggerAction>* getTrigger1Actions()                        { return (Array<TriggerAction>*)AoFeatures_getTrigger1Actions(this);}
    void                  getTrigger1DelayRange(MathInterval &x)      {        AoFeatures_getTrigger1DelayRange(this, &x); }
@@ -5495,7 +5550,7 @@ public: /*for compatible*/
       getExternalRefRange(x);
       return x;
    }
-   MathInterval getConvertClockRange() 
+   MathInterval getConvertClockRange()
    {
       MathInterval x;
       getConvertClockRange(x);
@@ -5571,7 +5626,7 @@ private:
    DAQCLS_DISABLE_CONSTRUCT(InstantAoCtrl)
 };
 
-/* Interface BufferedAoCtrl */   
+/* Interface BufferedAoCtrl */
 class BufferedAoCtrl : public AoCtrlBase
 {
 public:
@@ -5585,8 +5640,8 @@ public:
    ErrorCode     SetData(int32 count, int16 rawData[])                                    { return BufferedAoCtrl_SetDataI16(this, count, rawData);   }
    ErrorCode     SetData(int32 count, int32 rawData[])                                    { return BufferedAoCtrl_SetDataI32(this, count, rawData);   }
    ErrorCode     SetData(int32 count, double scaledData[])                                { return BufferedAoCtrl_SetDataF64(this, count, scaledData);}
-                                                                                            
-   /*Buffered AO Property*/                                                                 
+
+   /*Buffered AO Property*/
    void*         getBuffer()                                                              { return BufferedAoCtrl_getBuffer(this);           }
    int32         getBufferCapacity()                                                      { return BufferedAoCtrl_getBufferCapacity(this);   }
    ScanChannel*  getScanChannel()                                                         { return BufferedAoCtrl_getScanChannel(this);      }
@@ -5640,13 +5695,13 @@ public:
    uint8      getDirectionMask()                                           { return DioPort_getDirectionMask(this);        }
    ErrorCode  setDirectionMask(uint8 value)                                { return DioPort_setDirectionMask(this, value); }
 
-   /*DI port property*/                                                      
+   /*DI port property*/
    uint8      getDiInversePort()                                           { return DioPort_getDiInversePort(this);        }
    ErrorCode  setDiInversePort(uint8 value)                                { return DioPort_setDiInversePort(this, value); }
    uint8      getDiOpenState()                                             { return DioPort_getDiOpenState(this);          }
    ErrorCode  setDiOpenState(uint8 value)                                  { return DioPort_setDiOpenState(this, value);   }
 
-   /*DO port property*/                                                      
+   /*DO port property*/
    uint8         getPresetValue()                                          { return DioPort_getDoPresetValue(this);        }
    ErrorCode     setPresetValue(uint8 value)                               { return DioPort_setDoPresetValue(this, value); }
    DoCircuitType getDoCircuitType()                                        { return DioPort_getDoCircuitType(this);        }
@@ -5703,7 +5758,7 @@ private:
    DAQCLS_DISABLE_CONSTRUCT(DiPmintPort)
 };
 
-/* Interface DioFeatures */ 
+/* Interface DioFeatures */
 class DioFeatures
 {
 public:
@@ -5714,16 +5769,16 @@ public:
    Array<uint8>*        getPortsType()                                     { return (Array<uint8>*)DioFeatures_getPortsType(this);         }
    bool                 getDiSupported()                                   { return !!DioFeatures_getDiSupported(this);                    }
    bool                 getDoSupported()                                   { return !!DioFeatures_getDoSupported(this);                    }
-                                                                             
-   /*DI features*/                                                           
+
+   /*DI features*/
    Array<uint8>*        getDiDataMask()                                    { return (Array<uint8>*)DioFeatures_getDiDataMask(this);        }
-                                                                             
-   /*DI noise filter features*/                                              
+
+   /*DI noise filter features*/
    bool                 getDiNoiseFilterSupported()                        { return !!DioFeatures_getDiNoiseFilterSupported(this);              }
    Array<uint8>*        getDiNoiseFilterOfChannels()                       { return (Array<uint8>*)DioFeatures_getDiNoiseFilterOfChannels(this);}
    void                 getDiNoiseFilterBlockTimeRange(MathInterval &x)    {        DioFeatures_getDiNoiseFilterBlockTimeRange(this, &x);  }
-                                                                             
-   /*DI interrupt features*/                                                 
+
+   /*DI interrupt features*/
    bool                 getDiintSupported()                                { return !!DioFeatures_getDiintSupported(this);                 }
    bool                 getDiintGateSupported()                            { return !!DioFeatures_getDiintGateSupported(this);             }
    bool                 getDiCosintSupported()                             { return !!DioFeatures_getDiCosintSupported(this);              }
@@ -5734,23 +5789,23 @@ public:
    Array<uint8>*        getDiCosintOfPorts()                               { return (Array<uint8>*)DioFeatures_getDiCosintOfPorts(this);      }
    Array<uint8>*        getDiPmintOfPorts()                                { return (Array<uint8>*)DioFeatures_getDiPmintOfPorts(this);       }
    Array<EventId>*      getDiSnapEventSources()                            { return (Array<EventId>*)DioFeatures_getDiSnapEventSources(this); }
-                                                                             
-   /*DO features*/                                                           
+
+   /*DO features*/
    Array<uint8>*         getDoDataMask()                                   { return (Array<uint8>*)DioFeatures_getDoDataMask(this);         }
-   Array<SignalDrop>*    getDoFreezeSignalSources()                        { return (Array<SignalDrop>*)DioFeatures_getDoFreezeSignalSources(this); }                        
-   void                  getDoReflectWdtFeedIntervalRange(MathInterval &x) {        DioFeatures_getDoReflectWdtFeedIntervalRange(this, &x); } 
-   Depository            getDoPresetValueDepository()                      { return DioFeatures_getDoPresetValueDepository(this);           }                        
-   Array<DoCircuitType>* getDoCircuitSelectableTypes()                     { return (Array<DoCircuitType>*)DioFeatures_getDoCircuitSelectableTypes(this); }                        
+   Array<SignalDrop>*    getDoFreezeSignalSources()                        { return (Array<SignalDrop>*)DioFeatures_getDoFreezeSignalSources(this); }
+   void                  getDoReflectWdtFeedIntervalRange(MathInterval &x) {        DioFeatures_getDoReflectWdtFeedIntervalRange(this, &x); }
+   Depository            getDoPresetValueDepository()                      { return DioFeatures_getDoPresetValueDepository(this);           }
+   Array<DoCircuitType>* getDoCircuitSelectableTypes()                     { return (Array<DoCircuitType>*)DioFeatures_getDoCircuitSelectableTypes(this); }
 
    /* buffered dio common */
    int32                 getResolution()                                   { return DioFeatures_getResolution(this);                }
    int32                 getDataSize()                                     { return DioFeatures_getDataSize(this);                  }
 
    /*buffered di->basic features*/
-   bool                  getBufferedDiSupported()                          { return !!DioFeatures_getBufferedDiSupported(this);     }                                                                               
+   bool                  getBufferedDiSupported()                          { return !!DioFeatures_getBufferedDiSupported(this);     }
    SamplingMethod        getDiSamplingMethod()                             { return DioFeatures_getDiSamplingMethod(this);          }
 
-   /*buffered di->conversion clock features*/                          
+   /*buffered di->conversion clock features*/
    Array<SignalDrop>*    getDiConvertClockSources()                        { return (Array<SignalDrop>*)DioFeatures_getDiConvertClockSources(this);}
    void                  getDiConvertClockRange(MathInterval &x)           {        DioFeatures_getDiConvertClockRange(this, &x);     }
 
@@ -5758,7 +5813,7 @@ public:
    bool                   getDiRetriggerable()                             { return !!DioFeatures_getDiRetriggerable(this);            }
    int32                  getDiTriggerCount()                              { return DioFeatures_getDiTriggerCount(this);               }
 
-   /*trigger 0*/                                                       
+   /*trigger 0*/
    Array<TriggerAction>*  getDiTriggerActions()                            { return (Array<TriggerAction>*)DioFeatures_getDiTriggerActions(this);        }
    void                   getDiTriggerDelayRange(MathInterval &x)          {        DioFeatures_getDiTriggerDelayRange(this, &x);                        }
    Array<SignalDrop>*     getDiTriggerSources()                            { return (Array<SignalDrop>*)DioFeatures_getDiTriggerSources(this);           }
@@ -5766,7 +5821,7 @@ public:
    double                 getDiTriggerHysteresisIndexMax()                 { return DioFeatures_getDiTriggerHysteresisIndexMax(this);                    }
    int32                  getDiTriggerHysteresisIndexStep()                { return DioFeatures_getDiTriggerHysteresisIndexStep(this);                   }
 
-   /*trigger 1*/                                                       
+   /*trigger 1*/
    Array<TriggerAction>*  getDiTrigger1Actions()                           { return (Array<TriggerAction>*)DioFeatures_getDiTrigger1Actions(this);       }
    void                   getDiTrigger1DelayRange(MathInterval &x)         {        DioFeatures_getDiTrigger1DelayRange(this, &x);                       }
    Array<SignalDrop>*     getDiTrigger1Sources()                           { return (Array<SignalDrop>*)DioFeatures_getDiTrigger1Sources(this);          }
@@ -5775,10 +5830,10 @@ public:
    int32                  getDiTrigger1HysteresisIndexStep()               { return DioFeatures_getDiTrigger1HysteresisIndexStep(this);                  }
 
    /*buffered do->basic features*/
-   bool                  getBufferedDoSupported()                         { return !!DioFeatures_getBufferedDoSupported(this);     }                                                                               
+   bool                  getBufferedDoSupported()                         { return !!DioFeatures_getBufferedDoSupported(this);     }
    SamplingMethod        getDoSamplingMethod()                            { return DioFeatures_getDoSamplingMethod(this);          }
 
-   /*buffered do->conversion clock features*/                          
+   /*buffered do->conversion clock features*/
    Array<SignalDrop>*    getDoConvertClockSources()                       { return (Array<SignalDrop>*)DioFeatures_getDoConvertClockSources(this);}
    void                  getDoConvertClockRange(MathInterval &x)          {        DioFeatures_getDoConvertClockRange(this, &x);     }
 
@@ -5786,7 +5841,7 @@ public:
    bool                   getDoRetriggerable()                            { return !!DioFeatures_getDoRetriggerable(this);            }
    int32                  getDoTriggerCount()                             { return DioFeatures_getDoTriggerCount(this);               }
 
-   /*trigger 0*/                                                       
+   /*trigger 0*/
    Array<TriggerAction>*  getDoTriggerActions()                           { return (Array<TriggerAction>*)DioFeatures_getDoTriggerActions(this);        }
    void                   getDoTriggerDelayRange(MathInterval &x)         {        DioFeatures_getDoTriggerDelayRange(this, &x);                        }
    Array<SignalDrop>*     getDoTriggerSources()                           { return (Array<SignalDrop>*)DioFeatures_getDoTriggerSources(this);           }
@@ -5794,7 +5849,7 @@ public:
    double                 getDoTriggerHysteresisIndexMax()                { return DioFeatures_getDoTriggerHysteresisIndexMax(this);                    }
    int32                  getDoTriggerHysteresisIndexStep()               { return DioFeatures_getDoTriggerHysteresisIndexStep(this);                   }
 
-   /*trigger 1*/                                                       
+   /*trigger 1*/
    Array<TriggerAction>*  getDoTrigger1Actions()                          { return (Array<TriggerAction>*)DioFeatures_getDoTrigger1Actions(this);       }
    void                   getDoTrigger1DelayRange(MathInterval &x)        {        DioFeatures_getDoTrigger1DelayRange(this, &x);                       }
    Array<SignalDrop>*     getDoTrigger1Sources()                          { return (Array<SignalDrop>*)DioFeatures_getDoTrigger1Sources(this);          }
@@ -5809,14 +5864,14 @@ public: /*for compatible*/
       getDiNoiseFilterBlockTimeRange(x);
       return x;
    }
-   MathInterval getDoReflectWdtFeedIntervalRange() 
+   MathInterval getDoReflectWdtFeedIntervalRange()
    {
       MathInterval x;
       getDoReflectWdtFeedIntervalRange(x);
       return x;
    }
 
-   MathInterval getDiConvertClockRange() 
+   MathInterval getDiConvertClockRange()
    {
       MathInterval x;
       getDiConvertClockRange(x);
@@ -5834,7 +5889,7 @@ public: /*for compatible*/
       getDiTrigger1DelayRange(x);
       return x;
    }
-   MathInterval getDoConvertClockRange() 
+   MathInterval getDoConvertClockRange()
    {
       MathInterval x;
       getDoConvertClockRange(x);
@@ -5872,7 +5927,7 @@ typedef DioFeatures DiFeatures; /*for compatible*/
 typedef DioFeatures DoFeatures; /*for compatible*/
 
 
-/* Interface DioCtrlBase */ 
+/* Interface DioCtrlBase */
 class DioCtrlBase : public DaqCtrlBase
 {
 public:
@@ -5888,7 +5943,7 @@ private:
    DAQCLS_DISABLE_CONSTRUCT(DioCtrlBase)
 };
 
-/* Interface InstantDiCtrl */ 
+/* Interface InstantDiCtrl */
 class InstantDiCtrl : public DioCtrlBase
 {
 public:
@@ -5902,7 +5957,7 @@ public:
    double                getNoiseFilterBlockTime()                                  { return InstantDiCtrl_getNoiseFilterBlockTime(this);        }
    ErrorCode             setNoiseFilterBlockTime(double value)                      { return InstantDiCtrl_setNoiseFilterBlockTime(this, value); }
    Array<NosFltChannel>* getNoiseFilter()                                           { return (Array<NosFltChannel>*)InstantDiCtrl_getNoiseFilter(this); }
-                                                                                              
+
    Array<DiintChannel>*  getDiintChannels()                                         { return (Array<DiintChannel>*)InstantDiCtrl_getDiintChannels(this);}
    Array<DiCosintPort>*  getDiCosintPorts()                                         { return (Array<DiCosintPort>*)InstantDiCtrl_getDiCosintPorts(this);}
    Array<DiPmintPort>*   getDiPmintPorts()                                          { return (Array<DiPmintPort>*)InstantDiCtrl_getDiPmintPorts(this);  }
@@ -5946,19 +6001,19 @@ public:
    void          Release()                                                                {        BufferedDiCtrl_Release(this); }
    bool          GetBufferStatus(int32 *count, int32 *offset)                             { return !!BufferedDiCtrl_GetBufferStatus(this, count, offset);}
 
-   ErrorCode GetData(int32 count, int8 rawData[], 
+   ErrorCode GetData(int32 count, int8 rawData[],
       int32 timeout = 0, int32 *returned = NULL, double *startTime = NULL, int32 *markCount = NULL, DataMark *markBuf = NULL)
-   { 
-      return BufferedDiCtrl_GetData(this, count, rawData, timeout, returned, startTime, markCount, markBuf);    
+   {
+      return BufferedDiCtrl_GetData(this, count, rawData, timeout, returned, startTime, markCount, markBuf);
    }
 
-   /*Buffered DI Property*/                                                                 
+   /*Buffered DI Property*/
    void*             getBuffer()                                                          { return BufferedDiCtrl_getBuffer(this);         }
    int32             getBufferCapacity()                                                  { return BufferedDiCtrl_getBufferCapacity(this); }
    ScanPort*         getScanPort()                                                        { return BufferedDiCtrl_getScanPort(this);       }
-   ConvertClock*     getConvertClock()                                                    { return BufferedDiCtrl_getConvertClock(this);   }   
+   ConvertClock*     getConvertClock()                                                    { return BufferedDiCtrl_getConvertClock(this);   }
    Trigger*          getTrigger()                                                         { return BufferedDiCtrl_getTrigger(this);        }
-   Trigger*          getTrigger1()                                                        { return BufferedDiCtrl_getTrigger1(this);       }   
+   Trigger*          getTrigger1()                                                        { return BufferedDiCtrl_getTrigger1(this);       }
 
 public:
    /*Create an BufferedDiCtrl. Note: Use 'dispose' to free the object*/
@@ -5973,13 +6028,13 @@ public: /*helpers*/
    void          addCacheOverflowHandler(BfdDiEventProc proc, void *userParam)            { DaqCtrlBase_addEventHandler   (this, EvtBufferedDiCacheOverflow, (DaqEventProc)proc, userParam);}
    void          removeCacheOverflowHandler(BfdDiEventProc proc, void *userParam)         { DaqCtrlBase_removeEventHandler(this, EvtBufferedDiCacheOverflow, (DaqEventProc)proc, userParam);}
    void          addStoppedHandler(BfdDiEventProc proc, void *userParam)                  { DaqCtrlBase_addEventHandler   (this, EvtBufferedDiStopped,       (DaqEventProc)proc, userParam);}
-   void          removeStoppedHandler(BfdDiEventProc proc, void *userParam)               { DaqCtrlBase_removeEventHandler(this, EvtBufferedDiStopped,       (DaqEventProc)proc, userParam);}   
+   void          removeStoppedHandler(BfdDiEventProc proc, void *userParam)               { DaqCtrlBase_removeEventHandler(this, EvtBufferedDiStopped,       (DaqEventProc)proc, userParam);}
 
 private:
    DAQCLS_DISABLE_CONSTRUCT(BufferedDiCtrl)
 };
 
-/* Interface InstantDoCtrl */ 
+/* Interface InstantDoCtrl */
 class InstantDoCtrl : public DioCtrlBase
 {
 public:
@@ -6003,7 +6058,7 @@ private:
    DAQCLS_DISABLE_CONSTRUCT(InstantDoCtrl)
 };
 
-/* Interface BufferedDoCtrl */   
+/* Interface BufferedDoCtrl */
 class BufferedDoCtrl : public DioCtrlBase
 {
 public:
@@ -6016,14 +6071,14 @@ public:
    bool          GetBufferStatus(int32 *count, int32 *offset)                             { return !!BufferedDoCtrl_GetBufferStatus(this, count, offset);}
    ErrorCode     SetData(int32 count, int8 rawData[])                                     { return BufferedDoCtrl_SetData(this, count, rawData);   }
 
-   /*Buffered DO Property*/                                                                 
+   /*Buffered DO Property*/
    void*             getBuffer()                                                          { return BufferedDoCtrl_getBuffer(this);           }
    int32             getBufferCapacity()                                                  { return BufferedDoCtrl_getBufferCapacity(this);   }
    ScanPort*         getScanPort()                                                        { return BufferedDoCtrl_getScanPort(this);         }
    ConvertClock*     getConvertClock()                                                    { return BufferedDoCtrl_getConvertClock(this);     }
    Trigger*          getTrigger()                                                         { return BufferedDoCtrl_getTrigger(this);          }
    Trigger*          getTrigger1()                                                        { return BufferedDoCtrl_getTrigger1(this);         }
-   
+
 public:
    /*Create an BufferedDoCtrl. Note: Use 'dispose' to free the object*/
    static BufferedDoCtrl * Create(void)                                                   { return BufferedDoCtrl_Create();  }
@@ -6058,7 +6113,7 @@ public:
    Array<T>* getItem(int32 channel)                                  { return (Array<T>*)CounterIndexer_getItem((ICounterIndexer*)this, channel); }
 
 public: /*for compatible*/
-   int32     getCount()                                              { return getLength(); } 
+   int32     getCount()                                              { return getLength(); }
 
 private:
    DAQCLS_DISABLE_CONSTRUCT(CounterIndexer)
@@ -6069,7 +6124,7 @@ typedef CounterIndexer<SignalDrop>        CounterClockSourceIndexer;
 typedef CounterIndexer<SignalDrop>        CounterGateSourceIndexer;
 typedef CounterIndexer<SignalDrop>        CounterTriggerSourceIndexer;
 
-class CntrFeatures 
+class CntrFeatures
 {
 public:
    /*channel features*/
@@ -6077,8 +6132,8 @@ public:
    int32 getResolution()                                             { return CntrFeatures_getResolution(this);                   }
    int32 getDataSize()                                               { return CntrFeatures_getDataSize(this);                     }
    CounterCapabilityIndexer* getCapabilities()                       { return (CounterCapabilityIndexer*)CntrFeatures_getCapabilities(this);}
-                                                                       
-   /*noise filter features*/                                           
+
+   /*noise filter features*/
    bool          getNoiseFilterSupported()                           { return !!CntrFeatures_getNoiseFilterSupported(this);              }
    Array<uint8>* getNoiseFilterOfChannels()                          { return (Array<uint8>*)CntrFeatures_getNoiseFilterOfChannels(this);}
    void          getNoiseFilterBlockTimeRange(MathInterval &x)       {        CntrFeatures_getNoiseFilterBlockTimeRange(this, &x);       }
@@ -6086,33 +6141,33 @@ public:
    /*new*/
    void          getMeasurementTimeoutRange(MathInterval &x)         {        CntrFeatures_getMeasurementTimeoutRange(this, &x);         }
 
-   /*event counting features*/                                         
+   /*event counting features*/
    CounterClockSourceIndexer* getEcClockSources()                    { return (CounterClockSourceIndexer*)CntrFeatures_getEcClockSources(this);}
    Array<SignalPolarity>*     getEcClockPolarities()                 { return (Array<SignalPolarity>*)CntrFeatures_getEcClockPolarities(this); }
    Array<SignalPolarity>*     getEcGatePolarities()                  { return (Array<SignalPolarity>*)CntrFeatures_getEcGatePolarities(this);  }
    Array<int32>*              getEcGateControlOfChannels()           { return (Array<int32>*)CntrFeatures_getEcGateControlOfChannels(this);    }
-                                                                       
-   /*frequency measurement features*/                                  
-   Array<FreqMeasureMethod>* getFmMethods()                          { return (Array<FreqMeasureMethod>*)CntrFeatures_getFmMethods(this);      } 
-                                                                       
-   /*one-shot features*/                                               
+
+   /*frequency measurement features*/
+   Array<FreqMeasureMethod>* getFmMethods()                          { return (Array<FreqMeasureMethod>*)CntrFeatures_getFmMethods(this);      }
+
+   /*one-shot features*/
    CounterClockSourceIndexer* getOsClockSources()                    { return (CounterClockSourceIndexer*)CntrFeatures_getOsClockSources(this);}
    Array<SignalPolarity>*     getOsClockPolarities()                 { return (Array<SignalPolarity>*)CntrFeatures_getOsClockPolarities(this); }
    CounterGateSourceIndexer*  getOsGateSources()                     { return (CounterGateSourceIndexer*)CntrFeatures_getOsGateSources(this);  }
    Array<SignalPolarity>*     getOsGatePolarities()                  { return (Array<SignalPolarity>*)CntrFeatures_getOsGatePolarities(this);  }
    Array<OutSignalType>*      getOsOutSignals()                      { return (Array<OutSignalType>*)CntrFeatures_getOsOutSignals(this);       }
    void                       getOsDelayCountRange(MathInterval &x)  {        CntrFeatures_getOsDelayCountRange(this, &x);                     }
-                                                                       
-   /*timer/pulse features*/                                            
+
+   /*timer/pulse features*/
    Array<int32>*          getTmrGateControlOfChannels()              { return (Array<int32>*)CntrFeatures_getTmrGateControlOfChannels(this);  }
    Array<SignalPolarity>* getTmrGatePolarities()                     { return (Array<SignalPolarity>*)CntrFeatures_getTmrGatePolarities(this);}
    Array<OutSignalType>*  getTmrOutSignals()                         { return (Array<OutSignalType>*)CntrFeatures_getTmrOutSignals(this);     }
    void                   getTmrFrequencyRange(MathInterval &x)      {        CntrFeatures_getTmrFrequencyRange(this, &x);                    }
-                                                                       
-   /*pulse width measurement features*/                                
+
+   /*pulse width measurement features*/
    Array<CounterCascadeGroup>* getPiCascadeGroup()                   { return (Array<CounterCascadeGroup>*)CntrFeatures_getPiCascadeGroup(this);}
-                                                                       
-   /*pulse width modulation features*/                                 
+
+   /*pulse width modulation features*/
    Array<int32>*          getPoGateControlOfChannels()               { return (Array<int32>*)CntrFeatures_getPoGateControlOfChannels(this);  }
    Array<SignalPolarity>* getPoGatePolarities()                      { return (Array<SignalPolarity>*)CntrFeatures_getPoGatePolarities(this);}
    Array<OutSignalType>*  getPoOutSignals()                          { return (Array<OutSignalType>*)CntrFeatures_getPoOutSignals(this);     }
@@ -6126,36 +6181,37 @@ public:
    Array<TriggerAction>*           getPoTriggerActions()                       { return (Array<TriggerAction>*)CntrFeatures_getPoTriggerActions(this);        }
 	void                            getPoTriggerDelayRange(MathInterval &x)     {        CntrFeatures_getPoTriggerDelayRange(this, &x);                        }
 
-   /*up-down counter features*/                                        
-   Array<CountingType>*   getUdCountingTypes()                       { return (Array<CountingType>*)CntrFeatures_getUdCountingTypes(this);   } 
+   /*up-down counter features*/
+   Array<CountingType>*   getUdCountingTypes()                       { return (Array<CountingType>*)CntrFeatures_getUdCountingTypes(this);   }
    Array<int32>*          getUdInitialValues()                       { return (Array<int32>*)CntrFeatures_getUdInitialValues(this);          }
    Array<EventId>*        getUdSnapEventSources()                    { return (Array<EventId>*)CntrFeatures_getUdSnapEventSources(this);     }
    void                   getUdValueResetTimes(MathInterval &x)      {        CntrFeatures_getUdValueResetTimes(this, &x);                    }
 
-   // new features for Counter continue comparing: outputting pulse settings 
+   // new features for Counter continue comparing: outputting pulse settings
    Array<int32>*          getCcpGateControlOfChannels()              { return (Array<int32>*)CntrFeatures_getCcpGateControlOfChannels(this);  }
    Array<SignalPolarity>* getCcpGatePolarities()                     { return (Array<SignalPolarity>*)CntrFeatures_getCcpGatePolarities(this);}
    Array<OutSignalType>*  getCcpOutSignals()                         { return (Array<OutSignalType>*)CntrFeatures_getCcpOutSignals(this);     }
    void                   getCcpHiPeriodRange(MathInterval &x)       {        CntrFeatures_getCcpHiPeriodRange(this, &x);                     }
    void                   getCcpLoPeriodRange(MathInterval &x)       {        CntrFeatures_getCcpLoPeriodRange(this, &x);                     }
    void                   getCcpOutCountRange(MathInterval &x)       {        CntrFeatures_getCcpOutCountRange(this, &x);                     }
-                                                                                                                                             
+   bool                   getCcpDataCtrlCodeSupported()              { return !!CntrFeatures_getCcpDataCtrlCodeSupported(this);               }
+
    /*new buffered counter*/
    int32                  getTriggerCount()                          { return CntrFeatures_getTriggerCount(this);                               }
    Array<SignalDrop>*     getTriggerSources()                        { return (Array<SignalDrop>*)CntrFeatures_getTriggerSources(this);         }
    Array<TriggerAction>*  getTriggerActions()                        { return (Array<TriggerAction>*)CntrFeatures_getTriggerActions(this);      }
 
    CounterClockSourceIndexer* getEcSampleClockSources()              { return (CounterClockSourceIndexer*)CntrFeatures_getEcSampleClockSources(this);  }
-   CounterClockSourceIndexer* getPiSampleClockSources()              { return (CounterClockSourceIndexer*)CntrFeatures_getPiSampleClockSources(this);  }      
+   CounterClockSourceIndexer* getPiSampleClockSources()              { return (CounterClockSourceIndexer*)CntrFeatures_getPiSampleClockSources(this);  }
    CounterClockSourceIndexer* getPoSampleClockSources()              { return (CounterClockSourceIndexer*)CntrFeatures_getPoSampleClockSources(this);  }
    CounterClockSourceIndexer* getUdSampleClockSources()              { return (CounterClockSourceIndexer*)CntrFeatures_getUdSampleClockSources(this);  }
 
    /*absolute counter features*/
-   Array<CodingType>*         getAbsCodingTypes()                    { return (Array<CodingType>*)CntrFeatures_getAbsCodingTypes(this);        } 
-   Array<Baudrate>*           getAbsBaudrates()                      { return (Array<Baudrate>*)CntrFeatures_getAbsBaudrates(this);            }  
-   Array<ErrorRetType>*       getAbsErrorRetTypes()                  { return (Array<ErrorRetType>*)CntrFeatures_getAbsErrorRetTypes(this);    }  
-   Array<OutSignalType>*      getAbsOutSignals()                     { return (Array<OutSignalType>*)CntrFeatures_getAbsOutSignals(this);      }  
-   Array<ActiveSignal>*       getAbsLatchSignalEdges()               { return (Array<ActiveSignal>*)CntrFeatures_getAbsLatchSignalEdges(this); }  
+   Array<CodingType>*         getAbsCodingTypes()                    { return (Array<CodingType>*)CntrFeatures_getAbsCodingTypes(this);        }
+   Array<Baudrate>*           getAbsBaudrates()                      { return (Array<Baudrate>*)CntrFeatures_getAbsBaudrates(this);            }
+   Array<ErrorRetType>*       getAbsErrorRetTypes()                  { return (Array<ErrorRetType>*)CntrFeatures_getAbsErrorRetTypes(this);    }
+   Array<OutSignalType>*      getAbsOutSignals()                     { return (Array<OutSignalType>*)CntrFeatures_getAbsOutSignals(this);      }
+   Array<ActiveSignal>*       getAbsLatchSignalEdges()               { return (Array<ActiveSignal>*)CntrFeatures_getAbsLatchSignalEdges(this); }
 
 public: /*for compatible*/
    MathInterval getNoiseFilterBlockTimeRange()
@@ -6192,11 +6248,11 @@ public: /*for compatible*/
       getPoLoPeriodRange(x);
       return x;
    }
-   Array<CountingType>* getCountingTypes()   
+   Array<CountingType>* getCountingTypes()
    {
       return getUdCountingTypes();
    }
-   Array<int32>* getInitialValues()   
+   Array<int32>* getInitialValues()
    {
       return getUdInitialValues();
    }
@@ -6222,13 +6278,13 @@ private:
 };
 
 /*for compatible*/
-typedef CntrFeatures    EventCounterFeatures ;     
-typedef CntrFeatures    FreqMeterFeatures;  
-typedef CntrFeatures    OneShotFeatures;  
-typedef CntrFeatures    TimerPulseFeatures; 
-typedef CntrFeatures    PwMeterFeatures;    
+typedef CntrFeatures    EventCounterFeatures ;
+typedef CntrFeatures    FreqMeterFeatures;
+typedef CntrFeatures    OneShotFeatures;
+typedef CntrFeatures    TimerPulseFeatures;
+typedef CntrFeatures    PwMeterFeatures;
 typedef CntrFeatures    PwModulatorFeatures;
-typedef CntrFeatures    UdCounterFeatures;  
+typedef CntrFeatures    UdCounterFeatures;
 
 /* Interface CntrCtrlBase */
 class CntrCtrlBase : public DaqCtrlBase
@@ -6269,8 +6325,8 @@ public:
    int32          getChannel()                           { return EcChannel_getChannel(this);              }
    bool           getNoiseFiltered()                     { return !!EcChannel_getNoiseFiltered(this);      }
    ErrorCode      setNoiseFiltered(bool value)           { return EcChannel_setNoiseFiltered(this, value); }
-                                                           
-   /*Event counting Property*/                             
+
+   /*Event counting Property*/
    SignalDrop     getClockSource()                       { return EcChannel_getClockSource(this);          }
    ErrorCode      setClockSource(SignalDrop value)       { return EcChannel_setClockSource(this, value);   }
    SignalPolarity getClockPolarity()                     { return EcChannel_getClockPolarity(this);        }
@@ -6311,8 +6367,8 @@ class BufferedEventCounterCtrl : public CntrCtrlBase
 public:
    /*Buffered Event Counter Method*/
    ErrorCode GetData(int32 cntr, int32 count, int32 data[], int32 timeout = 0, int32 *returned = NULL, double *startTime = NULL)
-   { 
-      return BufferedEventCounterCtrl_GetDataI32(this, cntr, count, data, timeout, returned, startTime);    
+   {
+      return BufferedEventCounterCtrl_GetDataI32(this, cntr, count, data, timeout, returned, startTime);
    }
 
    int32          getBufferCapacity()                      { return BufferedEventCounterCtrl_getBufferCapacity(this);       }
@@ -6357,8 +6413,8 @@ public:
    int32             getChannel()                         { return FmChannel_getChannel(this);                 }
    bool              getNoiseFiltered()                   { return !!FmChannel_getNoiseFiltered(this);         }
    ErrorCode         setNoiseFiltered(bool value)         { return FmChannel_setNoiseFiltered(this, value);    }
-                                                            
-   /*Frequency measurement Property*/                       
+
+   /*Frequency measurement Property*/
    FreqMeasureMethod getFmMethod()                        { return FmChannel_getFmMethod(this);                }
    ErrorCode         setFmMethod(FreqMeasureMethod value) { return FmChannel_setFmMethod(this, value);         }
    double            getCollectionPeriod()                { return FmChannel_getCollectionPeriod(this);        }
@@ -6404,7 +6460,7 @@ public:
    bool           getNoiseFiltered()                       { return !!OsChannel_getNoiseFiltered(this);      }
    ErrorCode      setNoiseFiltered(bool value)             { return OsChannel_setNoiseFiltered(this, value); }
 
-   /*One-shot Property*/                                     
+   /*One-shot Property*/
    int32          getDelayCount()                          { return OsChannel_getDelayCount(this);           }
    ErrorCode      setDelayCount(int32 value)               { return OsChannel_setDelayCount(this, value);    }
    SignalDrop     getClockSource()                         { return OsChannel_getClockSource(this);          }
@@ -6423,7 +6479,7 @@ private:
 };
 
 /* Interface OneShotCtrl */
-class OneShotCtrl : public CntrCtrlBase 
+class OneShotCtrl : public CntrCtrlBase
 {
 public:
    /*One-shot Property*/
@@ -6444,7 +6500,7 @@ public: /*helpers*/
 public: /*For compatible ONLY!*/
    void addOneShotListener(CntrEventListener & listener)          { OneShotCtrl_addOneShotListener(this, &listener);    }
    void removeOneShotListener(CntrEventListener & listener)       { OneShotCtrl_removeOneShotListener(this, &listener); }
-   
+
 private:
    DAQCLS_DISABLE_CONSTRUCT(OneShotCtrl)
 };
@@ -6458,7 +6514,7 @@ public:
    bool           getNoiseFiltered()                     { return !!TmrChannel_getNoiseFiltered(this);      }
    ErrorCode      setNoiseFiltered(bool value)           { return TmrChannel_setNoiseFiltered(this, value); }
 
-   /*Timer/Pulse Property*/                                
+   /*Timer/Pulse Property*/
    double         getFrequency()                         { return TmrChannel_getFrequency(this);            }
    ErrorCode      setFrequency(double value)             { return TmrChannel_setFrequency(this, value);     }
    bool           getGated()                             { return !!TmrChannel_getGated(this);              }
@@ -6492,8 +6548,8 @@ public: /*helpers*/
    ErrorCode setFrequency(double value)                               { return TimerPulseCtrl_setFrequency(this, value);  }
 
 public: /*For compatible ONLY!*/
-   void addTimerTickListener(CntrEventListener & listener)            { TimerPulseCtrl_addTimerTickListener(this, &listener);    } 
-   void removeTimerTickListener(CntrEventListener & listener)         { TimerPulseCtrl_removeTimerTickListener(this, &listener); } 
+   void addTimerTickListener(CntrEventListener & listener)            { TimerPulseCtrl_addTimerTickListener(this, &listener);    }
+   void removeTimerTickListener(CntrEventListener & listener)         { TimerPulseCtrl_removeTimerTickListener(this, &listener); }
 
 private:
    DAQCLS_DISABLE_CONSTRUCT(TimerPulseCtrl)
@@ -6532,14 +6588,14 @@ public:
 public: /*helpers*/
    /*event*/
    void addOverflowHandler(CntrEventProc proc, void *userParam)    { DaqCtrlBase_addEventHandler   (this, EvtCntPwmInOverflow0, (DaqEventProc)proc, userParam);}
-   void removeOverflowHandler(CntrEventProc proc, void *userParam) { DaqCtrlBase_removeEventHandler(this, EvtCntPwmInOverflow0, (DaqEventProc)proc, userParam);}   
+   void removeOverflowHandler(CntrEventProc proc, void *userParam) { DaqCtrlBase_removeEventHandler(this, EvtCntPwmInOverflow0, (DaqEventProc)proc, userParam);}
 
    /*for compatible*/
    void getValue(PulseWidth &width)                                {  Read(1, &width); }
 
 public: /*For compatible ONLY!*/
-   void addOverflowListener(CntrEventListener & listener)          { PwMeterCtrl_addOverflowListener(this, &listener);    }  
-   void removeOverflowListener(CntrEventListener & listener)       { PwMeterCtrl_removeOverflowListener(this, &listener); }  
+   void addOverflowListener(CntrEventListener & listener)          { PwMeterCtrl_addOverflowListener(this, &listener);    }
+   void removeOverflowListener(CntrEventListener & listener)       { PwMeterCtrl_removeOverflowListener(this, &listener); }
 
 private:
    DAQCLS_DISABLE_CONSTRUCT(PwMeterCtrl)
@@ -6552,7 +6608,7 @@ public:
    /*Buffered Pulse Width Measurement Method*/
    ErrorCode GetData(int32 cntr, int32 count, PulseWidth *data, int32 timeout = 0, int32 *returned = NULL, double *startTime = NULL)
    {
-      return BufferedPwMeterCtrl_GetData(this, cntr, count, data, timeout, returned, startTime);    
+      return BufferedPwMeterCtrl_GetData(this, cntr, count, data, timeout, returned, startTime);
    }
 
    int32          getBufferCapacity()                      { return BufferedPwMeterCtrl_getBufferCapacity(this);       }
@@ -6597,8 +6653,8 @@ public:
    int32          getChannel()                           { return PoChannel_getChannel(this);              }
    bool           getNoiseFiltered()                     { return !!PoChannel_getNoiseFiltered(this);      }
    ErrorCode      setNoiseFiltered(bool value)           { return PoChannel_setNoiseFiltered(this, value); }
-                                                           
-   /*Pulse Width Modulation Property*/                     
+
+   /*Pulse Width Modulation Property*/
    void           getPulseWidth(PulseWidth &width)       {        PoChannel_getPulseWidth(this, &width);  }
    ErrorCode      setPulseWidth(PulseWidth const &width) { return PoChannel_setPulseWidth(this, &width);  }
    bool           getGated()                             { return !!PoChannel_getGated(this);             }
@@ -6627,7 +6683,7 @@ private:
 /* Interface PwModulatorCtrl */
 class PwModulatorCtrl : public CntrCtrlBase
 {
-public: 
+public:
    /*Pulse Width Modulation Property*/
    Array<PoChannel>* getChannels()                  { return (Array<PoChannel>*)PwModulatorCtrl_getChannels(this);  }
 
@@ -6646,16 +6702,16 @@ private:
 /* Interface BufferedPwModulatorCtrl */
 class BufferedPwModulatorCtrl : public CntrCtrlBase
 {
-public: 
+public:
    /*Buffered Event Counter Method*/
    ErrorCode SetData(int32 cntr, int32 count, PulseWidth *data)
-   { 
-      return BufferedPwModulatorCtrl_SetData(this, cntr, count, data);    
+   {
+      return BufferedPwModulatorCtrl_SetData(this, cntr, count, data);
    }
 
    int32          getBufferCapacity()                      { return BufferedPwModulatorCtrl_getBufferCapacity(this);       }
    Trigger*       getTrigger()                             { return BufferedPwModulatorCtrl_getTrigger(this);              }
-   int32          getSamples()                             { return BufferedPwModulatorCtrl_getSamples(this);              }       
+   int32          getSamples()                             { return BufferedPwModulatorCtrl_getSamples(this);              }
    ErrorCode      setSamples(int32 value)                  { return BufferedPwModulatorCtrl_setSamples(this, value);       }
    int32          getIntervalCount()                       { return BufferedPwModulatorCtrl_getIntervalCount(this);        }
    ErrorCode      setIntervalCount(int32 value)            { return BufferedPwModulatorCtrl_setIntervalCount(this, value); }
@@ -6703,7 +6759,7 @@ public:
    bool         getNoiseFiltered()                  { return !!UdChannel_getNoiseFiltered(this);           }
    ErrorCode    setNoiseFiltered(bool value)        { return UdChannel_setNoiseFiltered(this, value);      }
 
-   /*Up-down Counter Property*/                       
+   /*Up-down Counter Property*/
    CountingType getCountingType()                   { return UdChannel_getCountingType(this);              }
    ErrorCode    setCountingType(CountingType value) { return UdChannel_setCountingType(this, value);       }
    int32        getInitialValue()                   { return UdChannel_getInitialValue(this);              }
@@ -6711,7 +6767,7 @@ public:
    int32        getResetTimesByIndex()              { return UdChannel_getResetTimesByIndex(this);         }
    ErrorCode    setResetTimesByIndex(int32 value)   { return UdChannel_setResetTimesByIndex(this, value);  }
 
-   // new properties for Counter continue comparing: outputting pulse settings 
+   // new properties for Counter continue comparing: outputting pulse settings
    void           getPulseWidth(PulseWidth &width)       {        UdChannel_getPulseWidth(this, &width);  }
    ErrorCode      setPulseWidth(PulseWidth const &width) { return UdChannel_setPulseWidth(this, &width);  }
    bool           getGated()                             { return !!UdChannel_getGated(this);             }
@@ -6738,14 +6794,16 @@ public:
    ErrorCode CompareSetTable(int32 channel, int32 count, int32 *table)                       { return UdCounterCtrl_CompareSetTable(this, channel, count, table);  }
    ErrorCode CompareAppendInterval(int32 channel, int32 start, int32 increment,int32 count)  { return UdCounterCtrl_CompareAppendInterval(this, channel, start, increment, count);  }
    ErrorCode CompareSetInterval(int32 channel, int32 start, int32 increment,int32 count)     { return UdCounterCtrl_CompareSetInterval(this, channel, start, increment, count);  }
-   ErrorCode CompareClear(int32 channel)                                                     { return UdCounterCtrl_CompareClear(this, channel);  } 
+   ErrorCode CompareClear(int32 channel)                                                     { return UdCounterCtrl_CompareClear(this, channel);  }
    ErrorCode ValueReset()                                                                    { return UdCounterCtrl_ValueReset(this);             }
-   
+
    ErrorCode Read(int32 &data)                                                               { return UdCounterCtrl_Read(this, 1,    &data);      }
    ErrorCode Read(int32 count, int32 *data)                                                  { return UdCounterCtrl_Read(this, count, data);      }
 
    /*Up-down Counter Property*/
    Array<UdChannel>* getChannels()                                                           { return (Array<UdChannel>*)UdCounterCtrl_getChannels(this);  }
+   bool              getCcpDatCtrlCodeEnabled()                                              { return !!UdCounterCtrl_getCcpDatCtrlCodeEnabled(this);      }
+   ErrorCode         setCcpDatCtrlCodeEnabled(bool value)                                    { return UdCounterCtrl_setCcpDatCtrlCodeEnabled(this, value); }
 
    /*Create an UdCounterCtrl. Note: Use 'dispose' to free the object*/
    static UdCounterCtrl * Create(void)                                                       { return UdCounterCtrl_Create();  }
@@ -6786,8 +6844,8 @@ class BufferedUdCounterCtrl : public CntrCtrlBase
 public:
    /*Buffered Up-down Counter Method*/
    ErrorCode GetData(int32 cntr, int32 count, int32 data[], int32 timeout = 0, int32 *returned = NULL, double *startTime = NULL)
-   { 
-      return BufferedUdCounterCtrl_GetDataI32(this, cntr, count, data, timeout, returned, startTime);    
+   {
+      return BufferedUdCounterCtrl_GetDataI32(this, cntr, count, data, timeout, returned, startTime);
    }
 
    int32          getBufferCapacity()                      { return BufferedUdCounterCtrl_getBufferCapacity(this);       }
@@ -6800,7 +6858,7 @@ public:
 
    ErrorCode      Prepare()                                { return BufferedUdCounterCtrl_Prepare(this); }
    void           Release()                                {        BufferedUdCounterCtrl_Release(this); }
-    
+
    bool           GetBufferStatus(int32 ch, int32 *count, int32 *offset) { return !!BufferedUdCounterCtrl_getBufferStatus(this, ch, count, offset);}
 
    /*Up-down Counter Property*/
@@ -6832,8 +6890,8 @@ public:
    int32          getChannel()                         { return AbsChannel_getChannel(this);                }
    bool           getNoiseFiltered()                   { return !!AbsChannel_getNoiseFiltered(this);        }
    ErrorCode      setNoiseFiltered(bool value)         { return AbsChannel_setNoiseFiltered(this, value);   }
-                                                           
-   /*absolute counting Property*/                             
+
+   /*absolute counting Property*/
    CodingType     getCodingType()                      { return AbsChannel_getCodingType(this);             }
    ErrorCode      setCodingType(CodingType value)      { return AbsChannel_setCodingType(this, value);      }
 
@@ -6897,7 +6955,7 @@ public:
    bool              getNoiseFiltered()                       { return !!EsChannel_getNoiseFiltered(this);          }
    ErrorCode         setNoiseFiltered(bool value)             { return EsChannel_setNoiseFiltered(this, value);     }
 
-   /*Edge Separation Measurement Property*/                       
+   /*Edge Separation Measurement Property*/
    ActiveSignal      getStartCountingEdge()                   { return EsChannel_getStartCountingEdge(this);        }
    ErrorCode         setStartCountingEdge(ActiveSignal value) { return EsChannel_setStartCountingEdge(this, value); }
    ActiveSignal      getStopCountingEdge()                    { return EsChannel_getStopCountingEdge(this);         }
@@ -6938,7 +6996,7 @@ public:
 
    CaliState       AdjCodeGetCurrentState(double *value, int32 *count, int32 code[]) { return CaliSubject_AdjCodeGetCurrentState(this, value, count, code); }
    void            AdjCodeGetRange(int32 lower[], int32 upper[])                     {        CaliSubject_AdjCodeGetRange(this, lower, upper);              }
-   
+
    ErrorCode       ManualAdjStart(void)                                              { return CaliSubject_ManualAdjStart(this);                }
    ErrorCode       ManualAdjStop(void)                                               { return CaliSubject_ManualAdjStop(this);                 }
    ErrorCode       ManualAdjSetCode(int32 count, int32 code[])                       { return CaliSubject_ManualAdjSetCode(this, count, code); }

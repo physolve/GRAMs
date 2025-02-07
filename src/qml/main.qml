@@ -6,7 +6,7 @@ import "mnemo/GRAM300_mnemo/GRAM300_mnemoContent"
 ApplicationWindow {
     id: main
     width: 1900
-    height: 1040
+    height: 1000
     visible: true
     title: qsTr("GRAMs")
     visibility: Window.Maximized

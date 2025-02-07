@@ -1,4 +1,4 @@
-#include "customplotitem.h"
+#include "CustomPlotItem.h"
 #include "lib/qcustomplot.h"
 #include <QDebug>
 

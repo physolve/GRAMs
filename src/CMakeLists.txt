@@ -1,5 +1,6 @@
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
+# find_package(biodaq)
 qt_add_resources(QML_RESOURCES resources.qrc)
 
 set(CMAKE_AUTOMOC ON)
@@ -56,4 +57,5 @@ target_link_libraries(${EXECUTABLE_NAME}
             Qt6::PrintSupport
             Qt6::OpenGL
             Eigen3::Eigen
+            biodaq
 )

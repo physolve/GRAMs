@@ -20,6 +20,14 @@
                     }
                 ]
             }
+        },
+        {
+            "name": "GRAMs_lin",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}"
         }
 
     ]

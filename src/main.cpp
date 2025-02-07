@@ -39,7 +39,7 @@ void myMessageHandler(QtMsgType type, const QMessageLogContext & context, const 
     //QString qs = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     //qDebug() << "write log to " << qs;
 
-    QFile outFile(/*qs +*/ "GRAMs-log.txt");
+    QFile outFile(/*qs +*/ "data/GRAMs-log.txt");
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream ts(&outFile);
     ts << qFormatLogMessage(type, context, txt) << Qt::endl;
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 
     const auto &curInitProfile = QString("GRAM50");
 
-    Grams app(argc, argv);
+    Grams app(argc, argv, curInitProfile);
     int ret;
     try{
         ret = app.exec(); 
