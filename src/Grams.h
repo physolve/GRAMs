@@ -30,11 +30,11 @@ private:
 
     void readingEvent(bool valveCheck);
 
-    QQmlApplicationEngine m_engine;
     Initialize initSource;
     DataAcquisition dataSource;
     ValveModel valveModel;
     MyModel dataModel;
     Security m_safeModule; // naming?
     QTimer *softTimer;
+    QQmlApplicationEngine m_engine;
 };

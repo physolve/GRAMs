@@ -7,6 +7,7 @@
         <file>../fonts/Momot___.ttf</file>
         <file>qml/mnemo/GRAM300_mnemo/GRAM300_mnemoContent/MnemoBase.qml</file>
         <file>qml/mnemo/GRAM300_mnemo/GRAM300_mnemoContent/background/GRAMsMimicNew.png</file>
+        <file>qml/mnemo/GRAM300_mnemo/GRAM300_mnemoContent/background/shigure-ui-dance.gif</file>
 
         <file>qml/mnemo/GRAM300_mnemo/GRAM300_mnemoContent/ValveButton.qml</file>
         <file>qml/mnemo/GRAM300_mnemo/GRAM300_mnemoContent/SensorWidget.qml</file>
@@ -15,5 +16,6 @@
 
         <file>qml/main.qml</file>
         <file>qml/SettingsWindow.qml</file>
+        <file>qml/SettingsConnections.qml</file>
     </qresource>
 </RCC>

@@ -1,7 +1,14 @@
 {
     "files.associations": {
         "qsettings": "cpp",
-        "qquickstyle": "cpp"
+        "qquickstyle": "cpp",
+        "algorithm": "cpp",
+        "complex": "cpp",
+        "functional": "cpp",
+        "type_traits": "cpp",
+        "xtr1common": "cpp",
+        "xutility": "cpp",
+        "qfontdatabase": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible"
 }

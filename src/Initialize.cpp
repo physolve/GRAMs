@@ -11,8 +11,8 @@
 #include "lib/bdaqctrl.h"
 using namespace Automation::BDaq;
 
-Initialize::Initialize(QObject *parent) :
-    QObject(parent)
+Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
+    QObject(parent), m_curInitProfile(curInitProfile)
 {
     // сначала определяешь все, что подключено
     // а потом сверяешь с тем, что в профиле
@@ -23,12 +23,17 @@ Initialize::Initialize(QObject *parent) :
     bool checkPass = false;
     QString m_rawData;
     checkPass = readProfile(m_rawData);
-    checkPass = jsonParser(m_rawData);
+    QJsonObject profileJson;
+    checkPass = jsonParser(m_rawData, profileJson);
     
     //device map 
     //  -_ Advantech device map
     //if(profile advantech!!!)
     checkPass = advantechDeviceCheck();
+
+    //check
+    visualRepresentation(profileJson);
+
 }
 
 bool Initialize::readProfile(QString &rawData){
@@ -43,15 +48,15 @@ bool Initialize::readProfile(QString &rawData){
     return true;
 }
 
-bool Initialize::jsonParser(QString &rawData){
+bool Initialize::jsonParser(QString &rawData, QJsonObject &profileJson){
     QJsonDocument document = { QJsonDocument::fromJson(rawData.toUtf8()) };
-    QJsonObject jsonObject = document.object();
+    profileJson = document.object();
     QMap<int, QString> m;
-    for(auto s : jsonObject.keys()) // it is just sorting thing
-        m[jsonObject[s].toObject()["profileId"].toInt()] = s;
+    for(auto s : profileJson.keys()) // it is just sorting thing
+        m[profileJson[s].toObject()["profileId"].toInt()] = s;
     
     m_profileNames = m.values();
-    m_profileJson = jsonObject.toVariantMap();
+    m_profileJson = profileJson.toVariantMap();
     return true;
 }
 
@@ -83,9 +88,124 @@ bool Initialize::advantechDeviceCheck(){
 }
 
 
-void Initialize::visualRepresentation(){
+void Initialize::visualRepresentation(const QJsonObject &profileJson){
+    // knows profile
+    const auto &profileObject = profileJson[m_curInitProfile].toObject();
     
+//hardware
+    const auto &hardwareObject = profileObject["stuff"].toObject(); 
+    const auto &valves = hardwareObject["valveMap"].toVariant().toStringList();
+    const auto &pressureSensorsArray = hardwareObject["pressureSensors"].toArray();
+    QMap<QString,QMap<QString, double>> pressureSensors;
+    for(const auto &value : pressureSensorsArray){
+        QMap<QString, double> pressureSensorsValues;
+        const auto &obj = value.toObject();
+        pressureSensorsValues["cch"] = obj["cch"].toInt(); 
+        pressureSensorsValues["A"] = obj["A"].toDouble(); 
+        pressureSensorsValues["B"] = obj["B"].toDouble(); 
+        pressureSensorsValues["R"] = obj["R"].toDouble();
+        pressureSensors[obj["name"].toString()] = pressureSensorsValues;
+    }
+    const auto &tempSensorsArray = hardwareObject["temperatureSensors"].toArray();
+    QStringList tempSensors;
+    for(const auto &value : tempSensorsArray){
+        const auto &obj = value.toObject();
+        tempSensors << obj["name"].toString();
+    }
+    m_hardware = hardwareParameters{valves, pressureSensors, tempSensors};
+//hardware
+
+//controllers
+    const auto &controllersObject = profileObject["controllers"].toObject();
+    const auto &advantechArray = controllersObject["Advantech"].toArray();
+    for(const auto &value : advantechArray){
+        const auto &obj = value.toObject();
+        const auto &device = obj["device"].toString();
+        const auto &purpose = obj["purpose"].toString();
+        const auto &profile = obj.contains("profile") ? obj["purpose"].toString() : "";
+        const auto &defaultType = obj.contains("defaultType") ? obj["defaultType"].toString() : "";
+        m_daq << daqParameters{device, purpose, profile, defaultType};
+    }
+//controllers
+
+// quartiles
+    const auto &quartilesObject = profileObject["quartiles"].toObject();
+    //addRemoveQuar
+    const auto &addRemoveQuarObject = quartilesObject["addRemoveQuar"].toObject(); 
+    fillAddRemoveQuar(addRemoveQuarObject);
+    //storageQuar
+    const auto &storageQuarObject = quartilesObject["storageQuar"].toObject();
+    fillStorageQuar(storageQuarObject);
+    //reactionQuar
+    const auto &reactionQuarObject = quartilesObject["reactionQuar"].toObject();
+    fillReactionQuar(reactionQuarObject);
+    //secondLineQuar
+    const auto &secondLineQuarObject = quartilesObject["secondLineQuar"].toObject();
+    fillSecondLineQuar(secondLineQuarObject);
+// quartiles
+// security
+    const auto &securityObject = profileObject["security"].toObject();
+    const auto &contradictionValvesObject = securityObject["contradictionValves"].toObject(); 
+    QMap<QString, QStringList>  contradictionValves;
+    for(const auto& key : contradictionValvesObject.keys()){
+        contradictionValves[key] = contradictionValvesObject[key].toVariant().toStringList();
+    }
+    const auto &twoOfThree = securityObject["twoOfThree"].toVariant().toStringList();
+    const auto &safetyQuarsObject = securityObject["safetyQuars"].toObject(); 
+    QMap<QString, QStringList>  safetyQuars;
+    for(const auto& key : safetyQuarsObject.keys()){
+        safetyQuars[key] = safetyQuarsObject[key].toVariant().toStringList();
+    }
+    m_security = securityParameters{contradictionValves, twoOfThree, safetyQuars};
+// security
 }
+
+void Initialize::fillAddRemoveQuar(const QJsonObject &addRemoveQuarObject){
+    const auto &gasSupplyValves = addRemoveQuarObject["v_gasSupply"].toVariant().toStringList();
+    const auto &gasDrainValves = addRemoveQuarObject["v_gasDrain"].toVariant().toStringList();
+    const auto &vacuumSensor = addRemoveQuarObject["m_vacuum"].toString();
+    m_addRemoveQuar = addRemoveQuarParameters{gasSupplyValves, gasDrainValves, vacuumSensor};
+    //addRemoveQuar
+}
+
+void Initialize::fillStorageQuar(const QJsonObject &storageQuarObject){
+    const auto &gasStoreValves = storageQuarObject["v_gasStore"].toVariant().toStringList();
+    const auto &gasReleaseValve = storageQuarObject["v_gasRelease"].toString();
+    const auto &pressureRangeValve = storageQuarObject["v_pressureRange"].toString();
+    const auto &highPressureSensors = storageQuarObject["s_highPressure"].toVariant().toStringList();
+    const auto &lowPressureSensor = storageQuarObject["s_lowPressure"].toString();
+    const auto &temperatureSensors = storageQuarObject["m_temperature"].toVariant().toStringList();
+    const auto &pressureRange_close = storageQuarObject["cond_pressureRange_close"].toDouble();
+    const auto &pressureRange_open = storageQuarObject["cond_pressureRange_open"].toDouble();
+    const auto &gasRelease = storageQuarObject["cond_gasRelease"].toDouble();
+    m_storageQuar = storageQuarParameters{gasStoreValves, gasReleaseValve, pressureRangeValve, highPressureSensors, lowPressureSensor,
+    temperatureSensors, pressureRange_close, pressureRange_open, gasRelease};
+    //storageQuar
+}
+
+void Initialize::fillReactionQuar(const QJsonObject &reactionQuarObject){
+    const auto &gasLeakageValves = reactionQuarObject["v_gasLeakage"].toVariant().toStringList();
+    const auto &pressureRangeValve = reactionQuarObject["v_pressureRange"].toString();
+    const auto &highPressureSensor = reactionQuarObject["s_highPressure"].toString();
+    const auto &lowPressureSensors = reactionQuarObject["s_lowPressure"].toVariant().toStringList();
+    const auto &temperatureSensors = reactionQuarObject["m_temperature"].toVariant().toStringList();
+    const auto &pressureRange_close = reactionQuarObject["cond_pressureRange_close"].toDouble();
+    const auto &pressureRange_open = reactionQuarObject["cond_pressureRange_open"].toDouble();
+    const auto &gasRelease = reactionQuarObject["cond_gasRelease"].toDouble();
+    m_reactionQuar = reactionQuarParameters{gasLeakageValves, pressureRangeValve, highPressureSensor, lowPressureSensors,
+    temperatureSensors, pressureRange_close, pressureRange_open, gasRelease};
+    //reactionQuar
+}
+
+void Initialize::fillSecondLineQuar(const QJsonObject &secondLineQuarObject){
+    const auto &gasDrainValve = secondLineQuarObject["v_gasDrain"].toString();
+    const auto &mass_spectr = secondLineQuarObject["mass_spectr"].toString();
+    //secondLineQuar
+}
+
+// compare profile and real
+// function to GUI representation
+// local channelmapping
 
 QVariantMap Initialize::advantechDeviceFill(const QString &description, const QString &type){
     QVariantMap advantechDeviceSettings;
@@ -101,3 +221,4 @@ QVariantMap Initialize::advantechDeviceFill(const QString &description, const QS
     }
     return advantechDeviceSettings;
 }
+

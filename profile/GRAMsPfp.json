@@ -108,10 +108,8 @@
                 "v_gasStore": ["v_k131", "v_k133", "v_k135"],
                 "v_gasRelease": "v_k118",
                 "v_pressureRange": "v_k171",
-                "m_pressure":{
-                    "high": ["DD311", "DD341"],
-                    "low": ["DD312"]
-                },
+                "s_highPressure": ["DD311", "DD341"], 
+                "s_lowPressure": "DD312",
                 "m_temperature": ["DT341", "DT314", "DT352", "DT354", "DT356"],
                 "cond_pressureRange_close": 1.8,
                 "cond_pressureRange_open": 1.6,
@@ -120,17 +118,15 @@
             "reactionQuar":{
                 "v_gasLeakage": ["v_k155", "v_k153", "v_k151"],
                 "v_pressureRange": "v_k173",
-                "m_pressure":{
-                    "high": ["DD331"],
-                    "low": ["DD332", "DD334"]
-                },
+                "s_highPressure": "DD331",
+                "s_lowPressure": ["DD332", "DD334"], 
                 "m_temperature": ["DT358", "DT359"],
                 "cond_pressureRange_close": 1.8,
                 "cond_pressureRange_open": 1.6,
                 "cond_gasRelease": 12
             },
             "secondLineQuar":{
-                "v_gasLeakage": ["v_k179"],
+                "v_gasDrain": "v_k179",
                 "mass_spectr": "unknown"
             }
         },
@@ -142,9 +138,7 @@
                 "v_k178":["v_k104", "v_k109", "v_k114", "v_k118"],
                 "v_k118":["v_k104", "v_k109", "v_k114", "v_k178"]
             },
-            "twoOfThree": [
-                ["v_k178", "v_k179", "v_k192"]
-            ],
+            "twoOfThree": ["v_k178", "v_k179", "v_k192"],
             "safetyQuars" : {
                 "storageQuarSP": ["v_pressureRange", "storageQuar", "cond_pressureRange_close", "cond_pressureRange_open"],
                 "storageQuarSR": ["v_gasRelease", "storageQuar", "cond_gasRelease"],
