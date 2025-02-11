@@ -2,7 +2,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material 2.12
-import "mnemo/GRAM300_mnemo/GRAM300_mnemoContent"
+
+//import "mnemo/GRAM300_mnemo/GRAM300_mnemoContent"
+import "mnemo/GRAM50_mnemo/GRAM50_mnemoContent"
+
 ApplicationWindow {
     id: main
     width: 1900

@@ -5,9 +5,20 @@
 struct hardwareParameters{
     Q_GADGET
     Q_PROPERTY (QStringList                         valves          MEMBER m_valves)
-    Q_PROPERTY (QMap<QString,QMap<QString,double>>  pressureSensors MEMBER m_pressureSensors)
     Q_PROPERTY (QStringList                         tempSensors     MEMBER m_tempSensors)
+
 public:
+    Q_INVOKABLE QVariantMap pressureSensors(){
+        QVariantMap retPressureSensors;
+        for(auto const& [key, value]: m_pressureSensors.asKeyValueRange()){
+            QVariantMap retValue;
+            for(auto const& [key, value]: value.asKeyValueRange()){
+                retValue[key] = QVariant::fromValue(value);
+            }
+            retPressureSensors[key] = retValue; 
+        }
+        return retPressureSensors;
+    }
     QStringList                             m_valves;
     QMap<QString,QMap<QString,double>>      m_pressureSensors;
     QStringList                             m_tempSensors;
@@ -63,7 +74,6 @@ public:
 struct reactionQuarParameters{
   Q_GADGET
     Q_PROPERTY (QStringList     gasLeakageValves    MEMBER m_gasLeakageValves)
-    Q_PROPERTY (QString         gasReleaseValve     MEMBER m_gasReleaseValve)
     Q_PROPERTY (QString         pressureRangeValve  MEMBER m_pressureRangeValve)
     Q_PROPERTY (QString         highPressureSensor  MEMBER m_highPressureSensor)
     Q_PROPERTY (QStringList     lowPressureSensors  MEMBER m_lowPressureSensors)
@@ -73,7 +83,6 @@ struct reactionQuarParameters{
     Q_PROPERTY (double          gasRelease          MEMBER m_gasRelease)
 public:
     QStringList                 m_gasLeakageValves;
-    QString                     m_gasReleaseValve;
     QString                     m_pressureRangeValve; // possible second pressureRange
     QString                     m_highPressureSensor;
     QStringList                 m_lowPressureSensors;
@@ -94,12 +103,12 @@ public:
 
 struct securityParameters{
   Q_GADGET
-    Q_PROPERTY (QMap<QString, QStringList>  contradictionValves MEMBER m_contradictionValves)
-    Q_PROPERTY (QString                     twoOfThree     MEMBER m_twoOfThree)
-    Q_PROPERTY (QMap<QString, QStringList>  safetyQuars MEMBER m_safetyQuars)
+    Q_PROPERTY (QMap<QString, QStringList>  contradictionValves     MEMBER m_contradictionValves)
+    Q_PROPERTY (QStringList                 twoOfThree              MEMBER m_twoOfThree) // first twoOfThree case
+    Q_PROPERTY (QMap<QString, QStringList>  safetyQuars             MEMBER m_safetyQuars)
 public:
     QMap<QString, QStringList>  m_contradictionValves;
-    QString                     m_twoOfThree;
+    QStringList                 m_twoOfThree;
     QMap<QString, QStringList>  m_safetyQuars;
 };
 
@@ -107,11 +116,26 @@ class Initialize : public QObject
 {
     Q_OBJECT
 public:
-    Initialize(QObject *parent = 0);
+    Initialize(QObject *parent = 0, const QString &curInitProfile = "GRAM50");
     Q_PROPERTY(QVariantMap profileJson MEMBER m_profileJson CONSTANT)
     Q_PROPERTY(QStringList profileNames MEMBER m_profileNames CONSTANT)
     Q_PROPERTY(QStringList advantechDeviceMap MEMBER m_advantechDeviceMap NOTIFY advantechDeviceMapChanged)
+    Q_PROPERTY(hardwareParameters hardware MEMBER m_hardware CONSTANT)
+    Q_PROPERTY(addRemoveQuarParameters addRemoveQuar MEMBER m_addRemoveQuar CONSTANT)
+    Q_PROPERTY(storageQuarParameters storageQuar MEMBER m_storageQuar CONSTANT)
+    Q_PROPERTY(reactionQuarParameters reactionQuar MEMBER m_reactionQuar CONSTANT)
+    Q_PROPERTY(secondLineQuarParameters secondLineQuar MEMBER m_secondLineQuar CONSTANT)
+    Q_PROPERTY(securityParameters security MEMBER m_security CONSTANT)
+
     Q_INVOKABLE QVariantMap advantechDeviceFill(const QString &description, const QString &type);
+    // Q_PROPERTY(QList<daqParameters> daq MEMBER m_daq CONSTANT)
+    Q_INVOKABLE QVariantList daq(){
+        QVariantList rtnDaq;
+        for(const auto& val : m_daq){
+            rtnDaq << QVariant::fromValue(val);
+        }
+        return rtnDaq;
+    }
     
 signals:
     void advantechDeviceMapChanged();
@@ -119,24 +143,31 @@ signals:
     
 private:
     bool readProfile(QString &rawData);
-    bool jsonParser(QString &rawData);
+    bool jsonParser(QString &rawData, QJsonObject &profileJson);
     bool advantechDeviceCheck();
 
+    QString m_curInitProfile;
+    
     QVariantMap m_profileJson;
 
     QStringList m_profileNames;
 
     QStringList m_advantechDeviceMap;
 
+    //QJsonObject profileJson;
     //QVariantMap m_advantechDeviceSettings;
 
-    void visualRepresentation();
+    void visualRepresentation(const QJsonObject &profileJson);
+    void fillAddRemoveQuar(const QJsonObject &addRemoveQuarObject);
+    void fillStorageQuar(const QJsonObject &storageQuarObject);
+    void fillReactionQuar(const QJsonObject &reactionQuarObject);
+    void fillSecondLineQuar(const QJsonObject &secondLineQuarObject);
 
-    hardwareParameters hardware;
-    daqParameters daq;
-    addRemoveQuarParameters addRemoveQuar;
-    storageQuarParameters storageQuar;
-    reactionQuarParameters reactionQuar;
-    secondLineQuarParameters secondLineQuar;
-    securityParameters security;
+    hardwareParameters              m_hardware;
+    QList<daqParameters>            m_daq;
+    addRemoveQuarParameters         m_addRemoveQuar;
+    storageQuarParameters           m_storageQuar;
+    reactionQuarParameters          m_reactionQuar;
+    secondLineQuarParameters        m_secondLineQuar;
+    securityParameters              m_security;
 };

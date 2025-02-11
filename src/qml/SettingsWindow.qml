@@ -50,9 +50,20 @@ Item {
 
     Window {
         id: childWindow
-        color: "thistle"
-        Rectangle{
-            color: "blue"
+
+        color: "#2B2B2B"
+        ScrollView {
+            id: connectionsRoot
+            ScrollBar.horizontal.interactive: true
+            ScrollBar.vertical.interactive: true
+            anchors.fill: parent
+            //model view based on keys from Initialize
+                //four groups: stuff, controllers, quartiles, security
+            // from initSource
+            // layout with json information
+            SettingsConnections{
+                width: childWindow.width
+            }
         }
         onClosing: {
             holderButton.visible = true
