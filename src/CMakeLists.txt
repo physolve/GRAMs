@@ -1,6 +1,6 @@
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
-# find_package(biodaq)
+# find_package(libbio REQUIRED)
 qt_add_resources(QML_RESOURCES resources.qrc)
 
 set(CMAKE_AUTOMOC ON)
@@ -12,6 +12,8 @@ set(EXECUTABLE_NAME "GRAMs")
 project(${EXECUTABLE_NAME} VERSION 1.0.0 LANGUAGES CXX)
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -fstrict-aliasing -pedantic-errors -pedantic -Wno-deprecated-declarations -Wno-unused-variable")
+SET( CMAKE_CXX_FLAGS  "-lbiodaq")
+
 if(NOT DEFINED HEADERS)
     file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 endif()
@@ -36,6 +38,9 @@ if(NOT DEFINED CPP_LIBS)
     file(GLOB CPP_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/lib/*.cpp)
 endif()
 
+if (LINUX)            
+    link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libDAQ)
+endif (LINUX)
 
 source_group("Header Files" FILES ${HEADERS})
 source_group("Source Files" FILES ${SOURCES})
@@ -57,5 +62,4 @@ target_link_libraries(${EXECUTABLE_NAME}
             Qt6::PrintSupport
             Qt6::OpenGL
             Eigen3::Eigen
-            biodaq
 )

@@ -8,7 +8,7 @@ struct hardwareParameters{
     Q_PROPERTY (QStringList                         tempSensors     MEMBER m_tempSensors)
 
 public:
-    Q_INVOKABLE QVariantMap pressureSensors(){
+    Q_INVOKABLE QVariantMap pressureSensors(){ // change to READ property!
         QVariantMap retPressureSensors;
         for(auto const& [key, value]: m_pressureSensors.asKeyValueRange()){
             QVariantMap retValue;
@@ -127,15 +127,9 @@ public:
     Q_PROPERTY(secondLineQuarParameters secondLineQuar MEMBER m_secondLineQuar CONSTANT)
     Q_PROPERTY(securityParameters security MEMBER m_security CONSTANT)
 
+    Q_PROPERTY(QList<daqParameters> daqGui MEMBER m_daq CONSTANT)
+
     Q_INVOKABLE QVariantMap advantechDeviceFill(const QString &description, const QString &type);
-    // Q_PROPERTY(QList<daqParameters> daq MEMBER m_daq CONSTANT)
-    Q_INVOKABLE QVariantList daq(){
-        QVariantList rtnDaq;
-        for(const auto& val : m_daq){
-            rtnDaq << QVariant::fromValue(val);
-        }
-        return rtnDaq;
-    }
     
 signals:
     void advantechDeviceMapChanged();

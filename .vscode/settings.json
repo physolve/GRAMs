@@ -10,5 +10,18 @@
         "xutility": "cpp",
         "qfontdatabase": "cpp"
     },
-    "cmake.options.statusBarVisibility": "visible"
+    "cmake.options.statusBarVisibility": "visible",
+    "cSpell.words": [
+        "Advantech",
+        "Flickable",
+        "Frameless",
+        "mnemo",
+        "Quar",
+        "Quars",
+        "spectr",
+        "Verdana"
+    ],
+    "cSpell.ignoreWords": [
+        "settinglist"
+    ]
 }

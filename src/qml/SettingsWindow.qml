@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material 2.12
+
 Item {
     id: rootItem
     Component.onCompleted: {
@@ -12,6 +13,7 @@ Item {
             containerSettings.window = placeholder
             childWindow.flags = Qt.Window
             childWindow.show()
+            childWindow.width = 525 
         }
         else {
             childWindow.flags = Qt.FramelessWindowHint
@@ -19,6 +21,7 @@ Item {
             containerSettings.window = childWindow
         }
     }
+    
     ColumnLayout{
         anchors.fill: parent
         anchors.margins: 10
@@ -50,7 +53,7 @@ Item {
 
     Window {
         id: childWindow
-
+        // width: 700
         color: "#2B2B2B"
         ScrollView {
             id: connectionsRoot

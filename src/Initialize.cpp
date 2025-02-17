@@ -61,7 +61,7 @@ bool Initialize::jsonParser(QString &rawData, QJsonObject &profileJson){
 }
 
 bool Initialize::advantechDeviceCheck(){
-    auto startCheckInstance = InstantDoCtrl::Create(); // does it work with every Adv controller?
+    auto startCheckInstance = InstantAiCtrl::Create(); // does it work with every Adv controller?
     auto allSupportedDevices = startCheckInstance->getSupportedDevices();
     if (allSupportedDevices->getCount() == 0)
     {
@@ -118,14 +118,16 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
 //controllers
     const auto &controllersObject = profileObject["controllers"].toObject();
     const auto &advantechArray = controllersObject["Advantech"].toArray();
+    auto temp_daq = QList<daqParameters>();
     for(const auto &value : advantechArray){
         const auto &obj = value.toObject();
         const auto &device = obj["device"].toString();
         const auto &purpose = obj["purpose"].toString();
         const auto &profile = obj.contains("profile") ? obj["purpose"].toString() : "";
         const auto &defaultType = obj.contains("defaultType") ? obj["defaultType"].toString() : "";
-        m_daq << daqParameters{device, purpose, profile, defaultType};
+        temp_daq << daqParameters{device, purpose, profile, defaultType}; 
     }
+    m_daq = temp_daq;
 //controllers
 
 // quartiles

@@ -33,10 +33,10 @@ Grams::~Grams(){
 
 void Grams::initGUI(){
     QQuickStyle::setStyle("Material");
-    QString applicationName = "GRAMs";
+    QString applicationName = "GRAMs"; // curInitProfile also?
     
     m_engine.addImportPath(":/");
-    const QUrl url(QString("qrc:/%1/qml/main.qml").arg(applicationName));
+    const QUrl url(QString("qrc:/%1/qml/Main.qml").arg(applicationName));
     QObject::connect(
                 &m_engine, &QQmlApplicationEngine::objectCreated, this,
                 [url](QObject *obj, const QUrl &objUrl) {
