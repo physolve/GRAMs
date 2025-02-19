@@ -30,11 +30,13 @@ struct daqParameters{
     Q_PROPERTY (QString purpose                 MEMBER m_purpose)
     Q_PROPERTY (QString profile                 MEMBER m_profile)
     Q_PROPERTY (QString defaultType             MEMBER m_defaultType)
+    Q_PROPERTY (bool    state                   MEMBER m_state)
 public:
     QString                                 m_device;
     QString                                 m_purpose;
     QString                                 m_profile;
     QString                                 m_defaultType;
+    bool                                    m_state;
 };
 
 struct addRemoveQuarParameters{
@@ -127,18 +129,20 @@ public:
     Q_PROPERTY(secondLineQuarParameters secondLineQuar MEMBER m_secondLineQuar CONSTANT)
     Q_PROPERTY(securityParameters security MEMBER m_security CONSTANT)
 
-    Q_PROPERTY(QList<daqParameters> daqGui MEMBER m_daq CONSTANT)
+    Q_PROPERTY(QList<daqParameters> daqGui MEMBER m_daq CONSTANT ) // profiled
 
     Q_INVOKABLE QVariantMap advantechDeviceFill(const QString &description, const QString &type);
     
 signals:
     void advantechDeviceMapChanged();
     //void advantechDeviceSettingsChanged();
+    void daqGuiChanged();
     
 private:
     bool readProfile(QString &rawData);
     bool jsonParser(QString &rawData, QJsonObject &profileJson);
     bool advantechDeviceCheck();
+    void advantechCompareProfile();
 
     QString m_curInitProfile;
     

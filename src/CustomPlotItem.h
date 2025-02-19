@@ -17,7 +17,11 @@ public:
 
 
   Q_INVOKABLE void initCustomPlot(int index); // index as place in somewhere
+
+  // replace create from Grams.cpp
   Q_INVOKABLE void placePointerGraph(const QString &name, QSharedPointer<Sensor> sensor_ptr); // additional paramters
+
+
   Q_INVOKABLE void setCustomLabel(const QString &label); // additional paramters
   Q_INVOKABLE void updatePlot();
   Q_INVOKABLE void resetPos();

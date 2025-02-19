@@ -28,7 +28,7 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
 }
 
 Grams::~Grams(){
-
+    qInfo() << "Exit Grams safely \n\n";
 }
 
 void Grams::initGUI(){

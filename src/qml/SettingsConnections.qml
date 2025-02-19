@@ -41,12 +41,12 @@ GridLayout{
             flow: GridView.FlowLeftToRight
             anchors.topMargin:10
             anchors.leftMargin: 5
-            cellWidth: 60; cellHeight: 20
+            cellWidth: 70; cellHeight: 20
             model: initSource.hardware.valves
             clip: true
             interactive: false
             delegate: Rectangle { 
-                width: 60
+                width: 68
                 height: 20
                 color:"transparent"; border.color: "#464646";
                 Text { text: index + ". " + modelData; font.pointSize: 9; color: "white"; font.family: "Verdana"; anchors.centerIn: parent } 
@@ -112,10 +112,10 @@ GridLayout{
             flow: GridView.FlowLeftToRight
             anchors.topMargin:10
             anchors.leftMargin: 5
-            cellWidth: 60; cellHeight: 20
+            cellWidth: 70; cellHeight: 20
             model: initSource.hardware.tempSensors
             delegate: Rectangle { 
-                width: 60
+                width: 68
                 height: 20
                 color: "transparent"; border.color: "#464646";
                 Text { text: `${index}. ${modelData}` ; font.pointSize: 9; color: "white";
@@ -151,6 +151,7 @@ GridLayout{
                 console.log(test[0].device)
             }
         }
+        // function to change parameter fill rectangle 
         ListView {
             id: viewDaqMap
             anchors.top: parent.top
@@ -164,10 +165,11 @@ GridLayout{
             interactive: false
             orientation: Qt.Vertical
             model: initSource.daqGui
-            delegate: Rectangle { 
+            delegate: Rectangle { // basically we have modelData - state !!!
                 width: 350
                 height: 20
-                color: "transparent"; border.color: "#464646"
+                color: modelData.state ? "#36454f" : "transparent"
+                border.color: "#464646"
                 Text { text: `${modelData.device}, ${modelData.purpose}`; font.pointSize: 9
                 color: "white"; font.family: "Verdana"; anchors.centerIn: parent }
             }

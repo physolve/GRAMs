@@ -4,7 +4,7 @@
 //#include <QDebug>
 
 //#include <QQuickStyle>
-#include <QStandardPaths>
+#include <QDir>
 #include <QFile>
 #include <QDate>
 #include <iostream>
@@ -31,22 +31,26 @@ void myMessageHandler(QtMsgType type, const QMessageLogContext & context, const 
         txt += QString("\tFatal: %1").arg(msg);
         break;
     default:
-        txt += QString("\tDefault: %1").arg(msg);
+        txt += msg;
     }
 
     std::cout << "MessageHandler: " << qFormatLogMessage(type, context, txt).toStdString() << std::endl;
 
     //QString qs = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     //qDebug() << "write log to " << qs;
-
     QFile outFile(/*qs +*/ "data/GRAMs-log.txt");
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream ts(&outFile);
     ts << qFormatLogMessage(type, context, txt) << Qt::endl;
+    outFile.close();
 }
 
 int main(int argc, char *argv[]) {
+    if(!QDir("data").exists()){
+        QDir().mkdir("data");
+    }
     qInstallMessageHandler(myMessageHandler);
+    qInfo() << "Start Grams safely";
     QCoreApplication::setApplicationName("GRAMs");
     QCoreApplication::setApplicationVersion("1.0.0");
     QCoreApplication::setOrganizationName(QStringLiteral("Tomsk Polytechnic University"));

@@ -26,6 +26,8 @@ public:
     Q_INVOKABLE QSharedPointer<Sensor> getSensor(const QString &name);
     // Q_INVOKABLE QVariantMap getCurPressureValues() const; // this is temporally, change to some ordinate way like map of names? or idx
     // Q_INVOKABLE QVariantMap getCurTempValues() const;
+    
+    // replace create from Grams.cpp
     Q_INVOKABLE void appendProfileSensors(const QString &controllerPurpose, const QVariantList &sensors); // QVector<double>& data??
 
     void initializeAcquisition();

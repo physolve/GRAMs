@@ -31,8 +31,10 @@ Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
     //if(profile advantech!!!)
     checkPass = advantechDeviceCheck();
 
+    visualRepresentation(profileJson); // setted after gui run
+
+    advantechCompareProfile();
     //check
-    visualRepresentation(profileJson);
 
 }
 
@@ -125,7 +127,7 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
         const auto &purpose = obj["purpose"].toString();
         const auto &profile = obj.contains("profile") ? obj["purpose"].toString() : "";
         const auto &defaultType = obj.contains("defaultType") ? obj["defaultType"].toString() : "";
-        temp_daq << daqParameters{device, purpose, profile, defaultType}; 
+        temp_daq << daqParameters{device, purpose, profile, defaultType, false}; 
     }
     m_daq = temp_daq;
 //controllers
@@ -206,10 +208,30 @@ void Initialize::fillSecondLineQuar(const QJsonObject &secondLineQuarObject){
 }
 
 // compare profile and real
+void Initialize::advantechCompareProfile(){
+    // m_advantechDeviceMap compare to m_daq
+    // real to profile
+    QStringList unrecognizedControllers;
+    for(const auto& val : m_advantechDeviceMap){
+        qDebug() << val;
+        bool recognized = false;
+        for(auto &profile : m_daq){
+            if(profile.m_device != val.split(',').value(0, "")) 
+                continue;
+            recognized = profile.m_state = true;
+        }
+        if(!recognized)
+            unrecognizedControllers << val;
+    }
+    qDebug() << "Unrecognized controllers " << unrecognizedControllers;
+    // which found navi blue, which unexpected - yellow
+}
+
 // function to GUI representation
 // local channelmapping
 
-QVariantMap Initialize::advantechDeviceFill(const QString &description, const QString &type){
+// I don't like this function
+QVariantMap Initialize::advantechDeviceFill(const QString &description, const QString &type){ 
     QVariantMap advantechDeviceSettings;
     if(type == "valves"){
         advantechDeviceSettings["blank"] = "null";
