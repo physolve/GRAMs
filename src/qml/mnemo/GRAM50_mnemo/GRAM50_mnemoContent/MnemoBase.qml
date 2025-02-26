@@ -16,7 +16,7 @@ Item {
 
     Image {
         id: gRAMsMimicNew
-        source: "background/GRAMsMimicNew-alpha.png"
+        source: "background/GRAMsMimicNew-beta.png"
         // fillMode: Image.PreserveAspectFit
         width: 1380
         height: 960
@@ -44,6 +44,8 @@ Item {
             id: k_AR4
             x: 427
             y: 171
+            checked: backend.vAR4State
+            onClicked: backend.setValveState(checked, 3) // or name
         }
         ValveButton {
             id: k_AR5

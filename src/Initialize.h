@@ -37,6 +37,7 @@ public:
     QString                                 m_profile;
     QString                                 m_defaultType;
     bool                                    m_state;
+    QString                                 fullName;
 };
 
 struct addRemoveQuarParameters{
@@ -74,7 +75,7 @@ public:
 };
 
 struct reactionQuarParameters{
-  Q_GADGET
+    Q_GADGET
     Q_PROPERTY (QStringList     gasLeakageValves    MEMBER m_gasLeakageValves)
     Q_PROPERTY (QString         pressureRangeValve  MEMBER m_pressureRangeValve)
     Q_PROPERTY (QString         highPressureSensor  MEMBER m_highPressureSensor)
@@ -95,7 +96,7 @@ public:
 };
 
 struct secondLineQuarParameters{
-  Q_GADGET
+    Q_GADGET
     Q_PROPERTY (QString         gasLeakageValve     MEMBER m_gasLeakageValve)
     Q_PROPERTY (QString         mass_spectr         MEMBER m_mass_spectr)
 public:
@@ -104,7 +105,7 @@ public:
 };
 
 struct securityParameters{
-  Q_GADGET
+    Q_GADGET
     Q_PROPERTY (QMap<QString, QStringList>  contradictionValves     MEMBER m_contradictionValves)
     Q_PROPERTY (QStringList                 twoOfThree              MEMBER m_twoOfThree) // first twoOfThree case
     Q_PROPERTY (QMap<QString, QStringList>  safetyQuars             MEMBER m_safetyQuars)
@@ -129,10 +130,10 @@ public:
     Q_PROPERTY(secondLineQuarParameters secondLineQuar MEMBER m_secondLineQuar CONSTANT)
     Q_PROPERTY(securityParameters security MEMBER m_security CONSTANT)
 
-    Q_PROPERTY(QList<daqParameters> daqGui MEMBER m_daq CONSTANT ) // profiled
+    Q_PROPERTY(QList<daqParameters> daqGui MEMBER m_daq CONSTANT ) // profiled but changing state should be external
 
-    Q_INVOKABLE QVariantMap advantechDeviceFill(const QString &description, const QString &type);
-    
+    void profileToRealParameters(QList<daqParameters> &params);
+    bool isInitializeOk() const;
 signals:
     void advantechDeviceMapChanged();
     //void advantechDeviceSettingsChanged();
@@ -168,4 +169,6 @@ private:
     reactionQuarParameters          m_reactionQuar;
     secondLineQuarParameters        m_secondLineQuar;
     securityParameters              m_security;
+
+    bool initializeOk;
 };

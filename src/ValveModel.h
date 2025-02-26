@@ -9,7 +9,7 @@ struct Valve{
     void setState(bool s){
         m_state = s;
     }
-    bool getState(){
+    bool getState() const{
        return m_state; 
     }
     Valve(const QString &name = "unknown", const bool &state = false): m_name(name), m_state(state) { }
@@ -47,6 +47,6 @@ signals:
 private:
     QStringList m_valveNames;
     QMap<QString, Valve> m_valves;
-    //QList<Valve*> m_valves; // not pointer beacause we know in start?
+    //QList<Valve*> m_valves; // not pointer because we know in start?
     QElapsedTimer m_time;
 };

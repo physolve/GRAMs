@@ -146,12 +146,11 @@ GridLayout{
                 anchors.centerIn: parent
             }
             Component.onCompleted: {
-                let test = initSource.daqGui
-                console.log(test.length)
-                console.log(test[0].device)
+                const daqArray = initSource.daqGui
+                console.log(daqArray.map((daq) => daq.device));
             }
         }
-        // function to change parameter fill rectangle 
+        // also append undefined devices
         ListView {
             id: viewDaqMap
             anchors.top: parent.top
@@ -165,7 +164,7 @@ GridLayout{
             interactive: false
             orientation: Qt.Vertical
             model: initSource.daqGui
-            delegate: Rectangle { // basically we have modelData - state !!!
+            delegate: Rectangle { 
                 width: 350
                 height: 20
                 color: modelData.state ? "#36454f" : "transparent"
@@ -173,7 +172,7 @@ GridLayout{
                 Text { text: `${modelData.device}, ${modelData.purpose}`; font.pointSize: 9
                 color: "white"; font.family: "Verdana"; anchors.centerIn: parent }
             }
-        } // I want to highlight connected 
+        } 
         
         // let's view other things later
         // addRemoveQuarParameters

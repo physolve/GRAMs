@@ -16,26 +16,74 @@ m_deviceName(deviceName)
 AdvAIType::AdvAIType(QString deviceName): ControllerInfo (deviceName){
 
 }
-QVariantMap AdvAIType::getSettings(){
-	QVariantMap settingPressure;
-    settingPressure["channelCount"] = m_channelCount;
-	settingPressure["channelStart"] = m_channelStart;
-	settingPressure["valueRanges"] = m_valueRanges;
-	settingPressure["profilePath"] = m_profilePath;
-	return settingPressure;
+QString AdvAIType::advDescription() const{
+	return m_deviceName;
+}
+void AdvAIType::setProfilePath(const QString &profilePath){
+	m_profilePath = profilePath;
+}
+QString AdvAIType::profilePath() const{
+	return m_profilePath;
 }
 
-void AdvAIType::setSettings(const QVariantMap& info){
-	m_channelCount = info["indexChannelCount"].toInt();
-	m_channelStart = info["indexChannelStart"].toInt();
-	//m_valueRanges = info["valueRanges"].toStringList();
-	m_valueRangeCh = info["indexValueRange"].toInt();
-	m_profilePath = info["inProfilePath"].toString();
+void AdvAIType::setChannelStart(const int &channelStart){
+	m_channelStart = channelStart;
 }
 
-AdvDOType::AdvDOType(QString deviceName): ControllerInfo (deviceName){
+int AdvAIType::channelStart() const{
+	return m_channelStart;
 }
 
-void AdvDOType::setSettings(const QVariantMap& info){
-	m_profilePath = info["profilePath"].toString();
+void AdvAIType::setChannelCount(const int &channelCount){
+	m_channelCount = channelCount;
+}
+
+int AdvAIType::channelCount() const{
+	return m_channelCount;
+}
+
+void AdvAIType::setDefaultType(const int &defaultType){
+	m_defaultType = defaultType;
+}
+
+int AdvAIType::defaultType() const{
+	return m_defaultType;
+}
+
+void AdvAIType::appendToValueRange(const QString &valueRange){ // replase to set?
+	m_valueRanges << valueRange;
+}
+
+QStringList AdvAIType::getValueRanges() const{
+	return m_valueRanges;
+}
+
+// QVariantMap AdvAIType::getSettings(){
+// 	QVariantMap settingPressure;
+//     settingPressure["channelCount"] = m_channelCount;
+// 	settingPressure["channelStart"] = m_channelStart;
+// 	settingPressure["valueRanges"] = m_valueRanges;
+// 	settingPressure["profilePath"] = m_profilePath;
+// 	return settingPressure;
+// }
+
+// void AdvAIType::setSettings(const QVariantMap& info){
+// 	m_channelCount = info["indexChannelCount"].toInt();
+// 	m_channelStart = info["indexChannelStart"].toInt();
+// 	//m_valueRanges = info["valueRanges"].toStringList();
+// 	m_valueRangeCh = info["indexValueRange"].toInt();
+// 	m_profilePath = info["inProfilePath"].toString();
+// }
+
+AdvDOType::AdvDOType(const QString & deviceName): ControllerInfo (deviceName){
+}
+
+QString AdvDOType::advDescription() const{
+	return m_deviceName;
+}
+void AdvDOType::setProfilePath(const QString &profilePath){
+	m_profilePath = profilePath;
+}
+QString AdvDOType::profilePath() const{
+	return m_profilePath;
 }

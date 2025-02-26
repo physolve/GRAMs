@@ -13,13 +13,13 @@ class AdvantechCtrl : public QObject
 {
     Q_OBJECT
 public:
-    AdvantechCtrl(const QString &name = "unknown", QObject *parent = nullptr);
+    AdvantechCtrl(QObject *parent = nullptr);
     virtual ~AdvantechCtrl();
     virtual void Initialization();
     virtual void readData(); 
 protected:
     QString m_name;
-
+    // set Info override?
 };
 
 class AdvantechAI : public AdvantechCtrl
@@ -91,7 +91,6 @@ private:
     WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class
     QVector<double> m_vector; // should be list of values 
 	QList<VoltageFilter> m_voltageFilters; // to filterView?
-    
 };
 
 
@@ -99,22 +98,23 @@ class AdvantechDO : public AdvantechCtrl
 {
     Q_OBJECT
 public:
-    AdvantechDO(const AdvDOType &info, QObject *parent = nullptr);
+    AdvantechDO(QObject *parent = nullptr);
     ~AdvantechDO();
+    void setInfo(const AdvDOType &info); // might be override function
     void ConfigureDeviceDO();
-	void CheckError(ErrorCode errorCode);
-    void applyFeatures();
-    void resizeDataVector(uint8_t size);
     void readData() override;
     AdvDOType getInfo(); // move to base class
     QVector<bool> getData();
-    void setData(const QVector<bool> &changedState);
+    bool setData(const QVector<bool> &changedState);
 //Q_SIGNALS:
 
 public slots:
     //void generateData(int type, int rowCount, int colCount);
 
 private:
+    void CheckError(ErrorCode errorCode);
+    void applyFeatures();
+    void resizeDataVector(uint8_t size);
     AdvDOType m_info;
     InstantDoCtrl* m_instantDoCtrl;  // change to smart pointer or initialize inside class
     int portCount;

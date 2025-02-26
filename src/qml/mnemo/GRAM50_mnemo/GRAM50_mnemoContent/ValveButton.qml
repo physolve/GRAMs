@@ -45,15 +45,15 @@ RoundButton {
            anchors.horizontalCenter: parent.horizontalCenter
         }
     }
-    // i don't like it
-    onDoubleClicked:{
-        if(!doubleClickState){
-            valve.text = "+"
-            doubleClickState = true
-        }
-        else {
-            valve.text = ""
-            doubleClickState = false
-        }
-    }
+    // i don't like it, should be checked emit check
+    // onDoubleClicked:{
+    //     if(!doubleClickState){
+    //         valve.text = "+"
+    //         doubleClickState = true
+    //     }
+    //     else {
+    //         valve.text = ""
+    //         doubleClickState = false
+    //     }
+    // }
 }

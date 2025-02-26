@@ -12,7 +12,7 @@
 using namespace Automation::BDaq;
 
 Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
-    QObject(parent), m_curInitProfile(curInitProfile)
+    QObject(parent), m_curInitProfile(curInitProfile), initializeOk(false)
 {
     // сначала определяешь все, что подключено
     // а потом сверяешь с тем, что в профиле
@@ -32,8 +32,11 @@ Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
     checkPass = advantechDeviceCheck();
 
     visualRepresentation(profileJson); // setted after gui run
-
-    advantechCompareProfile();
+    
+    initializeOk = checkPass; 
+    if(initializeOk)
+        advantechCompareProfile();
+    else qDebug() << "checkPass problem";
     //check
 
 }
@@ -63,8 +66,8 @@ bool Initialize::jsonParser(QString &rawData, QJsonObject &profileJson){
 }
 
 bool Initialize::advantechDeviceCheck(){
-    auto startCheckInstance = InstantAiCtrl::Create(); // does it work with every Adv controller?
-    auto allSupportedDevices = startCheckInstance->getSupportedDevices();
+    DeviceCtrl* deviceCtrl;
+    auto const &allSupportedDevices = deviceCtrl->getInstalledDevices();
     if (allSupportedDevices->getCount() == 0)
     {
         qDebug() << "No advantech devices connected";
@@ -73,22 +76,12 @@ bool Initialize::advantechDeviceCheck(){
     QStringList deviceMap;
     for(int i = 0; i < allSupportedDevices->getCount(); i++){
         DeviceTreeNode const &node = allSupportedDevices->getItem(i);
-        qDebug("%d, %ls", node.DeviceNumber, node.Description);
-        // auto advantechDescription = QString::fromWCharArray(node.Description).split(',');
-        // auto tempName = advantechDescription.value(0);
-        // auto tempBID = advantechDescription.value(1);
-
-        // it doesn't fit expectations (it should show virtual BID to distinguish from non-virtual and put into BID)
-        //qDebug() << "CHECK INDEX FOR BID to SHOW Virtual " << node.ModulesIndex;
-
         deviceMap << QString::fromWCharArray(node.Description);
     }
     m_advantechDeviceMap = deviceMap;
-    startCheckInstance->Dispose();
     allSupportedDevices->Dispose();
     return true;
 }
-
 
 void Initialize::visualRepresentation(const QJsonObject &profileJson){
     // knows profile
@@ -219,30 +212,46 @@ void Initialize::advantechCompareProfile(){
             if(profile.m_device != val.split(',').value(0, "")) 
                 continue;
             recognized = profile.m_state = true;
+            profile.fullName = val;
         }
         if(!recognized)
             unrecognizedControllers << val;
     }
-    qDebug() << "Unrecognized controllers " << unrecognizedControllers;
+    if(!unrecognizedControllers.isEmpty())
+        qDebug() << "Unrecognized controllers " << unrecognizedControllers;
     // which found navi blue, which unexpected - yellow
 }
 
+void Initialize::profileToRealParameters(QList<daqParameters> &params){
+    for(auto &profile : m_daq){
+        if(profile.m_state)
+            params << profile;
+            // default type channel count channel start and others here
+    }
+}
+
+bool Initialize::isInitializeOk() const{
+    return initializeOk;
+}
 // function to GUI representation
 // local channelmapping
 
-// I don't like this function
-QVariantMap Initialize::advantechDeviceFill(const QString &description, const QString &type){ 
-    QVariantMap advantechDeviceSettings;
-    if(type == "valves"){
-        advantechDeviceSettings["blank"] = "null";
-    }
-    else{
-        AdvAIType a(description);
-        auto demoPressure = AdvantechBuff(a); //AdvantechAI(a); 
-        demoPressure.Initialization();
-        a = demoPressure.getInfo();
-        advantechDeviceSettings = a.getSettings();
-    }
-    return advantechDeviceSettings;
-}
+// create controller info for next constructor
+
+
+// I don't like this function move settings for controllers later
+// QVariantMap Initialize::advantechDeviceFill(const QString &description, const QString &type){ 
+//     QVariantMap advantechDeviceSettings;
+//     if(type == "valves"){
+//         advantechDeviceSettings["blank"] = "null";
+//     }
+//     else{
+//         AdvAIType a(description);
+//         auto demoPressure = AdvantechBuff(a); //AdvantechAI(a); 
+//         demoPressure.Initialization();
+//         a = demoPressure.getInfo();
+//         advantechDeviceSettings = a.getSettings();
+//     }
+//     return advantechDeviceSettings;
+// }
 

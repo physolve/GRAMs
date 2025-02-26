@@ -40,8 +40,8 @@
             }
         },
         {
-            "name": "GRAMs",
-            "type": "cppdbg",
+            "name": "GRAMs_win",
+            "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "stopAtEntry": false,

@@ -14,7 +14,7 @@
         <file>qml/mnemo/GRAM300_mnemo/GRAM300_mnemoContent/ShortComboBox.qml</file> -->
         
         <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/MnemoBase.qml</file>
-        <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/background/GRAMsMimicNew-alpha.png</file>
+        <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/background/GRAMsMimicNew-beta.png</file>
         <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/ValveButton.qml</file>
         <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/SensorWidget.qml</file>
         <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/TempWidget.qml</file>

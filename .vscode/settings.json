@@ -15,13 +15,20 @@
         "Advantech",
         "Flickable",
         "Frameless",
+        "INVOKABLE",
+        "kalman",
         "mnemo",
+        "navi",
+        "qreal",
         "Quar",
         "Quars",
         "spectr",
-        "Verdana"
+        "Verdana",
+        "Xhat"
     ],
     "cSpell.ignoreWords": [
+        "BDAQCALL",
+        "argvm",
         "settinglist"
     ]
 }
