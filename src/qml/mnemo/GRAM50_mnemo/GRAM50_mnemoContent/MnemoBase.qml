@@ -111,7 +111,7 @@ Item {
 
         ValveButton {
             id: k_SL1
-            x: 743
+            x: 819
             y: 592
         }
 
@@ -190,6 +190,12 @@ Item {
             id: s_ARV
             x: 481
             y: 659
+        }
+
+        ValveButton {
+            id: k_SL2
+            x: 514
+            y: 592
         }
     }
 }
