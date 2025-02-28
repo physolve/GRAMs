@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QtQuick>
-#include "Sensor.h"
+#include "DataCollection.h"
 
 class QCustomPlot;
 class QCPAbstractPlottable;
@@ -15,16 +15,17 @@ public:
 
   void paint(QPainter *painter);
 
+  Q_INVOKABLE CustomPlotItem* getCustomPlot();
 
-  Q_INVOKABLE void initCustomPlot(int index); // index as place in somewhere
-
-  // replace create from Grams.cpp
-  Q_INVOKABLE void placePointerGraph(const QString &name, QSharedPointer<Sensor> sensor_ptr); // additional paramters
-
-
-  Q_INVOKABLE void setCustomLabel(const QString &label); // additional paramters
   Q_INVOKABLE void updatePlot();
   Q_INVOKABLE void resetPos();
+
+  void initCustomPlot();
+  void backgroundCustomPlot();
+  void setupPlot(QCustomPlot* customPlot);
+
+  void setDataPointers(DataCollection** ptr , int ptrCnt);
+  void placeGraph();
 protected:
   void routeMouseEvents(QMouseEvent *event);
   void routeWheelEvents(QWheelEvent *event);
@@ -36,11 +37,10 @@ protected:
 
 private:
   QCustomPlot *m_CustomPlot;
-  int m_index;
 
   bool rescalingON;
-  QStringList m_plotNames;
-  QList<QSharedPointer<Sensor>> m_sensors;
+  DataCollection* m_time;
+  QList<DataCollection*> m_sensors;
 
 private slots:
   void graphClicked(QCPAbstractPlottable *plottable);

@@ -26,13 +26,14 @@ class AdvantechAI : public AdvantechCtrl
 {
     Q_OBJECT
 public:
-    AdvantechAI(const AdvAIType &info, QObject *parent = nullptr); 
+    AdvantechAI(QObject *parent = nullptr); 
     virtual ~AdvantechAI();
+    void setInfo(const AdvAIType &info);
     void Initialization() ; //override
     void initialInfo();
     void ConfigureDeviceTest(); // rename TEST
 	void CheckError(ErrorCode errorCode);
-    const AdvAIType& getInfo(); // move to base class
+    const AdvAIType& getInfo() const; // move to base class
     void resizeDataVector(uint8_t size);
     void readData() override;
     const QVector<double> getData();
@@ -55,13 +56,13 @@ class AdvantechBuff : public AdvantechCtrl
 {
     Q_OBJECT
 public:
-    AdvantechBuff(const AdvAIType &info, QObject *parent = nullptr); 
+    AdvantechBuff(QObject *parent = nullptr); 
     virtual ~AdvantechBuff();
+    void setInfo(const AdvAIType &info);
     void Initialization() ; //override
-    void initialInfo();
-    void ConfigureDeviceTest(); // rename TEST
+    void ConfigureDeviceBuff(); // rename TEST
 	void CheckError(ErrorCode errorCode);
-    const AdvAIType& getInfo(); // move to base class
+    const AdvAIType& getInfo() const; // move to base class
 
     void readData() override;
     const QVector<double> getData();
@@ -103,7 +104,7 @@ public:
     void setInfo(const AdvDOType &info); // might be override function
     void ConfigureDeviceDO();
     void readData() override;
-    AdvDOType getInfo(); // move to base class
+    AdvDOType getInfo() const; // move to base class
     QVector<bool> getData();
     bool setData(const QVector<bool> &changedState);
 //Q_SIGNALS:

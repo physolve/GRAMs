@@ -17,27 +17,27 @@ FilterView::FilterView(QObject *parent) : QObject(parent), safeCheck(false), app
 FilterView::~FilterView(){
 }
 
-void FilterView::setFilterSize(int channelCount){
+void FilterView::setFilterSize(int channelCount){ // только для графика фильтра
     // argument put count to sensor container
     for(int i = 0; i < channelCount; ++i){
-        m_channelsData << QSharedPointer<Sensor>::create(QString("voltage_ch%1").arg(i));
-        m_channelsXhatS << QSharedPointer<Sensor>::create(QString("XhatS_ch%1").arg(i));
-        m_channelsXhatT << QSharedPointer<Sensor>::create(QString("XhatT_ch%1").arg(i));
+        // m_channelsData << QSharedPointer<Sensor>::create(QString("voltage_ch%1").arg(i));
+        // m_channelsXhatS << QSharedPointer<Sensor>::create(QString("XhatS_ch%1").arg(i));
+        // m_channelsXhatT << QSharedPointer<Sensor>::create(QString("XhatT_ch%1").arg(i));
     }
     //if проверка на сохранить в файл
-    //если установлен тру, то вызывай сейф в файл и делай эту переменную фолс
+    //если установлен true, то вызывай сейф в файл и делай эту переменную false
 }
 
 void FilterView::appendDataToView(int viewN, const QVector<qreal> &time, const QVector<double> &data){
-    m_channelsData[viewN]->setData(time, data);
+    // m_channelsData[viewN]->setData(time, data);
     emit updateView();
 }
 void FilterView::appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data){
-    m_channelsXhatS[viewN]->setData(time, data);
+    // m_channelsXhatS[viewN]->setData(time, data);
     emit updateXhatS();
 }
 void FilterView::appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data){
-    m_channelsXhatT[viewN]->setData(time, data);
+    // m_channelsXhatT[viewN]->setData(time, data);
     emit updateXhatT();
 }
 
@@ -73,17 +73,17 @@ void FilterView::saveToFile(const QVector<double> &data){
     out << "P\t";
     outLambda(ui_mP);
 
-    const auto& timeBuffer = m_channelsData[0]->getTime();
-    if(timeBuffer.isEmpty())
-        return;
+    // const auto& timeBuffer = m_channelsData[0]->getTime();
+    // if(timeBuffer.isEmpty())
+    //     return;
     out << "N" << "\t" << "Data" << "\t" << "Filtered data" << "\t" << "XhatS" << "\t" << "XhatT" << "\n";
-    const auto& bufferFiltered = m_channelsData[0]->getValue();
-    const auto& bufferSecond = m_channelsXhatS[0]->getValue();
-    const auto& bufferThird = m_channelsXhatT[0]->getValue();
+    // const auto& bufferFiltered = m_channelsData[0]->getValue();
+    // const auto& bufferSecond = m_channelsXhatS[0]->getValue();
+    // const auto& bufferThird = m_channelsXhatT[0]->getValue();
     
-    for(int i = 0; i < timeBuffer.count();++i){
-        out << i << "\t" << data[i] << "\t" << bufferFiltered[i] << "\t" << bufferSecond[i] << "\t" << bufferThird[i] << "\n";
-    }
+    // for(int i = 0; i < timeBuffer.count();++i){
+        // out << i << "\t" << data[i] << "\t" << bufferFiltered[i] << "\t" << bufferSecond[i] << "\t" << bufferThird[i] << "\n";
+    // }
     file.close();
     this->safeCheck = false;
 }
@@ -95,16 +95,16 @@ void FilterView::appendToFile(const QVector<double> &data){\
     if(!file.open(QIODevice::Append|QIODevice::Text))
         return;
     QTextStream out(&file);
-    const auto& timeBuffer = m_channelsData[0]->getTime();
-    if(timeBuffer.isEmpty())
-        return;
-    const auto& bufferFiltered = m_channelsData[0]->getValue();
-    const auto& bufferSecond = m_channelsXhatS[0]->getValue();
-    const auto& bufferThird = m_channelsXhatT[0]->getValue();
+    // const auto& timeBuffer = m_channelsData[0]->getTime();
+    // if(timeBuffer.isEmpty())
+    //     return;
+    // const auto& bufferFiltered = m_channelsData[0]->getValue();
+    // const auto& bufferSecond = m_channelsXhatS[0]->getValue();
+    // const auto& bufferThird = m_channelsXhatT[0]->getValue();
     
-    for(int i = 0; i < timeBuffer.count();++i){
-        out << i << "\t" << data[i] << "\t" << bufferFiltered[i] << "\t" << bufferSecond[i] << "\t" << bufferThird[i] << "\n";
-    }
+    // for(int i = 0; i < timeBuffer.count();++i){
+    //     out << i << "\t" << data[i] << "\t" << bufferFiltered[i] << "\t" << bufferSecond[i] << "\t" << bufferThird[i] << "\n";
+    // }
     file.close();
 }
 
@@ -116,18 +116,18 @@ bool FilterView::getAppendCheck(){
     return this->appendCheck;
 }
 
-QSharedPointer<Sensor> FilterView::getChannelSensor(int channel, QString a){
-    if(m_channelsData.isEmpty()){
-        return QSharedPointer<Sensor>::create(QString("empty"));
-    }
-    if(a == "view"){
-        return m_channelsData[channel];
-    }
-    else if( a == "xhats"){
-        return m_channelsXhatS[channel];
-    } 
-    else if(a == "xhatt") return m_channelsXhatT[channel];
-}
+// QSharedPointer<Sensor> FilterView::getChannelSensor(int channel, QString a){
+//     if(m_channelsData.isEmpty()){
+//         return QSharedPointer<Sensor>::create(QString("empty"));
+//     }
+//     if(a == "view"){
+//         return m_channelsData[channel];
+//     }
+//     else if( a == "xhats"){
+//         return m_channelsXhatS[channel];
+//     } 
+//     else if(a == "xhatt") return m_channelsXhatT[channel];
+// }
 
 void FilterView::setUiA(const QList<double> &ui_A)
 {
@@ -185,5 +185,5 @@ QList<double> FilterView::uiP() const{
 }
 
 FilterMatrix FilterView::getNewFilterParameters() const{
-    return FilterMatrix({ui_mA, ui_mC, ui_mQ, ui_mR, ui_mP}); 
+    return {ui_mA, ui_mC, ui_mQ, ui_mR, ui_mP}; 
 }

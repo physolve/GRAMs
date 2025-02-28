@@ -5,7 +5,6 @@
 
 struct Valve{
     QString m_name = "";
-    bool m_state = false;
     void setState(bool s){
         m_state = s;
     }
@@ -13,6 +12,8 @@ struct Valve{
        return m_state; 
     }
     Valve(const QString &name = "unknown", const bool &state = false): m_name(name), m_state(state) { }
+private:
+    bool m_state = false;
 };
 
 

@@ -91,15 +91,17 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
     const auto &hardwareObject = profileObject["stuff"].toObject(); 
     const auto &valves = hardwareObject["valveMap"].toVariant().toStringList();
     const auto &pressureSensorsArray = hardwareObject["pressureSensors"].toArray();
-    QMap<QString,QMap<QString, double>> pressureSensors;
+    // m_hardware.m_pressureSensors.empty
+    QList<PressureSensor> pressureSensors;
     for(const auto &value : pressureSensorsArray){
-        QMap<QString, double> pressureSensorsValues;
+        PressureSensor pressureSensor;
         const auto &obj = value.toObject();
-        pressureSensorsValues["cch"] = obj["cch"].toInt(); 
-        pressureSensorsValues["A"] = obj["A"].toDouble(); 
-        pressureSensorsValues["B"] = obj["B"].toDouble(); 
-        pressureSensorsValues["R"] = obj["R"].toDouble();
-        pressureSensors[obj["name"].toString()] = pressureSensorsValues;
+        pressureSensor.m_sensorName = obj["name"].toString();
+        pressureSensor.m_cch = obj["cch"].toInt();
+        pressureSensor.m_A = obj["A"].toDouble();
+        pressureSensor.m_B = obj["B"].toDouble();
+        pressureSensor.m_R = obj["R"].toDouble();
+        pressureSensors << pressureSensor;
     }
     const auto &tempSensorsArray = hardwareObject["temperatureSensors"].toArray();
     QStringList tempSensors;
@@ -118,8 +120,8 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
         const auto &obj = value.toObject();
         const auto &device = obj["device"].toString();
         const auto &purpose = obj["purpose"].toString();
-        const auto &profile = obj.contains("profile") ? obj["purpose"].toString() : "";
-        const auto &defaultType = obj.contains("defaultType") ? obj["defaultType"].toString() : "";
+        const auto &profile = obj.contains("profile") ? obj["profile"].toString() : "";
+        const auto &defaultType = obj.contains("defaultType") ? obj["defaultType"].toInt() : 0;
         temp_daq << daqParameters{device, purpose, profile, defaultType, false}; 
     }
     m_daq = temp_daq;
@@ -222,12 +224,39 @@ void Initialize::advantechCompareProfile(){
     // which found navi blue, which unexpected - yellow
 }
 
-void Initialize::profileToRealParameters(QList<daqParameters> &params){
+void Initialize::getParametersDO(daqParameters &params){
     for(auto &profile : m_daq){
-        if(profile.m_state)
-            params << profile;
-            // default type channel count channel start and others here
+        if(profile.m_device == "USB-4750"&&profile.m_state){
+            params = profile;
+            return;
+        } // from profile
     }
+}
+
+void Initialize::getParametersAIpres(daqParameters &params){
+    for(auto &profile : m_daq){
+        if(profile.m_device == "USB-4716"&&profile.m_state){
+            params = profile;
+            return;
+        } // from profile
+    }
+}
+
+void Initialize::getParametersAItemp(daqParameters &params){
+    for(auto &profile : m_daq){
+        if(profile.m_device == "USB-4718"&&profile.m_state){
+            params = profile;
+            return;
+        } // from profile
+    }
+}
+
+QList<PressureSensor> Initialize::getPressureSensors() const{
+    return m_hardware.m_pressureSensors;
+}
+
+QStringList Initialize::getTempSensors() const{
+    return m_hardware.m_tempSensors;
 }
 
 bool Initialize::isInitializeOk() const{

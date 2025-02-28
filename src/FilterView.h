@@ -1,7 +1,7 @@
 #pragma once
 #include <QDebug>
 #include <QVariant>
-#include "Sensor.h"
+// #include "Sensor.h"
 #include "controllers/VoltageFilter.h"
 class FilterView : public QObject
 {
@@ -15,7 +15,7 @@ public:
     explicit FilterView(QObject *parent  = nullptr);
     ~FilterView();
     void setFilterSize(int channelCount);
-    Q_INVOKABLE QSharedPointer<Sensor> getChannelSensor(int channel, QString a);
+    // Q_INVOKABLE QSharedPointer<Sensor> getChannelSensor(int channel, QString a);
     Q_INVOKABLE void startAppend(bool state);
     // function to update values somewhere
     // function to link Kalman parameters with View
@@ -56,9 +56,9 @@ signals:
 
 private:
     // should be separate window with Custom plot and Kalman Filter's parameters
-    QList<QSharedPointer<Sensor>> m_channelsData;
-    QList<QSharedPointer<Sensor>> m_channelsXhatS;
-    QList<QSharedPointer<Sensor>> m_channelsXhatT;
+    // QList<QSharedPointer<Sensor>> m_channelsData; // change to pointer of object from parent 
+    // QList<QSharedPointer<Sensor>> m_channelsXhatS; // change to pointer of object from parent
+    // QList<QSharedPointer<Sensor>> m_channelsXhatT; // change to pointer of object from parent
     QList<double> ui_mA;
     QList<double> ui_mC;
     QList<double> ui_mQ;

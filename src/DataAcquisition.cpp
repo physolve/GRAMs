@@ -1,7 +1,7 @@
 #include "DataAcquisition.h"
 
 DataAcquisition::DataAcquisition(QObject *parent) :
-    QObject(parent), filterView(), fastFilter(new QTimer)
+    QObject(parent), fastFilter(new QTimer)
 {
     GRAMsIntegrity["pressure"] = ControllerConnection::Offline;
     GRAMsIntegrity["temperature"] = ControllerConnection::Offline;
@@ -17,22 +17,28 @@ bool DataAcquisition::getGRAMsIntegrity(){
     return true;
 }
 
-void DataAcquisition::initDaq(const QList<daqParameters> &parameters){
-    if(parameters[0].m_device == "USB-4750")
-        initDO(parameters[0]);
-    // init
-}
-
 void DataAcquisition::setValvePointers(Valve ptr[], int valvesCnt){
-    // m_switches.append(QSharedPointer<Switch>(ptr));
     for(int i = 0; i < valvesCnt; ++i){
         m_valves[i] = &ptr[i];
     }
     m_valvesCnt = valvesCnt;
-    // m_valvesCnt = valvesCnt; compare to profile
 }
 
-void DataAcquisition::initDO(const daqParameters &parameter){
+void DataAcquisition::setPressurePointers(ControllerData ptr[], int pressureCnt){
+    for(int i = 0; i < pressureCnt; ++i){
+        m_pressureSensors[i] = &ptr[i];
+    }
+    m_pressureSensorsCnt = pressureCnt;
+}
+
+void DataAcquisition::setTempPointers(ControllerData ptr[], int tempCnt){
+    for(int i = 0; i < tempCnt; ++i){
+        m_tempSensors[i] = &ptr[i];
+    }
+    m_tempSensorsCnt = tempCnt;
+}
+
+void DataAcquisition::initDaqDO(const daqParameters &parameter){
     // pass real info from Initialize
     AdvDOType a(parameter.fullName);
     a.setProfilePath(parameter.m_profile);
@@ -48,16 +54,63 @@ void DataAcquisition::initDO(const daqParameters &parameter){
     GRAMsIntegrity["valves"] = ControllerConnection::Online;
 }
 
-void DataAcquisition::setValveStates(){
+void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
+    AdvAIType a(parameter.fullName);
+    a.setProfilePath(parameter.m_profile);
+    a.setDefaultType(parameter.m_defaultType);
+    reqSensorAI.setInfo(a);
+    reqSensorAI.Initialization();
+    reqSensorAI.ConfigureDeviceBuff();
+
+    a = reqSensorAI.getInfo();
+    // a.channelCount() or m_pressureSensorsCnt
+    for(int i = 0; i < a.channelCount(); ++i){
+        reqSensorAI.setVolageFilter(i, filterView.getNewFilterParameters());
+    } 
+    // if ok
+    // pass to filter
+    const auto &readData = reqSensorAI.getData();
+    for(int i = 0; i < m_pressureSensorsCnt; ++i){
+        m_pressureSensors[i]->addValue(readData[i]);
+    }
+
+    GRAMsIntegrity["pressure"] = ControllerConnection::Online;
+}
+
+void DataAcquisition::setNewFilter(){ // invokable
     // if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
     //     return;
+    // auto controller = m_controllerList["pressure"].staticCast<AdvantechBuff>();
+
+    // auto parameters = filterView.getNewFilterParameters();
+    // controller->setVolageFilter(0, parameters);
+    // filterView.safeCheckOn();
+}
+
+void DataAcquisition::initDaqAItemp(const daqParameters &parameter){
+    AdvAIType a(parameter.fullName);
+    a.setProfilePath(parameter.m_profile);
+    a.setDefaultType(parameter.m_defaultType);
+    reqTempAI.setInfo(a);
+    reqTempAI.Initialization();
+    // if ok
+    // without filters
+    const auto &readData = reqTempAI.getData();
+    for(int i = 0; i < m_tempSensorsCnt; ++i){
+        m_tempSensors[i]->addValue(readData[i]);
+    }
+}
+
+bool DataAcquisition::setValveStates(){
+    if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
+        return false;
     QVector<bool> changedState;
     // if changedState > 8*portCount!
     for(int i = 0; i < m_valvesCnt; ++i){
         changedState << m_valves[i]->getState();
     }
     // handler to unsuccessful set (true / false)
-    reqValveDO.setData(changedState);
+    return reqValveDO.setData(changedState);
 }
 
 // void DataAcquisition::advantechDeviceSetting(const QString &description, const QString &type, const QVariantMap& deviceSettings){
@@ -161,13 +214,3 @@ void DataAcquisition::filterEvent(){
 //     if(getGRAMsIntegrity())
 //         processEvents();
 // }
-
-void DataAcquisition::setNewFilter(){
-    // if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
-    //     return;
-    // auto controller = m_controllerList["pressure"].staticCast<AdvantechBuff>();
-
-    // auto parameters = filterView.getNewFilterParameters();
-    // controller->setVolageFilter(0, parameters);
-    // filterView.safeCheckOn();
-}

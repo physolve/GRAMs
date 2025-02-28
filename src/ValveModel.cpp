@@ -63,17 +63,17 @@ int ValveModel::rowCount( const QModelIndex& parent) const
 
 QVariant ValveModel::data(const QModelIndex &index, int role) const
 {
-    if ( !index.isValid() )
-        return QVariant();
+    // if ( !index.isValid() )
+    //     return QVariant();
 
-    auto valve = this->m_valves[m_valveNames.at(index.row())];
-    if ( role == NameRole ){
-        return valve.m_name;
-    }
-    else if ( role == State )
-        return QVariant::fromValue(valve.m_state);
-    else
-        return QVariant();
+    // auto valve = this->m_valves[m_valveNames.at(index.row())];
+    // if ( role == NameRole ){
+    //     return valve.m_name;
+    // }
+    // else if ( role == State )
+    //     return QVariant::fromValue(valve.m_state);
+    // else
+    //     return QVariant();
 }
 
 //--> slide

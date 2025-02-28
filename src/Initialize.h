@@ -2,42 +2,49 @@
 
 #include <QVariant>
 
+struct PressureSensor{
+    Q_GADGET
+    Q_PROPERTY (QString sensorName MEMBER m_sensorName)
+    Q_PROPERTY (int cch MEMBER m_cch)
+    Q_PROPERTY (double A MEMBER m_A)
+    Q_PROPERTY (double B MEMBER m_B)
+    Q_PROPERTY (double R MEMBER m_R)
+public:
+    // PressureSensor() = default;
+    QString m_sensorName;
+    int m_cch;
+    double m_A;
+    double m_B;
+    double m_R;
+    // other parameters to easy get
+    bool operator==(const PressureSensor& other) const = default;
+};
+
 struct hardwareParameters{
     Q_GADGET
-    Q_PROPERTY (QStringList                         valves          MEMBER m_valves)
-    Q_PROPERTY (QStringList                         tempSensors     MEMBER m_tempSensors)
-
+    Q_PROPERTY (QStringList             valves          MEMBER m_valves)
+    Q_PROPERTY (QStringList             tempSensors     MEMBER m_tempSensors)
+    Q_PROPERTY (QList<PressureSensor>   pressureSensors MEMBER m_pressureSensors)
 public:
-    Q_INVOKABLE QVariantMap pressureSensors(){ // change to READ property!
-        QVariantMap retPressureSensors;
-        for(auto const& [key, value]: m_pressureSensors.asKeyValueRange()){
-            QVariantMap retValue;
-            for(auto const& [key, value]: value.asKeyValueRange()){
-                retValue[key] = QVariant::fromValue(value);
-            }
-            retPressureSensors[key] = retValue; 
-        }
-        return retPressureSensors;
-    }
     QStringList                             m_valves;
-    QMap<QString,QMap<QString,double>>      m_pressureSensors;
+    QList<PressureSensor>                   m_pressureSensors;
     QStringList                             m_tempSensors;
 };
 
 struct daqParameters{
     Q_GADGET
-    Q_PROPERTY (QString device                  MEMBER m_device)
-    Q_PROPERTY (QString purpose                 MEMBER m_purpose)
-    Q_PROPERTY (QString profile                 MEMBER m_profile)
-    Q_PROPERTY (QString defaultType             MEMBER m_defaultType)
-    Q_PROPERTY (bool    state                   MEMBER m_state)
+    Q_PROPERTY (QString         device                  MEMBER m_device)
+    Q_PROPERTY (QString         purpose                 MEMBER m_purpose)
+    Q_PROPERTY (QString         profile                 MEMBER m_profile)
+    Q_PROPERTY (int             defaultType             MEMBER m_defaultType)
+    Q_PROPERTY (bool            state                   MEMBER m_state)
 public:
-    QString                                 m_device;
-    QString                                 m_purpose;
-    QString                                 m_profile;
-    QString                                 m_defaultType;
-    bool                                    m_state;
-    QString                                 fullName;
+    QString                     m_device;
+    QString                     m_purpose;
+    QString                     m_profile;
+    int                         m_defaultType;
+    bool                        m_state;
+    QString                     fullName;
 };
 
 struct addRemoveQuarParameters{
@@ -131,8 +138,14 @@ public:
     Q_PROPERTY(securityParameters security MEMBER m_security CONSTANT)
 
     Q_PROPERTY(QList<daqParameters> daqGui MEMBER m_daq CONSTANT ) // profiled but changing state should be external
+    
+    void getParametersDO(daqParameters &params); //
+    void getParametersAIpres(daqParameters &params); //
+    void getParametersAItemp(daqParameters &params); //
+    QList<PressureSensor> getPressureSensors() const;
+    QStringList getTempSensors() const;
 
-    void profileToRealParameters(QList<daqParameters> &params);
+
     bool isInitializeOk() const;
 signals:
     void advantechDeviceMapChanged();

@@ -78,13 +78,12 @@ GridLayout{
             clip: true
             interactive: false
             orientation: Qt.Vertical
-            model: Object.keys(initSource.hardware.pressureSensors()) // rewrite as property
+            model: initSource.hardware.pressureSensors // rewrite as property
             delegate: Rectangle { 
                 width: 350
                 height: 20
                 color: "transparent"; border.color: "#464646";
-                property var curSensor: initSource.hardware.pressureSensors()[modelData]
-                Text { text: `${modelData}, A = ${curSensor.A}, B = ${curSensor.B}, R = ${curSensor.R}, ch = ${curSensor.cch}` ; font.pointSize: 9
+                Text { text: `${modelData.sensorName}, A = ${modelData.A}, B = ${modelData.B}, R = ${modelData.R}, ch = ${modelData.cch}` ; font.pointSize: 9
                 color: "white"; font.family: "Verdana"; anchors.centerIn: parent }
             }
         }

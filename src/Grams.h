@@ -4,10 +4,35 @@
 #include <QQmlApplicationEngine>
 
 #include "DataAcquisition.h"
-#include "DataModel.h"
+// #include "DataModel.h"
 #include "ValveModel.h"
 #include "Initialize.h"
 #include "Security.h"
+#include "DataCollection.h"
+
+#include "CustomPlotItem.h"
+
+struct guiValues{ // sample
+    Q_GADGET
+    // it might be linked to json for import and multi-result log
+    Q_PROPERTY (double prSH     MEMBER g_prSH)
+    Q_PROPERTY (double prSA     MEMBER g_prSA)
+    Q_PROPERTY (double prRH     MEMBER g_prRH)
+    Q_PROPERTY (double prRA     MEMBER g_prRA)
+    Q_PROPERTY (double prRL     MEMBER g_prRL)
+    Q_PROPERTY (double prSK     MEMBER g_prSK)
+    Q_PROPERTY (double tmSK     MEMBER g_tmSK)
+    Q_PROPERTY (double tmS      MEMBER g_tmS)
+public:
+    double g_prSH;  // bar
+    double g_prSA;  // bar
+    double g_prRH;  // bar
+    double g_prRA;  // bar
+    double g_prRL;  // bar
+    double g_prSK;  // bar
+    double g_tmSK;  // bar
+    double g_tmS;   // bar
+};
 
 class Grams : public QApplication
 {
@@ -21,42 +46,49 @@ public:
     // add JSON and profile here?
     Q_INVOKABLE void setValveState(bool state, int valveId);
     // Q_INVOKABLE void setValveState(const QString &name, const bool &state);
-    Q_PROPERTY (bool vAR1State READ getVAR1State NOTIFY valveChanged)
-    Q_PROPERTY (bool vAR2State READ getVAR2State NOTIFY valveChanged)
-    Q_PROPERTY (bool vAR3State READ getVAR3State NOTIFY valveChanged)
-    Q_PROPERTY (bool vAR4State READ getVAR4State NOTIFY valveChanged)
-    Q_PROPERTY (bool vAR5State READ getVAR5State NOTIFY valveChanged)
-    Q_PROPERTY (bool vAR6State READ getVAR6State NOTIFY valveChanged)
-    Q_PROPERTY (bool vS1State READ getVS1State NOTIFY valveChanged)
-    Q_PROPERTY (bool vS2State READ getVS2State NOTIFY valveChanged)
-    Q_PROPERTY (bool vS3State READ getVS3State NOTIFY valveChanged)
-    Q_PROPERTY (bool vS4State READ getVS4State NOTIFY valveChanged)
-    Q_PROPERTY (bool vR1State READ getVR1State NOTIFY valveChanged)
-    Q_PROPERTY (bool vR2State READ getVR2State NOTIFY valveChanged)
-    Q_PROPERTY (bool vR3State READ getVR3State NOTIFY valveChanged)
-    Q_PROPERTY (bool vR4State READ getVR4State NOTIFY valveChanged)
-    Q_PROPERTY (bool vR5State READ getVR5State NOTIFY valveChanged)
-    Q_PROPERTY (bool vSL1State READ getVSL1State NOTIFY valveChanged)
-    Q_PROPERTY (bool vSL2State READ getVSL2State NOTIFY valveChanged)
+    Q_PROPERTY (bool vAR1State      READ getVAR1State   NOTIFY valveChanged)
+    Q_PROPERTY (bool vAR2State      READ getVAR2State   NOTIFY valveChanged)
+    Q_PROPERTY (bool vAR3State      READ getVAR3State   NOTIFY valveChanged)
+    Q_PROPERTY (bool vAR4State      READ getVAR4State   NOTIFY valveChanged)
+    Q_PROPERTY (bool vAR5State      READ getVAR5State   NOTIFY valveChanged)
+    Q_PROPERTY (bool vAR6State      READ getVAR6State   NOTIFY valveChanged)
+    Q_PROPERTY (bool vS1State       READ getVS1State    NOTIFY valveChanged)
+    Q_PROPERTY (bool vS2State       READ getVS2State    NOTIFY valveChanged)
+    Q_PROPERTY (bool vS3State       READ getVS3State    NOTIFY valveChanged)
+    Q_PROPERTY (bool vS4State       READ getVS4State    NOTIFY valveChanged)
+    Q_PROPERTY (bool vR1State       READ getVR1State    NOTIFY valveChanged)
+    Q_PROPERTY (bool vR2State       READ getVR2State    NOTIFY valveChanged)
+    Q_PROPERTY (bool vR3State       READ getVR3State    NOTIFY valveChanged)
+    Q_PROPERTY (bool vR4State       READ getVR4State    NOTIFY valveChanged)
+    Q_PROPERTY (bool vR5State       READ getVR5State    NOTIFY valveChanged)
+    Q_PROPERTY (bool vSL1State      READ getVSL1State   NOTIFY valveChanged)
+    Q_PROPERTY (bool vSL2State      READ getVSL2State   NOTIFY valveChanged)
 
+    Q_PROPERTY (guiValues guiValsPres READ getGuiValsPres NOTIFY guiValsPresChanged) //WRITE setExpTimingStruct 
+    // Q_PROPERTY (guiValues guiValsTemp READ getGuiValsTemp NOTIFY guiValsTempChanged) //WRITE setExpTimingStruct 
 signals:
     void valveChanged();
+    void guiValsPresChanged();
 
 private slots:
     void softEvent();
 
 private:
-    void advDoController();
-    void initGUI();
     void initDigitalData();
+    void initAnalogData();
+    void advDoController();
+    void advAiController();
+    void initGUI();
+    void guiValsUpdate();
+
     void readingEvent(bool valveCheck); // valve check connect by new data signal
 
     Initialize initSource;
-    DataAcquisition dataSource; // pass from constructor
-    ValveModel valveModel;
-    MyModel dataModel;
-    Security m_safeModule; // naming?
     QQmlApplicationEngine m_engine;
+    DataAcquisition dataSource; // pass from constructor
+    // ValveModel valveModel;
+    // MyModel dataModel;
+    Security m_safeModule; // naming?
 
     // those are required
     Valve vAR1; // 0 k104
@@ -64,17 +96,17 @@ private:
     Valve vAR3; // 2 k114
     Valve vAR4; // 3 k118
     Valve vAR5; // 4 k178
-    Valve vSL2; // k192
-    Valve vAR6; // k176
-    Valve vSL1; // k179
-    Valve vS4; // k171
-    Valve vS1; // k131
-    Valve vS2; // k133
-    Valve vS3; // k135
-    Valve vR1; // k155
-    Valve vR2; // k153
-    Valve vR3; // k151
-    Valve vR4; // k173
+    Valve vSL2; // 5 k192
+    Valve vAR6; // 6 k176
+    Valve vSL1; // 7 k179
+    Valve vS4;  // 8 k171
+    Valve vS1;  // 9 k131
+    Valve vS2;  // 10 k133
+    Valve vS3;  // 11 k135
+    Valve vR1;  // 12 k155
+    Valve vR2;  // 13 k153
+    Valve vR3;  // 14 k151
+    Valve vR4;  // 15 k173
     Valve vR5; // chamber manual (config)
 
     bool getVAR1State() const;
@@ -94,4 +126,30 @@ private:
     bool getVR5State() const;
     bool getVSL1State() const;
     bool getVSL2State() const;
+
+    ControllerData timeAnalog;
+
+    ControllerData prSH;    // 0 DD311
+    ControllerData prSA;    // 1 DD312
+    ControllerData prRH;    // 2 DD331
+    ControllerData prRA;    // 3 DD332
+    ControllerData prRL;    // 4 DD334
+    ControllerData prSK;    // 5 DD341
+    ControllerData tmSK;    // 6 DT341
+    ControllerData tmS;     // 7 DT314
+
+    ControllerData tmX;         // 0 DT350 
+    ControllerData tmY;         // 1 DT351
+    ControllerData tmSLittle;   // 2 DT352
+    ControllerData tmSSmall;    // 3 DT354
+    ControllerData tmSLarge;    // 4 DT356
+    ControllerData tmSTube;     // 5 DT357
+    ControllerData tmRTube;     // 6 DT358
+    ControllerData tmF;         // 7 DT359
+
+    guiValues m_pressureVals;
+    guiValues getGuiValsPres() const;
+    // filters
+
+    CustomPlotItem* m_mainPlot;
 };

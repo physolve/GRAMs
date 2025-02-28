@@ -18,13 +18,17 @@ void AdvantechCtrl::readData(){
 }
 /* Advantech Analog Input (pressure and temperature readings) */
 
-AdvantechAI::AdvantechAI(const AdvAIType &info, QObject *parent) :
-	AdvantechCtrl(), m_info(info), m_instantAiCtrl(NULL), m_vector(8,0.0)
+AdvantechAI::AdvantechAI(QObject *parent) :
+	AdvantechCtrl(), m_instantAiCtrl(nullptr), m_vector(8,0.0)
 {
 }
 
 AdvantechAI::~AdvantechAI(){
     qDebug() << QString("Oh no, %1 was deleted").arg(m_info.advDescription());
+}
+
+void AdvantechAI::setInfo(const AdvAIType &info){
+	m_info = info;
 }
 
 void AdvantechAI::Initialization()
@@ -65,7 +69,7 @@ void AdvantechAI::Initialization()
 	instantAiCtrl->Dispose();
 }
 
-const AdvAIType& AdvantechAI::getInfo(){
+const AdvAIType& AdvantechAI::getInfo() const{
 	return m_info;
 }
 
@@ -86,6 +90,11 @@ void AdvantechAI::ConfigureDeviceTest(){ // after accept
     errorCode = m_instantAiCtrl->LoadProfile(profile.c_str());
     CheckError(errorCode);
 
+	if (errorCode != 0){
+		QString str;
+        QString des = QString::fromStdWString(description);
+		return;
+	}
 	//Get channel max number. set value range for every channel.
 	Array<AiChannel> *channels = m_instantAiCtrl->getChannels();
 
@@ -133,19 +142,27 @@ const QVector<double> AdvantechAI::getData(){ // const & ?
 
 /* Advantech Buffered Analog Input (pressure and temperature readings) */
 
-AdvantechBuff::AdvantechBuff(const AdvAIType &info, QObject *parent) :
-	AdvantechCtrl(), m_info(info), m_waveformAiCtrl(nullptr), m_vector(8,0.0) // 8?
+AdvantechBuff::AdvantechBuff(QObject *parent) :
+	AdvantechCtrl(), m_waveformAiCtrl(nullptr), m_vector(8,0.0) // 8?
 {
 	m_waveformAiCtrl = WaveformAiCtrl::Create(); // should it be later?
 	m_waveformAiCtrl->addStoppedHandler(OnStoppedEvent, this);
 }
 
 AdvantechBuff::~AdvantechBuff(){
+
     qDebug() << QString("Oh no, %1 was deleted").arg(m_info.advDescription());
 	if (m_waveformAiCtrl != NULL)
 	{
+		m_waveformAiCtrl->Stop();
+		m_waveformAiCtrl->Release();
 		m_waveformAiCtrl->Dispose();
 	}
+}
+
+void AdvantechBuff::setInfo(const AdvAIType &info){
+	// this function sets info for Digital outut controller
+	m_info = info;
 }
 
 void AdvantechBuff::Initialization()
@@ -166,7 +183,7 @@ void AdvantechBuff::Initialization()
 	int channelCount = (waveformAiCtrl->getChannelCount() < 16) ? 
 		waveformAiCtrl->getChannelCount() : 16;
 
-	int logicChannelCount = waveformAiCtrl->getChannelCount(); // ?
+	int logicChannelCount = 0;// waveformAiCtrl->getChannelCount(); // ?
 
 	m_info.setChannelStart(logicChannelCount); // ?
 
@@ -188,11 +205,11 @@ void AdvantechBuff::Initialization()
 	waveformAiCtrl->Dispose();
 }
 
-const AdvAIType& AdvantechBuff::getInfo(){
+const AdvAIType& AdvantechBuff::getInfo() const{
 	return m_info;
 }
 
-void AdvantechBuff::ConfigureDeviceTest(){ // after accept
+void AdvantechBuff::ConfigureDeviceBuff(){ // after accept
 	int32 rawDataBufferLength = m_info.channelCount() * m_sectionLength;
 	// resize kalmanBuffer to rawDataBufferLength?
 
@@ -203,8 +220,8 @@ void AdvantechBuff::ConfigureDeviceTest(){ // after accept
 	CheckError(errorCode);
 	// add DIR ? profile
     std::wstring profile = m_info.profilePath().toStdWString();
-    //errorCode = m_waveformAiCtrl->LoadProfile(profile.c_str());
-    //CheckError(errorCode);
+    errorCode = m_waveformAiCtrl->LoadProfile(profile.c_str());
+    CheckError(errorCode);
 
 	errorCode = m_waveformAiCtrl->getConversion()->setChannelCount(m_info.channelCount());
 	CheckError(errorCode);
@@ -215,7 +232,7 @@ void AdvantechBuff::ConfigureDeviceTest(){ // after accept
 	CheckError(errorCode);
 	errorCode = m_waveformAiCtrl->getRecord()->setSectionLength(m_sectionLength);
 	CheckError(errorCode);
-	errorCode = m_waveformAiCtrl->getRecord()->setSectionCount(1);
+	errorCode = m_waveformAiCtrl->getRecord()->setSectionCount(1); // 0
 	CheckError(errorCode);
 	//Get channel max number. set value range for every channel.
 	Array<AiChannel> *channels = m_waveformAiCtrl->getChannels();
@@ -255,6 +272,7 @@ void AdvantechBuff::readData(){
 	ErrorCode errorCode = Success;
 	//qDebug() << "controller Data count = " << m_vector.count();
 	errorCode = m_waveformAiCtrl->Start();
+	// stop
 	CheckError(errorCode);
 }
 
@@ -286,11 +304,11 @@ void AdvantechBuff::setVoltageToFilter(const QVector<double> &voltageBuffer){
 void AdvantechBuff::doFilter(){
 	// pass to FilterView
 	// update data in
-	// for(int i = 0; i < m_voltageFilters.count(); i++){
-		auto allVoltage = m_voltageFilters[0].getFilteredVoltage(false);
+	for(int i = 0; i < m_voltageFilters.count(); i++){ // m_info.channelCount()
+		auto allVoltage = m_voltageFilters[i].getFilteredVoltage(false);
 		// qDebug() << allVoltage;
-		m_vector[0] = allVoltage.last();
-	// }
+		m_vector[i] = allVoltage.last();
+	}
 }
 
 const QVector<double> AdvantechBuff::getBufferedData(uint8_t channelN){
@@ -466,6 +484,6 @@ void AdvantechDO::CheckError(ErrorCode errorCode)
 	}
 }
 
-AdvDOType AdvantechDO::getInfo(){
+AdvDOType AdvantechDO::getInfo() const{
 	return m_info;
 }

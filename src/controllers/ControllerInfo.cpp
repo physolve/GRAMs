@@ -50,7 +50,7 @@ int AdvAIType::defaultType() const{
 	return m_defaultType;
 }
 
-void AdvAIType::appendToValueRange(const QString &valueRange){ // replase to set?
+void AdvAIType::appendToValueRange(const QString &valueRange){ // replace to set?
 	m_valueRanges << valueRange;
 }
 

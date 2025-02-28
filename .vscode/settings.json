@@ -8,7 +8,8 @@
         "type_traits": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp",
-        "qfontdatabase": "cpp"
+        "qfontdatabase": "cpp",
+        "qvariant": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [
@@ -19,6 +20,7 @@
         "kalman",
         "mnemo",
         "navi",
+        "Plottable",
         "qreal",
         "Quar",
         "Quars",
@@ -28,7 +30,10 @@
     ],
     "cSpell.ignoreWords": [
         "BDAQCALL",
+        "Coeffs",
         "argvm",
-        "settinglist"
+        "settinglist",
+        "xhats",
+        "xhatt"
     ]
 }
