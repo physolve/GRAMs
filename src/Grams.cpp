@@ -53,6 +53,17 @@ void Grams::initDigitalData(){
 
     vSL1.m_name = "Second line outlet";
     vSL2.m_name = "Second line barrel";
+
+    timeAnalog.m_name = "Time";
+
+    QVector<double> indexData;
+    for(int i = 0; i < 512; ++i) {
+        indexData << i;
+    }
+    timeFilter.setData(indexData);
+    for(int j = 0; j < 8; j++){
+        filtersData[j].setData(QVector<double>(512,0.0));
+    }
 }
 
 void Grams::initAnalogData(){
@@ -70,6 +81,8 @@ void Grams::initAnalogData(){
         tempSensorsList[i]->m_name = tempSensors[i];
         tempSensorsList[i]->setCoeffs(1.0, 0.0);
     }
+
+    m_pressureVals = guiValues{0,0,0,0,0,0,0,0};
 }
 
 void Grams::advDoController(){
@@ -94,14 +107,18 @@ void Grams::advAiController(){
     daqParameters parametersAIpres;
     daqParameters parametersAItemp;
 
+    dataSource.setTimePointer(&timeAnalog);
+
     initSource.getParametersAIpres(parametersAIpres);
     dataSource.setPressurePointers(*pressureSensorsList, 8);
+    dataSource.setFiltersDataPointers(filtersData, 8);
     dataSource.initDaqAIpres(parametersAIpres);
-    guiValsUpdate();
 
     initSource.getParametersAItemp(parametersAItemp);
     dataSource.setTempPointers(*tempSensorsList, 8);
     dataSource.initDaqAItemp(parametersAItemp);
+
+    guiValsUpdate();
 }
 
 void Grams::setValveState(bool state, int index){
@@ -144,9 +161,39 @@ void Grams::initGUI(){
 
     // create somewhere filterview
     // m_engine.rootContext()->setContextProperty("filterView", dataSource.getFilterView()); // initialize here and pass to dataSource
+    // m_engine.rootContext()->setContextProperty("backend", this); // make singleton later
+    qmlRegisterSingletonInstance("Grams.backendSourceSingleton", 1, 0, "Grams", this);
 
-    m_engine.rootContext()->setContextProperty("backend", this);
     m_engine.load(url);
+}
+
+void Grams::getCustomPlotPtr(CustomPlotItem* customPlotPointer){
+    m_testPlot = customPlotPointer;
+    DataCollection* chartPtrs[3] = {&timeAnalog, &prSH, &prSA};
+    m_testPlot->setDataPointers(chartPtrs, 3);
+    m_testPlot->initCustomPlot();
+    m_testPlot->placeGraph();
+    m_testPlot->dataUpdated();
+    // connect(&testController, &TestController::valueChanged, m_testAxisTag, &CustomPlotItem::dataUpdated);
+    // connect(&analogController, &IcpAICtrl::valueChanged, m_testAxisTag, &CustomPlotItem::dataUpdated);
+}
+
+void Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
+    switch(m_filterPlots.count()){
+        case 0:
+        {
+            DataCollection* chartPtrs[3] = {&timeFilter, &filtersData[0], &filtersData[1]};
+            filterPlotPointer->setDataPointers(chartPtrs, 3);
+            filterPlotPointer->initCustomPlot();
+            filterPlotPointer->placeGraph();
+            filterPlotPointer->dataSetUpdated();
+            break;
+        }
+        default:
+            qDebug() << "default\n"; // no error
+            break;
+    }
+    m_filterPlots << filterPlotPointer;
 }
 
 void Grams::guiValsUpdate(){
@@ -159,6 +206,10 @@ void Grams::guiValsUpdate(){
     m_pressureVals.g_tmSK = tmSK.getCurValue();
     m_pressureVals.g_tmS = tmS.getCurValue();
     emit guiValsPresChanged();
+}
+
+void Grams::manuallyReadAll(){
+    dataSource.processEvents();
 }
 
 // void Grams::initializeReading(){

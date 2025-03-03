@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import Grams.backendSourceSingleton 1.0
 
 Item {
     width: gRAMsMimicNew.width
@@ -26,114 +27,114 @@ Item {
             id: k_AR1
             x: 115
             y: 425
-            checked: backend.vAR1State
-            onClicked: backend.setValveState(checked, 0) // or name
+            checked: Grams.vAR1State
+            onClicked: Grams.setValveState(checked, 0) // or name
         }
 
         ValveButton {
             id: k_AR2
             x: 189
             y: 425
-            checked: backend.vAR2State
-            onClicked: backend.setValveState(checked, 1) // or name
+            checked: Grams.vAR2State
+            onClicked: Grams.setValveState(checked, 1) // or name
         }
 
         ValveButton {
             id: k_AR3
             x: 261
             y: 425
-            checked: backend.vAR3State
-            onClicked: backend.setValveState(checked, 2) // or name
+            checked: Grams.vAR3State
+            onClicked: Grams.setValveState(checked, 2) // or name
         }
 
         ValveButton {
             id: k_AR4
             x: 427
             y: 171
-            checked: backend.vAR4State
-            onClicked: backend.setValveState(checked, 3) // or name
+            checked: Grams.vAR4State
+            onClicked: Grams.setValveState(checked, 3) // or name
         }
         ValveButton {
             id: k_AR5
             x: 427
             y: 425
-            checked: backend.vAR5State
-            onClicked: backend.setValveState(checked, 4) // or name
+            checked: Grams.vAR5State
+            onClicked: Grams.setValveState(checked, 4) // or name
         }
         ValveButton {
             id: k_AR6
             x: 427
             y: 637
-            checked: backend.vAR6State
-            onClicked: backend.setValveState(checked, 6) // or name
+            checked: Grams.vAR6State
+            onClicked: Grams.setValveState(checked, 6) // or name
         }
         ValveButton {
             id: k_S1
             x: 315
             y: 308
-            checked: backend.vS1State
-            onClicked: backend.setValveState(checked, 9) // or name
+            checked: Grams.vS1State
+            onClicked: Grams.setValveState(checked, 9) // or name
         }
 
         ValveButton {
             id: k_S2
             x: 315
             y: 212
-            checked: backend.vS2State
-            onClicked: backend.setValveState(checked, 10) // or name
+            checked: Grams.vS2State
+            onClicked: Grams.setValveState(checked, 10) // or name
         }
         ValveButton {
             id: k_S3
             x: 315
             y: 109
-            checked: backend.vS3State
-            onClicked: backend.setValveState(checked, 11) // or name
+            checked: Grams.vS3State
+            onClicked: Grams.setValveState(checked, 11) // or name
         }
         ValveButton {
             id: k_S4
             x: 618
             y: 267
-            checked: backend.vS4State
-            onClicked: backend.setValveState(checked, 8) // or name
+            checked: Grams.vS4State
+            onClicked: Grams.setValveState(checked, 8) // or name
         }
 
         ValveButton {
             id: k_R1
             x: 818
             y: 365
-            checked: backend.vR1State
-            onClicked: backend.setValveState(checked, 12) // or name
+            checked: Grams.vR1State
+            onClicked: Grams.setValveState(checked, 12) // or name
         }
 
         ValveButton {
             id: k_R2
             x: 818
             y: 425
-            checked: backend.vR2State
-            onClicked: backend.setValveState(checked, 13) // or name
+            checked: Grams.vR2State
+            onClicked: Grams.setValveState(checked, 13) // or name
         }
 
         ValveButton {
             id: k_R3
             x: 819
             y: 487
-            checked: backend.vR3State
-            onClicked: backend.setValveState(checked, 14) // or name
+            checked: Grams.vR3State
+            onClicked: Grams.setValveState(checked, 14) // or name
         }
 
         ValveButton {
             id: k_R4
             x: 995
             y: 308
-            checked: backend.vR4State
-            onClicked: backend.setValveState(checked, 15) // or name
+            checked: Grams.vR4State
+            onClicked: Grams.setValveState(checked, 15) // or name
         }
 
         ValveButton {
             id: k_R5
             x: 1106
             y: 366
-            checked: backend.vR5State
+            checked: Grams.vR5State
             onClicked: checked ? console.log("Chamber open") : console.log("Chamber close")
         }
 
@@ -141,30 +142,30 @@ Item {
             id: k_SL1
             x: 819
             y: 592
-            checked: backend.vSL1State
-            onClicked: backend.setValveState(checked, 7) // or name
+            checked: Grams.vSL1State
+            onClicked: Grams.setValveState(checked, 7) // or name
         }
 
         ValveButton {
             id: k_SL2
             x: 514
             y: 592
-            checked: backend.vSL2State
-            onClicked: backend.setValveState(checked, 5) // or name
+            checked: Grams.vSL2State
+            onClicked: Grams.setValveState(checked, 5) // or name
         }
 
         SensorWidget {
             id: s_SH
             x: 479
             y: 242
-            value: backend.guiValsPres.prSH
+            value: Grams.guiValsPres.prSH
         }
 
         SensorWidget {
             id: s_SA
             x: 592
             y: 147
-            value: backend.guiValsPres.prSA
+            value: Grams.guiValsPres.prSA
         }
         SensorWidget {
             id: s_SBS
@@ -185,35 +186,35 @@ Item {
             id: s_SHM
             x: 716
             y: 145
-            value: backend.guiValsPres.prSK
+            value: Grams.guiValsPres.prSK
         }
 
         TempWidget {
             id: t_ST
             x: 545
             y: 417
-            value: backend.guiValsPres.tmS
+            value: Grams.guiValsPres.tmS
         }
 
         SensorWidget {
             id: s_RH
             x: 890
             y: 241
-            value: backend.guiValsPres.prRH
+            value: Grams.guiValsPres.prRH
         }
 
         SensorWidget {
             id: s_RA
             x: 969
             y: 147
-            value: backend.guiValsPres.prRA
+            value: Grams.guiValsPres.prRA
         }
 
         SensorWidget {
             id: s_RL
             x: 1070
             y: 147
-            value: backend.guiValsPres.prRL
+            value: Grams.guiValsPres.prRL
         }
         TempWidget {
             id: t_RT

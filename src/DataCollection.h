@@ -33,6 +33,13 @@ private:
     double lin_B;
 };
 
+class FilterData : public DataCollection
+{
+public:
+    FilterData(const QString &name = "unknown");
+    virtual ~FilterData();
+    void setData(const QVector<double> &y);
+};
 
 // class Sensor //: public QObject
 // {

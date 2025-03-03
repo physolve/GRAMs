@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material 2.12
+import Grams.backendSourceSingleton 1.0
 
 //import "mnemo/GRAM300_mnemo/GRAM300_mnemoContent"
 import "mnemo/GRAM50_mnemo/GRAM50_mnemoContent"
@@ -157,18 +158,22 @@ ApplicationWindow {
                     //Layout.fillHeight: true
                     Rectangle{
                         id: test1
-                        width: 100; height: 100
+                        width: 300; height: 150
+                        Button{
+                            anchors.centerIn: parent
+                            text: "Ручное считывание"
+                            onClicked:{
+                                Grams.manuallyReadAll()
+                            }
+                        }
                     }
                     
                 }   
-                Item{
-                    //Layout.fillHeight: true
-                    Rectangle{
-                        id: test2
-                        width: 100; height: 100
-                    }
+                ChartCreator{
+                    id: test2
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
-                
                 SettingsWindow{
                     id: test3
                     Layout.fillWidth: true

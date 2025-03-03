@@ -21,6 +21,7 @@ Item {
             containerSettings.window = childWindow
         }
     }
+
     
     ColumnLayout{
         anchors.fill: parent
@@ -38,9 +39,9 @@ Item {
             }
         }
         WindowContainer {
+            id: containerSettings
             Layout.fillHeight: true
             Layout.fillWidth: true
-            id: containerSettings
         }
     }
     Window {
@@ -51,26 +52,31 @@ Item {
     
     // connectionWindow page?
 
-    Window {
+    ChartWindow{
         id: childWindow
-        // width: 700
-        color: "#2B2B2B"
-        ScrollView {
-            id: connectionsRoot
-            ScrollBar.horizontal.interactive: true
-            ScrollBar.vertical.interactive: true
-            anchors.fill: parent
-            //model view based on keys from Initialize
-                //four groups: stuff, controllers, quartiles, security
-            // from initSource
-            // layout with json information
-            SettingsConnections{
-                width: childWindow.width
-            }
-        }
+        title: "Chart"
         onClosing: {
             holderButton.visible = true
             detachWindow(false)
+        }
+        Component.onCompleted: {
+            detachWindow(true)
+            holderButton.visible = false
+        }
+    }
+
+    ChartFilter{
+        id: filterWindow
+        title: "FilterChart"
+        onClosing: {
+            filterWindow.flags = Qt.FramelessWindowHint
+            filterWindow.hide()
+            // containerSettings.window = filterWindow
+        }
+        Component.onCompleted: {
+            filterWindow.flags = Qt.Window
+            filterWindow.show()
+            filterWindow.width = 525 
         }
     }
 }

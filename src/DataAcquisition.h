@@ -30,9 +30,10 @@ public:
 
     void setValvePointers(Valve ptr[], int valvesCnt);
     bool setValveStates();
-
+    void setTimePointer(ControllerData* ptr);
     void setPressurePointers(ControllerData ptr[], int pressureCnt);
     void setTempPointers(ControllerData ptr[], int tempCnt);
+    void setFiltersDataPointers(FilterData ptr[], int filtersCnt);
     
     Q_INVOKABLE void turnOnFilterTimer(bool s);
     Q_INVOKABLE void setNewFilter();
@@ -42,8 +43,9 @@ private slots:
 private:
     // QMap<QString, QSharedPointer<AdvantechCtrl>> m_controllerList; // for read
     QMap<QString, ControllerConnection> GRAMsIntegrity;
+    QElapsedTimer m_elapsedTimer;
     
-    ControllerData* time;
+    ControllerData* m_time;
     QTimer* fastFilter;
     
     AdvantechDO reqValveDO;
@@ -63,6 +65,8 @@ private:
     ControllerData* m_tempSensors[8];
     int m_tempSensorsCnt;
     
-
     FilterView filterView;
+    FilterData* m_filtersData[8];
+    int m_filtersDataCnt;
+    
 };

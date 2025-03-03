@@ -23,6 +23,8 @@
         <file>qml/Main.qml</file>
         <file>qml/SettingsWindow.qml</file>
         <file>qml/SettingsConnections.qml</file>
-
+        <file>qml/ChartCreator.qml</file>
+        <file>qml/ChartWindow.qml</file>
+        <file>qml/ChartFilter.qml</file>
     </qresource>
 </RCC>

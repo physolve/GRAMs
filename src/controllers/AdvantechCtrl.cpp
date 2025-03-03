@@ -294,9 +294,10 @@ void AdvantechBuff::OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *use
 }
 
 void AdvantechBuff::setVoltageToFilter(const QVector<double> &voltageBuffer){
+	const auto& channelCount = m_info.channelCount();
 	for(int i = 0; i < m_sectionLength; i++){
-		for(int j = 0; j < m_info.channelCount(); j++){
-			m_voltageFilters[j].appendToBuffer(voltageBuffer[i*m_info.channelCount() + j]);
+		for(int j = 0; j < channelCount; j++){
+			m_voltageFilters[j].appendToBuffer(voltageBuffer[i*channelCount + j]);
 		}
 	}
 }

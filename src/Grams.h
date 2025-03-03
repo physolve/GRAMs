@@ -33,6 +33,7 @@ public:
     double g_tmSK;  // bar
     double g_tmS;   // bar
 };
+// add temp values
 
 class Grams : public QApplication
 {
@@ -65,6 +66,9 @@ public:
     Q_PROPERTY (bool vSL2State      READ getVSL2State   NOTIFY valveChanged)
 
     Q_PROPERTY (guiValues guiValsPres READ getGuiValsPres NOTIFY guiValsPresChanged) //WRITE setExpTimingStruct 
+    Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer);
+    Q_INVOKABLE void getFilterPlotPtr(CustomPlotItem* customPlotPointer);
+    Q_INVOKABLE void manuallyReadAll();
     // Q_PROPERTY (guiValues guiValsTemp READ getGuiValsTemp NOTIFY guiValsTempChanged) //WRITE setExpTimingStruct 
 signals:
     void valveChanged();
@@ -147,9 +151,17 @@ private:
     ControllerData tmRTube;     // 6 DT358
     ControllerData tmF;         // 7 DT359
 
+    CustomPlotItem* m_testPlot;
+    // make it QList
+
     guiValues m_pressureVals;
     guiValues getGuiValsPres() const;
     // filters
 
     CustomPlotItem* m_mainPlot;
+
+    QList<CustomPlotItem*> m_filterPlots;
+    FilterData timeFilter;
+    FilterData filtersData[8];
+
 };

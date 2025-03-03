@@ -9,13 +9,15 @@ FilterView::FilterView(QObject *parent) : QObject(parent), safeCheck(false), app
     this->ui_mC = {1, 0, 0};
 
     // Reasonable covariance matrices
-    this->ui_mQ = {.05, .05, .0, .05, .05, .0, .0, .0, .0};
+    this->ui_mQ = {.001, .001, .0, .001, .001, .0, .0, .0, .0};
     this->ui_mR = 5;
-    this->ui_mP = {.1, .1, .1, .1, 10000, 10, .1, 10, 100};
+    this->ui_mP = {10000, .1, .1, .1, 10000, 10, .1, 10, 100};
 }
 
 FilterView::~FilterView(){
 }
+
+
 
 void FilterView::setFilterSize(int channelCount){ // только для графика фильтра
     // argument put count to sensor container
@@ -28,18 +30,18 @@ void FilterView::setFilterSize(int channelCount){ // только для гра�
     //если установлен true, то вызывай сейф в файл и делай эту переменную false
 }
 
-void FilterView::appendDataToView(int viewN, const QVector<qreal> &time, const QVector<double> &data){
-    // m_channelsData[viewN]->setData(time, data);
-    emit updateView();
-}
-void FilterView::appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data){
-    // m_channelsXhatS[viewN]->setData(time, data);
-    emit updateXhatS();
-}
-void FilterView::appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data){
-    // m_channelsXhatT[viewN]->setData(time, data);
-    emit updateXhatT();
-}
+// void FilterView::appendDataToView(int viewN, const QVector<qreal> &time, const QVector<double> &data){
+//     m_channelsData[viewN]->setData(time, data);
+//     emit updateView();
+// }
+// void FilterView::appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data){
+//     m_channelsXhatS[viewN]->setData(time, data);
+//     emit updateXhatS();
+// }
+// void FilterView::appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data){
+//     m_channelsXhatT[viewN]->setData(time, data);
+//     emit updateXhatT();
+// }
 
 void FilterView::safeCheckOn(){
     this->safeCheck = true;

@@ -3,7 +3,7 @@
 #include <QDebug>
 
 CustomPlotItem::CustomPlotItem(QQuickItem *parent)
-    : QQuickPaintedItem(parent), m_CustomPlot(nullptr), rescalingON(true) {
+    : QQuickPaintedItem(parent), m_CustomPlot(nullptr), rescalingON(true), lastPointKey(0) {
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
 
@@ -77,14 +77,13 @@ void CustomPlotItem::backgroundCustomPlot()
 }
 
 void CustomPlotItem::setupPlot(QCustomPlot* customPlot){ // knows how many should be // realize only for one
-    customPlot->yAxis->setTickLabels(false);
-    customPlot->yAxis2->setVisible(true);
+
     //make left and bottom axes transfer their ranges to right and top axes:
     connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange))); //?
     connect(customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->yAxis2, SLOT(setRange(QCPRange))); //?
     customPlot->xAxis->setLabel("Время, с");
     customPlot->xAxis->setLabelColor(Qt::white);
-    customPlot->yAxis->setLabel("Давление, бар");
+    customPlot->yAxis->setLabel("Давление, бар"); // changeble label
     customPlot->yAxis->setLabelColor(Qt::white);
     customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     connect(customPlot, &QCustomPlot::afterReplot, this,
@@ -94,11 +93,11 @@ void CustomPlotItem::setupPlot(QCustomPlot* customPlot){ // knows how many shoul
 
 void CustomPlotItem::setDataPointers(DataCollection** ptr, int ptrCnt){
     // not good but it works
+    // m_sensors.resize(ptrCnt - 1);
     m_time = ptr[0];
     for(auto i = 1; i < ptrCnt; ++i){
         m_sensors.append(ptr[i]);
     }
-    // unsafe but fun
 }
 
 void CustomPlotItem::placeGraph(){
@@ -155,24 +154,32 @@ void CustomPlotItem::wheelEvent(QWheelEvent *event) {
     routeWheelEvents(event); 
 }
 
-void CustomPlotItem::updatePlot(){
-    // if(m_sensors.isEmpty()){
-    //     return;
-    // }
-    // // static double lastPointKey = 0; // making problems being static
-    // qreal lastPointKey = 0;
-    // for(auto i = 0; i < m_CustomPlot->graphCount(); ++i){
-    //     m_CustomPlot->graph(i)->setData(m_sensors[i]->getTime(), m_sensors[i]->getValue());
-    //     if(lastPointKey < m_sensors[i]->getCurTime())
-    //         lastPointKey = m_sensors[i]->getCurTime();
-    // }
-    // if(rescalingON){
-    //     m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
-    //     m_CustomPlot->yAxis->rescale();
-    //     // if(m_sensors[0]->getValue().last() != 0)
-    //     //     m_CustomPlot->yAxis->scaleRange(1.1);
-    // }
-    // m_CustomPlot->replot();
+void CustomPlotItem::dataUpdated(){
+    const auto &timePoint = m_time->getCurValue(); 
+    for(unsigned short i = 0; auto* ptr : m_sensors){
+        m_CustomPlot->graph(i)->addData(timePoint, ptr->getCurValue());
+        ++i;
+    }
+    if(lastPointKey < m_time->getCurValue())
+        lastPointKey = m_time->getCurValue();
+    
+    if(rescalingON){
+        m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
+        m_CustomPlot->yAxis->rescale();
+        // if(m_sensors[0]->getValue().last() != 0)
+        //     m_CustomPlot->yAxis->scaleRange(1.1);
+    }
+    m_CustomPlot->replot();
+}
+
+void CustomPlotItem::dataSetUpdated(){
+    for(unsigned short i = 0; auto* ptr : m_sensors){
+        m_CustomPlot->graph(i)->setData(m_time->getValue(), ptr->getValue());
+        ++i;
+    }
+    m_CustomPlot->xAxis->rescale();
+    m_CustomPlot->yAxis->rescale();
+    m_CustomPlot->replot();
 }
 
 void CustomPlotItem::graphClicked(QCPAbstractPlottable *plottable) {
@@ -201,6 +208,7 @@ void CustomPlotItem::routeWheelEvents(QWheelEvent *event) {
             event->phase(), event->inverted());
         QCoreApplication::postEvent(m_CustomPlot, newEvent);
         m_CustomPlot->yAxis->rescale(); //?
+        m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
     }
 }
 

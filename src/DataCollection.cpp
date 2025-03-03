@@ -57,6 +57,20 @@ void ControllerData::addValue(const double &val_y, const double &minimalValue){
         val = 0.0;
     addPoint(val);
 }
+
+FilterData::FilterData(const QString &name) : DataCollection(name)
+{
+
+}
+
+FilterData::~FilterData(){
+    qDebug() << "FilterData destructor";
+}
+
+void FilterData::setData(const QVector<double> &y){
+    m_y = y;
+}
+
 // Sensor::Sensor(const QString &name, const QMap<QString,double> &parameters)://, QObject *parent) : QObject(parent),
 // m_name(name), m_A(parameters["A"]), m_B(parameters["B"]), m_R(parameters["R"])
 // {

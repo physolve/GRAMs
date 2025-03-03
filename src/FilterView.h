@@ -3,6 +3,8 @@
 #include <QVariant>
 // #include "Sensor.h"
 #include "controllers/VoltageFilter.h"
+#include "DataCollection.h"
+
 class FilterView : public QObject
 {
     Q_OBJECT 
@@ -19,9 +21,9 @@ public:
     Q_INVOKABLE void startAppend(bool state);
     // function to update values somewhere
     // function to link Kalman parameters with View
-    void appendDataToView(int viewN, const QVector<qreal> &time, const QVector<double> &data);
-    void appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data);
-    void appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data);
+    // void appendDataToView(int viewN, const QVector<qreal> &time, const QVector<double> &data);
+    // void appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data);
+    // void appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data);
 
     void safeCheckOn();
     bool getSafeCheck();
@@ -44,9 +46,9 @@ public:
 signals:
     void changeFilterMatrix();
 
-    void updateView();
-    void updateXhatS();
-    void updateXhatT();
+    // void updateView();
+    // void updateXhatS();
+    // void updateXhatT();
 
     void uiAChanged(QList<double>);
     void uiCChanged(QList<double> );
@@ -57,8 +59,12 @@ signals:
 private:
     // should be separate window with Custom plot and Kalman Filter's parameters
     // QList<QSharedPointer<Sensor>> m_channelsData; // change to pointer of object from parent 
+    QList<FilterData*> m_channelsData;
     // QList<QSharedPointer<Sensor>> m_channelsXhatS; // change to pointer of object from parent
+    QList<FilterData*> m_channelsXhatS;
     // QList<QSharedPointer<Sensor>> m_channelsXhatT; // change to pointer of object from parent
+    QList<FilterData*> m_channelsXhatT;
+
     QList<double> ui_mA;
     QList<double> ui_mC;
     QList<double> ui_mQ;

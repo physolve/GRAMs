@@ -46,6 +46,8 @@ source_group("Controller Source" FILES ${CPP_CONTROLLERS})
 source_group("Libs Header" FILES ${HPP_LIBS})
 source_group("Libs Source" FILES ${CPP_LIBS})
 
+add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
+
 qt6_add_executable(${EXECUTABLE_NAME} ${HEADERS} ${SOURCES} 
 ${CPP_CONTROLLERS} ${HPP_CONTROLLERS}
 ${CPP_LIBS} ${HPP_LIBS} ${QML_RESOURCES})

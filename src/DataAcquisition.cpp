@@ -7,11 +7,19 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     GRAMsIntegrity["temperature"] = ControllerConnection::Offline;
     GRAMsIntegrity["valves"] = ControllerConnection::Offline;
     connect(fastFilter, &QTimer::timeout, this, &DataAcquisition::filterEvent);
+    // for valvesCnt m_valves = nullptr
+    // for pressureCnt m_pressureSensors = nullptr
+    // for tempCnt m_tempSensors = nullptr
+    m_elapsedTimer.start();
 }
+
+// DataAcquisition::~DataAcquisition(){
+//     // qDebug() ?
+// }
 
 bool DataAcquisition::getGRAMsIntegrity(){
     //auto l_integrity = [](const QList<ControllerConnection> a) { 
-    for(auto b:GRAMsIntegrity.values())
+    for(const auto& b:GRAMsIntegrity.values())
             if(b!=ControllerConnection::Online)
                 return false;
     return true;
@@ -22,6 +30,10 @@ void DataAcquisition::setValvePointers(Valve ptr[], int valvesCnt){
         m_valves[i] = &ptr[i];
     }
     m_valvesCnt = valvesCnt;
+}
+
+void DataAcquisition::setTimePointer(ControllerData* timeAnalog){
+    m_time = timeAnalog;
 }
 
 void DataAcquisition::setPressurePointers(ControllerData ptr[], int pressureCnt){
@@ -36,6 +48,13 @@ void DataAcquisition::setTempPointers(ControllerData ptr[], int tempCnt){
         m_tempSensors[i] = &ptr[i];
     }
     m_tempSensorsCnt = tempCnt;
+}
+
+void DataAcquisition::setFiltersDataPointers(FilterData ptr[], int filtersCnt){
+    for(int i = 0; i < filtersCnt; ++i){
+        m_filtersData[i] = &ptr[i];
+    }
+    m_filtersDataCnt = filtersCnt;
 }
 
 void DataAcquisition::initDaqDO(const daqParameters &parameter){
@@ -72,8 +91,8 @@ void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
     const auto &readData = reqSensorAI.getData();
     for(int i = 0; i < m_pressureSensorsCnt; ++i){
         m_pressureSensors[i]->addValue(readData[i]);
+        m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
     }
-
     GRAMsIntegrity["pressure"] = ControllerConnection::Online;
 }
 
@@ -99,6 +118,8 @@ void DataAcquisition::initDaqAItemp(const daqParameters &parameter){
     for(int i = 0; i < m_tempSensorsCnt; ++i){
         m_tempSensors[i]->addValue(readData[i]);
     }
+
+    GRAMsIntegrity["temperature"] = ControllerConnection::Online;
 }
 
 bool DataAcquisition::setValveStates(){
@@ -148,6 +169,21 @@ void DataAcquisition::processEvents(){ // rewrite as each one read
     // for (auto i = m_controllerList.cbegin(), end = m_controllerList.cend(); i != end; ++i){
     //     i.value()->readData();
     // } // it's okay?
+    if(!getGRAMsIntegrity()){
+        qDebug() << "Reading disabled";
+        return;
+    }
+    m_time->addValue(m_elapsedTimer.elapsed()/1000.0);
+    
+    const auto &readDataPres = reqSensorAI.getData();
+    for(int i = 0; i < m_pressureSensorsCnt; ++i){
+        m_pressureSensors[i]->addValue(readDataPres[i]);
+        m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
+    }
+    const auto &readDataTemp = reqTempAI.getData();
+    for(int i = 0; i < m_tempSensorsCnt; ++i){
+        m_tempSensors[i]->addValue(readDataTemp[i]);
+    }
 }
 
 void DataAcquisition::processEvents(QString purpose){

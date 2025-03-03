@@ -17,14 +17,14 @@ public:
 
   Q_INVOKABLE CustomPlotItem* getCustomPlot();
 
-  Q_INVOKABLE void updatePlot();
+  // Q_INVOKABLE void updatePlot();
   Q_INVOKABLE void resetPos();
 
   void initCustomPlot();
   void backgroundCustomPlot();
   void setupPlot(QCustomPlot* customPlot);
 
-  void setDataPointers(DataCollection** ptr , int ptrCnt);
+  void setDataPointers(DataCollection **ptr , int ptrCnt);
   void placeGraph();
 protected:
   void routeMouseEvents(QMouseEvent *event);
@@ -35,13 +35,17 @@ protected:
   virtual void mouseDoubleClickEvent(QMouseEvent *event);
   virtual void wheelEvent(QWheelEvent *event);
 
+public slots:
+  void dataUpdated();
+  void dataSetUpdated();
+
 private:
   QCustomPlot *m_CustomPlot;
-
-  bool rescalingON;
   DataCollection* m_time;
   QList<DataCollection*> m_sensors;
-
+  bool rescalingON;
+  double lastPointKey;
+  
 private slots:
   void graphClicked(QCPAbstractPlottable *plottable);
   void onCustomReplot();
