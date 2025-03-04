@@ -236,7 +236,7 @@ void AdvantechBuff::ConfigureDeviceBuff(){ // after accept
 	errorCode = m_waveformAiCtrl->getConversion()->setChannelStart(m_info.channelStart());
 	CheckError(errorCode);
 	// clockRate > 1 && clockRate < 100000000 
-	errorCode = m_waveformAiCtrl->getConversion()->setClockRate(1000); //first try 32 kHz
+	errorCode = m_waveformAiCtrl->getConversion()->setClockRate(5000); //first try 32 kHz
 	CheckError(errorCode);
 	errorCode = m_waveformAiCtrl->getRecord()->setSectionLength(m_sectionLength);
 	CheckError(errorCode);
@@ -284,6 +284,10 @@ void AdvantechBuff::readData(){
 	errorCode = m_waveformAiCtrl->Start();
 	// stop
 	CheckError(errorCode);
+	if (errorCode != Success)
+	{
+		return;
+	}
 }
 
 void AdvantechBuff::OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *userParam){

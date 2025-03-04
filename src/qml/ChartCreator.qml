@@ -13,7 +13,8 @@ Item {
             containerSettings.window = placeholder
             childWindow.flags = Qt.Window
             childWindow.show()
-            childWindow.width = 525 
+            childWindow.width = 525
+            childWindow.height = 600
         }
         else {
             childWindow.flags = Qt.FramelessWindowHint
@@ -76,7 +77,23 @@ Item {
         Component.onCompleted: {
             filterWindow.flags = Qt.Window
             filterWindow.show()
-            filterWindow.width = 525 
+            filterWindow.width = 525
+            filterWindow.height = 600
+        }
+    }
+    ChartFilter{
+        id: filterWindow1
+        title: "FilterChart1"
+        onClosing: {
+            filterWindow1.flags = Qt.FramelessWindowHint
+            filterWindow1.hide()
+            // containerSettings.window = filterWindow
+        }
+        Component.onCompleted: {
+            filterWindow1.flags = Qt.Window
+            filterWindow1.show()
+            filterWindow1.width = 525
+            filterWindow1.height = 600
         }
     }
 }

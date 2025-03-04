@@ -181,17 +181,23 @@ int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
     switch(m_filterPlots.count()){
         case 0:
         {
-            DataCollection* chartPtrs[3] = {&timeFilter, &filtersData[0], &filtersData[1]};
-            filterPlotPointer->setDataPointers(chartPtrs, 3);
-            filterPlotPointer->initCustomPlot();
-            filterPlotPointer->placeGraph();
-            filterPlotPointer->dataSetUpdated();
+            DataCollection* chartPtrs[3] = {&timeFilter, &filtersData[0]};
+            filterPlotPointer->setDataPointers(chartPtrs, 2);
+            break;
+        }
+        case 1:
+        {
+            DataCollection* chartPtrs[3] = {&timeFilter, &filtersData[1]};
+            filterPlotPointer->setDataPointers(chartPtrs, 2);
             break;
         }
         default:
             qDebug() << "default\n"; // no error
             break;
     }
+    filterPlotPointer->initCustomPlot();
+    filterPlotPointer->placeGraph();
+    filterPlotPointer->dataSetUpdated();
     m_filterPlots << filterPlotPointer;
     return m_filterPlots.count() - 1;
 }
@@ -221,6 +227,7 @@ void Grams::manuallyReadAll(){
     dataSource.processManual();
     m_testPlot->dataUpdated();
     m_filterPlots[0]->dataSetUpdated();
+    m_filterPlots[1]->dataSetUpdated();
     guiValsUpdate();
 }
 
@@ -236,8 +243,9 @@ void Grams::manuallyReadAll(){
 
 void Grams::softEvent(){
     guiValsUpdate();
-    // m_testPlot->dataUpdated();
-    // m_filterPlots[0]->dataSetUpdated();
+    m_testPlot->dataUpdated();
+    m_filterPlots[0]->dataSetUpdated();
+    m_filterPlots[1]->dataSetUpdated();
     // additional checks
 }
 // void Grams::setValveState(const QString &name, const bool &state){ // should be filtered

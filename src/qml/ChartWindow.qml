@@ -11,7 +11,7 @@ Window {
         CustomPlotItem {
             id: customPlotPressure
             anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
-            width: parent.width;  height: 300
+            width: parent.width;  height: 400
             Component.onCompleted: {
                 Grams.getCustomPlotPtr(getCustomPlot())
             }

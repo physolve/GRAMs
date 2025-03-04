@@ -15,7 +15,7 @@ Window {
             id: customPlotPressure
             anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
             //width: parent.width
-            height: 350
+            height: 400
             Component.onCompleted: {
                 // get index from getFilterPlotPtr
                 chartItem.chartIndex = Grams.getFilterPlotPtr(getCustomPlot())

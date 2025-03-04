@@ -166,6 +166,7 @@ void CustomPlotItem::dataUpdated(){
     if(rescalingON){
         m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
         m_CustomPlot->yAxis->rescale();
+        m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
         // if(m_sensors[0]->getValue().last() != 0)
         //     m_CustomPlot->yAxis->scaleRange(1.1);
     }
