@@ -3,6 +3,6 @@ project(globalProject)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick QuickControls2 Charts PrintSupport OpenGL)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick QuickControls2 Charts PrintSupport SerialPort OpenGL)
 
 add_subdirectory(src)

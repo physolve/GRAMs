@@ -1,6 +1,11 @@
 #include "FilterView.h"
+
+#include <QDir>
 #include <QFile>
-#include "QDir"
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+
 
 FilterView::FilterView(QObject *parent) : QObject(parent), safeCheck(false), appendCheck(false)
 {
@@ -12,36 +17,53 @@ FilterView::FilterView(QObject *parent) : QObject(parent), safeCheck(false), app
     this->ui_mQ = {.001, .001, .0, .001, .001, .0, .0, .0, .0};
     this->ui_mR = 5;
     this->ui_mP = {10000, .1, .1, .1, 10000, 10, .1, 10, 100};
+    readKalman();
+    parseKalman();
 }
 
 FilterView::~FilterView(){
 }
 
-
-
-void FilterView::setFilterSize(int channelCount){ // только для графика фильтра
-    // argument put count to sensor container
-    for(int i = 0; i < channelCount; ++i){
-        // m_channelsData << QSharedPointer<Sensor>::create(QString("voltage_ch%1").arg(i));
-        // m_channelsXhatS << QSharedPointer<Sensor>::create(QString("XhatS_ch%1").arg(i));
-        // m_channelsXhatT << QSharedPointer<Sensor>::create(QString("XhatT_ch%1").arg(i));
-    }
-    //if проверка на сохранить в файл
-    //если установлен true, то вызывай сейф в файл и делай эту переменную false
+void FilterView::readKalman(){
+    QDir dir("profile");
+    if(!dir.exists()) return;
+    QFile file;
+    file.setFileName(dir.filePath("kalman.json"));
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+    kalmanProfile = file.readAll();
+    file.close();
 }
 
-// void FilterView::appendDataToView(int viewN, const QVector<qreal> &time, const QVector<double> &data){
-//     m_channelsData[viewN]->setData(time, data);
-//     emit updateView();
-// }
-// void FilterView::appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data){
-//     m_channelsXhatS[viewN]->setData(time, data);
-//     emit updateXhatS();
-// }
-// void FilterView::appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data){
-//     m_channelsXhatT[viewN]->setData(time, data);
-//     emit updateXhatT();
-// }
+void FilterView::parseKalman(){
+    QJsonArray profileJson;
+    QJsonDocument document = { QJsonDocument::fromJson(kalmanProfile.toUtf8()) };
+    profileJson = document.array();//.object();
+    
+    const auto &profile = profileJson[0].toObject();
+    const auto& dt = profile["dt"].toVariant().toDouble();
+    QList<double> mA;
+    for(const auto& var: profile["A"].toArray().toVariantList()){
+        mA << var.toDouble();
+    }
+    QList<double> mC;
+    for(const auto& var: profile["C"].toArray().toVariantList()){
+        mC << var.toDouble();
+    }
+    QList<double> mQ;
+    for(const auto& var: profile["Q"].toArray().toVariantList()){
+        mQ << var.toDouble();
+    }
+    const auto& mR = profile["R"].toVariant().toDouble();
+    QList<double> mP;
+    for(const auto& var: profile["P"].toArray().toVariantList()){
+        mP << var.toDouble();
+    }
+    jsonMatrix = {mA, mC, mQ, mR, mP};
+}
+
+FilterMatrix FilterView::getJsonMatrix() const{
+    return jsonMatrix;
+}
 
 void FilterView::safeCheckOn(){
     this->safeCheck = true;

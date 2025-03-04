@@ -4,7 +4,7 @@
 #include <QBitArray>
 
 AdvantechCtrl::AdvantechCtrl(QObject *parent) : 
-	QObject(parent)
+	QObject(parent), connected(false)
 {
 }
 AdvantechCtrl::~AdvantechCtrl(){
@@ -15,6 +15,10 @@ void AdvantechCtrl::Initialization(){
 }
 void AdvantechCtrl::readData(){
 	qDebug() << "I read data!";
+}
+
+bool AdvantechCtrl::isConnected() const{
+	return connected;
 }
 /* Advantech Analog Input (pressure and temperature readings) */
 
@@ -108,8 +112,8 @@ void AdvantechAI::ConfigureDeviceTemp(){ // after accept
 
 	qDebug() << "INFO COUNT " << channels->getCount();
 	resizeDataVector(m_info.channelCount()); // ?
-
 	readData();
+	connected = true;
 }
 
 void AdvantechAI::resizeDataVector(uint8_t size){
@@ -123,6 +127,7 @@ void AdvantechAI::CheckError(ErrorCode errorCode)
 		QString message = tr("Sorry, there are some errors occurred, Error Code: 0x") +
 			QString::number(errorCode, 16).right(8).toUpper();
 		qDebug() << QString("Warning Information %1").arg(message);
+		connected = false;
 	}
 }
 
@@ -149,6 +154,7 @@ AdvantechBuff::AdvantechBuff(QObject *parent) :
 {
 	m_waveformAiCtrl = WaveformAiCtrl::Create(); // should it be later?
 	m_waveformAiCtrl->addStoppedHandler(OnStoppedEvent, this);
+	resizeVoltageFilterList(8);
 }
 
 AdvantechBuff::~AdvantechBuff(){
@@ -252,6 +258,7 @@ void AdvantechBuff::ConfigureDeviceBuff(){ // after accept
 	qDebug() << "INFO COUNT " << channels->getCount();
 	resizeDataVector(m_info.channelCount()); // ?
 	resizeVoltageFilterList(m_info.channelCount());
+	connected = true;
 }
 
 void AdvantechBuff::resizeDataVector(uint8_t size){
@@ -267,6 +274,7 @@ void AdvantechBuff::CheckError(ErrorCode errorCode)
 		QString message = tr("Sorry, there are some errors occurred, Error Code: 0x") +
 			QString::number(errorCode, 16).right(8).toUpper();
 		qDebug() << QString("Warning Information %1").arg(message);
+		connected = false;
 	}
 }
 
@@ -308,6 +316,7 @@ void AdvantechBuff::doFilter(){
 	// pass to FilterView
 	// update data in
 	for(int i = 0; i < m_voltageFilters.count(); i++){ // m_info.channelCount()
+		// 
 		const auto &allVoltage = m_voltageFilters[i].getFilteredVoltage(false);
 		// qDebug() << allVoltage;
 		m_vector[i] = allVoltage.last();
@@ -333,14 +342,6 @@ const QVector<double> AdvantechBuff::getOriginalData(uint8_t channelN){
 	if(channelN >=m_voltageFilters.count())
 		return QVector<double>();
 	return m_voltageFilters[channelN].lastOriginalBuffer();
-}
-
-const QVector<qreal> AdvantechBuff::getTimeBuffer(){
-	QVector<qreal> timeBuffer;
-	for(auto i = 0; i < m_sectionLength; ++i){
-		timeBuffer << i;
-	}
-	return timeBuffer;
 }
 
 const QVector<double> AdvantechBuff::getData(){ // const & ?

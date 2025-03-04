@@ -83,7 +83,7 @@ QVector<double> VoltageFilter::getFilteredVoltage(bool debug) {
     m_XhatS = debugXhatS;
     m_XhatT = debugXhatT;
     m_saveOriginalBuffer = m_voltageBuffer;
-    m_voltageBuffer.clear();
+    m_voltageBuffer.clear(); // make cross sections! 
     return filteredVoltage;
 }
 

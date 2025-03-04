@@ -12,7 +12,7 @@
 
 #include "CustomPlotItem.h"
 
-struct guiValues{ // sample
+struct guiValsPres{ // sample
     Q_GADGET
     // it might be linked to json for import and multi-result log
     Q_PROPERTY (double prSH     MEMBER g_prSH)
@@ -32,6 +32,27 @@ public:
     double g_prSK;  // bar
     double g_tmSK;  // bar
     double g_tmS;   // bar
+};
+
+struct guiValsTemp{ 
+    Q_GADGET
+    Q_PROPERTY (double tmX          MEMBER g_tmX)
+    Q_PROPERTY (double tmY          MEMBER g_tmY)
+    Q_PROPERTY (double tmSLittle    MEMBER g_tmSLittle)
+    Q_PROPERTY (double tmSSmall     MEMBER g_tmSSmall)
+    Q_PROPERTY (double tmSLarge     MEMBER g_tmSLarge)
+    Q_PROPERTY (double tmSTube      MEMBER g_tmSTube)
+    Q_PROPERTY (double tmRTube      MEMBER g_tmRTube)
+    Q_PROPERTY (double tmF          MEMBER g_tmF)
+public:
+    double g_tmX;
+    double g_tmY;
+    double g_tmSLittle;
+    double g_tmSSmall;
+    double g_tmSLarge;
+    double g_tmSTube;
+    double g_tmRTube;
+    double g_tmF;
 };
 // add temp values
 
@@ -65,14 +86,15 @@ public:
     Q_PROPERTY (bool vSL1State      READ getVSL1State   NOTIFY valveChanged)
     Q_PROPERTY (bool vSL2State      READ getVSL2State   NOTIFY valveChanged)
 
-    Q_PROPERTY (guiValues guiValsPres READ getGuiValsPres NOTIFY guiValsPresChanged) //WRITE setExpTimingStruct 
+    Q_PROPERTY (guiValsPres guiPres READ getGuiValsPres NOTIFY guiValsPresChanged) // requiredPresAI
+    Q_PROPERTY (guiValsTemp guiTemp READ getGuiValsTemp NOTIFY guiValsTempChanged) // requiredTempAI
     Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer);
-    Q_INVOKABLE void getFilterPlotPtr(CustomPlotItem* customPlotPointer);
+    Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer);
     Q_INVOKABLE void manuallyReadAll();
-    // Q_PROPERTY (guiValues guiValsTemp READ getGuiValsTemp NOTIFY guiValsTempChanged) //WRITE setExpTimingStruct 
 signals:
     void valveChanged();
     void guiValsPresChanged();
+    void guiValsTempChanged();
 
 private slots:
     void softEvent();
@@ -85,12 +107,11 @@ private:
     void initGUI();
     void guiValsUpdate();
 
-    void readingEvent(bool valveCheck); // valve check connect by new data signal
-
     Initialize initSource;
     QQmlApplicationEngine m_engine;
     DataAcquisition dataSource; // pass from constructor
     // ValveModel valveModel;
+    QTimer* softTimer;
     // MyModel dataModel;
     Security m_safeModule; // naming?
 
@@ -154,9 +175,12 @@ private:
     CustomPlotItem* m_testPlot;
     // make it QList
 
-    guiValues m_pressureVals;
-    guiValues getGuiValsPres() const;
+    guiValsPres m_pressureVals;
+    guiValsPres getGuiValsPres() const;
+    guiValsTemp m_tempVals;
+    guiValsTemp getGuiValsTemp() const;
     // filters
+
 
     CustomPlotItem* m_mainPlot;
 

@@ -19,13 +19,18 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     dataSource(),
     // valveModel(), // replace
     // dataModel(), // replace
-    m_safeModule() // check
+    m_safeModule(), // check
+    softTimer(new QTimer)
 {
     initDigitalData();
     initAnalogData();
     advDoController();
     advAiController();
     initGUI();
+    connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
+    softTimer->setInterval(1000);
+    softTimer->start();
+    dataSource.startAcquisition();
 }
 
 Grams::~Grams(){
@@ -57,12 +62,12 @@ void Grams::initDigitalData(){
     timeAnalog.m_name = "Time";
 
     QVector<double> indexData;
-    for(int i = 0; i < 512; ++i) {
+    for(int i = 0; i < 512; ++i) { //m_sectionLength
         indexData << i;
     }
     timeFilter.setData(indexData);
     for(int j = 0; j < 8; j++){
-        filtersData[j].setData(QVector<double>(512,0.0));
+        filtersData[j].setData(QVector<double>(512,0.0)); //m_sectionLength
     }
 }
 
@@ -82,7 +87,8 @@ void Grams::initAnalogData(){
         tempSensorsList[i]->setCoeffs(1.0, 0.0);
     }
 
-    m_pressureVals = guiValues{0,0,0,0,0,0,0,0};
+    m_pressureVals = guiValsPres{0,0,0,0,0,0,0,0};
+    m_tempVals = guiValsTemp{0,0,0,0,0,0,0,0};
 }
 
 void Grams::advDoController(){
@@ -151,17 +157,10 @@ void Grams::initGUI(){
     qmlRegisterSingletonInstance("Grams.dataSourceSingleton", 1, 0, "DataSource", &dataSource);
     
     m_engine.rootContext()->setContextProperty("initSource", &initSource); // make singleton later
-    
-    // m_engine.rootContext()->setContextProperty("dataSource", &dataSource);
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     // m_engine.rootContext()->setContextProperty("_valveModel", &valveModel);
     // m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
-
     m_engine.rootContext()->setContextProperty("safeModule", &m_safeModule);
-
-    // create somewhere filterview
-    // m_engine.rootContext()->setContextProperty("filterView", dataSource.getFilterView()); // initialize here and pass to dataSource
-    // m_engine.rootContext()->setContextProperty("backend", this); // make singleton later
     qmlRegisterSingletonInstance("Grams.backendSourceSingleton", 1, 0, "Grams", this);
 
     m_engine.load(url);
@@ -178,7 +177,7 @@ void Grams::getCustomPlotPtr(CustomPlotItem* customPlotPointer){
     // connect(&analogController, &IcpAICtrl::valueChanged, m_testAxisTag, &CustomPlotItem::dataUpdated);
 }
 
-void Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
+int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
     switch(m_filterPlots.count()){
         case 0:
         {
@@ -194,6 +193,7 @@ void Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
             break;
     }
     m_filterPlots << filterPlotPointer;
+    return m_filterPlots.count() - 1;
 }
 
 void Grams::guiValsUpdate(){
@@ -206,10 +206,19 @@ void Grams::guiValsUpdate(){
     m_pressureVals.g_tmSK = tmSK.getCurValue();
     m_pressureVals.g_tmS = tmS.getCurValue();
     emit guiValsPresChanged();
+    m_tempVals.g_tmX = tmX.getCurValue();
+    m_tempVals.g_tmY = tmY.getCurValue();
+    m_tempVals.g_tmSLittle = tmSLittle.getCurValue();
+    m_tempVals.g_tmSSmall = tmSSmall.getCurValue();
+    m_tempVals.g_tmSLarge = tmSLarge.getCurValue();
+    m_tempVals.g_tmSTube = tmSTube.getCurValue();
+    m_tempVals.g_tmRTube = tmRTube.getCurValue();
+    m_tempVals.g_tmF = tmF.getCurValue();
+    emit guiValsTempChanged();
 }
 
 void Grams::manuallyReadAll(){
-    dataSource.processEvents();
+    dataSource.processManual();
     m_testPlot->dataUpdated();
     m_filterPlots[0]->dataSetUpdated();
     guiValsUpdate();
@@ -226,24 +235,11 @@ void Grams::manuallyReadAll(){
 // }
 
 void Grams::softEvent(){
-
-    //for now only reading event
-    readingEvent(false);
-
+    guiValsUpdate();
+    // m_testPlot->dataUpdated();
+    // m_filterPlots[0]->dataSetUpdated();
+    // additional checks
 }
-
-void Grams::readingEvent(bool valveCheck){
-    if(dataSource.getGRAMsIntegrity())
-        dataSource.processEvents();
-    
-    dataSource.processEvents("pressure");
-
-    // dataModel.appendData(dataSource.getMeasures()); // don't like it
-    
-    // if(valveCheck)
-    //     valveModel.appendData(dataSource.getValves()); // always valve check? why
-}
-
 // void Grams::setValveState(const QString &name, const bool &state){ // should be filtered
 //     // find a way for force valve set (as SU)
 //     if(!dataSource.getGRAMsIntegrity())
@@ -258,8 +254,12 @@ void Grams::readingEvent(bool valveCheck){
 //     readingEvent(true);
 // }
 
-guiValues Grams::getGuiValsPres() const{
+guiValsPres Grams::getGuiValsPres() const{
     return m_pressureVals;
+}
+
+guiValsTemp Grams::getGuiValsTemp() const{
+    return m_tempVals;
 }
 
 bool Grams::getVAR1State() const{

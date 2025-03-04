@@ -16,10 +16,12 @@ public:
     AdvantechCtrl(QObject *parent = nullptr);
     virtual ~AdvantechCtrl();
     virtual void Initialization();
-    virtual void readData(); 
+    virtual void readData();
+    bool isConnected() const;
 protected:
     QString m_name;
     // set Info override?
+    bool connected;
 };
 
 class AdvantechAI : public AdvantechCtrl
@@ -70,10 +72,10 @@ public:
     const QVector<double> getXhatS(uint8_t channelN);
     const QVector<double> getXhatT(uint8_t channelN);
     const QVector<double> getOriginalData(uint8_t channelN);
-    const QVector<qreal> getTimeBuffer();
     static void BDAQCALL OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *userParam);
 
     void setVolageFilter(uint8_t channelN, const FilterMatrix &parameters);
+    
 //Q_SIGNALS:
 public slots:
     //void settingAccepted();

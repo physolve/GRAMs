@@ -22,10 +22,11 @@ public:
     void initDaqDO(const daqParameters &parameterDO); 
     void initDaqAIpres(const daqParameters &parameterAIpres);
     void initDaqAItemp(const daqParameters &parameterAItemp);
-    void processEvents(); // weirdly written
-    void processEvents(QString purpose); // ?
 
-    // QMap<QString,QVector<double>> getMeasures();
+    void processManual();
+    void startAcquisition();
+    void stopAcquisition();
+
     bool getGRAMsIntegrity();
 
     void setValvePointers(Valve ptr[], int valvesCnt);
@@ -35,18 +36,17 @@ public:
     void setTempPointers(ControllerData ptr[], int tempCnt);
     void setFiltersDataPointers(FilterData ptr[], int filtersCnt);
     
-    Q_INVOKABLE void turnOnFilterTimer(bool s);
-    Q_INVOKABLE void setNewFilter();
-
+    Q_INVOKABLE void updateFilter(int chartIndex); // move to DataAcquisition
 private slots:
-    void filterEvent();
+    void processEvents();
+
 private:
     // QMap<QString, QSharedPointer<AdvantechCtrl>> m_controllerList; // for read
     QMap<QString, ControllerConnection> GRAMsIntegrity;
     QElapsedTimer m_elapsedTimer;
     
     ControllerData* m_time;
-    QTimer* fastFilter;
+    QTimer* m_acquisitionTimer;
     
     AdvantechDO reqValveDO;
     // valve pointers

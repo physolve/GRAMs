@@ -158,14 +158,14 @@ Item {
             id: s_SH
             x: 479
             y: 242
-            value: Grams.guiValsPres.prSH
+            value: Grams.guiPres.prSH
         }
 
         SensorWidget {
             id: s_SA
             x: 592
             y: 147
-            value: Grams.guiValsPres.prSA
+            value: Grams.guiPres.prSA
         }
         SensorWidget {
             id: s_SBS
@@ -186,45 +186,47 @@ Item {
             id: s_SHM
             x: 716
             y: 145
-            value: Grams.guiValsPres.prSK
+            value: Grams.guiPres.prSK
         }
 
         TempWidget {
             id: t_ST
             x: 545
             y: 417
-            value: Grams.guiValsPres.tmS
+            value: Grams.guiPres.tmS // or Grams.guiTemp.tmSTube
         }
 
         SensorWidget {
             id: s_RH
             x: 890
             y: 241
-            value: Grams.guiValsPres.prRH
+            value: Grams.guiPres.prRH
         }
 
         SensorWidget {
             id: s_RA
             x: 969
             y: 147
-            value: Grams.guiValsPres.prRA
+            value: Grams.guiPres.prRA
         }
 
         SensorWidget {
             id: s_RL
             x: 1070
             y: 147
-            value: Grams.guiValsPres.prRL
+            value: Grams.guiPres.prRL
         }
         TempWidget {
             id: t_RT
             x: 943
             y: 417
+            value: Grams.guiTemp.tmRTube
         }
         TempWidget {
             id: t_RC
             x: 1195
             y: 409
+            value: Grams.guiTemp.tmF
         }
 
         SensorWidget {

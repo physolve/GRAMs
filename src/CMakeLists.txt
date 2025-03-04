@@ -51,16 +51,28 @@ add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
 qt6_add_executable(${EXECUTABLE_NAME} ${HEADERS} ${SOURCES} 
 ${CPP_CONTROLLERS} ${HPP_CONTROLLERS}
 ${CPP_LIBS} ${HPP_LIBS} ${QML_RESOURCES})
-
-target_link_libraries(${EXECUTABLE_NAME}
+if (WIN32)
+    target_link_libraries(${EXECUTABLE_NAME}
+        PRIVATE Qt6::Core
+                Qt6::Quick
+                Qt6::QuickControls2
+                Qt6::Charts
+                Qt6::PrintSupport
+                Qt6::SerialPort
+                Qt6::OpenGL
+                # biodaq
+                opengl32
+        Eigen3::Eigen
+    )
+else()
+    target_link_libraries(${EXECUTABLE_NAME}
     PRIVATE Qt6::Core
-            Qt6::Qml
             Qt6::Quick
             Qt6::QuickControls2
             Qt6::Charts
             Qt6::PrintSupport
+            Qt6::SerialPort
             Qt6::OpenGL
-            # biodaq
-            opengl32
-    Eigen3::Eigen
-)
+            biodaq
+    )
+endif()

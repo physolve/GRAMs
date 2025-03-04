@@ -16,8 +16,9 @@ class FilterView : public QObject
 public:
     explicit FilterView(QObject *parent  = nullptr);
     ~FilterView();
-    void setFilterSize(int channelCount);
-    // Q_INVOKABLE QSharedPointer<Sensor> getChannelSensor(int channel, QString a);
+    void readKalman();
+    void parseKalman();
+
     Q_INVOKABLE void startAppend(bool state);
     // function to update values somewhere
     // function to link Kalman parameters with View
@@ -43,6 +44,7 @@ public:
     QList<double> uiP() const;
 
     FilterMatrix getNewFilterParameters() const;
+    FilterMatrix getJsonMatrix() const;
 signals:
     void changeFilterMatrix();
 
@@ -65,6 +67,8 @@ private:
     // QList<QSharedPointer<Sensor>> m_channelsXhatT; // change to pointer of object from parent
     QList<FilterData*> m_channelsXhatT;
 
+    QString kalmanProfile;
+
     QList<double> ui_mA;
     QList<double> ui_mC;
     QList<double> ui_mQ;
@@ -72,4 +76,7 @@ private:
     QList<double> ui_mP;
     bool safeCheck;
     bool appendCheck;
+
+    // make it 8
+    FilterMatrix jsonMatrix;
 };
