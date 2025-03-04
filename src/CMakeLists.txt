@@ -60,5 +60,7 @@ target_link_libraries(${EXECUTABLE_NAME}
             Qt6::Charts
             Qt6::PrintSupport
             Qt6::OpenGL
-            biodaq
+            # biodaq
+            opengl32
+    Eigen3::Eigen
 )

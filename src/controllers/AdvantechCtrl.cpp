@@ -48,7 +48,7 @@ void AdvantechAI::Initialization()
 	int channelCount = (instantAiCtrl->getChannelCount() < 16) ? 
 		instantAiCtrl->getChannelCount() : 16;
 
-	int logicChannelCount = instantAiCtrl->getChannelCount(); // ?
+	int logicChannelCount = 0;//instantAiCtrl->getChannelCount(); // ?
 
 	m_info.setChannelStart(logicChannelCount); // ?
 
@@ -73,9 +73,9 @@ const AdvAIType& AdvantechAI::getInfo() const{
 	return m_info;
 }
 
-void AdvantechAI::ConfigureDeviceTest(){ // after accept
+void AdvantechAI::ConfigureDeviceTemp(){ // after accept
 
-	if (m_instantAiCtrl==NULL)
+	if (!m_instantAiCtrl)
 	{
       m_instantAiCtrl = InstantAiCtrl::Create();
 	}
@@ -108,6 +108,8 @@ void AdvantechAI::ConfigureDeviceTest(){ // after accept
 
 	qDebug() << "INFO COUNT " << channels->getCount();
 	resizeDataVector(m_info.channelCount()); // ?
+
+	readData();
 }
 
 void AdvantechAI::resizeDataVector(uint8_t size){
@@ -290,7 +292,7 @@ void AdvantechBuff::OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *use
 		remainingCount -= returnedCount;
 		uParam->setVoltageToFilter(kalmanBuffer);
 	} while (remainingCount > 0); //Usually get full bufSize of data (m_sectionLength * m_channelCount)
-	uParam->doFilter();
+	uParam->doFilter(); //?
 }
 
 void AdvantechBuff::setVoltageToFilter(const QVector<double> &voltageBuffer){
@@ -306,7 +308,7 @@ void AdvantechBuff::doFilter(){
 	// pass to FilterView
 	// update data in
 	for(int i = 0; i < m_voltageFilters.count(); i++){ // m_info.channelCount()
-		auto allVoltage = m_voltageFilters[i].getFilteredVoltage(false);
+		const auto &allVoltage = m_voltageFilters[i].getFilteredVoltage(false);
 		// qDebug() << allVoltage;
 		m_vector[i] = allVoltage.last();
 	}

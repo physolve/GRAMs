@@ -74,6 +74,7 @@ QVariant ValveModel::data(const QModelIndex &index, int role) const
     //     return QVariant::fromValue(valve.m_state);
     // else
     //     return QVariant();
+    return QVariant();
 }
 
 //--> slide

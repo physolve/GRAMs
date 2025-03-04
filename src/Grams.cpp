@@ -74,7 +74,7 @@ void Grams::initAnalogData(){
     for(int i = 0; i < 8; ++i){
         const auto& pressureSensor = pressureSensors[i];
         pressureSensorsList[i]->m_name = pressureSensor.m_sensorName;
-        pressureSensorsList[i]->setCoeffs(pressureSensor.m_A*1000.0/pressureSensor.m_R, pressureSensor.m_B);
+        pressureSensorsList[i]->setCoeffs(pressureSensor.m_A/pressureSensor.m_R*1000.0, pressureSensor.m_B); //*1000.0 fix profile later
     }
     const auto& tempSensors = initSource.getTempSensors();
     for(int i = 0; i < 8; ++i){
@@ -210,6 +210,9 @@ void Grams::guiValsUpdate(){
 
 void Grams::manuallyReadAll(){
     dataSource.processEvents();
+    m_testPlot->dataUpdated();
+    m_filterPlots[0]->dataSetUpdated();
+    guiValsUpdate();
 }
 
 // void Grams::initializeReading(){

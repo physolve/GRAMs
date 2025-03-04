@@ -31,7 +31,7 @@ public:
     void setInfo(const AdvAIType &info);
     void Initialization() ; //override
     void initialInfo();
-    void ConfigureDeviceTest(); // rename TEST
+    void ConfigureDeviceTemp(); 
 	void CheckError(ErrorCode errorCode);
     const AdvAIType& getInfo() const; // move to base class
     void resizeDataVector(uint8_t size);

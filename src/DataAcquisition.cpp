@@ -112,6 +112,7 @@ void DataAcquisition::initDaqAItemp(const daqParameters &parameter){
     a.setDefaultType(parameter.m_defaultType);
     reqTempAI.setInfo(a);
     reqTempAI.Initialization();
+    reqTempAI.ConfigureDeviceTemp();
     // if ok
     // without filters
     const auto &readData = reqTempAI.getData();
@@ -173,6 +174,8 @@ void DataAcquisition::processEvents(){ // rewrite as each one read
         qDebug() << "Reading disabled";
         return;
     }
+    reqSensorAI.readData();
+    reqTempAI.readData();
     m_time->addValue(m_elapsedTimer.elapsed()/1000.0);
     
     const auto &readDataPres = reqSensorAI.getData();
