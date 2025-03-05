@@ -5,31 +5,23 @@
 class ValveGraph{
 public:
     ValveGraph(const QString &selfName = "unknown");
-    void addEachInList(const QStringList &nodeValveList);
+
+    bool isExclusion() const;
+    void addEachInList(const QStringList &exclusionValveList);
     void addRuleOfThree(const QString &threeNodeOne,const QString &threeNodeTwo);
-    
     bool applyGraphMask(const QMap<QString, bool> &valveMap);
-    
     QString m_selfName;
+
 private:
-    bool checkEachInList = false;
-    QStringList nodeValves;
-    bool maskEachInList(const QMap<QString, bool> &valveMap){
-        for(auto nodeValve : nodeValves){
-            if(valveMap[nodeValve]){
-                return false;
-            }
-        }
-        return true;
-    }
-    bool checkRuleOfThree = false;
+    bool maskEachInList(const QMap<QString, bool> &valveMap) const;
+    bool maskRuleOfThree(const QMap<QString, bool> &valveMap) const;
+
+    bool checkEachInList;
+    QStringList exclusionValves;
+
+    bool checkRuleOfThree;
     QString m_threeNodeOne;
     QString m_threeNodeTwo;
-    bool maskRuleOfThree(const QMap<QString, bool> &valveMap){
-        if(valveMap[m_threeNodeOne]&&valveMap[m_threeNodeTwo])
-            return false;
-        return true;
-    }
 };
 
 struct ValveToRangePressure{
@@ -37,38 +29,70 @@ struct ValveToRangePressure{
     QString m_watchQuartile;
     double m_pressureOpen;
     double m_pressureClose;
-    bool applyPressureMask(bool state, double currentPressure, double incomingPressure);
+    // currentPressure - step, incoming - two step
+    bool applyPressureMask(bool currentState, double incomingPressure) const;
 };
 
 struct ValveToSafeRelease{
     QString m_selfName;
     QString m_watchQuartile;
-    double m_pressureOpen;
-    bool applyPressureMask(bool state, double currentPressure);
+    double m_gasMax;
+    bool applyPressureMask(double currentPressure) const;
 };
 
+struct ReactionToSupply{
+    // this could be Supply or Leakage valves
+    // start with Leakage
+    QString m_selfName;
+    ValveToRangePressure m_rangePressure;
+    ValveToSafeRelease m_safeRelease;
+    bool applyPressureMask(bool &rangePressureState, double &safeReleaseState, double incomingPressure) const;
+};
+struct ReactionToLeakage{
+    // kind of three step check
+    QString m_selfName;
+    ValveToRangePressure m_rangePressure;
+    double gasMax; // from profile
+    double chamberMax; // chamber object
+    bool applyPressureMask(bool &rangePressureState, double incomingPressure) const;
+};
 
 class Security : public QObject
 {
     Q_OBJECT
 public:
-    Security(QObject *parent = 0);
-    Q_INVOKABLE void setContradictionValves(const QVariantMap &contradictionValves, const QVariantList &ruleOfThreeList);
-    Q_INVOKABLE void setRangePressureValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen, const double &pressureClose);
-    Q_INVOKABLE void setSafeReleaseValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen);
-    bool checkValveAction(const QMap<QString, bool> &valveMap, const QString &sender, const bool &state);
-    QMap<QString, bool> checkValvePressure(const QMap<QString, bool> &valveMap, const QMap<QString, double> &pressureMap);
+    explicit Security(QObject *parent = 0); // ?
+    void constructValveMap(const QStringList &valveList);
+    void setInitialState(const QString &sender, const bool &state);
+    void setContradictionValves(const QMap<QString, QStringList> &contradictionValves);
+    void setRuleOfThreeValves(const QStringList &ruleOfThreeList);
+
+    void setGasSupplyValves(const QStringList &gasSupplyList);
+    void setGasLeakageValves(const QStringList &gasLeakageList);
+    
+    void setRangePressureValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen, const double &pressureClose);
+    void setSafeReleaseValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen);
+    
+    // void setValveMap(const QMap<QString, bool> &valveMap);
+    void setPressureMap(const QMap<QString, double> &pressureMap);
+    bool checkValveAction(const QString &sender, const bool &state);
+    QMap<QString, bool> checkValvePressure();
 
 private:
-    QMap<QString, bool> m_valveMap;
     // current states (valves)
+    QMap<QString, bool> m_valveMap;
     // current pressure
+    QMap<QString, double> m_pressureQuarMap;
     // incoming states (valves)
     // incoming pressure
+    // pressureNodes
     // filter incoming states to current states
     // filter incoming states to current/incoming pressure
     QMap<QString, ValveGraph> m_contradictionValves;
     QMap<QString, ValveToRangePressure> m_rangePressureValves;
     QMap<QString, ValveToSafeRelease> m_safeReleaseValves;
+
+    QMap<QString, ReactionToSupply> m_supplyValves;
+    QMap<QString, ReactionToLeakage> m_leakageValves;
 };
 

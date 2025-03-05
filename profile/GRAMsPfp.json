@@ -40,22 +40,22 @@
         "profileId":1,
         "stuff":{
             "valveMap":[
-                "v_k104",
-                "v_k109",
-                "v_k114",
-                "v_k118",
-                "v_k178",
-                "v_k192",
-                "v_k176",
-                "v_k179",
-                "v_k171",
-                "v_k131",
-                "v_k133",
-                "v_k135",
-                "v_k155",
-                "v_k153",
-                "v_k151",
-                "v_k173"
+                "AR1",
+                "AR2",
+                "AR3",
+                "AR4",
+                "AR5",
+                "SL2",
+                "AR6",
+                "SL1",
+                "S4",
+                "S1",
+                "S2",
+                "S3",
+                "R1",
+                "R2",
+                "R3",
+                "R4"
             ],
             "pressureSensors":[
                 { "name": "DD311", "cch": 0, "A": 3.1243,   "B": -12.494,    "R": 240},
@@ -100,45 +100,47 @@
         },
         "quartiles":{
             "addRemoveQuar":{
-                "v_gasSupply": ["v_k104", "v_k109", "v_k114"],
-                "v_gasDrain": ["v_k178", "v_k176"],
+                "v_gasSupply": ["AR1", "AR2", "AR3"],
+                "v_gasDrain": ["AR5", "AR6"],
+                "v_gasRelease": "AR4",
                 "m_vacuum": "vacuum_sensor"
             },
             "storageQuar":{
-                "v_gasStore": ["v_k131", "v_k133", "v_k135"],
-                "v_gasRelease": "v_k118",
-                "v_pressureRange": "v_k171",
+                "v_gasStore": ["S1", "S2", "S3"],
+                "v_pressureRange": "S4",
                 "s_highPressure": ["DD311", "DD341"], 
                 "s_lowPressure": "DD312",
                 "m_temperature": ["DT341", "DT314", "DT352", "DT354", "DT356"],
                 "cond_pressureRange_close": 1.8,
                 "cond_pressureRange_open": 1.6,
-                "cond_gasRelease": 12
+                "cond_gasRelease": 55
             },
             "reactionQuar":{
-                "v_gasLeakage": ["v_k155", "v_k153", "v_k151"],
-                "v_pressureRange": "v_k173",
+                "v_gasLeakage": ["R1", "R2", "R3"],
+                "v_pressureRange": "R4",
                 "s_highPressure": "DD331",
                 "s_lowPressure": ["DD332", "DD334"], 
                 "m_temperature": ["DT358", "DT359"],
                 "cond_pressureRange_close": 1.8,
                 "cond_pressureRange_open": 1.6,
-                "cond_gasRelease": 12
+                "cond_gasMax": 50,
+                "chamber_valve": "AR5"
             },
             "secondLineQuar":{
-                "v_gasDrain": "v_k179",
+                "v_gasVacuum": "SL2",
+                "v_gasOutlet": "SL1",
                 "mass_spectr": "unknown"
             }
         },
         "security": {
             "contradictionValves":{
-                "v_k104":["v_k109", "v_k114", "v_k178", "v_k118"],
-                "v_k109":["v_k104", "v_k114", "v_k178", "v_k118"],
-                "v_k114":["v_k104", "v_k109", "v_k178", "v_k118"],
-                "v_k178":["v_k104", "v_k109", "v_k114", "v_k118"],
-                "v_k118":["v_k104", "v_k109", "v_k114", "v_k178"]
+                "AR1":["AR2", "AR3", "AR5", "AR4"],
+                "AR2":["AR1", "AR3", "AR5", "AR4"],
+                "AR3":["AR1", "AR2", "AR5", "AR4"],
+                "AR5":["AR1", "AR2", "AR3", "AR4"],
+                "AR4":["AR1", "AR2", "AR3", "AR5"]
             },
-            "twoOfThree": ["v_k178", "v_k179", "v_k192"],
+            "twoOfThree": ["AR5", "SL1", "SL2"],
             "safetyQuars" : {
                 "storageQuarSP": ["v_pressureRange", "storageQuar", "cond_pressureRange_close", "cond_pressureRange_open"],
                 "storageQuarSR": ["v_gasRelease", "storageQuar", "cond_gasRelease"],

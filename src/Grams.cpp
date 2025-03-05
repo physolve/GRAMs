@@ -27,6 +27,7 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     advDoController();
     advAiController();
     initGUI();
+    initSafeModule();
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
     softTimer->setInterval(1000);
     softTimer->start();
@@ -38,26 +39,26 @@ Grams::~Grams(){
 }
 
 void Grams::initDigitalData(){
-    vAR1.m_name = "Supply port 1"; // later from profile
-    vAR2.m_name = "Supply port 2";
-    vAR3.m_name = "Supply port 3";
-    vAR4.m_name = "Gas drain atm";
-    vAR5.m_name = "Gas drain barrel";
-    vAR6.m_name = "Gas drain vacuum";
+    vAR1.m_name = "AR1"; // "Supply port 1"; // later from profile
+    vAR2.m_name = "AR2"; // "Supply port 2";
+    vAR3.m_name = "AR3"; // "Supply port 3";
+    vAR4.m_name = "AR4"; // "Gas drain atm";
+    vAR5.m_name = "AR5"; // "Gas drain barrel";
+    vAR6.m_name = "AR6"; // "Gas drain vacuum";
 
-    vS1.m_name = "Little storage";
-    vS2.m_name = "Normal storage";
-    vS3.m_name = "Large storage";
-    vS4.m_name = "Pressure range storage";
+    vS1.m_name = "S1"; // "Little storage";
+    vS2.m_name = "S2"; // "Normal storage";
+    vS3.m_name = "S3"; // "Large storage";
+    vS4.m_name = "S4"; // "Pressure range storage";
 
-    vR1.m_name = "Leakage slow";
-    vR2.m_name = "Leakage fast";
-    vR3.m_name = "Leakage tube";
-    vR4.m_name = "Pressure range reaction";
-    vR5.m_name = "Chamber manual valve";
+    vR1.m_name = "R1"; // "Leakage slow";
+    vR2.m_name = "R2"; // "Leakage fast";
+    vR3.m_name = "R3"; // "Leakage tube";
+    vR4.m_name = "R4"; // "Pressure range reaction";
+    vR5.m_name = "R5"; // "Chamber manual valve";
 
-    vSL1.m_name = "Second line outlet";
-    vSL2.m_name = "Second line barrel";
+    vSL1.m_name = "SL1"; // "Second line outlet";
+    vSL2.m_name = "SL2"; // "Second line barrel";
 
     timeAnalog.m_name = "Time";
 
@@ -130,12 +131,12 @@ void Grams::advAiController(){
 void Grams::setValveState(bool state, int index){
     // signal from GUI to change state of object
     Valve *valveList[16] = {&vAR1, &vAR2, &vAR3, &vAR4, &vAR5, &vSL2, &vAR6, &vSL1, &vS4, &vS1, &vS2, &vS3, &vR1, &vR2, &vR3, &vR4};
+    Valve *valve = valveList[index];
     const bool originalState = valveList[index]->getState();
-    if(true) {// securityCheck ok? || state != originalState
-        valveList[index]->setState(state);
+    bool safe_state = m_safeModule.checkValveAction(valve->m_name, state);
+    valve->setState(safe_state);
         if(!dataSource.setValveStates())
-            valveList[index]->setState(originalState);
-    }
+            valve->setState(originalState);
     emit valveChanged();
 }
 
@@ -201,6 +202,27 @@ int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
     m_filterPlots << filterPlotPointer;
     return m_filterPlots.count() - 1;
 }
+
+void Grams::initSafeModule(){
+    m_safeModule.constructValveMap(initSource.m_hardware.m_valves);
+    Valve *valveList[16] = {&vAR1, &vAR2, &vAR3, &vAR4, &vAR5, &vSL2, &vAR6, &vSL1, &vS4, &vS1, &vS2, &vS3, &vR1, &vR2, &vR3, &vR4};
+    for(int i = 0; i < 16; i++){
+        m_safeModule.setInitialState(valveList[i]->m_name, valveList[i]->getState());
+    }
+    m_safeModule.setContradictionValves(initSource.m_security.m_contradictionValves);
+    m_safeModule.setRuleOfThreeValves(initSource.m_security.m_twoOfThree);
+
+    m_safeModule.setRangePressureValves(initSource.m_storageQuar.m_pressureRangeValve,"storageQuar",
+        initSource.m_storageQuar.m_pressureRange_open,initSource.m_storageQuar.m_pressureRange_close);
+    m_safeModule.setRangePressureValves(initSource.m_reactionQuar.m_pressureRangeValve,"reactionQuar",
+        initSource.m_reactionQuar.m_pressureRange_open,initSource.m_reactionQuar.m_pressureRange_close);
+    m_safeModule.setSafeReleaseValves(initSource.m_storageQuar.m_gasReleaseValve, "storageQuar", 
+        initSource.m_storageQuar.m_gasRelease);
+    
+        m_safeModule.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
+    m_safeModule.setGasLeakageValves(initSource.m_reactionQuar.m_gasLeakageValves);
+}
+
 
 void Grams::guiValsUpdate(){
     m_pressureVals.g_prSH = prSH.getCurValue();

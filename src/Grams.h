@@ -105,6 +105,8 @@ private:
     void advDoController();
     void advAiController();
     void initGUI();
+    void initSafeModule();
+
     void guiValsUpdate();
 
     Initialize initSource;
@@ -115,7 +117,7 @@ private:
     // MyModel dataModel;
     Security m_safeModule; // naming?
 
-    // those are required
+    // those are required GRAM50
     Valve vAR1; // 0 k104
     Valve vAR2; // 1 k109
     Valve vAR3; // 2 k114
@@ -131,7 +133,7 @@ private:
     Valve vR1;  // 12 k155
     Valve vR2;  // 13 k153
     Valve vR3;  // 14 k151
-    Valve vR4;  // 15 k173
+    Valve vR4;  // 15 k173 
     Valve vR5; // chamber manual (config)
 
     bool getVAR1State() const;

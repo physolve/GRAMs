@@ -5,7 +5,7 @@ import Grams.backendSourceSingleton 1.0
 import Grams.dataSourceSingleton 1.0
 
 Window {
-    // width: 700
+    id: root
     color: "#2B2B2B"
     Item {
         id: chartItem
@@ -19,6 +19,7 @@ Window {
             Component.onCompleted: {
                 // get index from getFilterPlotPtr
                 chartItem.chartIndex = Grams.getFilterPlotPtr(getCustomPlot())
+                root.title = "FilterChart " + chartItem.chartIndex 
             }
         }
         Button{

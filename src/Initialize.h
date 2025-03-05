@@ -146,6 +146,12 @@ public:
     QStringList getTempSensors() const;
 
 
+    hardwareParameters              m_hardware; // need m_valves and m_twoOfThree
+    securityParameters              m_security; // need m_contradictionValves
+    addRemoveQuarParameters         m_addRemoveQuar; // need m_gasSupplyValves
+    reactionQuarParameters          m_reactionQuar; // need m_gasLeakageValves and to ValveToRangePressure
+    storageQuarParameters           m_storageQuar; // need to ValveToRangePressure
+
     bool isInitializeOk() const;
 signals:
     void advantechDeviceMapChanged();
@@ -175,13 +181,8 @@ private:
     void fillReactionQuar(const QJsonObject &reactionQuarObject);
     void fillSecondLineQuar(const QJsonObject &secondLineQuarObject);
 
-    hardwareParameters              m_hardware;
+    
     QList<daqParameters>            m_daq;
-    addRemoveQuarParameters         m_addRemoveQuar;
-    storageQuarParameters           m_storageQuar;
-    reactionQuarParameters          m_reactionQuar;
     secondLineQuarParameters        m_secondLineQuar;
-    securityParameters              m_security;
-
     bool initializeOk;
 };

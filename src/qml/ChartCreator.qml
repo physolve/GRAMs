@@ -68,7 +68,6 @@ Item {
 
     ChartFilter{
         id: filterWindow
-        title: "FilterChart"
         onClosing: {
             filterWindow.flags = Qt.FramelessWindowHint
             filterWindow.hide()
@@ -83,7 +82,6 @@ Item {
     }
     ChartFilter{
         id: filterWindow1
-        title: "FilterChart1"
         onClosing: {
             filterWindow1.flags = Qt.FramelessWindowHint
             filterWindow1.hide()
