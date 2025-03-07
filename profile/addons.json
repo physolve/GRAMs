@@ -1,0 +1,28 @@
+{
+    "addRemoveQuar": {
+        "volume": 0,
+        "supplySpeed": 1,
+        "drainSpeed": 1,
+        "flowCoefficient": [0,0.04,0.01],
+        "inletPressure": [0,50,10]
+    },
+    "storageQuar": {
+        "volume": {
+            "B": 55,
+            "C1": 11,
+            "C2": 51,
+            "C3": 301,
+            "D1": 11
+        }
+    },
+    "reactionQuar":{
+        "volume": {
+            "E": 26,
+            "D2": 13
+        },
+        "chamber": "empty"
+    },
+    "secondLineQuar":{
+        "volume": 0
+    }
+}

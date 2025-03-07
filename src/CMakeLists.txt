@@ -35,6 +35,15 @@ if(NOT DEFINED CPP_LIBS)
     file(GLOB CPP_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/lib/*.cpp)
 endif()
 
+if(NOT DEFINED HPP_ADDON)
+    file(GLOB HPP_ADDON ${CMAKE_CURRENT_SOURCE_DIR}/addon/*.h)
+endif()
+
+if(NOT DEFINED CPP_ADDON)
+    file(GLOB CPP_ADDON ${CMAKE_CURRENT_SOURCE_DIR}/addon/*.cpp)
+endif()
+
+
 if (LINUX)            
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libDAQ)
 endif (LINUX)
@@ -50,7 +59,9 @@ add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
 
 qt6_add_executable(${EXECUTABLE_NAME} ${HEADERS} ${SOURCES} 
 ${CPP_CONTROLLERS} ${HPP_CONTROLLERS}
-${CPP_LIBS} ${HPP_LIBS} ${QML_RESOURCES})
+${CPP_LIBS} ${HPP_LIBS} 
+${CPP_ADDON} ${HPP_ADDON}
+${QML_RESOURCES})
 if (WIN32)
     target_link_libraries(${EXECUTABLE_NAME}
         PRIVATE Qt6::Core

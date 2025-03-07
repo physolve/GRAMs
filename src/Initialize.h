@@ -180,7 +180,6 @@ private:
     void fillStorageQuar(const QJsonObject &storageQuarObject);
     void fillReactionQuar(const QJsonObject &reactionQuarObject);
     void fillSecondLineQuar(const QJsonObject &secondLineQuarObject);
-
     
     QList<daqParameters>            m_daq;
     secondLineQuarParameters        m_secondLineQuar;

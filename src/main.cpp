@@ -57,7 +57,6 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationDomain(QStringLiteral("tpu.ru"));
     // pass to settings application
     // qputenv("QT_FONT_DPI", QByteArray("128")); //96/128 set for High DPI screen
-    qputenv("QT_ENABLE_HIGHDPI_SCALING", QByteArray("0"));
 
     const auto &curInitProfile = QString("GRAM50");
 

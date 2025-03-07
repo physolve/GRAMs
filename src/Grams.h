@@ -9,7 +9,7 @@
 #include "Initialize.h"
 #include "Security.h"
 #include "DataCollection.h"
-
+#include "addon/Quartile.h"
 #include "CustomPlotItem.h"
 
 struct guiValsPres{ // sample
@@ -176,18 +176,21 @@ private:
 
     CustomPlotItem* m_testPlot;
     // make it QList
-
     guiValsPres m_pressureVals;
     guiValsPres getGuiValsPres() const;
     guiValsTemp m_tempVals;
     guiValsTemp getGuiValsTemp() const;
+    
     // filters
-
-
     CustomPlotItem* m_mainPlot;
-
     QList<CustomPlotItem*> m_filterPlots;
     FilterData timeFilter;
     FilterData filtersData[8];
 
+    // quartiles
+    AddRemoveQuartile m_addRemoveQuartile;
+    StorageQuartile m_storageQuartile;
+    ReactionQuartile m_reactionQuartile;
+    SecondLineQuartile m_secondLineQuartile;
+    
 };

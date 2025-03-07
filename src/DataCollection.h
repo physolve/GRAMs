@@ -41,6 +41,13 @@ public:
     void setData(const QVector<double> &y);
 };
 
+class NodeData : public DataCollection
+{
+public:
+    NodeData(const QString &name = "unknown");
+    virtual ~NodeData();
+};
+
 // class Sensor //: public QObject
 // {
 //     //Q_OBJECT
