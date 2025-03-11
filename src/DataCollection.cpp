@@ -46,6 +46,14 @@ void ControllerData::setCoeffs(const double& A, const double& B){
     lin_B = B;
 }
 
+double ControllerData::getLin_A() const{
+    return lin_A;
+}
+
+double ControllerData::getLin_B() const{
+    return lin_B;
+}
+
 void ControllerData::addValue(const double &val_y){
     const auto& val = lin_A*val_y + lin_B;
     addPoint(val);
@@ -69,6 +77,30 @@ FilterData::~FilterData(){
 
 void FilterData::setData(const QVector<double> &y){
     m_y = y;
+}
+
+void FilterData::addData(const QVector<double> &y){
+    m_y = y;
+    cumulativeData << m_y;
+    cumulativeCount++;
+}
+
+QVector<double> FilterData::getCumulativeData() const{
+    return cumulativeData;
+}
+
+void FilterData::clearCumulative(){
+    cumulativeData.clear();
+    cumulativeCount = 0;
+}
+
+QuartileData::QuartileData(const QString &name) : DataCollection(name)
+{
+
+}
+
+QuartileData::~QuartileData(){
+    qDebug() << "QuartileData destructor";
 }
 
 // Sensor::Sensor(const QString &name, const QMap<QString,double> &parameters)://, QObject *parent) : QObject(parent),

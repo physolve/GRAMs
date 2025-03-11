@@ -28,6 +28,8 @@ public:
     void setCoeffs(const double& A, const double& B);
     void addValue(const double &val_y);
     void addValue(const double &val_y, const double &minimalValue);
+    double getLin_A() const;
+    double getLin_B() const;
 private:
     double lin_A;
     double lin_B;
@@ -39,6 +41,18 @@ public:
     FilterData(const QString &name = "unknown");
     virtual ~FilterData();
     void setData(const QVector<double> &y);
+    void addData(const QVector<double> &y);
+    QVector<double> getCumulativeData() const;
+    void clearCumulative();
+private:
+    QVector<double> cumulativeData;
+    int cumulativeCount{0};
+};
+
+class QuartileData : public DataCollection{
+public:
+    QuartileData(const QString &name = "unknown");
+    virtual ~QuartileData();
 };
 
 class NodeData : public DataCollection

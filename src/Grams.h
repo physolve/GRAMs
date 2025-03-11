@@ -11,6 +11,8 @@
 #include "DataCollection.h"
 #include "addon/Quartile.h"
 #include "CustomPlotItem.h"
+#include "addon/LightPlotItem.h"
+
 
 struct guiValsPres{ // sample
     Q_GADGET
@@ -189,8 +191,11 @@ private:
 
     // quartiles
     AddRemoveQuartile m_addRemoveQuartile;
+    FilterData m_supplyPressureHigh;
+    FilterData m_supplyPressureLow;
     StorageQuartile m_storageQuartile;
+    QuartileData prSQ;
     ReactionQuartile m_reactionQuartile;
-    SecondLineQuartile m_secondLineQuartile;
-    
+    QuartileData prRQ;
+    SecondLineQuartile m_secondLineQuartile; 
 };

@@ -4,7 +4,8 @@
 #include <QMap>
 #include "../DataCollection.h"
 #include "NodePressure.h"
-
+#include "SupplyPort.h"
+#include "LightPlotItem.h"
 // Quartile object is used to store parameters from one of four volumes
 class Quartile : public QObject
 {
@@ -19,7 +20,7 @@ public:
     virtual void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB);
     void updatePressureNodes();
     // pressure sensor pointers
-    protected:
+protected:
     double m_volume;
     QMap<QString, VolumeObject> m_volumeObjects;
     // pressure sensor pointers
@@ -39,9 +40,22 @@ class AddRemoveQuartile : public Quartile
 public:
     explicit AddRemoveQuartile(QObject *parent = nullptr);
     virtual ~AddRemoveQuartile();
+    void setSupplyPressurePtr(FilterData* high, FilterData* low);
+    Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
+    void startSupplyMeasure(int currentSupplyPort);
+    void fillSupplyPortData();
+    void stopSupplyMeasure();
 private:
-    double m_supplySpeed;
+    double m_supplySpeed; // current
     double m_drainSpeed;
+    int m_currentSupplyPort;
+    SupplyPort m_supplyPort[3]; // settings different but process only one!
+    // custom plot graph local
+    FilterData* m_supplyPressureHigh;
+    FilterData* m_supplyPressureLow;
+    FilterData pseudo_time;
+    QList<LightPlotItem*> m_supplyPressurePlots;
+    // quartile pressure from StorageQuartile 
 };
 
 class StorageQuartile : public Quartile
@@ -55,6 +69,9 @@ public:
 private:
     // additional volumes not objects
     // active volume
+    QuartileData* pressureStorageQuartile;
+    // temperature
+    // moles
 };
 
 class ReactionQuartile : public Quartile

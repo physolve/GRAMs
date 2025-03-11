@@ -89,7 +89,7 @@ private:
     void doFilter();
     
     AdvAIType m_info;
-    const int m_sectionLength = 512;
+    const int m_sectionLength = 512; // move to namespace
     ValueRange m_valueRange;
     WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class
     QVector<double> m_vector; // should be list of values 

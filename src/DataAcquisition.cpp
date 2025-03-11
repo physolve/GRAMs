@@ -110,6 +110,27 @@ void DataAcquisition::updateFilter(int chartIndex){
     // filterView.safeCheckOn();
 }
 
+void DataAcquisition::fillSupplyARQ(){
+    QVector<double> filteredReal;
+    int index = 0;
+    const auto& filteredVoltage_high = reqSensorAI.getBufferedData(index);
+    const auto& lin_A_high = m_pressureSensors[index]->getLin_A();
+    const auto& lin_B_high = m_pressureSensors[index]->getLin_B();
+    for(const auto& val : filteredVoltage_high){
+        filteredReal << lin_A_high * val + lin_B_high;
+    }
+    m_supplyPressureHigh->addData(filteredReal);
+    filteredReal.clear();
+    index = 1;
+    const auto& filteredVoltage_low = reqSensorAI.getBufferedData(index);
+    const auto& lin_A_low = m_pressureSensors[index]->getLin_A();
+    const auto& lin_B_low = m_pressureSensors[index]->getLin_B();
+    for(const auto& val : filteredVoltage_low){
+        filteredReal << lin_A_low * val + lin_B_low;
+    }
+    m_supplyPressureLow->addData(filteredReal);
+}
+
 void DataAcquisition::initDaqAItemp(const daqParameters &parameter){
     AdvAIType a(parameter.fullName);
     a.setProfilePath(parameter.m_profile);

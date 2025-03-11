@@ -154,9 +154,12 @@ void Grams::initGUI(){
     Qt::QueuedConnection);
     
     qmlRegisterType<CustomPlotItem>("CustomPlot", 1, 0, "CustomPlotItem");
+    qmlRegisterType<LightPlotItem>("LightPlot", 1, 0, "LightPlotItem");
 
     qmlRegisterSingletonInstance("Grams.dataSourceSingleton", 1, 0, "DataSource", &dataSource);
-    
+
+    qmlRegisterSingletonInstance("Grams.addRemoveQuartileSingleton", 1, 0, "AddRemoveQuar", &m_addRemoveQuartile);
+
     m_engine.rootContext()->setContextProperty("initSource", &initSource); // make singleton later
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     // m_engine.rootContext()->setContextProperty("_valveModel", &valveModel);
@@ -182,13 +185,13 @@ int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
     switch(m_filterPlots.count()){
         case 0:
         {
-            DataCollection* chartPtrs[3] = {&timeFilter, &filtersData[0]};
+            DataCollection* chartPtrs[2] = {&timeFilter, &filtersData[0]};
             filterPlotPointer->setDataPointers(chartPtrs, 2);
             break;
         }
         case 1:
         {
-            DataCollection* chartPtrs[3] = {&timeFilter, &filtersData[1]};
+            DataCollection* chartPtrs[2] = {&timeFilter, &filtersData[1]};
             filterPlotPointer->setDataPointers(chartPtrs, 2);
             break;
         }

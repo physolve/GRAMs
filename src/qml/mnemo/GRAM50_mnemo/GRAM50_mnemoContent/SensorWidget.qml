@@ -19,12 +19,11 @@ Rectangle {
             height: 40
             radius: 10
             color: "#61736c"
-            //anchors.top: parent.top
-            //anchors.left: parent.left
-            // anchors.margins: 2
+            property string formVal: (sensor.value < 1e-2) ? 
+                    sensor.value.toExponential(3) : sensor.value.toFixed(3)
             Label {
                 id: label
-                text: Number(sensor.value.toPrecision(5))
+                text: parent.formVal
                 font.pixelSize: 17
                 color: "white"
                 anchors.verticalCenter: parent.verticalCenter

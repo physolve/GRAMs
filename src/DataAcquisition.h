@@ -7,6 +7,7 @@
 
 #include "DataCollection.h"
 #include "ValveModel.h"
+#include "addon/Quartile.h"
 
 enum ControllerConnection{
     Offline,
@@ -37,6 +38,9 @@ public:
     void setFiltersDataPointers(FilterData ptr[], int filtersCnt);
     
     Q_INVOKABLE void updateFilter(int chartIndex); // move to DataAcquisition
+
+    void fillSupplyARQ();
+    
 private slots:
     void processEvents();
 
@@ -68,5 +72,8 @@ private:
     FilterView filterView;
     FilterData* m_filtersData[8];
     int m_filtersDataCnt;
+
+    FilterData* m_supplyPressureHigh;
+    FilterData* m_supplyPressureLow;
     
 };

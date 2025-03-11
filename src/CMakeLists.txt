@@ -57,10 +57,10 @@ source_group("Libs Source" FILES ${CPP_LIBS})
 
 add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
 
-qt6_add_executable(${EXECUTABLE_NAME} ${HEADERS} ${SOURCES} 
-${CPP_CONTROLLERS} ${HPP_CONTROLLERS}
-${CPP_LIBS} ${HPP_LIBS} 
-${CPP_ADDON} ${HPP_ADDON}
+qt6_add_executable(${EXECUTABLE_NAME} ${SOURCES} 
+${CPP_CONTROLLERS}
+${CPP_LIBS} 
+${CPP_ADDON}
 ${QML_RESOURCES})
 if (WIN32)
     target_link_libraries(${EXECUTABLE_NAME}

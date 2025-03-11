@@ -1,82 +1,46 @@
-#include "CustomPlotItem.h"
-#include "lib/qcustomplot.h"
+#include "LightPlotItem.h"
+#include "../lib/qcustomplot.h"
 #include <QDebug>
 
-CustomPlotItem::CustomPlotItem(QQuickItem *parent)
+LightPlotItem::LightPlotItem(QQuickItem *parent)
     : QQuickPaintedItem(parent), m_CustomPlot(nullptr), rescalingON(true), lastPointKey(0) {
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
 
     connect(this, &QQuickPaintedItem::widthChanged, this,
-            &CustomPlotItem::updateCustomPlotSize);
+            &LightPlotItem::updateCustomPlotSize);
     connect(this, &QQuickPaintedItem::heightChanged, this,
-            &CustomPlotItem::updateCustomPlotSize);
+            &LightPlotItem::updateCustomPlotSize);
     qDebug() << "CustomPlotItem Created";
 }
 
-CustomPlotItem::~CustomPlotItem() {
+LightPlotItem::~LightPlotItem() {
     delete m_CustomPlot;
     m_CustomPlot = nullptr;
     qDebug() << "CustomPlotItem Destroyed";
 }
 
-CustomPlotItem* CustomPlotItem::getCustomPlot()
+LightPlotItem* LightPlotItem::getLightPlot()
 {
     return this;
 }
 
-void CustomPlotItem::initCustomPlot() {
+void LightPlotItem::initCustomPlot() {
     if(!m_CustomPlot){
         m_CustomPlot = new QCustomPlot();
         m_CustomPlot->setOpenGl(true); // it's not working without some fckn include
         updateCustomPlotSize();
-        backgroundCustomPlot();
+        QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
+        timeTicker->setTimeFormat("%h:%m:%s");
+        m_CustomPlot->xAxis->setTicker(timeTicker);
+        m_CustomPlot->axisRect()->setupFullAxesBox();
+        m_CustomPlot->yAxis->setRange(-1.2, 1.2);
+        // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
         setupPlot(m_CustomPlot); // time
     }
-    //m_CustomPlot->replot();
 }
 
-void CustomPlotItem::backgroundCustomPlot()
-{
-    m_CustomPlot->setNoAntialiasingOnDrag(true);
-    QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
-    timeTicker->setTimeFormat("%h:%m:%s");
-    m_CustomPlot->xAxis->setTicker(timeTicker);
-
-    // set some pens, brushes and backgrounds:
-    m_CustomPlot->xAxis->setBasePen(QPen(Qt::white, 1));
-    m_CustomPlot->yAxis->setBasePen(QPen(Qt::white, 1));
-    m_CustomPlot->xAxis->setTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->yAxis->setTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->xAxis->setSubTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->yAxis->setSubTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->xAxis->setTickLabelColor(Qt::white);
-    m_CustomPlot->yAxis->setTickLabelColor(Qt::white);
-    m_CustomPlot->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-    m_CustomPlot->yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-    m_CustomPlot->xAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-    m_CustomPlot->yAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-    m_CustomPlot->xAxis->grid()->setSubGridVisible(true);
-    m_CustomPlot->yAxis->grid()->setSubGridVisible(true);
-    m_CustomPlot->xAxis->grid()->setZeroLinePen(Qt::NoPen);
-    m_CustomPlot->yAxis->grid()->setZeroLinePen(Qt::NoPen);
-    m_CustomPlot->xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
-    m_CustomPlot->yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
-    QLinearGradient plotGradient;
-    plotGradient.setStart(0, 0);
-    plotGradient.setFinalStop(0, 350);
-    plotGradient.setColorAt(0, QColor(80, 80, 80));
-    plotGradient.setColorAt(1, QColor(50, 50, 50));
-    m_CustomPlot->setBackground(plotGradient);
-    QLinearGradient axisRectGradient;
-    axisRectGradient.setStart(0, 0);
-    axisRectGradient.setFinalStop(0, 350);
-    axisRectGradient.setColorAt(0, QColor(80, 80, 80));
-    axisRectGradient.setColorAt(1, QColor(30, 30, 30));
-    m_CustomPlot->axisRect()->setBackground(axisRectGradient);
-}
-
-void CustomPlotItem::setupPlot(QCustomPlot* customPlot){ // knows how many should be // realize only for one
+void LightPlotItem::setupPlot(QCustomPlot* customPlot){ // knows how many should be // realize only for one
 
     //make left and bottom axes transfer their ranges to right and top axes:
     connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange))); //?
@@ -87,11 +51,11 @@ void CustomPlotItem::setupPlot(QCustomPlot* customPlot){ // knows how many shoul
     customPlot->yAxis->setLabelColor(Qt::white);
     customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     connect(customPlot, &QCustomPlot::afterReplot, this,
-            &CustomPlotItem::onCustomReplot);
+            &LightPlotItem::onCustomReplot);
     qDebug() << QString("QCustomPlot Initialized");
 }
 
-void CustomPlotItem::setDataPointers(DataCollection** ptr, int ptrCnt){
+void LightPlotItem::setDataPointers(DataCollection** ptr, int ptrCnt){
     // not good but it works
     // m_sensors.resize(ptrCnt - 1);
     m_time = ptr[0];
@@ -100,7 +64,7 @@ void CustomPlotItem::setDataPointers(DataCollection** ptr, int ptrCnt){
     }
 }
 
-void CustomPlotItem::placeGraph(){
+void LightPlotItem::placeGraph(){
     if(m_sensors.isEmpty()){
         return;
     }
@@ -108,15 +72,14 @@ void CustomPlotItem::placeGraph(){
     for(unsigned short i = 0; auto sensor : m_sensors){
         m_CustomPlot->addGraph();
         auto pen = QPen(QColor(lineColors[i]), 1.5);
-        m_CustomPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, pen, QBrush(Qt::white), 9));
         m_CustomPlot->graph()->setPen(QPen(QColor(120, 120, 120), 2));
-        m_CustomPlot->graph()->setAdaptiveSampling(true);
+        m_CustomPlot->graph()->setAdaptiveSampling(true); //?
         m_CustomPlot->graph()->setName(sensor->m_name);
         ++i;
     }
 }
 
-void CustomPlotItem::paint(QPainter *painter) {
+void LightPlotItem::paint(QPainter *painter) {
     if (m_CustomPlot) {
         QPixmap picture(boundingRect().size().toSize());
         QCPPainter qcpPainter(&picture);
@@ -127,37 +90,37 @@ void CustomPlotItem::paint(QPainter *painter) {
     }
 }
 
-void CustomPlotItem::mousePressEvent(QMouseEvent *event) {
+void LightPlotItem::mousePressEvent(QMouseEvent *event) {
     //qDebug() << Q_FUNC_INFO;
     routeMouseEvents(event);
 }
 
-void CustomPlotItem::mouseReleaseEvent(QMouseEvent *event) {
+void LightPlotItem::mouseReleaseEvent(QMouseEvent *event) {
     //qDebug() << Q_FUNC_INFO;
     routeMouseEvents(event);
     //QQuickPaintedItem::mouseReleaseEvent(event);
 }
 
-void CustomPlotItem::mouseMoveEvent(QMouseEvent *event) {
+void LightPlotItem::mouseMoveEvent(QMouseEvent *event) {
     rescalingON = false;
     routeMouseEvents(event);
 }
 
-void CustomPlotItem::mouseDoubleClickEvent(QMouseEvent *event) {
+void LightPlotItem::mouseDoubleClickEvent(QMouseEvent *event) {
     qDebug() << Q_FUNC_INFO;
     rescalingON = true;
     routeMouseEvents(event);
 }
 
-void CustomPlotItem::wheelEvent(QWheelEvent *event) { 
+void LightPlotItem::wheelEvent(QWheelEvent *event) { 
     rescalingON = false;
     routeWheelEvents(event); 
 }
 
-void CustomPlotItem::dataUpdated(){
+void LightPlotItem::dataUpdated(){
     const auto &timePoint = m_time->getCurValue(); 
     for(unsigned short i = 0; auto* ptr : m_sensors){
-        m_CustomPlot->graph(i)->addData(timePoint, ptr->getCurValue());
+        m_CustomPlot->graph(i)->addData(m_time->getValue(), ptr->getValue());
         ++i;
     }
     if(lastPointKey < m_time->getCurValue())
@@ -173,7 +136,7 @@ void CustomPlotItem::dataUpdated(){
     m_CustomPlot->replot();
 }
 
-void CustomPlotItem::dataSetUpdated(){
+void LightPlotItem::dataSetUpdated(){
     for(unsigned short i = 0; auto* ptr : m_sensors){
         m_CustomPlot->graph(i)->setData(m_time->getValue(), ptr->getValue());
         ++i;
@@ -183,16 +146,16 @@ void CustomPlotItem::dataSetUpdated(){
     m_CustomPlot->replot();
 }
 
-void CustomPlotItem::graphClicked(QCPAbstractPlottable *plottable) {
+void LightPlotItem::graphClicked(QCPAbstractPlottable *plottable) {
     qDebug() << Q_FUNC_INFO
             << QString("Clicked on graph '%1 ").arg(plottable->name());
 }
 
-void CustomPlotItem::resetPos(){
+void LightPlotItem::resetPos(){
     rescalingON = true;
 }
 
-void CustomPlotItem::routeMouseEvents(QMouseEvent *event) {
+void LightPlotItem::routeMouseEvents(QMouseEvent *event) {
     if (m_CustomPlot) {
         QMouseEvent *newEvent =
             new QMouseEvent(event->type(), event->localPos(), event->button(),
@@ -201,7 +164,7 @@ void CustomPlotItem::routeMouseEvents(QMouseEvent *event) {
     }
 }
 
-void CustomPlotItem::routeWheelEvents(QWheelEvent *event) {
+void LightPlotItem::routeWheelEvents(QWheelEvent *event) {
     if (m_CustomPlot) {
         QWheelEvent *newEvent = new QWheelEvent(
             event->position(), event->globalPosition(), event->pixelDelta(),
@@ -210,34 +173,16 @@ void CustomPlotItem::routeWheelEvents(QWheelEvent *event) {
         QCoreApplication::postEvent(m_CustomPlot, newEvent);
         m_CustomPlot->yAxis->rescale(); //?
         m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
-        /*
-        QCPFinancialDataMap *pDataMap = m_ptrCandles->data();
-        QCPFinancialDataMap::const_iterator lower = pDataMap->lowerBound(ui->chart->xAxis->range().lower);
-        QCPFinancialDataMap::const_iterator upper = pDataMap->upperBound(ui->chart->xAxis->range().upper);
-        //TODO: error checking
-        
-        double dHigh = std::numeric_limits<double>::min();
-        double dLow = std::numeric_limits<double>::max();
-        
-        while (lower != upper)
-        {
-            if (lower.value().high > dHigh) dHigh = lower.value().high;
-            if (lower.value().low < dLow) dLow = lower.value().low;
-            lower++;
-        }
-        
-        ui->chart->yAxis->setRange(dLow*0.99, dHigh*1.01);
-        */
     }
 }
 
-void CustomPlotItem::updateCustomPlotSize() {
+void LightPlotItem::updateCustomPlotSize() {
     if (m_CustomPlot) {
         m_CustomPlot->setGeometry(0, 0, (int)width(), (int)height());
         m_CustomPlot->setViewport(QRect(0, 0, (int)width(), (int)height()));
     }
 }
 
-void CustomPlotItem::onCustomReplot() {
+void LightPlotItem::onCustomReplot() {
     update();
 }
