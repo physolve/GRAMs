@@ -26,5 +26,7 @@
         <file>qml/ChartCreator.qml</file>
         <file>qml/ChartWindow.qml</file>
         <file>qml/ChartFilter.qml</file>
+        <file>qml/SupplyAdjust.qml</file>
+        <file>qml/ExpCreator.qml</file>
     </qresource>
 </RCC>

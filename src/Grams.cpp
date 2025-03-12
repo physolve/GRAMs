@@ -26,6 +26,9 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     initAnalogData();
     advDoController();
     advAiController();
+
+    initAddRemoveQuartile();
+
     initGUI();
     initSafeModule();
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
@@ -126,6 +129,15 @@ void Grams::advAiController(){
     dataSource.initDaqAItemp(parametersAItemp);
 
     guiValsUpdate();
+}
+
+
+void Grams::initAddRemoveQuartile(){
+    m_supplyPressureHigh.m_name = "Подача газа выс.";
+    m_supplyPressureLow.m_name = "Подача газа низ.";
+    m_addRemoveQuartile.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
+    Valve* valveList[3] = {&vAR1, &vAR2, &vAR3};
+    m_addRemoveQuartile.addValvePtrs(*valveList, 3);
 }
 
 void Grams::setValveState(bool state, int index){
@@ -246,14 +258,6 @@ void Grams::guiValsUpdate(){
     m_tempVals.g_tmRTube = tmRTube.getCurValue();
     m_tempVals.g_tmF = tmF.getCurValue();
     emit guiValsTempChanged();
-}
-
-void Grams::manuallyReadAll(){
-    dataSource.processManual();
-    m_testPlot->dataUpdated();
-    m_filterPlots[0]->dataSetUpdated();
-    m_filterPlots[1]->dataSetUpdated();
-    guiValsUpdate();
 }
 
 // void Grams::initializeReading(){

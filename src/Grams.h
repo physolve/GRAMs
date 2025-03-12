@@ -92,7 +92,6 @@ public:
     Q_PROPERTY (guiValsTemp guiTemp READ getGuiValsTemp NOTIFY guiValsTempChanged) // requiredTempAI
     Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer);
     Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer);
-    Q_INVOKABLE void manuallyReadAll();
 signals:
     void valveChanged();
     void guiValsPresChanged();
@@ -108,7 +107,7 @@ private:
     void advAiController();
     void initGUI();
     void initSafeModule();
-
+    void initAddRemoveQuartile();
     void guiValsUpdate();
 
     Initialize initSource;

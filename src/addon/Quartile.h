@@ -15,6 +15,7 @@ public:
     virtual ~Quartile();
     void setVolume(double volume);
     void addVolume(const QString& name, double volume);
+    void addValvePtrs(Valve ptr[], int valvesCnt);
     void addPressurePtrs(ControllerData ptr[], int pressureCnt);
     void addTemperaturePtrs(ControllerData ptr[], int temperatureCnt);
     virtual void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB);
@@ -41,10 +42,12 @@ public:
     explicit AddRemoveQuartile(QObject *parent = nullptr);
     virtual ~AddRemoveQuartile();
     void setSupplyPressurePtr(FilterData* high, FilterData* low);
-    Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
-    void startSupplyMeasure(int currentSupplyPort);
+    
     void fillSupplyPortData();
     void stopSupplyMeasure();
+    Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
+    Q_INVOKABLE void setSupplyAdjustParameters(QVariantMap parameters);
+    Q_INVOKABLE void startSupplyMeasure();
 private:
     double m_supplySpeed; // current
     double m_drainSpeed;

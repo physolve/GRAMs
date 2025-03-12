@@ -154,21 +154,11 @@ ApplicationWindow {
                 anchors.bottom: parent.bottom
                 //width: parent.width
                 currentIndex: barMain.currentIndex
-                Item{
-                    //Layout.fillHeight: true
-                    Rectangle{
-                        id: test1
-                        width: 300; height: 150
-                        Button{
-                            anchors.centerIn: parent
-                            text: "Ручное считывание"
-                            onClicked:{
-                                Grams.manuallyReadAll()
-                            }
-                        }
-                    }
-                    
-                }   
+                ExpCreator{
+                    id: test1
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }  
                 ChartCreator{
                     id: test2
                     Layout.fillWidth: true

@@ -24,6 +24,13 @@ void Quartile::addVolume(const QString& name, double volume){
     m_volumeObjects[name] = volumeObject;
 }
 
+void Quartile::addValvePtrs(Valve ptr[], int valvesCnt){
+    for(int i = 0; i < valvesCnt; ++i){
+        m_valves << &ptr[i];
+    }
+    // m_valvesCnt = valvesCnt;
+}
+
 void Quartile::addPressurePtrs(ControllerData ptr[], int pressureCnt){
     for(int i = 0; i < pressureCnt; ++i){
         m_pressureList << &ptr[i];
@@ -41,7 +48,9 @@ void Quartile::addPressureNode(const QString& nodeName, const QString& volA, con
 }
 
 AddRemoveQuartile::AddRemoveQuartile(QObject *parent) : Quartile(parent){
-
+    for(int i{2}; i >= 0; --i){
+        m_supplyPort[i].setInitialParametersSupply(i,0,1);
+    }
 }
 AddRemoveQuartile::~AddRemoveQuartile(){
     m_supplyPressureHigh = nullptr;
@@ -77,10 +86,20 @@ int AddRemoveQuartile::getLightPlotPtr(LightPlotItem* lightPlotPointer){
     m_supplyPressurePlots << lightPlotPointer;
     return m_supplyPressurePlots.count() - 1;
 }
-void AddRemoveQuartile::startSupplyMeasure(int currentSupplyPort){
-    m_currentSupplyPort = currentSupplyPort;
 
+void AddRemoveQuartile::setSupplyAdjustParameters(QVariantMap parameters){
+    m_currentSupplyPort = 2 - parameters["supplyPort"].toInt();
+    const auto& turn = parameters["turn"].toDouble();
+    const auto& portPressure = parameters["portPressure"].toDouble();
+    m_supplyPort[m_currentSupplyPort].setInitialParametersSupply(m_currentSupplyPort, turn, portPressure);
+    qDebug() << "Begin supply with parameters:" << QString("%1 %2 %3").arg(m_currentSupplyPort).arg(turn).arg(portPressure);
 }
+
+void AddRemoveQuartile::startSupplyMeasure(){
+    qDebug() << "Current supply port state: " << m_valves[m_currentSupplyPort]->getState();
+}
+
+
 void AddRemoveQuartile::fillSupplyPortData(){
     const auto& time = pseudo_time.getCurValue();
     QVector<double> indexTime;
