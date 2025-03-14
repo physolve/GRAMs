@@ -168,7 +168,7 @@ void DataAcquisition::processEvents(){
     m_time->addValue(m_elapsedTimer.elapsed()/1000.0);  
     const auto &readDataPres = reqSensorAI.getData();
     for(int i = 0; i < m_pressureSensorsCnt; ++i){
-        m_pressureSensors[i]->addValue(readDataPres[i]);
+        m_pressureSensors[i]->addValue(readDataPres[i]); // ,0 minimal value
         m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
     }
     const auto &readDataTemp = reqTempAI.getData(); // this data from last read

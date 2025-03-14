@@ -45,7 +45,7 @@ private:
   QList<DataCollection*> m_sensors;
   bool rescalingON;
   double lastPointKey;
-  
+  double rangeLow;
 private slots:
   void graphClicked(QCPAbstractPlottable *plottable);
   void onCustomReplot();

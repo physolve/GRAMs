@@ -3,7 +3,7 @@
 #include <QDebug>
 
 CustomPlotItem::CustomPlotItem(QQuickItem *parent)
-    : QQuickPaintedItem(parent), m_CustomPlot(nullptr), rescalingON(true), lastPointKey(0) {
+    : QQuickPaintedItem(parent), m_CustomPlot(nullptr), rescalingON(true), lastPointKey(0), rangeLow(0) {
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
 
@@ -165,10 +165,13 @@ void CustomPlotItem::dataUpdated(){
     
     if(rescalingON){
         m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
-        m_CustomPlot->yAxis->rescale();
+        m_CustomPlot->yAxis->rescale(true);
         m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
         // if(m_sensors[0]->getValue().last() != 0)
         //     m_CustomPlot->yAxis->scaleRange(1.1);
+        // if(lastPointKey > 10){
+        //     rangeLow = ?
+        // }
     }
     // if m_CustomPlot points more than x delete first y points
     m_CustomPlot->replot(QCustomPlot::rpQueuedReplot);
@@ -179,8 +182,7 @@ void CustomPlotItem::dataSetUpdated(){
         m_CustomPlot->graph(i)->setData(m_time->getValue(), ptr->getValue());
         ++i;
     }
-    m_CustomPlot->xAxis->rescale();
-    m_CustomPlot->yAxis->rescale();
+    m_CustomPlot->rescaleAxes();
     m_CustomPlot->replot(QCustomPlot::rpQueuedReplot);
 }
 

@@ -2,7 +2,7 @@
 
 #include <QObject>
 #include <QFile>
-#include "../DataCollection.h"
+#include <QElapsedTimer>
 // let's make it as experiment object with file saves
 static float constexpr specific_gravity{0.07};
 class SupplyPort : public QObject
@@ -15,14 +15,15 @@ public:
     // info about port
     // data to file
     void initResultFile();
-    void startCalc();
+    void startCalc(double pressure_quartile);
+    void setPortOpen(bool state);
     void endCalc();
-    void addMeasure(double time_pass);
+    void addMeasure(double pressure_quartile);
     double getFlowCoefficient(double turn);
     void calculateRate(double flow_factor, double diff_pres);
     void saveResultsToFile();
 private:
-    double calcualteModelPass(double time_pass);
+    double calcualteModelPass(double time_differ);
     int m_portId;
     double m_turn;
     double m_currentRate;
@@ -30,11 +31,13 @@ private:
     double m_flowPass;
     double last_time_pass;
     int supplyResultCount;
+    bool m_portOpen;
     QFile supplyResultFile;
     // to save
-    FilterData* m_supplyPressure;
-    FilterData* pseudo_time;
+    QElapsedTimer progressTime;
+    // Quartile pressure
     QList<double> m_timePoints;
     QList<double> m_pressurePoints;
+    QList<double> m_ratePoints;
     QList<double> m_modelPassPoints;
 };

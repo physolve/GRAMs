@@ -10,7 +10,8 @@
         "xutility": "cpp",
         "qfontdatabase": "cpp",
         "qvariant": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "vector": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [
