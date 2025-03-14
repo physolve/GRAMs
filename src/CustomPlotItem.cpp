@@ -33,7 +33,6 @@ void CustomPlotItem::initCustomPlot() {
         backgroundCustomPlot();
         setupPlot(m_CustomPlot); // time
     }
-    //m_CustomPlot->replot();
 }
 
 void CustomPlotItem::backgroundCustomPlot()
@@ -88,6 +87,7 @@ void CustomPlotItem::setupPlot(QCustomPlot* customPlot){ // knows how many shoul
     customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     connect(customPlot, &QCustomPlot::afterReplot, this,
             &CustomPlotItem::onCustomReplot);
+    customPlot->setAttribute(Qt::WA_OpaquePaintEvent, true);
     qDebug() << QString("QCustomPlot Initialized");
 }
 
@@ -170,7 +170,8 @@ void CustomPlotItem::dataUpdated(){
         // if(m_sensors[0]->getValue().last() != 0)
         //     m_CustomPlot->yAxis->scaleRange(1.1);
     }
-    m_CustomPlot->replot();
+    // if m_CustomPlot points more than x delete first y points
+    m_CustomPlot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void CustomPlotItem::dataSetUpdated(){
@@ -180,7 +181,7 @@ void CustomPlotItem::dataSetUpdated(){
     }
     m_CustomPlot->xAxis->rescale();
     m_CustomPlot->yAxis->rescale();
-    m_CustomPlot->replot();
+    m_CustomPlot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void CustomPlotItem::graphClicked(QCPAbstractPlottable *plottable) {

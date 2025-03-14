@@ -56,8 +56,10 @@ Window {
                         turn: controlTurn.value,
                         portPressure: portPressureCtrl.text
                     }
+                    if(checked){
+                        AddRemoveQuar.setSupplyAdjustParameters(parameters)
+                    }
                     DataSource.setSupplyMeasure(checked)
-                    AddRemoveQuar.setSupplyAdjustParameters(parameters)
                     AddRemoveQuar.startSupplyMeasure(checked)
                 }
             }

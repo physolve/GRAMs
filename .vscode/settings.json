@@ -9,7 +9,8 @@
         "xtr1common": "cpp",
         "xutility": "cpp",
         "qfontdatabase": "cpp",
-        "qvariant": "cpp"
+        "qvariant": "cpp",
+        "fstream": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

@@ -16,6 +16,7 @@ public:
     // data to file
     void initResultFile();
     void startCalc();
+    void endCalc();
     void addMeasure(double time_pass);
     double getFlowCoefficient(double turn);
     void calculateRate(double flow_factor, double diff_pres);
@@ -28,6 +29,7 @@ private:
     double m_portPressure;
     double m_flowPass;
     double last_time_pass;
+    int supplyResultCount;
     QFile supplyResultFile;
     // to save
     FilterData* m_supplyPressure;

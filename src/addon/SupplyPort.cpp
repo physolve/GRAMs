@@ -6,7 +6,7 @@ SupplyPort::SupplyPort(QObject *parent) :
     QObject(parent)
 {
     qDebug() << "SupplyPort class is created";
-
+    supplyResultCount = 0;
 }
 
 SupplyPort::~SupplyPort()
@@ -23,13 +23,23 @@ void SupplyPort::setInitialParametersSupply(int portId, double turn, double port
 }
 
 void SupplyPort::initResultFile(){
-    supplyResultFile.setFileName(QString("data/SupplyPort%1.txt").arg(m_portId));
-    if (!supplyResultFile.open(QIODevice::WriteOnly | QIODevice::Text))
+    supplyResultFile.setFileName(QString("data/SupplyPort%1_%2.txt").arg(m_portId).arg(supplyResultCount));
+    if (!supplyResultFile.open(QIODevice::WriteOnly | QIODevice::Text)){
+        qDebug() << "File don't exist";
         return;
-
+    }
+    supplyResultCount++;
     QTextStream out(&supplyResultFile);
     out << "SupplyPort " << m_portId << "\tCurrent turn" << m_turn << "\tPort pressure " << m_portPressure << "\tSystem pressure " << m_supplyPressure->getCurValue() << "\n";
     out << "Elapsed\t" << "Pressure\t" << "Modelled cm3 H2\t"<< "\n";
+}
+
+void SupplyPort::startCalc(){
+    const auto& flow_factor = getFlowCoefficient(m_turn)/1.156;
+    const auto& diff_pres = m_portPressure - m_supplyPressure->getCurValue(); // initial
+    calculateRate(flow_factor, diff_pres);
+    m_flowPass = 0;
+    last_time_pass = 0;
 }
 
 void SupplyPort::addMeasure(double time_pass){
@@ -40,22 +50,6 @@ void SupplyPort::addMeasure(double time_pass){
     calculateRate(flow_factor, diff_pres);
     m_flowPass += calcualteModelPass(time_pass-last_time_pass);
     m_modelPassPoints << m_flowPass;
-}
-
-void SupplyPort::saveResultsToFile(){
-    QTextStream out(&supplyResultFile);
-    for (int i = 0; i < m_timePoints.size(); i++){
-        out << m_timePoints[i] << "\t" << m_pressurePoints[i] << "\t" << m_modelPassPoints[i] << "\n";
-    }
-    supplyResultFile.close();
-}
-
-void SupplyPort::startCalc(){
-    const auto& flow_factor = getFlowCoefficient(m_turn)/1.156;
-    const auto& diff_pres = m_portPressure - m_supplyPressure->getCurValue(); // initial
-    calculateRate(flow_factor, diff_pres);
-    m_flowPass = 0;
-    last_time_pass = 0;
 }
 
 double SupplyPort::getFlowCoefficient(double turn){
@@ -72,5 +66,19 @@ void SupplyPort::calculateRate(double flow_factor, double diff_pres){
 
 double SupplyPort::calcualteModelPass(double time_pass){
     return m_currentRate * 227.778 * time_pass; // m3/h * s -> 227.778*cm3/s*s -> cm3
+}
+
+void SupplyPort::saveResultsToFile(){
+    QTextStream out(&supplyResultFile);
+    for (int i = 0; i < m_timePoints.size(); i++){
+        out << m_timePoints[i] << "\t" << m_pressurePoints[i] << "\t" << m_modelPassPoints[i] << "\n";
+    }
+    supplyResultFile.close();
+}
+
+void SupplyPort::endCalc(){
+    m_timePoints.clear();
+    m_pressurePoints.clear();
+    m_modelPassPoints.clear();
 }
 

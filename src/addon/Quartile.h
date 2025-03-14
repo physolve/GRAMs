@@ -42,9 +42,6 @@ public:
     explicit AddRemoveQuartile(QObject *parent = nullptr);
     virtual ~AddRemoveQuartile();
     void setSupplyPressurePtr(FilterData* high, FilterData* low);
-    
-    void fillSupplyPortData();
-    void stopSupplyMeasure();
     Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
     Q_INVOKABLE void setSupplyAdjustParameters(QVariantMap parameters);
     Q_INVOKABLE void startSupplyMeasure(bool measure);
@@ -52,6 +49,7 @@ private slots:
     void expEvent();
 
 private:
+    void fillSupplyPortData();
     double m_supplySpeed; // current
     double m_drainSpeed;
     int m_currentSupplyPort;

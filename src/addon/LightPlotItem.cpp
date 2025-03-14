@@ -76,6 +76,14 @@ void LightPlotItem::placeGraph(){
         m_CustomPlot->graph()->setName(sensor->m_name);
         ++i;
     }
+    QCPTextElement *legendTitle = new QCPTextElement(m_CustomPlot);
+    legendTitle->setLayer(m_CustomPlot->legend->layer()); // place text element on same layer as legend, or it ends up below legend
+    legendTitle->setText("Sensor Status");
+    legendTitle->setFont(QFont("sans", 7, QFont::Bold));
+    // then we add it to the QCPLegend (which is a subclass of QCPLayoutGrid):
+    if (m_CustomPlot->legend->hasElement(0, 0)) // if top cell isn't empty, insert an empty row at top
+        m_CustomPlot->legend->insertRow(0);
+    m_CustomPlot->legend->addElement(0, 0, legendTitle); // place the text element into the empty cell
 }
 
 void LightPlotItem::paint(QPainter *painter) {
@@ -132,7 +140,6 @@ void LightPlotItem::dataUpdated(){
     }  
     if(lastPointKey < timePoint)
         lastPointKey = timePoint;
-    
     if(rescalingON){
         // m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
         // m_CustomPlot->yAxis->rescale();
@@ -141,7 +148,7 @@ void LightPlotItem::dataUpdated(){
         // if(m_sensors[0]->getValue().last() != 0)
         //     m_CustomPlot->yAxis->scaleRange(1.1);
     }
-    m_CustomPlot->replot();
+    m_CustomPlot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void LightPlotItem::graphClicked(QCPAbstractPlottable *plottable) {

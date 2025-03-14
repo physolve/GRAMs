@@ -6,7 +6,6 @@ Quartile::Quartile(QObject *parent) :
     QObject(parent)
 {
     qDebug() << "Quartile class is created";
-
 }
 
 Quartile::~Quartile(){
@@ -99,23 +98,36 @@ void AddRemoveQuartile::setSupplyAdjustParameters(QVariantMap parameters){
 void AddRemoveQuartile::startSupplyMeasure(bool measure){
     if(measure){
         qDebug() << "Current supply port state: " << m_valves[m_currentSupplyPort]->getState();
+        m_supplyPort[m_currentSupplyPort].initResultFile();
         m_expUpdate->start();
     }
     else{
-        stopSupplyMeasure();
+        m_expUpdate->stop();
+        //saves
+        m_supplyPort[m_currentSupplyPort].saveResultsToFile();
+        //clear
+        m_supplyPort[m_currentSupplyPort].endCalc();
+        m_currentSupplyPort = -1;
     }
+}
+
+void AddRemoveQuartile::expEvent(){
+    fillSupplyPortData();
 }
 
 void AddRemoveQuartile::fillSupplyPortData(){
     switch(m_currentSupplyPort){
+        // this is supply port for low pressure
         case 2:
         {
-            m_supplyPressurePlots[0]->dataUpdated();
+            // but this graph update values from m_supplyPressureHigh
+            m_supplyPressurePlots[0]->dataUpdated(); 
 
             break;
         }
-        case 1:
+        case 1: // this is supply port for high pressure
         {
+            // but graph update values from m_supplyPressureLow
             m_supplyPressurePlots[1]->dataUpdated();
 
             break;
@@ -124,18 +136,6 @@ void AddRemoveQuartile::fillSupplyPortData(){
             break;
         }
     }
-}
-
-void AddRemoveQuartile::expEvent(){
-    fillSupplyPortData();
-}
-
-void AddRemoveQuartile::stopSupplyMeasure(){
-    m_expUpdate->stop();
-    //saves
-    m_supplyPort[m_currentSupplyPort].saveResultsToFile();
-    //clear
-    m_currentSupplyPort = -1;
 }
 
 StorageQuartile::StorageQuartile(QObject *parent) :
