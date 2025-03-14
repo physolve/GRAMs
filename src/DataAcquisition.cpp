@@ -1,7 +1,7 @@
 #include "DataAcquisition.h"
 
 DataAcquisition::DataAcquisition(QObject *parent) :
-    QObject(parent), m_acquisitionTimer(new QTimer)
+    QObject(parent), m_acquisitionTimer(new QTimer), m_supplyMeasure(false)
 {
     GRAMsIntegrity["pressure"] = ControllerConnection::Offline;
     GRAMsIntegrity["temperature"] = ControllerConnection::Offline;
@@ -110,27 +110,6 @@ void DataAcquisition::updateFilter(int chartIndex){
     // filterView.safeCheckOn();
 }
 
-void DataAcquisition::fillSupplyARQ(){
-    QVector<double> filteredReal;
-    int index = 0;
-    const auto& filteredVoltage_high = reqSensorAI.getBufferedData(index);
-    const auto& lin_A_high = m_pressureSensors[index]->getLin_A();
-    const auto& lin_B_high = m_pressureSensors[index]->getLin_B();
-    for(const auto& val : filteredVoltage_high){
-        filteredReal << lin_A_high * val + lin_B_high;
-    }
-    m_supplyPressureHigh->addData(filteredReal);
-    filteredReal.clear();
-    index = 1;
-    const auto& filteredVoltage_low = reqSensorAI.getBufferedData(index);
-    const auto& lin_A_low = m_pressureSensors[index]->getLin_A();
-    const auto& lin_B_low = m_pressureSensors[index]->getLin_B();
-    for(const auto& val : filteredVoltage_low){
-        filteredReal << lin_A_low * val + lin_B_low;
-    }
-    m_supplyPressureLow->addData(filteredReal);
-}
-
 void DataAcquisition::initDaqAItemp(const daqParameters &parameter){
     AdvAIType a(parameter.fullName);
     a.setProfilePath(parameter.m_profile);
@@ -161,32 +140,6 @@ bool DataAcquisition::setValveStates(){
     return reqValveDO.setData(changedState);
 }
 
-void DataAcquisition::processManual(){ // rewrite as each one read
-    // only [pressure] and [temperature] and [vacuum] and [furnace] and [ ] 
-    // without always [valve] read, only after change 
-    // for (auto i = m_controllerList.cbegin(), end = m_controllerList.cend(); i != end; ++i){
-    //     i.value()->readData();
-    // } // it's okay?
-
-    if(!getGRAMsIntegrity()){
-        qDebug() << "Reading disabled";
-        return;
-    }
-    reqTempAI.readData();
-    m_time->addValue(m_elapsedTimer.elapsed()/1000.0);
-    
-    const auto &readDataPres = reqSensorAI.getData();
-    for(int i = 0; i < m_pressureSensorsCnt; ++i){
-        m_pressureSensors[i]->addValue(readDataPres[i]);
-        m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
-    }
-    const auto &readDataTemp = reqTempAI.getData();
-    for(int i = 0; i < m_tempSensorsCnt; ++i){
-        m_tempSensors[i]->addValue(readDataTemp[i]);
-    }
-    reqSensorAI.readData();
-}
-
 void DataAcquisition::startAcquisition(){
     if(!getGRAMsIntegrity()){
         qDebug() << "Reading disabled";
@@ -199,6 +152,10 @@ void DataAcquisition::startAcquisition(){
 void DataAcquisition::stopAcquisition(){
     m_acquisitionTimer->stop();
     // clear additionally
+}
+
+void DataAcquisition::setSupplyMeasure(bool supplyMeasure){
+    m_supplyMeasure = supplyMeasure;
 }
 
 void DataAcquisition::processEvents(){
@@ -219,6 +176,36 @@ void DataAcquisition::processEvents(){
         m_tempSensors[i]->addValue(readDataTemp[i]);
     }
     reqSensorAI.readData();
+
+    if(m_supplyMeasure){
+        fillSupplyARQ();
+    }
+}
+
+void DataAcquisition::setSupplyPressurePtr(FilterData* high, FilterData* low){
+    m_supplyPressureHigh = high;
+    m_supplyPressureLow = low;
+}
+
+void DataAcquisition::fillSupplyARQ(){
+    QVector<double> filteredReal;
+    int index = 0;
+    const auto& filteredVoltage_high = reqSensorAI.getBufferedData(index);
+    const auto& lin_A_high = m_pressureSensors[index]->getLin_A();
+    const auto& lin_B_high = m_pressureSensors[index]->getLin_B();
+    for(const auto& val : filteredVoltage_high){
+        filteredReal << lin_A_high * val + lin_B_high;
+    }
+    m_supplyPressureHigh->addData(filteredReal);
+    filteredReal.clear();
+    index = 1;
+    const auto& filteredVoltage_low = reqSensorAI.getBufferedData(index);
+    const auto& lin_A_low = m_pressureSensors[index]->getLin_A();
+    const auto& lin_B_low = m_pressureSensors[index]->getLin_B();
+    for(const auto& val : filteredVoltage_low){
+        filteredReal << lin_A_low * val + lin_B_low;
+    }
+    m_supplyPressureLow->addData(filteredReal);
 }
 
 

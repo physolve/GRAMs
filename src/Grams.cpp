@@ -133,9 +133,10 @@ void Grams::advAiController(){
 
 
 void Grams::initAddRemoveQuartile(){
-    m_supplyPressureHigh.m_name = "Подача газа выс.";
-    m_supplyPressureLow.m_name = "Подача газа низ.";
+    m_supplyPressureHigh.m_name = "Supply high";
+    m_supplyPressureLow.m_name = "Supply low";
     m_addRemoveQuartile.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
+    dataSource.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
     Valve* valveList[3] = {&vAR1, &vAR2, &vAR3};
     m_addRemoveQuartile.addValvePtrs(*valveList, 3);
 }
@@ -276,6 +277,7 @@ void Grams::softEvent(){
     m_filterPlots[0]->dataSetUpdated();
     m_filterPlots[1]->dataSetUpdated();
     // additional checks
+
 }
 // void Grams::setValveState(const QString &name, const bool &state){ // should be filtered
 //     // find a way for force valve set (as SU)

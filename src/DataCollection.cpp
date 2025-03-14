@@ -77,16 +77,21 @@ FilterData::~FilterData(){
 
 void FilterData::setData(const QVector<double> &y){
     m_y = y;
+    m_curValue = m_y.last();
 }
 
 void FilterData::addData(const QVector<double> &y){
-    m_y = y;
+    setData(y);
     cumulativeData << m_y;
     cumulativeCount++;
 }
 
 QVector<double> FilterData::getCumulativeData() const{
     return cumulativeData;
+}
+
+int FilterData::getCumulativeCount(){
+    return cumulativeCount;
 }
 
 void FilterData::clearCumulative(){

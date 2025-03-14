@@ -47,10 +47,12 @@ void Quartile::addPressureNode(const QString& nodeName, const QString& volA, con
 
 }
 
-AddRemoveQuartile::AddRemoveQuartile(QObject *parent) : Quartile(parent){
+AddRemoveQuartile::AddRemoveQuartile(QObject *parent) : Quartile(parent), m_expUpdate(new QTimer){
     for(int i{2}; i >= 0; --i){
         m_supplyPort[i].setInitialParametersSupply(i,0,1);
     }
+    connect(m_expUpdate, &QTimer::timeout, this, &AddRemoveQuartile::expEvent);
+    m_expUpdate->setInterval(1000);
 }
 AddRemoveQuartile::~AddRemoveQuartile(){
     m_supplyPressureHigh = nullptr;
@@ -66,14 +68,14 @@ int AddRemoveQuartile::getLightPlotPtr(LightPlotItem* lightPlotPointer){
     switch(m_supplyPressurePlots.count()){
         case 0:
         {
-            DataCollection* chartPtrs[2] = {&pseudo_time, m_supplyPressureHigh};
-            lightPlotPointer->setDataPointers(chartPtrs, 2);
+            FilterData* chartPtrs[1] = {m_supplyPressureHigh};
+            lightPlotPointer->setDataPointers(chartPtrs, 1);
             break;
         }
         case 1:
         {
-            DataCollection* chartPtrs[2] = {&pseudo_time, m_supplyPressureLow};
-            lightPlotPointer->setDataPointers(chartPtrs, 2);
+            FilterData* chartPtrs[1] = {m_supplyPressureLow};
+            lightPlotPointer->setDataPointers(chartPtrs, 1);
             break;
         }
         default:
@@ -82,7 +84,6 @@ int AddRemoveQuartile::getLightPlotPtr(LightPlotItem* lightPlotPointer){
     }
     lightPlotPointer->initCustomPlot();
     lightPlotPointer->placeGraph();
-    lightPlotPointer->dataSetUpdated();
     m_supplyPressurePlots << lightPlotPointer;
     return m_supplyPressurePlots.count() - 1;
 }
@@ -95,20 +96,19 @@ void AddRemoveQuartile::setSupplyAdjustParameters(QVariantMap parameters){
     qDebug() << "Begin supply with parameters:" << QString("%1 %2 %3").arg(m_currentSupplyPort).arg(turn).arg(portPressure);
 }
 
-void AddRemoveQuartile::startSupplyMeasure(){
-    qDebug() << "Current supply port state: " << m_valves[m_currentSupplyPort]->getState();
+void AddRemoveQuartile::startSupplyMeasure(bool measure){
+    if(measure){
+        qDebug() << "Current supply port state: " << m_valves[m_currentSupplyPort]->getState();
+        m_expUpdate->start();
+    }
+    else{
+        stopSupplyMeasure();
+    }
 }
 
-
 void AddRemoveQuartile::fillSupplyPortData(){
-    const auto& time = pseudo_time.getCurValue();
-    QVector<double> indexTime;
-    for(int i = 1; i <= 512; i++){
-        indexTime << time + i; 
-    }
-    pseudo_time.addData(indexTime);
     switch(m_currentSupplyPort){
-        case 0:
+        case 2:
         {
             m_supplyPressurePlots[0]->dataUpdated();
 
@@ -120,17 +120,22 @@ void AddRemoveQuartile::fillSupplyPortData(){
 
             break;
         }
+        default:{
+            break;
+        }
     }
 }
+
+void AddRemoveQuartile::expEvent(){
+    fillSupplyPortData();
+}
+
 void AddRemoveQuartile::stopSupplyMeasure(){
-    
+    m_expUpdate->stop();
     //saves
     m_supplyPort[m_currentSupplyPort].saveResultsToFile();
     //clear
     m_currentSupplyPort = -1;
-    pseudo_time.clearCumulative();
-    m_supplyPressureHigh->clearCumulative();
-    m_supplyPressureLow->clearCumulative();
 }
 
 StorageQuartile::StorageQuartile(QObject *parent) :

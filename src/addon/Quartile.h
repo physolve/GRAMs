@@ -47,7 +47,10 @@ public:
     void stopSupplyMeasure();
     Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
     Q_INVOKABLE void setSupplyAdjustParameters(QVariantMap parameters);
-    Q_INVOKABLE void startSupplyMeasure();
+    Q_INVOKABLE void startSupplyMeasure(bool measure);
+private slots:
+    void expEvent();
+
 private:
     double m_supplySpeed; // current
     double m_drainSpeed;
@@ -56,9 +59,9 @@ private:
     // custom plot graph local
     FilterData* m_supplyPressureHigh;
     FilterData* m_supplyPressureLow;
-    FilterData pseudo_time;
     QList<LightPlotItem*> m_supplyPressurePlots;
     // quartile pressure from StorageQuartile 
+    QTimer* m_expUpdate;
 };
 
 class StorageQuartile : public Quartile

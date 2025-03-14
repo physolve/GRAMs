@@ -24,7 +24,6 @@ public:
     void initDaqAIpres(const daqParameters &parameterAIpres);
     void initDaqAItemp(const daqParameters &parameterAItemp);
 
-    void processManual();
     void startAcquisition();
     void stopAcquisition();
 
@@ -38,13 +37,15 @@ public:
     void setFiltersDataPointers(FilterData ptr[], int filtersCnt);
     
     Q_INVOKABLE void updateFilter(int chartIndex); // move to DataAcquisition
-
-    void fillSupplyARQ();
+    
+    void setSupplyPressurePtr(FilterData* high, FilterData* low);
+    Q_INVOKABLE void setSupplyMeasure(bool supplyMeasure);
     
 private slots:
     void processEvents();
-
+    
 private:
+    void fillSupplyARQ();
     // QMap<QString, QSharedPointer<AdvantechCtrl>> m_controllerList; // for read
     QMap<QString, ControllerConnection> GRAMsIntegrity;
     QElapsedTimer m_elapsedTimer;
@@ -73,6 +74,7 @@ private:
     FilterData* m_filtersData[8];
     int m_filtersDataCnt;
 
+    bool m_supplyMeasure;
     FilterData* m_supplyPressureHigh;
     FilterData* m_supplyPressureLow;
     

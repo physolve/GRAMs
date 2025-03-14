@@ -4,6 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import Grams.addRemoveQuartileSingleton 1.0
+import Grams.dataSourceSingleton 1.0
 
 Window {
     id: root
@@ -42,10 +43,12 @@ Window {
             anchors.topMargin: 10
             spacing: 10
             Button{
+                checkable: true
                 text: "Начать подачу газа"
                 onClicked:{
                     if(gasPortChoose.currentIndex == 0){
                         gasPortNotChosen.open()
+                        checked = false
                         return
                     }
                     const parameters = {
@@ -53,8 +56,9 @@ Window {
                         turn: controlTurn.value,
                         portPressure: portPressureCtrl.text
                     }
+                    DataSource.setSupplyMeasure(checked)
                     AddRemoveQuar.setSupplyAdjustParameters(parameters)
-                    AddRemoveQuar.startSupplyMeasure()
+                    AddRemoveQuar.startSupplyMeasure(checked)
                 }
             }
             ComboBox{

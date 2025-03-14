@@ -43,6 +43,7 @@ public:
     void setData(const QVector<double> &y);
     void addData(const QVector<double> &y);
     QVector<double> getCumulativeData() const;
+    int getCumulativeCount();
     void clearCumulative();
 private:
     QVector<double> cumulativeData;

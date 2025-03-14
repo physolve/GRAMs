@@ -55,11 +55,10 @@ void LightPlotItem::setupPlot(QCustomPlot* customPlot){ // knows how many should
     qDebug() << QString("QCustomPlot Initialized");
 }
 
-void LightPlotItem::setDataPointers(DataCollection** ptr, int ptrCnt){
+void LightPlotItem::setDataPointers(FilterData** ptr, int ptrCnt){
     // not good but it works
     // m_sensors.resize(ptrCnt - 1);
-    m_time = ptr[0];
-    for(auto i = 1; i < ptrCnt; ++i){
+    for(auto i = 0; i < ptrCnt; ++i){
         m_sensors.append(ptr[i]);
     }
 }
@@ -118,31 +117,30 @@ void LightPlotItem::wheelEvent(QWheelEvent *event) {
 }
 
 void LightPlotItem::dataUpdated(){
-    const auto &timePoint = m_time->getCurValue(); 
-    for(unsigned short i = 0; auto* ptr : m_sensors){
-        m_CustomPlot->graph(i)->addData(m_time->getValue(), ptr->getValue());
-        ++i;
+    const auto& time = pseudo_time.getCurValue();
+    const auto& bufferCount = m_sensors[0]->getCumulativeCount();
+    QVector<double> indexTime;
+    for(int i = 1; i <= 512*bufferCount; i++){
+        indexTime << time + i; 
     }
-    if(lastPointKey < m_time->getCurValue())
-        lastPointKey = m_time->getCurValue();
+    pseudo_time.setData(indexTime);
+    const auto &timePoint = pseudo_time.getCurValue(); 
+    for(unsigned short i = 0; auto* ptr : m_sensors){
+        m_CustomPlot->graph(i)->addData(pseudo_time.getValue(), ptr->getCumulativeData());
+        ++i;
+        ptr->clearCumulative();
+    }  
+    if(lastPointKey < timePoint)
+        lastPointKey = timePoint;
     
     if(rescalingON){
-        m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
-        m_CustomPlot->yAxis->rescale();
+        // m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
+        // m_CustomPlot->yAxis->rescale();
+        m_CustomPlot->rescaleAxes();
         m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
         // if(m_sensors[0]->getValue().last() != 0)
         //     m_CustomPlot->yAxis->scaleRange(1.1);
     }
-    m_CustomPlot->replot();
-}
-
-void LightPlotItem::dataSetUpdated(){
-    for(unsigned short i = 0; auto* ptr : m_sensors){
-        m_CustomPlot->graph(i)->setData(m_time->getValue(), ptr->getValue());
-        ++i;
-    }
-    m_CustomPlot->xAxis->rescale();
-    m_CustomPlot->yAxis->rescale();
     m_CustomPlot->replot();
 }
 
