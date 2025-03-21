@@ -44,8 +44,8 @@ void SupplyPort::startCalc(){
 
 void SupplyPort::addMeasure(double time_pass){
     m_timePoints << time_pass;
-    m_pressurePoints << m_portPressure;
-    const auto& flow_factor = getFlowCoefficient(m_turn)/1.156;
+    m_pressurePoints << m_supplyPressure->getCurValue();
+    const auto& flow_factor = getFlowCoefficient(m_turn);
     const auto& diff_pres = m_portPressure - m_supplyPressure->getCurValue(); 
     calculateRate(flow_factor, diff_pres);
     m_flowPass += calcualteModelPass(time_pass-last_time_pass);
@@ -53,19 +53,19 @@ void SupplyPort::addMeasure(double time_pass){
 }
 
 double SupplyPort::getFlowCoefficient(double turn){
-    return 0.004*turn-0.003;
+    return 0.004*turn-0.003; // for s series from 2 to 8 turns
 }
 
 void SupplyPort::calculateRate(double flow_factor, double diff_pres){
     // 
-    // Cv = Q*sqrt(SG/dP)
-    // => Q = Cv/sqrt(SG/dP) = Cv*sqrt(dP/SG)
+    // if p_B < 1/2*p_inlet
+    // Q = Cv/sqrt(SG/dP) = Cv*sqrt(dP/SG)
     //
     m_currentRate = flow_factor * sqrt(diff_pres/specific_gravity); // m3/h
 }
 
 double SupplyPort::calcualteModelPass(double time_pass){
-    return m_currentRate * 227.778 * time_pass; // m3/h * s -> 227.778*cm3/s*s -> cm3
+    return m_currentRate * 16.6667 * time_pass; // std L/min * s -> 16.6667*cm3/s*s -> cm3
 }
 
 void SupplyPort::saveResultsToFile(){

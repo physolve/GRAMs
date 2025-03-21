@@ -25,7 +25,7 @@ VoltageFilter::VoltageFilter(): n(3), m(1), dt(1.0/512) {
     P << .1, .1, .1, .1, 10000, 10, .1, 10, 100;
 
     // Construct the filter
-    kf = KalmanFilter (dt, A, C, Q, R, P);
+    kf = KalmanFilter(dt, A, C, Q, R, P);
     qDebug() << "Kalman created";
     m_filteredVoltage.resize(512, 0.0);
     m_XhatS.resize(512, 0.0);
