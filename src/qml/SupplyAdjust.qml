@@ -44,7 +44,7 @@ Window {
             spacing: 10
             Button{
                 checkable: true
-                text: "Начать подачу газа"
+                text: checked ? "Остановить подачу газа" : "Начать подачу газа"
                 onClicked:{
                     if(gasPortChoose.currentIndex == 0){
                         gasPortNotChosen.open()

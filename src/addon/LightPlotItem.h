@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtQuick>
+#include <QFile>
 #include "../DataCollection.h"
 
 class QCustomPlot;
@@ -12,19 +13,20 @@ class LightPlotItem : public QQuickPaintedItem {
 public:
   LightPlotItem(QQuickItem *parent = 0);
   virtual ~LightPlotItem();
-
-  void paint(QPainter *painter);
-
   Q_INVOKABLE LightPlotItem* getLightPlot();
-
-  // Q_INVOKABLE void updatePlot();
   Q_INVOKABLE void resetPos();
 
+  void paint(QPainter *painter);
   void initCustomPlot();
   void setupPlot(QCustomPlot* customPlot);
   
   void setDataPointers(FilterData **ptr , int ptrCnt);
   void placeGraph();
+
+  void initPlotData();
+  void savePlotData();
+  void clearPlotData();
+
 protected:
   void routeMouseEvents(QMouseEvent *event);
   void routeWheelEvents(QWheelEvent *event);
@@ -43,7 +45,9 @@ private:
   QList<FilterData*> m_sensors;
   bool rescalingON;
   double lastPointKey;
-  
+
+  QFile fastFile;
+  int fastResultCount;
 private slots:
   void graphClicked(QCPAbstractPlottable *plottable);
   void onCustomReplot();

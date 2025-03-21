@@ -3,7 +3,7 @@
 #include <QDebug>
 
 LightPlotItem::LightPlotItem(QQuickItem *parent)
-    : QQuickPaintedItem(parent), m_CustomPlot(nullptr), rescalingON(true), lastPointKey(0) {
+    : QQuickPaintedItem(parent), m_CustomPlot(nullptr), rescalingON(true), lastPointKey(0), fastResultCount(0) {
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
 
@@ -76,14 +76,11 @@ void LightPlotItem::placeGraph(){
         m_CustomPlot->graph()->setName(sensor->m_name);
         ++i;
     }
-    QCPTextElement *legendTitle = new QCPTextElement(m_CustomPlot);
-    legendTitle->setLayer(m_CustomPlot->legend->layer()); // place text element on same layer as legend, or it ends up below legend
-    legendTitle->setText("Sensor Status");
-    legendTitle->setFont(QFont("sans", 7, QFont::Bold));
-    // then we add it to the QCPLegend (which is a subclass of QCPLayoutGrid):
-    if (m_CustomPlot->legend->hasElement(0, 0)) // if top cell isn't empty, insert an empty row at top
-        m_CustomPlot->legend->insertRow(0);
-    m_CustomPlot->legend->addElement(0, 0, legendTitle); // place the text element into the empty cell
+    m_CustomPlot->legend->setVisible(true);
+    QFont legendFont = m_CustomPlot->legend->font();  // start out with MainWindow's font..
+    legendFont.setPointSize(9); // and make a bit smaller for legend
+    m_CustomPlot->legend->setFont(legendFont);
+    m_CustomPlot->legend->setBrush(QBrush(QColor(255,255,255,230)));
 }
 
 void LightPlotItem::paint(QPainter *painter) {
@@ -141,12 +138,8 @@ void LightPlotItem::dataUpdated(){
     if(lastPointKey < timePoint)
         lastPointKey = timePoint;
     if(rescalingON){
-        // m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
-        // m_CustomPlot->yAxis->rescale();
         m_CustomPlot->rescaleAxes();
         m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
-        // if(m_sensors[0]->getValue().last() != 0)
-        //     m_CustomPlot->yAxis->scaleRange(1.1);
     }
     m_CustomPlot->replot(QCustomPlot::rpQueuedReplot);
 }
@@ -190,4 +183,32 @@ void LightPlotItem::updateCustomPlotSize() {
 
 void LightPlotItem::onCustomReplot() {
     update();
+}
+
+void LightPlotItem::initPlotData(){
+    fastFile.setFileName(QString("data/fastResult_%1.csv").arg(fastResultCount));
+    if (!fastFile.open(QIODevice::WriteOnly | QIODevice::Text)){
+        qDebug() << "File don't exist";
+        return;
+    }
+    fastResultCount++;
+}
+
+void LightPlotItem::savePlotData(){
+    QTextStream out(&fastFile);
+    out << "time"<< ',' << "value" << '\n';
+    const auto& data = m_CustomPlot->graph(0)->data();
+    // auto it = data->constBegin();
+    QCPGraphDataContainer::const_iterator it;
+    for (it = data->constBegin(); it != data->constEnd(); ++it) {
+        out << (*it).key << ',' << (*it).value << '\n';
+    }
+    fastFile.close();
+}
+
+void LightPlotItem::clearPlotData(){
+    for(auto i{0}; i<m_CustomPlot->graphCount(); ++i){
+        m_CustomPlot->graph(i)->data()->clear();
+    }
+    pseudo_time.clearPoints();
 }

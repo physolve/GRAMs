@@ -58,7 +58,7 @@ private:
     FilterData* m_supplyPressureHigh;
     FilterData* m_supplyPressureLow;
     QList<LightPlotItem*> m_supplyPressurePlots;
-    // quartile pressure from StorageQuartile 
+    // quartile pressure from StorageQuartile
     QTimer* m_expUpdate;
 };
 
