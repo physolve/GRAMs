@@ -12,6 +12,7 @@ DataCollection::~DataCollection(){
 void DataCollection::clearPoints(){
     m_y.clear();
     m_y << 0;
+    m_curValue = 0;
 }
 void DataCollection::addPoint(const double &val_y){
     m_y.append(m_curValue = val_y);        

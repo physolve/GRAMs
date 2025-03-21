@@ -50,8 +50,7 @@ void SupplyPort::setPortOpen(bool state){
 
 void SupplyPort::addMeasure(double pressure_quartile){
     const auto& flow_factor = getFlowCoefficient(m_turn)/1.156; // Cv = 1.156*Kv
-    const auto& diff_pres = m_portPressure - pressure_quartile; 
-    calculateRate(flow_factor, diff_pres);
+    calculateRate(flow_factor, pressure_quartile);
     if(m_portOpen){
         auto time_pass = progressTime.elapsed()/1000.;
         if(time_pass < 0) {
@@ -71,16 +70,28 @@ double SupplyPort::getFlowCoefficient(double turn){
     return 0.004*turn-0.003; // for s series from 2 to 8 turns
 }
 
-void SupplyPort::calculateRate(double flow_factor, double diff_pres){
+void SupplyPort::calculateRate(double flow_factor, double pressure){
     // 
     // if p_B < 1/2*p_inlet
-    // Q = Cv/sqrt(SG/dP) = Cv*sqrt(dP/SG)
+    // Q = 0.471*N2*Cv*p_inlet*sqrt(1/(G_g*T_B))
     //
+    // if p_B > 1/2*p_inlet
+    // Q = N2*Cv*p_inlet*(1-2*dp/(3*p_inlet))*sqrt(dp/(p_inlet*G_g*T_B))
+    //
+    // N2 = 6950 std L/min (bar, K)
+    // G_g = 0.07 (H2)
+    const auto& diff_pres = m_portPressure - pressure; 
     if(diff_pres < 0){
         qDebug() << "Wrong diff_press";
         return;
     }
-    m_currentRate = flow_factor * sqrt(diff_pres/specific_gravity); // m3/h
+    if(pressure < 0.5*m_portPressure){
+        m_currentRate = 0.471*6950*flow_factor*m_portPressure*sqrt(1/(specific_gravity*300)); // 300 K is a room temperature (27 C)
+    }
+    else{
+        m_currentRate = 6950*flow_factor*m_portPressure*(1-2*diff_pres/(3*m_portPressure))*sqrt(diff_pres/(m_portPressure*specific_gravity*300)); // 300 K is a room temperature (27 C)
+    } 
+    // std L/min
 }
 
 double SupplyPort::calcualteModelPass(double time_pass){

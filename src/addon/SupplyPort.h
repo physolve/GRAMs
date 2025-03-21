@@ -20,7 +20,7 @@ public:
     void endCalc();
     void addMeasure(double pressure_quartile);
     double getFlowCoefficient(double turn);
-    void calculateRate(double flow_factor, double diff_pres);
+    void calculateRate(double flow_factor, double pressure);
     void saveResultsToFile();
 private:
     double calcualteModelPass(double time_differ);
