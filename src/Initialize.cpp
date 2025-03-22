@@ -32,10 +32,9 @@ Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
     checkPass = advantechDeviceCheck();
 
     visualRepresentation(profileJson); // setted after gui run
-    
-    initializeOk = checkPass; 
-    if(initializeOk)
-        advantechCompareProfile();
+    if(checkPass){
+        initializeOk = advantechCompareProfile();
+    }
     else qDebug() << "checkPass problem";
     //check
 
@@ -203,10 +202,11 @@ void Initialize::fillSecondLineQuar(const QJsonObject &secondLineQuarObject){
 }
 
 // compare profile and real
-void Initialize::advantechCompareProfile(){
+bool Initialize::advantechCompareProfile(){
     // m_advantechDeviceMap compare to m_daq
     // real to profile
     QStringList unrecognizedControllers;
+    int recognizedCnt = 0;
     for(const auto& val : m_advantechDeviceMap){
         qDebug() << val;
         bool recognized = false;
@@ -215,6 +215,7 @@ void Initialize::advantechCompareProfile(){
                 continue;
             recognized = profile.m_state = true;
             profile.fullName = val;
+            recognizedCnt++;
         }
         if(!recognized)
             unrecognizedControllers << val;
@@ -222,6 +223,7 @@ void Initialize::advantechCompareProfile(){
     if(!unrecognizedControllers.isEmpty())
         qDebug() << "Unrecognized controllers " << unrecognizedControllers;
     // which found navi blue, which unexpected - yellow
+    return recognizedCnt >= m_daq.length();
 }
 
 void Initialize::getParametersDO(daqParameters &params){

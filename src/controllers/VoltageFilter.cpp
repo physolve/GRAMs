@@ -50,6 +50,12 @@ VoltageFilter::VoltageFilter(const FilterMatrix &parameters):n(3), m(1), dt(1.0/
     m_filteredVoltage.resize(512, 0.0);
     m_XhatS.resize(512, 0.0);
     m_XhatT.resize(512, 0.0);
+
+    // Best guess of initial states
+    Eigen::VectorXd x0(n);
+    double t = 0;
+    x0 << 1, 0, 0;
+    kf.init(t, x0);
 }
 
 void VoltageFilter::appendToBuffer(const double &value){ // change to replace Vector
@@ -58,10 +64,10 @@ void VoltageFilter::appendToBuffer(const double &value){ // change to replace Ve
 
 QVector<double> VoltageFilter::getFilteredVoltage(bool debug) {
     // Best guess of initial states
-    Eigen::VectorXd x0(n);
-    double t = 0;
-    x0 << m_voltageBuffer[0], 0, 0;
-    kf.init(t, x0);
+    // Eigen::VectorXd x0(n);
+    // double t = 0;
+    // x0 << m_voltageBuffer[0], 0, 0;
+    // kf.init(t, x0);
     // Feed measurements into filter, output estimated states
     QVector<double> filteredVoltage;
     QVector<double> debugXhatS;
@@ -70,7 +76,7 @@ QVector<double> VoltageFilter::getFilteredVoltage(bool debug) {
     if(debug) qDebug() << m_voltageBuffer;
     for(int i = 0; i < m_voltageBuffer.size(); i++) {
         //QVector<double> buffVector;
-        t += dt;
+        // t += dt;
         y << m_voltageBuffer[i];
         kf.update(y);
         // qDebug() << "t = " << t << ", x_hat[" << i << "] = " << kf.state().transpose();

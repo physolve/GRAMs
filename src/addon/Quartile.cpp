@@ -97,7 +97,7 @@ void AddRemoveQuartile::setSupplyAdjustParameters(QVariantMap parameters){
 
 void AddRemoveQuartile::startSupplyMeasure(bool measure){
     if(measure){
-        qDebug() << "Current supply port state: " << m_valves[m_currentSupplyPort]->getState();
+        qDebug() << "Current supply port state: " << m_valves[1]->getState();
         m_supplyPort[m_currentSupplyPort].initResultFile();
         m_supplyPort[m_currentSupplyPort].startCalc(m_supplyPressureHigh->getCurValue()); // replace to quartile_pressure
         
@@ -140,7 +140,7 @@ void AddRemoveQuartile::fillSupplyPortData(){
             break;
         }
     }
-    m_supplyPort[m_currentSupplyPort].setPortOpen(m_valves[m_currentSupplyPort]->getState());
+    m_supplyPort[m_currentSupplyPort].setPortOpen(m_valves[1]->getState()); // 1 - middle supply port
     m_supplyPort[m_currentSupplyPort].addMeasure(m_supplyPressureHigh->getCurValue()); // replace to quartile_pressure
 }
 

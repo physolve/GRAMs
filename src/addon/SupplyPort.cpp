@@ -28,13 +28,13 @@ void SupplyPort::initResultFile(){
         return;
     }
     QTextStream out(&supplyResultFile);
-    out << "SupplyPort " << m_portId << "\tCurrent turn" << m_turn << "\tPort pressure " << m_portPressure << "\n";
+    out << "SupplyPort " << m_portId << "\tCurrent turn " << m_turn << "\tPort pressure " << m_portPressure << "\n";
     out << "Elapsed\t" << "Pressure\t" << "Flow rate\t" << "Modelled cm3 H2\t"<< "\n";
     supplyResultCount++;
 }
 
 void SupplyPort::startCalc(double pressure_quartile){
-    const auto& flow_factor = getFlowCoefficient(m_turn)/1.156;
+    const auto& flow_factor = getFlowCoefficient(m_turn);
     const auto& diff_pres = m_portPressure - pressure_quartile; // initial
     calculateRate(flow_factor, diff_pres);
     m_flowPass = 0;
@@ -49,14 +49,12 @@ void SupplyPort::setPortOpen(bool state){
 }
 
 void SupplyPort::addMeasure(double pressure_quartile){
-    const auto& flow_factor = getFlowCoefficient(m_turn)/1.156; // Cv = 1.156*Kv
+    const auto& flow_factor = getFlowCoefficient(m_turn);
     calculateRate(flow_factor, pressure_quartile);
     if(m_portOpen){
-        auto time_pass = progressTime.elapsed()/1000.;
-        if(time_pass < 0) {
-            qDebug() << "Cyka";
-            time_pass = 0; 
-        }
+        auto time_pass = 0.0;
+        if(progressTime.isValid())
+            time_pass = progressTime.nsecsElapsed()/1000000000.0;
         m_timePoints << time_pass;
         m_pressurePoints << pressure_quartile;
         m_ratePoints << m_currentRate;
@@ -67,7 +65,7 @@ void SupplyPort::addMeasure(double pressure_quartile){
 }
 
 double SupplyPort::getFlowCoefficient(double turn){
-    return 0.004*turn-0.003; // for s series from 2 to 8 turns
+    return 0.0037*turn-0.0024; // for s series from 2 to 8 turns
 }
 
 void SupplyPort::calculateRate(double flow_factor, double pressure){

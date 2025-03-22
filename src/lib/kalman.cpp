@@ -43,7 +43,6 @@ void KalmanFilter::init() {
 }
 
 void KalmanFilter::update(const Eigen::VectorXd& y) {
-
   if(!initialized)
     throw std::runtime_error("Filter is not initialized!");
 
@@ -58,7 +57,6 @@ void KalmanFilter::update(const Eigen::VectorXd& y) {
 }
 
 void KalmanFilter::update(const Eigen::VectorXd& y, double dt, const Eigen::MatrixXd A) {
-
   this->A = A;
   this->dt = dt;
   update(y);

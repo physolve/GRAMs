@@ -197,4 +197,6 @@ private:
     ReactionQuartile m_reactionQuartile;
     QuartileData prRQ;
     SecondLineQuartile m_secondLineQuartile; 
+
+    QElapsedTimer m_benchmarkTime;
 };

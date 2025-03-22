@@ -39,7 +39,7 @@ void FilterView::parseKalman(){
     QJsonDocument document = { QJsonDocument::fromJson(kalmanProfile.toUtf8()) };
     profileJson = document.array();//.object();
     
-    const auto &profile = profileJson[0].toObject(); // GRAM50 json profile
+    const auto &profile = profileJson[0].toObject(); // first filter from array
     const auto& dt = profile["dt"].toVariant().toDouble();
     QList<double> mA;
     for(const auto& var: profile["A"].toArray().toVariantList()){

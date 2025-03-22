@@ -22,7 +22,6 @@ public:
     QVector<double> lastXhatS();
     QVector<double> lastXhatT();
     QVector<double> lastOriginalBuffer();
-    void changeMatrixParameters(double n_dt = 1.0/512); // 512 move to namespace!
 private:
     QVector<double> m_voltageBuffer;
     QVector<double> m_filteredVoltage;

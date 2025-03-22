@@ -136,6 +136,13 @@ bool Security::checkValveAction(const QString &sender, const bool &state){
     if(m_leakageValves.contains(sender)){
         // checks incoming pressure pre-open
     }
+    // if(m_storageValves.contains(sender)){
+    // checks incoming pressure pre-open
+    // }
+    // if(m_pressureRange.contains(sender)){
+    // checks opening pressure-range valve
+    //}
+
     if(!m_contradictionValves.contains(sender)){
         return state;
     }

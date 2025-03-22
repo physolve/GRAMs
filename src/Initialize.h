@@ -162,7 +162,7 @@ private:
     bool readProfile(QString &rawData);
     bool jsonParser(QString &rawData, QJsonObject &profileJson);
     bool advantechDeviceCheck();
-    void advantechCompareProfile();
+    bool advantechCompareProfile();
 
     QString m_curInitProfile;
     

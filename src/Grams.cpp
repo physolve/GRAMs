@@ -32,7 +32,7 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     initGUI();
     initSafeModule();
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
-    softTimer->setInterval(1000);
+    softTimer->setInterval(500);
     softTimer->start();
     dataSource.startAcquisition();
 }
@@ -131,7 +131,6 @@ void Grams::advAiController(){
     guiValsUpdate();
 }
 
-
 void Grams::initAddRemoveQuartile(){
     m_supplyPressureHigh.m_name = "Supply high";
     m_supplyPressureLow.m_name = "Supply low";
@@ -181,6 +180,8 @@ void Grams::initGUI(){
     qmlRegisterSingletonInstance("Grams.backendSourceSingleton", 1, 0, "Grams", this);
 
     m_engine.load(url);
+
+    // m_benchmarkTime.start();
 }
 
 void Grams::getCustomPlotPtr(CustomPlotItem* customPlotPointer){
@@ -227,7 +228,7 @@ void Grams::initSafeModule(){
     }
     m_safeModule.setContradictionValves(initSource.m_security.m_contradictionValves);
     m_safeModule.setRuleOfThreeValves(initSource.m_security.m_twoOfThree);
-
+    
     m_safeModule.setRangePressureValves(initSource.m_storageQuar.m_pressureRangeValve,"storageQuar",
         initSource.m_storageQuar.m_pressureRange_open,initSource.m_storageQuar.m_pressureRange_close);
     m_safeModule.setRangePressureValves(initSource.m_reactionQuar.m_pressureRangeValve,"reactionQuar",
@@ -235,7 +236,7 @@ void Grams::initSafeModule(){
     m_safeModule.setSafeReleaseValves(initSource.m_storageQuar.m_gasReleaseValve, "storageQuar", 
         initSource.m_storageQuar.m_gasRelease);
     
-        m_safeModule.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
+    m_safeModule.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
     m_safeModule.setGasLeakageValves(initSource.m_reactionQuar.m_gasLeakageValves);
 }
 
