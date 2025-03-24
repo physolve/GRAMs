@@ -38,6 +38,7 @@ void SupplyPort::startCalc(double pressure_quartile){
     const auto& diff_pres = m_portPressure - pressure_quartile; // initial
     calculateRate(flow_factor, diff_pres);
     m_flowPass = 0;
+    // double initial_vol = pv/rt*ta/pa;  
     last_time_pass = 0;
 }
 
@@ -65,7 +66,7 @@ void SupplyPort::addMeasure(double pressure_quartile){
 }
 
 double SupplyPort::getFlowCoefficient(double turn){
-    return turn < 1 ? 0.0037*turn-0.0024 : 0.001225; // for s series from 2 to 8 turns
+    return turn > 1 ? 0.0037*turn-0.0024 : 0.00137; // for s series from 2 to 8 turns
 }
 
 void SupplyPort::calculateRate(double flow_factor, double pressure){
