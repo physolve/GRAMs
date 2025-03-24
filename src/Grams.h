@@ -194,6 +194,9 @@ private:
     FilterData m_supplyPressureLow;
     StorageQuartile m_storageQuartile;
     QuartileData prSQ;
+    DataCollection prSC1;
+    DataCollection prSC2;
+    DataCollection prSC3;
     ReactionQuartile m_reactionQuartile;
     QuartileData prRQ;
     SecondLineQuartile m_secondLineQuartile; 

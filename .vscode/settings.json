@@ -11,7 +11,8 @@
         "qfontdatabase": "cpp",
         "qvariant": "cpp",
         "fstream": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "utility": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

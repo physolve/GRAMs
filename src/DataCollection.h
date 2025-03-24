@@ -54,6 +54,8 @@ class QuartileData : public DataCollection{
 public:
     QuartileData(const QString &name = "unknown");
     virtual ~QuartileData();
+    // returns and store pressure from other ControllerData
+     
 };
 
 class NodeData : public DataCollection
@@ -61,6 +63,12 @@ class NodeData : public DataCollection
 public:
     NodeData(const QString &name = "unknown");
     virtual ~NodeData();
+};
+
+class MolesData : public DataCollection{
+public:
+    MolesData(const QString &name = "unknown");
+    virtual ~MolesData();
 };
 
 // class Sensor //: public QObject

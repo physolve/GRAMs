@@ -19,7 +19,6 @@ public:
     void addPressurePtrs(ControllerData ptr[], int pressureCnt);
     void addTemperaturePtrs(ControllerData ptr[], int temperatureCnt);
     virtual void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB);
-    void updatePressureNodes();
     // pressure sensor pointers
 protected:
     double m_volume;
@@ -70,12 +69,28 @@ public:
     virtual ~StorageQuartile();
     void calculateTotalVolume();
     void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB) override;
+    void setCVolumePtr(DataCollection ptr[], int cVolumeCnt);
+    void setMolesPtr(MolesData ptr[], int molesCnt);
+    void setQuartileData(QuartileData* quartileData);
+    void setIndexPressureRange(int index);
+    void setIndexPressureHighLow(int indexHigh, int indexLow);
+    void setIndexTemperatureMain(int index);
+    void updateQuartileData();
+    void updatePressureNodes();
+    void updateMoles();
 private:
     // additional volumes not objects
+    QList<DataCollection*> cVolumePressure;
+    // moles info
+    QList<MolesData*> m_molesDataList;
     // active volume
     QuartileData* pressureStorageQuartile;
-    // temperature
-    // moles
+    QuartileData* temperatureStorageQuartile;
+    // index of pressure range valve
+    int v_pressure_range;
+    int s_pressure_high;
+    int s_pressure_low;
+    int s_temperature_main;
 };
 
 class ReactionQuartile : public Quartile

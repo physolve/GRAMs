@@ -33,7 +33,10 @@ void QuartileManager::parseAddons(){
 void QuartileManager::fillAddRemoveQuartile(AddRemoveQuartile& addRemoveQuartile){
     QJsonObject addRemoveQuar = profileJson["addRemoveQuar"].toObject();
     addRemoveQuartile.setVolume(addRemoveQuar["volume"].toDouble());
-
+    // flow coefficient parameters
+    // inlet pressure paramters
+    // supply speed [3]
+    // drain speed [2]
 }
 
 void QuartileManager::fillStorageQuartile(StorageQuartile& storageQuartile){
