@@ -65,7 +65,7 @@ Window {
             }
             ComboBox{
                 id: gasPortChoose
-                model: ["Порты справа-налево...", "Низкое давление H2", "Высокое давление H2", "Инертный газ"]
+                model: ["Порты справа-налево...", "Инертный газ", "Высокое давление H2", "Низкое давление H2"]
                 Layout.preferredWidth: 200
                 implicitContentWidthPolicy: ComboBox.ContentItemImplicitWidth
                 onActivated: {

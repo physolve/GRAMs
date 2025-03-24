@@ -65,7 +65,7 @@ void SupplyPort::addMeasure(double pressure_quartile){
 }
 
 double SupplyPort::getFlowCoefficient(double turn){
-    return 0.0037*turn-0.0024; // for s series from 2 to 8 turns
+    return turn < 1 ? 0.0037*turn-0.0024 : 0.001225; // for s series from 2 to 8 turns
 }
 
 void SupplyPort::calculateRate(double flow_factor, double pressure){
@@ -78,22 +78,17 @@ void SupplyPort::calculateRate(double flow_factor, double pressure){
     //
     // N2 = 6950 std L/min (bar, K)
     // G_g = 0.07 (H2)
-    const auto& diff_pres = m_portPressure - pressure; 
-    if(diff_pres < 0){
-        qDebug() << "Wrong diff_press";
-        return;
-    }
+    const auto& diff_pres = (pressure<m_portPressure)?m_portPressure-pressure:0;
     if(pressure < 0.5*m_portPressure){
-        m_currentRate = 0.471*6950*flow_factor*m_portPressure*sqrt(1/(specific_gravity*300)); // 300 K is a room temperature (27 C)
+        m_currentRate = 0.471*6950*flow_factor*m_portPressure*sqrt(1/(specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
     }
     else{
-        m_currentRate = 6950*flow_factor*m_portPressure*(1-2*diff_pres/(3*m_portPressure))*sqrt(diff_pres/(m_portPressure*specific_gravity*300)); // 300 K is a room temperature (27 C)
-    } 
-    // std L/min
+        m_currentRate = 6950*flow_factor*m_portPressure*(1-2*diff_pres/(3*m_portPressure))*sqrt(diff_pres/(m_portPressure*specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
+    }
 }
 
 double SupplyPort::calcualteModelPass(double time_pass){
-    return m_currentRate * 16.6667 * time_pass; // std L/min * s -> 16.6667*cm3/s*s -> cm3
+    return m_currentRate * time_pass; // cm3/s*s -> cm3
 }
 
 void SupplyPort::saveResultsToFile(){
