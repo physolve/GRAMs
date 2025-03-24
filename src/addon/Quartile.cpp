@@ -65,6 +65,7 @@ void AddRemoveQuartile::setSupplyPressurePtr(FilterData* high, FilterData* low){
 
 int AddRemoveQuartile::getLightPlotPtr(LightPlotItem* lightPlotPointer){
     switch(m_supplyPressurePlots.count()){
+        // better rewrite using node pressure
         case 0:
         {
             FilterData* chartPtrs[1] = {m_supplyPressureHigh};
@@ -124,16 +125,17 @@ void AddRemoveQuartile::expEvent(){
 void AddRemoveQuartile::fillSupplyPortData(){
     switch(m_currentSupplyPort){
         // this is supply port for low pressure
+        // better rewrite using node pressure
         case 2:
         {
-            // but this graph update values from m_supplyPressureHigh
-            m_supplyPressurePlots[0]->dataUpdated(); 
+            // but graph update values from m_supplyPressureLow
+            m_supplyPressurePlots[1]->dataUpdated();
             break;
         }
         case 1: // this is supply port for high pressure
         {
-            // but graph update values from m_supplyPressureLow
-            m_supplyPressurePlots[1]->dataUpdated();
+            // but this graph update values from m_supplyPressureHigh
+            m_supplyPressurePlots[0]->dataUpdated();
             break;
         }
         default:{
