@@ -27,7 +27,9 @@ bool DataAcquisition::getGRAMsIntegrity(){
 
 void DataAcquisition::setValvePointers(Valve ptr[], int valvesCnt){
     for(int i = 0; i < valvesCnt; ++i){
+        auto test = &ptr[i];
         m_valves[i] = &ptr[i];
+        qDebug() << test->m_name;
     }
     m_valvesCnt = valvesCnt;
 }

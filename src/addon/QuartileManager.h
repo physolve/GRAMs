@@ -12,8 +12,7 @@ class QuartileManager : public QObject
 public:
     QuartileManager(QObject *parent = nullptr);
     ~QuartileManager();
-    void readAddons();
-    void parseAddons();
+
     void fillAddRemoveQuartile(AddRemoveQuartile& addRemoveQuartile);
     QStringList fillStorageQuartile(StorageQuartile& storageQuartile);
     void fillReactionQuartile(ReactionQuartile& reactionQuartile);
@@ -21,5 +20,6 @@ public:
 private:
     QString addonsProfile;
     QJsonObject profileJson;
-
+    void readAddons();
+    void parseAddons();
 };

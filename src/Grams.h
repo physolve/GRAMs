@@ -198,6 +198,7 @@ private:
     FilterData m_supplyPressureLow;
     StorageQuartile m_storageQuartile;
     QuartileData prSQ;
+    QuartileData tmSQ;
     DataCollection prSC1;
     MolesData mlSC1;
     DataCollection prSC2;

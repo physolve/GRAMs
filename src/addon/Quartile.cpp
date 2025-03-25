@@ -25,7 +25,9 @@ void Quartile::addVolume(const QString& name, double volume){
 
 void Quartile::addValvePtrs(Valve ptr[], int valvesCnt){
     for(int i = 0; i < valvesCnt; ++i){
+        auto test = &ptr[i];
         m_valves << &ptr[i];
+        qDebug() << test->m_name;
     }
     // m_valvesCnt = valvesCnt;
 }
@@ -162,6 +164,14 @@ void StorageQuartile::calculateTotalVolume(){
     setVolume(totalVolume);
 }
 
+void StorageQuartile::setQuartileDataPressure(QuartileData* quartileData){
+    pressureStorageQuartile = quartileData;
+}
+
+void StorageQuartile::setQuartileDataTemperature(QuartileData* quartileData){
+    temperatureStorageQuartile = quartileData;
+}
+
 void StorageQuartile::setCVolumePtr(DataCollection ptr[], int cVolumeCnt){
     for(int i = 0; i < cVolumeCnt; ++i){
         cVolumePressure << &ptr[i];
@@ -175,7 +185,9 @@ void StorageQuartile::setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD
 
 void StorageQuartile::setMolesPtr(MolesData ptr[], int molesCnt){
     for(int i = 0; i < molesCnt; ++i){
+        auto test = &ptr[i];
         m_molesDataList << &ptr[i];
+        qDebug() << test->m_name;
     }
 }
 
@@ -248,6 +260,7 @@ void StorageQuartile::updateVolumeObjects(){
 
 void StorageQuartile::updateMoles(){
     for(auto moleSensor : m_molesDataList){
+        qDebug() << moleSensor->m_name;
         moleSensor->addPoint(m_volumeObjects[moleSensor->m_name].getMoles());
     }
 }

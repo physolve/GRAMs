@@ -7,7 +7,8 @@
 #include <QVariantList>
 
 QuartileManager::QuartileManager(QObject *parent){
-    
+    readAddons();
+    parseAddons();
 }
 
 QuartileManager::~QuartileManager(){
@@ -41,8 +42,6 @@ void QuartileManager::fillAddRemoveQuartile(AddRemoveQuartile& addRemoveQuartile
 
 QStringList QuartileManager::fillStorageQuartile(StorageQuartile& storageQuartile){
     QJsonObject storageQuar = profileJson["storageQuar"].toObject();
-    auto test = storageQuar["volume"];
-    qDebug() << test.();
     QVariantMap volumes = storageQuar["volume"].toObject().toVariantMap();
     QStringList volumeNames;
     for(const auto& [key,value] : volumes.asKeyValueRange()){

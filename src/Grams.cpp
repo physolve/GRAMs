@@ -152,6 +152,8 @@ void Grams::initStorageQuartile(){
     ControllerData* temperatureSensorsList[5] = {&tmSK, &tmS, &tmSLittle, &tmSSmall, &tmSLarge};
     m_storageQuartile.addTemperaturePtrs(*temperatureSensorsList, 5);
     DataCollection* cVolumeSensorsList[3] = {&prSC1, &prSC2, &prSC3};
+    m_storageQuartile.setQuartileDataPressure(&prSQ);
+    m_storageQuartile.setQuartileDataTemperature(&tmSQ);
     m_storageQuartile.setCVolumePtr(*cVolumeSensorsList, 3);
     m_storageQuartile.setBD1VolumePtr(&prB, &prD1);
     m_storageQuartile.setMolesPtr(*molesDataList, 5);

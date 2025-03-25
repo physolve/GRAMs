@@ -72,7 +72,8 @@ public:
     void setCVolumePtr(DataCollection ptr[], int cVolumeCnt);
     void setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD1);
     void setMolesPtr(MolesData ptr[], int molesCnt);
-    void setQuartileData(QuartileData* quartileData);
+    void setQuartileDataPressure(QuartileData* quartileData);
+    void setQuartileDataTemperature(QuartileData* quartileData);
     void setIndexValveRange(int index);
     void setIndexPressureHighLow(int indexHigh, int indexLow);
     void setIndexTemperatureMain(int index);
