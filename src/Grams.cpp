@@ -28,6 +28,7 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     advAiController();
 
     initAddRemoveQuartile();
+    initStorageQuartile();
 
     initGUI();
     initSafeModule();
@@ -90,7 +91,7 @@ void Grams::initAnalogData(){
         tempSensorsList[i]->m_name = tempSensors[i];
         tempSensorsList[i]->setCoeffs(1.0, 0.0);
     }
-
+    // mole Volume names from addons js
     m_pressureVals = guiValsPres{0,0,0,0,0,0,0,0};
     m_tempVals = guiValsTemp{0,0,0,0,0,0,0,0};
 }
@@ -138,6 +139,34 @@ void Grams::initAddRemoveQuartile(){
     dataSource.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
     Valve* valveList[3] = {&vAR1, &vAR2, &vAR3};
     m_addRemoveQuartile.addValvePtrs(*valveList, 3);
+}
+
+void Grams::initStorageQuartile(){
+    const auto& storage_names = m_quartileManager.fillStorageQuartile(m_storageQuartile);
+    MolesData* molesDataList[5] = {&mlB, &mlSC1, &mlSC2, &mlSC3, &mlD1};
+    for(int i = 0; i < 5; ++i){
+        molesDataList[i]->m_name = storage_names[i];
+    }
+    ControllerData* pressureSensorsList[3] = {&prSH, &prSA, &prSK};
+    m_storageQuartile.addPressurePtrs(*pressureSensorsList, 3);
+    ControllerData* temperatureSensorsList[5] = {&tmSK, &tmS, &tmSLittle, &tmSSmall, &tmSLarge};
+    m_storageQuartile.addTemperaturePtrs(*temperatureSensorsList, 5);
+    DataCollection* cVolumeSensorsList[3] = {&prSC1, &prSC2, &prSC3};
+    m_storageQuartile.setCVolumePtr(*cVolumeSensorsList, 3);
+    m_storageQuartile.setBD1VolumePtr(&prB, &prD1);
+    m_storageQuartile.setMolesPtr(*molesDataList, 5);
+    QString baseNode = storage_names[0];
+    for(int i = 1; i < 5; ++i){
+        QString addNode = storage_names[i];
+        m_storageQuartile.addPressureNode(baseNode+addNode, baseNode, addNode);
+    }
+    Valve* valvesList[4] = {&vS1, &vS2, &vS3, &vS4};
+    m_storageQuartile.addValvePtrs(*valvesList, 4);
+    m_storageQuartile.setIndexValveRange(3); // vS4
+    m_storageQuartile.setIndexPressureHighLow(0, 1); // prSH, prSA
+    m_storageQuartile.setIndexTemperatureMain(0); // tmSK
+    // test
+    m_storageQuartile.updateQuartileData();
 }
 
 void Grams::setValveState(bool state, int index){

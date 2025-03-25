@@ -70,17 +70,20 @@ public:
     void calculateTotalVolume();
     void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB) override;
     void setCVolumePtr(DataCollection ptr[], int cVolumeCnt);
+    void setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD1);
     void setMolesPtr(MolesData ptr[], int molesCnt);
     void setQuartileData(QuartileData* quartileData);
-    void setIndexPressureRange(int index);
+    void setIndexValveRange(int index);
     void setIndexPressureHighLow(int indexHigh, int indexLow);
     void setIndexTemperatureMain(int index);
     void updateQuartileData();
-    void updatePressureNodes();
+    void updateVolumeObjects();
     void updateMoles();
 private:
     // additional volumes not objects
     QList<DataCollection*> cVolumePressure;
+    DataCollection* bVolumePressure;
+    DataCollection* d1VolumePressure;
     // moles info
     QList<MolesData*> m_molesDataList;
     // active volume

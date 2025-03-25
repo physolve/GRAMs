@@ -10,6 +10,7 @@
 #include "Security.h"
 #include "DataCollection.h"
 #include "addon/Quartile.h"
+#include "addon/QuartileManager.h"
 #include "CustomPlotItem.h"
 #include "addon/LightPlotItem.h"
 
@@ -108,6 +109,7 @@ private:
     void initGUI();
     void initSafeModule();
     void initAddRemoveQuartile();
+    void initStorageQuartile();
     void guiValsUpdate();
 
     Initialize initSource;
@@ -189,14 +191,24 @@ private:
     FilterData filtersData[8];
 
     // quartiles
+    QuartileManager m_quartileManager;
+
     AddRemoveQuartile m_addRemoveQuartile;
     FilterData m_supplyPressureHigh;
     FilterData m_supplyPressureLow;
     StorageQuartile m_storageQuartile;
     QuartileData prSQ;
     DataCollection prSC1;
+    MolesData mlSC1;
     DataCollection prSC2;
+    MolesData mlSC2;
     DataCollection prSC3;
+    MolesData mlSC3;
+    DataCollection prB;
+    MolesData mlB;
+    DataCollection prD1;
+    MolesData mlD1;
+    
     ReactionQuartile m_reactionQuartile;
     QuartileData prRQ;
     SecondLineQuartile m_secondLineQuartile; 

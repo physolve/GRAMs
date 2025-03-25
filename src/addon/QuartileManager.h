@@ -15,7 +15,7 @@ public:
     void readAddons();
     void parseAddons();
     void fillAddRemoveQuartile(AddRemoveQuartile& addRemoveQuartile);
-    void fillStorageQuartile(StorageQuartile& storageQuartile);
+    QStringList fillStorageQuartile(StorageQuartile& storageQuartile);
     void fillReactionQuartile(ReactionQuartile& reactionQuartile);
     void fillSecondLineQuartile(SecondLineQuartile& secondLineQuartile);
 private:

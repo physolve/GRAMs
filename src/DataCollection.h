@@ -7,7 +7,7 @@ class DataCollection //: public QObject
 {
     //Q_OBJECT
 public:
-    DataCollection(const QString &name);
+    DataCollection(const QString &name = "unknown");
     virtual ~DataCollection();
     void clearPoints();
     void addPoint(const double &val_y);

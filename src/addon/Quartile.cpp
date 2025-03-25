@@ -168,6 +168,17 @@ void StorageQuartile::setCVolumePtr(DataCollection ptr[], int cVolumeCnt){
     }
 }
 
+void StorageQuartile::setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD1){
+    bVolumePressure = ptrB;
+    d1VolumePressure = ptrD1;
+}
+
+void StorageQuartile::setMolesPtr(MolesData ptr[], int molesCnt){
+    for(int i = 0; i < molesCnt; ++i){
+        m_molesDataList << &ptr[i];
+    }
+}
+
 void StorageQuartile::addPressureNode(const QString& nodeName, const QString& volA, const QString& volB){
     // gas store valves   
     m_pressureNodes.insert(nodeName, NodePressure());
@@ -176,7 +187,7 @@ void StorageQuartile::addPressureNode(const QString& nodeName, const QString& vo
     // recalculate node? and moles?
 }
 
-void StorageQuartile::setIndexPressureRange(int index){
+void StorageQuartile::setIndexValveRange(int index){
     v_pressure_range = index;
 }
 
@@ -191,6 +202,7 @@ void StorageQuartile::setIndexTemperatureMain(int index){
 
 void StorageQuartile::updateQuartileData(){
     double current_pressure = 0.0;
+    // write smooth transition
     if(m_valves[v_pressure_range]->getState()){
         current_pressure = m_pressureList[s_pressure_high]->getCurValue();    
     }
@@ -200,17 +212,43 @@ void StorageQuartile::updateQuartileData(){
     pressureStorageQuartile->addPoint(current_pressure);
     temperatureStorageQuartile->addPoint(m_temperatureList[s_temperature_main]->getCurValue());
     // put m_volumeObjects valve state
+    Valve* c_volume_valves[3] = {m_valves[0], m_valves[1], m_valves[2]}; // 
+    for(int i = 0; i < cVolumePressure.count(); ++i){
+        if(c_volume_valves[i]->getState()){
+            cVolumePressure[i]->addPoint(current_pressure);
+        }
+        else{
+            cVolumePressure[i]->addPoint(cVolumePressure[i]->getCurValue());
+        }
+    }
+    if(m_valves[v_pressure_range]->getState()){
+        d1VolumePressure->addPoint(current_pressure);
+    }
+    else{
+        d1VolumePressure->addPoint(m_pressureList[s_pressure_low]->getCurValue());
+    }
+    bVolumePressure->addPoint(current_pressure);
+    updateVolumeObjects();
+    updateMoles();
 }
 
-void StorageQuartile::updatePressureNodes(){
+void StorageQuartile::updateVolumeObjects(){
     // valve states to set volumeObject pressure
-    for(auto& volume : m_volumeObjects){
-        if()
-        volume.pressure = pressureStorageQuartile->getCurValue();
-        volume.temperature = temperatureStorageQuartile->getCurValue();
-    }
-    for(auto& node : m_pressureNodes){
-        node.getEquilibrium
+    m_volumeObjects["C1"].pressure = cVolumePressure[0]->getCurValue();
+    m_volumeObjects["C1"].temperature = temperatureStorageQuartile->getCurValue();
+    m_volumeObjects["C2"].pressure = cVolumePressure[1]->getCurValue();
+    m_volumeObjects["C2"].temperature = temperatureStorageQuartile->getCurValue();
+    m_volumeObjects["C3"].pressure = cVolumePressure[2]->getCurValue();
+    m_volumeObjects["C3"].temperature = temperatureStorageQuartile->getCurValue();
+    m_volumeObjects["B"].pressure = bVolumePressure->getCurValue();
+    m_volumeObjects["B"].temperature = temperatureStorageQuartile->getCurValue();
+    m_volumeObjects["D1"].pressure = d1VolumePressure->getCurValue();
+    m_volumeObjects["D1"].temperature = temperatureStorageQuartile->getCurValue();
+}
+
+void StorageQuartile::updateMoles(){
+    for(auto moleSensor : m_molesDataList){
+        moleSensor->addPoint(m_volumeObjects[moleSensor->m_name].getMoles());
     }
 }
 

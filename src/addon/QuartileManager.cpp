@@ -39,13 +39,18 @@ void QuartileManager::fillAddRemoveQuartile(AddRemoveQuartile& addRemoveQuartile
     // drain speed [2]
 }
 
-void QuartileManager::fillStorageQuartile(StorageQuartile& storageQuartile){
+QStringList QuartileManager::fillStorageQuartile(StorageQuartile& storageQuartile){
     QJsonObject storageQuar = profileJson["storageQuar"].toObject();
+    auto test = storageQuar["volume"];
+    qDebug() << test.();
     QVariantMap volumes = storageQuar["volume"].toObject().toVariantMap();
+    QStringList volumeNames;
     for(const auto& [key,value] : volumes.asKeyValueRange()){
         storageQuartile.addVolume(key,value.toDouble());
+        volumeNames << key;
     }
     storageQuartile.calculateTotalVolume();
+    return volumeNames;
 }
 
 void QuartileManager::fillReactionQuartile(ReactionQuartile& reactionQuartile){
