@@ -33,12 +33,11 @@ void SupplyPort::initResultFile(){
     supplyResultCount++;
 }
 
-void SupplyPort::startCalc(double pressure_quartile){
+void SupplyPort::startCalc(double pressure_quartile, double initial_flow){
     const auto& flow_factor = getFlowCoefficient(m_turn);
     const auto& diff_pres = m_portPressure - pressure_quartile; // initial
     calculateRate(flow_factor, diff_pres);
-    m_flowPass = 0;
-    // double initial_vol = pv/rt*ta/pa;  
+    m_flowPass = initial_flow;
     last_time_pass = 0;
 }
 

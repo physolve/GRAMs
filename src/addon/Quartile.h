@@ -14,6 +14,7 @@ public:
     explicit Quartile(QObject *parent = nullptr);
     virtual ~Quartile();
     void setVolume(double volume);
+    void setMainVolume(const QString& name);
     void addVolume(const QString& name, double volume);
     void addValvePtrs(const QVector<Valve*>& ptr);
     void addPressurePtrs(const QVector<ControllerData*>& ptr);
@@ -22,6 +23,7 @@ public:
     // pressure sensor pointers
 protected:
     double m_volume;
+    QString m_mainVolume;
     QMap<QString, VolumeObject> m_volumeObjects;
     // pressure sensor pointers
     QList<ControllerData*> m_pressureList;
@@ -41,6 +43,10 @@ public:
     explicit AddRemoveQuartile(QObject *parent = nullptr);
     virtual ~AddRemoveQuartile();
     void setSupplyPressurePtr(FilterData* high, FilterData* low);
+    
+    void setStorageQuartilePressure(QuartileData* storageQuartilePressure);
+    void setStorageQuartilePtr(Quartile* storageQuartile);
+
     Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
     Q_INVOKABLE void setSupplyAdjustParameters(QVariantMap parameters);
     Q_INVOKABLE void startSupplyMeasure(bool measure);
@@ -59,6 +65,8 @@ private:
     QList<LightPlotItem*> m_supplyPressurePlots;
     // quartile pressure from StorageQuartile
     QTimer* m_expUpdate;
+    QuartileData* m_storageQuartilePressure;
+    Quartile* m_storageQuartile; // try more header files and just ask another
 };
 
 class StorageQuartile : public Quartile
@@ -77,9 +85,12 @@ public:
     void setIndexValveRange(int index);
     void setIndexPressureHighLow(int indexHigh, int indexLow);
     void setIndexTemperatureMain(int index);
+    void fillVolumePairs(const QMap<QString,QString>& volumeToValve);
     void updateQuartileData();
     void updateVolumeObjects();
     void updateMoles();
+    double getQuartileMoleVolume() const;
+    double getQuartileMole() const;
 private:
     // additional volumes not objects
     QVector<DataCollection*> cVolumePressure;
@@ -95,6 +106,11 @@ private:
     int s_pressure_high;
     int s_pressure_low;
     int s_temperature_main;
+    QList<QPair<int,QString>> m_valveToVolumeList;
+
+    static float constexpr pressure_std_bar{1.0};
+    static float constexpr temperature_std_K{273};
+    static float constexpr gas_constant{8.31446};
 };
 
 class ReactionQuartile : public Quartile

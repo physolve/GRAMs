@@ -48,16 +48,27 @@ QStringList QuartileManager::fillStorageQuartile(StorageQuartile& storageQuartil
         storageQuartile.addVolume(key,value.toDouble());
         volumeNames << key;
     }
+    storageQuartile.setMainVolume(volumeNames[0]);
     storageQuartile.calculateTotalVolume();
+    QVariantMap volumeToValve = storageQuar["volumeToValve"].toObject().toVariantMap();
+    QMap<QString,QString> volumeToValveMap;
+    for(const auto& [key,value] : volumeToValve.asKeyValueRange()){
+        volumeToValveMap[key] = value.toString();
+    }
+    storageQuartile.fillVolumePairs(volumeToValveMap);
     return volumeNames;
 }
+
 
 void QuartileManager::fillReactionQuartile(ReactionQuartile& reactionQuartile){
     QJsonObject reactionQuar = profileJson["reactionQuar"].toObject();
     QVariantMap volumes = reactionQuar["volume"].toObject().toVariantMap();
+    QStringList volumeNames;
     for(const auto& [key,value] : volumes.asKeyValueRange()){
         reactionQuartile.addVolume(key,value.toDouble());
+        volumeNames << key;
     }
+    reactionQuartile.setMainVolume(volumeNames[0]);
     reactionQuartile.calculateTotalVolume();
     reactionQuartile.setChamber(reactionQuar["chamber"].toString());
 }

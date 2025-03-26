@@ -16,6 +16,10 @@ void Quartile::setVolume(double volume){
     m_volume = volume;
 }
 
+void Quartile::setMainVolume(const QString& name){
+    m_mainVolume = name;
+}
+
 void Quartile::addVolume(const QString& name, double volume){
     VolumeObject volumeObject{name, volume, 1, 300};
     // volumeObject.name = name;
@@ -56,10 +60,18 @@ void AddRemoveQuartile::setSupplyPressurePtr(FilterData* high, FilterData* low){
     m_supplyPressureLow = low;
 }
 
+void AddRemoveQuartile::setStorageQuartilePtr(Quartile* storageQuartile){
+    m_storageQuartile = storageQuartile;
+}
+
+void AddRemoveQuartile::setStorageQuartilePressure(QuartileData* storageQuartilePressure){
+    m_storageQuartilePressure = storageQuartilePressure;
+}
+
 int AddRemoveQuartile::getLightPlotPtr(LightPlotItem* lightPlotPointer){
     QVector<FilterData*> chartPtrs;
     switch(m_supplyPressurePlots.count()){
-        // better rewrite using node pressure
+        // i don't have quartile filter data
         case 0:
         {
             chartPtrs.append(m_supplyPressureHigh);
@@ -94,8 +106,9 @@ void AddRemoveQuartile::startSupplyMeasure(bool measure){
     if(measure){
         qDebug() << "Current supply port state: " << m_valves[m_currentSupplyPort]->getState();
         m_supplyPort[m_currentSupplyPort].initResultFile();
-        m_supplyPort[m_currentSupplyPort].startCalc(m_supplyPressureHigh->getCurValue()); // replace to quartile_pressure
-        
+        // initial_flow = quartile_storage->moles to std cm3
+        const auto& initial_flow = static_cast<StorageQuartile*>(m_storageQuartile)->getQuartileMoleVolume();
+        m_supplyPort[m_currentSupplyPort].startCalc(m_storageQuartilePressure->getCurValue(), initial_flow);
         m_supplyPressurePlots[0]->initPlotData();
         m_expUpdate->start();
     }
@@ -137,7 +150,7 @@ void AddRemoveQuartile::fillSupplyPortData(){
         }
     }
     m_supplyPort[m_currentSupplyPort].setPortOpen(m_valves[m_currentSupplyPort]->getState());
-    m_supplyPort[m_currentSupplyPort].addMeasure(m_supplyPressureHigh->getCurValue()); // replace to quartile_pressure
+    m_supplyPort[m_currentSupplyPort].addMeasure(m_storageQuartilePressure->getCurValue());
 }
 
 StorageQuartile::StorageQuartile(QObject *parent) :
@@ -198,6 +211,17 @@ void StorageQuartile::setIndexTemperatureMain(int index){
     s_temperature_main = index;
 }
 
+void StorageQuartile::fillVolumePairs(const QMap<QString,QString>& volumeToValve){
+    for(const auto& [key,value] : volumeToValve.asKeyValueRange()){
+        int index;
+        for(index = 0; index < m_valves.count(); ++index){
+            if(m_valves[index]->m_name == key)
+                break;
+        }
+        m_valveToVolumeList.append({index, value});
+    }
+}
+
 void StorageQuartile::updateQuartileData(){
     double current_pressure = 0.0;
     // write smooth transition
@@ -248,6 +272,22 @@ void StorageQuartile::updateMoles(){
     for(auto moleSensor : m_molesDataList){
         moleSensor->addPoint(m_volumeObjects[moleSensor->m_name].getMoles());
     }
+}
+
+double StorageQuartile::getQuartileMole() const{
+    double moles = 0;
+    moles+=m_volumeObjects[m_mainVolume].getMoles();
+    for(const auto& valveToVolume:m_valveToVolumeList){
+        if(m_valves[valveToVolume.first]->getState()){
+            moles+=m_volumeObjects[valveToVolume.second].getMoles();
+        }
+    }
+    return moles;
+}
+
+double StorageQuartile::getQuartileMoleVolume() const{
+    const auto& moles = getQuartileMole();
+    return moles*gas_constant*pressure_std_bar/temperature_std_K;
 }
 
 ReactionQuartile::ReactionQuartile(QObject *parent) :

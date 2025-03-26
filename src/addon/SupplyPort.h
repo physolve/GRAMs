@@ -15,7 +15,7 @@ public:
     // info about port
     // data to file
     void initResultFile();
-    void startCalc(double pressure_quartile);
+    void startCalc(double pressure_quartile, double initial_flow);
     void setPortOpen(bool state);
     void endCalc();
     void addMeasure(double pressure_quartile);

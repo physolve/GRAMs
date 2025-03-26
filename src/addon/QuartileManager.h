@@ -4,6 +4,7 @@
 #include <QJsonObject>
 
 #include "Quartile.h"
+#include "../Initialize.h"
 
 // Quartile object is used to store parameters from one of four volumes
 class QuartileManager : public QObject

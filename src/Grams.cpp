@@ -142,6 +142,11 @@ void Grams::initAddRemoveQuartile(){
 }
 
 void Grams::initStorageQuartile(){
+    QVector<Valve*> valvesList = {&vS1, &vS2, &vS3, &vS4};
+    m_storageQuartile.addValvePtrs(valvesList);
+    m_storageQuartile.setIndexValveRange(3); // vS4
+    m_storageQuartile.setIndexPressureHighLow(0, 1); // prSH, prSA
+    m_storageQuartile.setIndexTemperatureMain(0); // tmSK
     const auto& storage_names = m_quartileManager.fillStorageQuartile(m_storageQuartile);
     QVector<MolesData*> molesDataList = {&mlB, &mlSC1, &mlSC2, &mlSC3, &mlD1};
     for(int i = 0; i < molesDataList.count(); ++i){
@@ -165,11 +170,6 @@ void Grams::initStorageQuartile(){
         QString addNode = storage_names[i];
         m_storageQuartile.addPressureNode(baseNode+addNode, baseNode, addNode);
     }
-    QVector<Valve*> valvesList = {&vS1, &vS2, &vS3, &vS4};
-    m_storageQuartile.addValvePtrs(valvesList);
-    m_storageQuartile.setIndexValveRange(3); // vS4
-    m_storageQuartile.setIndexPressureHighLow(0, 1); // prSH, prSA
-    m_storageQuartile.setIndexTemperatureMain(0); // tmSK
     // test
     m_storageQuartile.updateQuartileData();
 }
