@@ -38,7 +38,14 @@ void SupplyPort::startCalc(double pressure_quartile, double initial_flow){
     const auto& diff_pres = m_portPressure - pressure_quartile; // initial
     calculateRate(flow_factor, diff_pres);
     m_flowPass = initial_flow;
+    // addPreValveFlow(); // prepare preValveFlow for different supply ports
     last_time_pass = 0;
+}
+
+void SupplyPort::addPreValveFlow(){
+    // assume that we have additional 300 std cm3 of Hydrogen before valve (5.9 cm3 tube under 50 bar)
+    double preValveFlow = 300;
+    m_flowPass+=preValveFlow;
 }
 
 void SupplyPort::setPortOpen(bool state){

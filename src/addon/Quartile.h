@@ -47,6 +47,8 @@ public:
     void setStorageQuartilePressure(QuartileData* storageQuartilePressure);
     void setStorageQuartilePtr(Quartile* storageQuartile);
 
+    void updatePortState();
+
     Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
     Q_INVOKABLE void setSupplyAdjustParameters(QVariantMap parameters);
     Q_INVOKABLE void startSupplyMeasure(bool measure);

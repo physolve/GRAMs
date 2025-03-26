@@ -32,6 +32,8 @@ private:
     double last_time_pass;
     int supplyResultCount;
     bool m_portOpen;
+    // assume volume pre valve
+    void addPreValveFlow();
     QFile supplyResultFile;
     // to save
     QElapsedTimer progressTime;

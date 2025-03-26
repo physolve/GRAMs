@@ -136,8 +136,11 @@ void Grams::initAddRemoveQuartile(){
     m_supplyPressureHigh.m_name = "Supply high";
     m_supplyPressureLow.m_name = "Supply low";
     m_addRemoveQuartile.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
+    m_addRemoveQuartile.setStorageQuartilePtr(&m_storageQuartile);
+    m_addRemoveQuartile.setStorageQuartilePressure(&prSQ);
     dataSource.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
-    QVector<Valve*> valveList = {&vAR1, &vAR2, &vAR3};
+
+    QVector<Valve*> valveList = {&vAR1, &vAR2, &vAR3}; // drain ptr?
     m_addRemoveQuartile.addValvePtrs(valveList);
 }
 
@@ -184,6 +187,14 @@ void Grams::setValveState(bool state, int index){
         if(!dataSource.setValveStates())
             valve->setState(originalState);
     emit valveChanged();
+    valveChangeUpdater(valve->m_name);
+}
+
+void Grams::valveChangeUpdater(const QString& valveName){
+    // from profile supply
+    if(initSource.m_addRemoveQuar.m_gasSupplyValves.contains(valveName)){
+        m_addRemoveQuartile.updatePortState();
+    }
 }
 
 void Grams::initGUI(){
@@ -297,17 +308,12 @@ void Grams::guiValsUpdate(){
     m_tempVals.g_tmRTube = tmRTube.getCurValue();
     m_tempVals.g_tmF = tmF.getCurValue();
     emit guiValsTempChanged();
+
+    // update storage volumes
+    // prSC1
+    // prSC2
+    // prSC3
 }
-
-// void Grams::initializeReading(){
-//     // for valves make different type
-
-//     // Add variable timer msec
-//     dataModel.initializeAcquisition();
-//     readingEvent(true);
-//     softTimer->start(1000);
-//     qDebug() << "Now I'm updating every 1000 ms";
-// }
 
 void Grams::softEvent(){
     guiValsUpdate();
@@ -315,21 +321,8 @@ void Grams::softEvent(){
     m_filterPlots[0]->dataSetUpdated();
     m_filterPlots[1]->dataSetUpdated();
     // additional checks
-
+    m_storageQuartile.updateQuartileData();
 }
-// void Grams::setValveState(const QString &name, const bool &state){ // should be filtered
-//     // find a way for force valve set (as SU)
-//     if(!dataSource.getGRAMsIntegrity())
-//         return;
-//     qDebug() << name << " " << state;
-//     auto valveMap = valveModel.getValveMap();
-//     auto result = m_safeModule.checkValveAction(valveMap, name, state);
-//     valveModel.appendData(name,result);
-//     auto valveVector = valveModel.getValveVector();
-//     qDebug() << valveVector;
-//     dataSource.setValves(valveVector);
-//     readingEvent(true);
-// }
 
 guiValsPres Grams::getGuiValsPres() const{
     return m_pressureVals;

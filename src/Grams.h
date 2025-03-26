@@ -57,7 +57,8 @@ public:
     double g_tmRTube;
     double g_tmF;
 };
-// add temp values
+
+// add virtual volumes
 
 class Grams : public QApplication
 {
@@ -111,7 +112,7 @@ private:
     void initAddRemoveQuartile();
     void initStorageQuartile();
     void guiValsUpdate();
-
+    void valveChangeUpdater(const QString& valveName);
     Initialize initSource;
     QQmlApplicationEngine m_engine;
     DataAcquisition dataSource; // pass from constructor

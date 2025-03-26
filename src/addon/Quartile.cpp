@@ -129,6 +129,13 @@ void AddRemoveQuartile::expEvent(){
     fillSupplyPortData();
 }
 
+void AddRemoveQuartile::updatePortState(){
+    // update all ports
+    for(int i = 0; i < m_valves.count(); ++i){ // if drain ptr!
+        m_supplyPort[i].setPortOpen(m_valves[i]->getState());
+    }
+}
+
 void AddRemoveQuartile::fillSupplyPortData(){
     switch(m_currentSupplyPort){
         // this is supply port for low pressure
@@ -212,13 +219,13 @@ void StorageQuartile::setIndexTemperatureMain(int index){
 }
 
 void StorageQuartile::fillVolumePairs(const QMap<QString,QString>& volumeToValve){
-    for(const auto& [key,value] : volumeToValve.asKeyValueRange()){
+    for(const auto& [volume, valve] : volumeToValve.asKeyValueRange()){
         int index;
         for(index = 0; index < m_valves.count(); ++index){
-            if(m_valves[index]->m_name == key)
+            if(m_valves[index]->m_name == valve)
                 break;
         }
-        m_valveToVolumeList.append({index, value});
+        m_valveToVolumeList.append({index, volume});
     }
 }
 
@@ -226,15 +233,15 @@ void StorageQuartile::updateQuartileData(){
     double current_pressure = 0.0;
     // write smooth transition
     if(m_valves[v_pressure_range]->getState()){
-        current_pressure = m_pressureList[s_pressure_high]->getCurValue();    
+        current_pressure = m_pressureList[s_pressure_low]->getCurValue();
     }
     else{
-        current_pressure = m_pressureList[s_pressure_low]->getCurValue();
+        current_pressure = m_pressureList[s_pressure_high]->getCurValue();
     }
     pressureStorageQuartile->addPoint(current_pressure);
     temperatureStorageQuartile->addPoint(m_temperatureList[s_temperature_main]->getCurValue());
     // put m_volumeObjects valve state
-    Valve* c_volume_valves[3] = {m_valves[0], m_valves[1], m_valves[2]}; // 
+    Valve* c_volume_valves[3] = {m_valves[0], m_valves[1], m_valves[2]}; // use pairs
     for(int i = 0; i < cVolumePressure.count(); ++i){
         if(c_volume_valves[i]->getState()){
             cVolumePressure[i]->addPoint(current_pressure);
@@ -287,7 +294,7 @@ double StorageQuartile::getQuartileMole() const{
 
 double StorageQuartile::getQuartileMoleVolume() const{
     const auto& moles = getQuartileMole();
-    return moles*gas_constant*pressure_std_bar/temperature_std_K;
+    return moles*temperature_std_K*gas_constant*10/pressure_std_bar; // moles * K *Jl/(mol*K) / (10^5*bar) -> m3 -> * 10^6 -> cm3
 }
 
 ReactionQuartile::ReactionQuartile(QObject *parent) :
