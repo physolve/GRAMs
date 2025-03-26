@@ -194,6 +194,8 @@ private:
     FilterData fl_prRA;    // 3 DD332
     FilterData fl_prRL;    // 4 DD334
     FilterData fl_prSK;    // 5 DD341
+    FilterData fl_tmSK;    // 6 DT341
+    FilterData fl_tmS;     // 7 DT314
     QVector<FilterData*> getFilterPointers() {
         QVector<FilterData*> pointers;
         pointers.append(&fl_prSH);
@@ -202,6 +204,8 @@ private:
         pointers.append(&fl_prRA);
         pointers.append(&fl_prRL);
         pointers.append(&fl_prSK);
+        pointers.append(&fl_tmSK);
+        pointers.append(&fl_tmS);
         return pointers;
     }
     // quartiles

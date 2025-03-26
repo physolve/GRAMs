@@ -78,6 +78,7 @@ void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
     reqSensorAI.readData();
     // pass to filter
     const auto &readData = reqSensorAI.getData();
+    if(m_filtersData.count() == m_pressureSensors.count()) qDebug() << "Filters to all USB4716 channels";
     for(int i = 0; i < m_pressureSensors.count(); ++i){
         m_pressureSensors[i]->addValue(readData[i], 0);
         m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
