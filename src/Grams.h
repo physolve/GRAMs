@@ -205,9 +205,9 @@ private:
     MolesData mlSC2;
     DataCollection prSC3;
     MolesData mlSC3;
-    DataCollection prB;
+    DataCollection prSB;
     MolesData mlB;
-    DataCollection prD1;
+    DataCollection prSD1;
     MolesData mlD1;
     
     ReactionQuartile m_reactionQuartile;

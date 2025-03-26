@@ -28,8 +28,8 @@ bool DataAcquisition::getGRAMsIntegrity(){
 void DataAcquisition::setValvePointers(Valve ptr[], int valvesCnt){
     for(int i = 0; i < valvesCnt; ++i){
         auto test = &ptr[i];
-        m_valves[i] = &ptr[i];
         qDebug() << test->m_name;
+        m_valves[i] = &ptr[i];
     }
     m_valvesCnt = valvesCnt;
 }
@@ -40,6 +40,8 @@ void DataAcquisition::setTimePointer(ControllerData* timeAnalog){
 
 void DataAcquisition::setPressurePointers(ControllerData ptr[], int pressureCnt){
     for(int i = 0; i < pressureCnt; ++i){
+        auto test = &ptr[i];
+        qDebug() << test->m_name;
         m_pressureSensors[i] = &ptr[i];
     }
     m_pressureSensorsCnt = pressureCnt;
@@ -47,6 +49,8 @@ void DataAcquisition::setPressurePointers(ControllerData ptr[], int pressureCnt)
 
 void DataAcquisition::setTempPointers(ControllerData ptr[], int tempCnt){
     for(int i = 0; i < tempCnt; ++i){
+        auto test = &ptr[i];
+        qDebug() << test->m_name;
         m_tempSensors[i] = &ptr[i];
     }
     m_tempSensorsCnt = tempCnt;
@@ -54,6 +58,8 @@ void DataAcquisition::setTempPointers(ControllerData ptr[], int tempCnt){
 
 void DataAcquisition::setFiltersDataPointers(FilterData ptr[], int filtersCnt){
     for(int i = 0; i < filtersCnt; ++i){
+        auto test = &ptr[i];
+        qDebug() << test->m_name;
         m_filtersData[i] = &ptr[i];
     }
     m_filtersDataCnt = filtersCnt;

@@ -15,7 +15,7 @@ public:
     virtual ~Quartile();
     void setVolume(double volume);
     void addVolume(const QString& name, double volume);
-    void addValvePtrs(Valve ptr[], int valvesCnt);
+    void addValvePtrs(Valve** ptr, int valvesCnt);
     void addPressurePtrs(ControllerData ptr[], int pressureCnt);
     void addTemperaturePtrs(ControllerData ptr[], int temperatureCnt);
     virtual void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB);
@@ -69,9 +69,9 @@ public:
     virtual ~StorageQuartile();
     void calculateTotalVolume();
     void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB) override;
-    void setCVolumePtr(DataCollection ptr[], int cVolumeCnt);
+    void setCVolumePtr(DataCollection** ptr, int cVolumeCnt);
     void setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD1);
-    void setMolesPtr(MolesData ptr[], int molesCnt);
+    void setMolesPtr(MolesData** ptr, int molesCnt);
     void setQuartileDataPressure(QuartileData* quartileData);
     void setQuartileDataTemperature(QuartileData* quartileData);
     void setIndexValveRange(int index);

@@ -23,23 +23,27 @@ void Quartile::addVolume(const QString& name, double volume){
     m_volumeObjects[name] = volumeObject;
 }
 
-void Quartile::addValvePtrs(Valve ptr[], int valvesCnt){
+void Quartile::addValvePtrs(Valve** ptr, int valvesCnt){
     for(int i = 0; i < valvesCnt; ++i){
-        auto test = &ptr[i];
-        m_valves << &ptr[i];
+        auto test = ptr[i];
         qDebug() << test->m_name;
+        m_valves << ptr[i];
     }
     // m_valvesCnt = valvesCnt;
 }
 
 void Quartile::addPressurePtrs(ControllerData ptr[], int pressureCnt){
     for(int i = 0; i < pressureCnt; ++i){
+        auto test = &ptr[i];
+        qDebug() << test->m_name;
         m_pressureList << &ptr[i];
     }
 }
 
 void Quartile::addTemperaturePtrs(ControllerData ptr[], int temperatureCnt){
     for(int i = 0; i < temperatureCnt; ++i){
+        auto test = &ptr[i];
+        qDebug() << test->m_name;
         m_temperatureList << &ptr[i];
     }
 }
@@ -172,9 +176,11 @@ void StorageQuartile::setQuartileDataTemperature(QuartileData* quartileData){
     temperatureStorageQuartile = quartileData;
 }
 
-void StorageQuartile::setCVolumePtr(DataCollection ptr[], int cVolumeCnt){
+void StorageQuartile::setCVolumePtr(DataCollection** ptr, int cVolumeCnt){
     for(int i = 0; i < cVolumeCnt; ++i){
-        cVolumePressure << &ptr[i];
+        auto test = ptr[i];
+        qDebug() << test->m_name;
+        cVolumePressure.append(ptr[i]);
     }
 }
 
@@ -183,11 +189,11 @@ void StorageQuartile::setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD
     d1VolumePressure = ptrD1;
 }
 
-void StorageQuartile::setMolesPtr(MolesData ptr[], int molesCnt){
+void StorageQuartile::setMolesPtr(MolesData** ptr, int molesCnt){
     for(int i = 0; i < molesCnt; ++i){
-        auto test = &ptr[i];
-        m_molesDataList << &ptr[i];
+        auto test = ptr[i];
         qDebug() << test->m_name;
+        m_molesDataList << ptr[i];
     }
 }
 

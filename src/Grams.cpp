@@ -138,7 +138,7 @@ void Grams::initAddRemoveQuartile(){
     m_addRemoveQuartile.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
     dataSource.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
     Valve* valveList[3] = {&vAR1, &vAR2, &vAR3};
-    m_addRemoveQuartile.addValvePtrs(*valveList, 3);
+    m_addRemoveQuartile.addValvePtrs(valveList, 3);
 }
 
 void Grams::initStorageQuartile(){
@@ -151,19 +151,23 @@ void Grams::initStorageQuartile(){
     m_storageQuartile.addPressurePtrs(*pressureSensorsList, 3);
     ControllerData* temperatureSensorsList[5] = {&tmSK, &tmS, &tmSLittle, &tmSSmall, &tmSLarge};
     m_storageQuartile.addTemperaturePtrs(*temperatureSensorsList, 5);
+    
+    prSC1.m_name = "prSC1";
+    prSC2.m_name = "prSC2";
+    prSC3.m_name = "prSC3";
     DataCollection* cVolumeSensorsList[3] = {&prSC1, &prSC2, &prSC3};
     m_storageQuartile.setQuartileDataPressure(&prSQ);
     m_storageQuartile.setQuartileDataTemperature(&tmSQ);
-    m_storageQuartile.setCVolumePtr(*cVolumeSensorsList, 3);
-    m_storageQuartile.setBD1VolumePtr(&prB, &prD1);
-    m_storageQuartile.setMolesPtr(*molesDataList, 5);
+    m_storageQuartile.setCVolumePtr(cVolumeSensorsList, 3);
+    m_storageQuartile.setBD1VolumePtr(&prSB, &prSD1);
+    m_storageQuartile.setMolesPtr(molesDataList, 5);
     QString baseNode = storage_names[0];
     for(int i = 1; i < 5; ++i){
         QString addNode = storage_names[i];
         m_storageQuartile.addPressureNode(baseNode+addNode, baseNode, addNode);
     }
     Valve* valvesList[4] = {&vS1, &vS2, &vS3, &vS4};
-    m_storageQuartile.addValvePtrs(*valvesList, 4);
+    m_storageQuartile.addValvePtrs(valvesList, 4);
     m_storageQuartile.setIndexValveRange(3); // vS4
     m_storageQuartile.setIndexPressureHighLow(0, 1); // prSH, prSA
     m_storageQuartile.setIndexTemperatureMain(0); // tmSK
