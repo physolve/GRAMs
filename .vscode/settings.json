@@ -12,7 +12,8 @@
         "qvariant": "cpp",
         "fstream": "cpp",
         "vector": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "charconv": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

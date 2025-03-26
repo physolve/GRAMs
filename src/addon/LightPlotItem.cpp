@@ -55,12 +55,8 @@ void LightPlotItem::setupPlot(QCustomPlot* customPlot){ // knows how many should
     qDebug() << QString("QCustomPlot Initialized");
 }
 
-void LightPlotItem::setDataPointers(FilterData** ptr, int ptrCnt){
-    // not good but it works
-    // m_sensors.resize(ptrCnt - 1);
-    for(auto i = 0; i < ptrCnt; ++i){
-        m_sensors.append(ptr[i]);
-    }
+void LightPlotItem::setDataPointers(const QVector<FilterData*>& ptr){
+    m_sensors = ptr;
 }
 
 void LightPlotItem::placeGraph(){

@@ -24,7 +24,7 @@ public:
   void backgroundCustomPlot();
   void setupPlot(QCustomPlot* customPlot);
 
-  void setDataPointers(DataCollection **ptr , int ptrCnt);
+  void setDataPointers(DataCollection* x, const QVector<DataCollection*>& ptr);
   void placeGraph();
 protected:
   void routeMouseEvents(QMouseEvent *event);
@@ -42,7 +42,7 @@ public slots:
 private:
   QCustomPlot *m_CustomPlot;
   DataCollection* m_time;
-  QList<DataCollection*> m_sensors;
+  QVector<DataCollection*> m_sensors;
   bool rescalingON;
   double lastPointKey;
   double rangeLow;

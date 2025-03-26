@@ -91,13 +91,9 @@ void CustomPlotItem::setupPlot(QCustomPlot* customPlot){ // knows how many shoul
     qDebug() << QString("QCustomPlot Initialized");
 }
 
-void CustomPlotItem::setDataPointers(DataCollection** ptr, int ptrCnt){
-    // not good but it works
-    // m_sensors.resize(ptrCnt - 1);
-    m_time = ptr[0];
-    for(auto i = 1; i < ptrCnt; ++i){
-        m_sensors.append(ptr[i]);
-    }
+void CustomPlotItem::setDataPointers(DataCollection* x, const QVector<DataCollection*>& ptr){
+    m_time = x;
+    m_sensors = ptr;
 }
 
 void CustomPlotItem::placeGraph(){

@@ -71,8 +71,8 @@ void Grams::initDigitalData(){
         indexData << i;
     }
     timeFilter.setData(indexData);
-    for(int j = 0; j < 8; j++){
-        filtersData[j].setData(QVector<double>(512,0.0)); //m_sectionLength
+    for(auto filtersData : getFilterPointers()){
+        filtersData->setData(QVector<double>(512,0.0));
     }
 }
 
@@ -100,8 +100,8 @@ void Grams::advDoController(){
     if(!initSource.isInitializeOk())
         return;
     // pointers to valves
-    Valve *valveList[16] = {&vAR1, &vAR2, &vAR3, &vAR4, &vAR5, &vSL2, &vAR6, &vSL1, &vS4, &vS1, &vS2, &vS3, &vR1, &vR2, &vR3, &vR4};
-    dataSource.setValvePointers(*valveList, 16);
+    QVector<Valve*> valveList = {&vAR1, &vAR2, &vAR3, &vAR4, &vAR5, &vSL2, &vAR6, &vSL1, &vS4, &vS1, &vS2, &vS3, &vR1, &vR2, &vR3, &vR4};
+    dataSource.setValvePointers(valveList);
     daqParameters parametersDO;
     initSource.getParametersDO(parametersDO);    
     // dataSource. set Required
@@ -112,8 +112,8 @@ void Grams::advDoController(){
 void Grams::advAiController(){
     if(!initSource.isInitializeOk())
         return;
-    ControllerData* pressureSensorsList[8] = {&prSH, &prSA, &prRH, &prRA, &prRL, &prSK, &tmSK, &tmS};
-    ControllerData* tempSensorsList[8] = {&tmX, &tmY, &tmSLittle, &tmSSmall, &tmSLarge, &tmSTube, &tmRTube, &tmF};
+    QVector<ControllerData*> pressureSensorsList = {&prSH, &prSA, &prRH, &prRA, &prRL, &prSK, &tmSK, &tmS};
+    QVector<ControllerData*> tempSensorsList = {&tmX, &tmY, &tmSLittle, &tmSSmall, &tmSLarge, &tmSTube, &tmRTube, &tmF};
 
     daqParameters parametersAIpres;
     daqParameters parametersAItemp;
@@ -121,12 +121,12 @@ void Grams::advAiController(){
     dataSource.setTimePointer(&timeAnalog);
 
     initSource.getParametersAIpres(parametersAIpres);
-    dataSource.setPressurePointers(*pressureSensorsList, 8);
-    dataSource.setFiltersDataPointers(filtersData, 8);
+    dataSource.setPressurePointers(pressureSensorsList);
+    dataSource.setFiltersDataPointers(getFilterPointers());
     dataSource.initDaqAIpres(parametersAIpres);
 
     initSource.getParametersAItemp(parametersAItemp);
-    dataSource.setTempPointers(*tempSensorsList, 8);
+    dataSource.setTempPointers(tempSensorsList);
     dataSource.initDaqAItemp(parametersAItemp);
 
     guiValsUpdate();
@@ -137,37 +137,36 @@ void Grams::initAddRemoveQuartile(){
     m_supplyPressureLow.m_name = "Supply low";
     m_addRemoveQuartile.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
     dataSource.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
-    Valve* valveList[3] = {&vAR1, &vAR2, &vAR3};
-    m_addRemoveQuartile.addValvePtrs(valveList, 3);
+    QVector<Valve*> valveList = {&vAR1, &vAR2, &vAR3};
+    m_addRemoveQuartile.addValvePtrs(valveList);
 }
 
 void Grams::initStorageQuartile(){
     const auto& storage_names = m_quartileManager.fillStorageQuartile(m_storageQuartile);
-    MolesData* molesDataList[5] = {&mlB, &mlSC1, &mlSC2, &mlSC3, &mlD1};
-    for(int i = 0; i < 5; ++i){
+    QVector<MolesData*> molesDataList = {&mlB, &mlSC1, &mlSC2, &mlSC3, &mlD1};
+    for(int i = 0; i < molesDataList.count(); ++i){
         molesDataList[i]->m_name = storage_names[i];
     }
-    ControllerData* pressureSensorsList[3] = {&prSH, &prSA, &prSK};
-    m_storageQuartile.addPressurePtrs(*pressureSensorsList, 3);
-    ControllerData* temperatureSensorsList[5] = {&tmSK, &tmS, &tmSLittle, &tmSSmall, &tmSLarge};
-    m_storageQuartile.addTemperaturePtrs(*temperatureSensorsList, 5);
-    
+    QVector<ControllerData*> pressureSensorsList = {&prSH, &prSA, &prSK};
+    m_storageQuartile.addPressurePtrs(pressureSensorsList);
+    QVector<ControllerData*> temperatureSensorsList = {&tmSK, &tmS, &tmSLittle, &tmSSmall, &tmSLarge};
+    m_storageQuartile.addTemperaturePtrs(temperatureSensorsList);
     prSC1.m_name = "prSC1";
     prSC2.m_name = "prSC2";
     prSC3.m_name = "prSC3";
-    DataCollection* cVolumeSensorsList[3] = {&prSC1, &prSC2, &prSC3};
+    QVector<DataCollection*> cVolumeSensorsList = {&prSC1, &prSC2, &prSC3};
     m_storageQuartile.setQuartileDataPressure(&prSQ);
     m_storageQuartile.setQuartileDataTemperature(&tmSQ);
-    m_storageQuartile.setCVolumePtr(cVolumeSensorsList, 3);
+    m_storageQuartile.setCVolumePtr(cVolumeSensorsList);
     m_storageQuartile.setBD1VolumePtr(&prSB, &prSD1);
-    m_storageQuartile.setMolesPtr(molesDataList, 5);
+    m_storageQuartile.setMolesPtr(molesDataList);
     QString baseNode = storage_names[0];
     for(int i = 1; i < 5; ++i){
         QString addNode = storage_names[i];
         m_storageQuartile.addPressureNode(baseNode+addNode, baseNode, addNode);
     }
-    Valve* valvesList[4] = {&vS1, &vS2, &vS3, &vS4};
-    m_storageQuartile.addValvePtrs(valvesList, 4);
+    QVector<Valve*> valvesList = {&vS1, &vS2, &vS3, &vS4};
+    m_storageQuartile.addValvePtrs(valvesList);
     m_storageQuartile.setIndexValveRange(3); // vS4
     m_storageQuartile.setIndexPressureHighLow(0, 1); // prSH, prSA
     m_storageQuartile.setIndexTemperatureMain(0); // tmSK
@@ -221,8 +220,10 @@ void Grams::initGUI(){
 
 void Grams::getCustomPlotPtr(CustomPlotItem* customPlotPointer){
     m_testPlot = customPlotPointer;
-    DataCollection* chartPtrs[3] = {&timeAnalog, &prSH, &prSA};
-    m_testPlot->setDataPointers(chartPtrs, 3);
+    QVector<DataCollection*> chartPtrs;
+    chartPtrs.append(&prSH);
+    chartPtrs.append(&prSA);
+    m_testPlot->setDataPointers(&timeAnalog, chartPtrs);
     m_testPlot->initCustomPlot();
     m_testPlot->placeGraph();
     m_testPlot->dataUpdated();
@@ -231,17 +232,18 @@ void Grams::getCustomPlotPtr(CustomPlotItem* customPlotPointer){
 }
 
 int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
+    QVector<DataCollection*> chartPtrs;
     switch(m_filterPlots.count()){
         case 0:
         {
-            DataCollection* chartPtrs[2] = {&timeFilter, &filtersData[0]};
-            filterPlotPointer->setDataPointers(chartPtrs, 2);
+            chartPtrs.append(&fl_prSH);
+            filterPlotPointer->setDataPointers(&timeFilter, chartPtrs);
             break;
         }
         case 1:
         {
-            DataCollection* chartPtrs[2] = {&timeFilter, &filtersData[1]};
-            filterPlotPointer->setDataPointers(chartPtrs, 2);
+            chartPtrs.append(&fl_prSA);
+            filterPlotPointer->setDataPointers(&timeFilter, chartPtrs);
             break;
         }
         default:

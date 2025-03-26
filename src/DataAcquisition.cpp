@@ -25,44 +25,24 @@ bool DataAcquisition::getGRAMsIntegrity(){
     return true;
 }
 
-void DataAcquisition::setValvePointers(Valve ptr[], int valvesCnt){
-    for(int i = 0; i < valvesCnt; ++i){
-        auto test = &ptr[i];
-        qDebug() << test->m_name;
-        m_valves[i] = &ptr[i];
-    }
-    m_valvesCnt = valvesCnt;
+void DataAcquisition::setValvePointers(const QVector<Valve*>& ptr){
+    m_valves = ptr;
 }
 
 void DataAcquisition::setTimePointer(ControllerData* timeAnalog){
     m_time = timeAnalog;
 }
 
-void DataAcquisition::setPressurePointers(ControllerData ptr[], int pressureCnt){
-    for(int i = 0; i < pressureCnt; ++i){
-        auto test = &ptr[i];
-        qDebug() << test->m_name;
-        m_pressureSensors[i] = &ptr[i];
-    }
-    m_pressureSensorsCnt = pressureCnt;
+void DataAcquisition::setPressurePointers(const QVector<ControllerData*>& ptr){
+    m_pressureSensors = ptr;
 }
 
-void DataAcquisition::setTempPointers(ControllerData ptr[], int tempCnt){
-    for(int i = 0; i < tempCnt; ++i){
-        auto test = &ptr[i];
-        qDebug() << test->m_name;
-        m_tempSensors[i] = &ptr[i];
-    }
-    m_tempSensorsCnt = tempCnt;
+void DataAcquisition::setTempPointers(const QVector<ControllerData*>& ptr){
+    m_tempSensors = ptr;
 }
 
-void DataAcquisition::setFiltersDataPointers(FilterData ptr[], int filtersCnt){
-    for(int i = 0; i < filtersCnt; ++i){
-        auto test = &ptr[i];
-        qDebug() << test->m_name;
-        m_filtersData[i] = &ptr[i];
-    }
-    m_filtersDataCnt = filtersCnt;
+void DataAcquisition::setFiltersDataPointers(const QVector<FilterData*>& ptr){
+    m_filtersData = ptr;
 }
 
 void DataAcquisition::initDaqDO(const daqParameters &parameter){
@@ -75,7 +55,7 @@ void DataAcquisition::initDaqDO(const daqParameters &parameter){
     // valve objects
     const auto &readData = reqValveDO.getData();
     // if ok
-    for(int i = 0; i < m_valvesCnt; ++i){
+    for(int i = 0; i < m_valves.count(); ++i){
         m_valves[i]->setState(readData[i]);
     }
     GRAMsIntegrity["valves"] = ControllerConnection::Online;
@@ -98,7 +78,7 @@ void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
     reqSensorAI.readData();
     // pass to filter
     const auto &readData = reqSensorAI.getData();
-    for(int i = 0; i < m_pressureSensorsCnt; ++i){
+    for(int i = 0; i < m_pressureSensors.count(); ++i){
         m_pressureSensors[i]->addValue(readData[i], 0);
         m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
     }
@@ -108,7 +88,7 @@ void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
 void DataAcquisition::updateFilter(int chartIndex){
     filterView.readKalman();
     filterView.parseKalman();
-    reqSensorAI.setVolageFilter(0, filterView.getJsonMatrix()); // chartIndex, getJsonMatrix(chartIndex)
+    reqSensorAI.setVolageFilter(0, filterView.getJsonMatrix());
     // if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
     //     return;
     // auto controller = m_controllerList["pressure"].staticCast<AdvantechBuff>();
@@ -129,7 +109,7 @@ void DataAcquisition::initDaqAItemp(const daqParameters &parameter){
     reqTempAI.readData();
     // without filters
     const auto &readData = reqTempAI.getData();
-    for(int i = 0; i < m_tempSensorsCnt; ++i){
+    for(int i = 0; i < m_tempSensors.count(); ++i){
         m_tempSensors[i]->addValue(readData[i]);
     }
 
@@ -141,7 +121,7 @@ bool DataAcquisition::setValveStates(){
         return false;
     QVector<bool> changedState;
     // if changedState > 8*portCount!
-    for(int i = 0; i < m_valvesCnt; ++i){
+    for(int i = 0; i < m_valves.count(); ++i){
         changedState << m_valves[i]->getState();
     }
     // handler to unsuccessful set (true / false)
@@ -175,12 +155,12 @@ void DataAcquisition::processEvents(){
     reqTempAI.readData();
     m_time->addValue(m_elapsedTimer.elapsed()/1000.0);  
     const auto &readDataPres = reqSensorAI.getData();
-    for(int i = 0; i < m_pressureSensorsCnt; ++i){
+    for(int i = 0; i < m_pressureSensors.count(); ++i){
         m_pressureSensors[i]->addValue(readDataPres[i]); // ,0 minimal value
         m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
     }
     const auto &readDataTemp = reqTempAI.getData(); // this data from last read
-    for(int i = 0; i < m_tempSensorsCnt; ++i){
+    for(int i = 0; i < m_tempSensors.count(); ++i){
         m_tempSensors[i]->addValue(readDataTemp[i]);
     }
     reqSensorAI.readData();

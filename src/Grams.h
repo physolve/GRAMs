@@ -188,8 +188,22 @@ private:
     CustomPlotItem* m_mainPlot;
     QList<CustomPlotItem*> m_filterPlots;
     FilterData timeFilter;
-    FilterData filtersData[8];
-
+    FilterData fl_prSH;    // 0 DD311
+    FilterData fl_prSA;    // 1 DD312
+    FilterData fl_prRH;    // 2 DD331
+    FilterData fl_prRA;    // 3 DD332
+    FilterData fl_prRL;    // 4 DD334
+    FilterData fl_prSK;    // 5 DD341
+    QVector<FilterData*> getFilterPointers() {
+        QVector<FilterData*> pointers;
+        pointers.append(&fl_prSH);
+        pointers.append(&fl_prSA);
+        pointers.append(&fl_prRH);
+        pointers.append(&fl_prRA);
+        pointers.append(&fl_prRL);
+        pointers.append(&fl_prSK);
+        return pointers;
+    }
     // quartiles
     QuartileManager m_quartileManager;
 

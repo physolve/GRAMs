@@ -20,7 +20,7 @@ public:
   void initCustomPlot();
   void setupPlot(QCustomPlot* customPlot);
   
-  void setDataPointers(FilterData **ptr , int ptrCnt);
+  void setDataPointers(const QVector<FilterData*>& ptr);
   void placeGraph();
 
   void initPlotData();
@@ -42,7 +42,7 @@ public slots:
 private:
   QCustomPlot *m_CustomPlot;
   FilterData pseudo_time;
-  QList<FilterData*> m_sensors;
+  QVector<FilterData*> m_sensors;
   bool rescalingON;
   double lastPointKey;
 

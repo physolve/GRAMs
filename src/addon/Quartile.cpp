@@ -23,29 +23,16 @@ void Quartile::addVolume(const QString& name, double volume){
     m_volumeObjects[name] = volumeObject;
 }
 
-void Quartile::addValvePtrs(Valve** ptr, int valvesCnt){
-    for(int i = 0; i < valvesCnt; ++i){
-        auto test = ptr[i];
-        qDebug() << test->m_name;
-        m_valves << ptr[i];
-    }
-    // m_valvesCnt = valvesCnt;
+void Quartile::addValvePtrs(const QVector<Valve*>& ptr){
+    m_valves = ptr;
 }
 
-void Quartile::addPressurePtrs(ControllerData ptr[], int pressureCnt){
-    for(int i = 0; i < pressureCnt; ++i){
-        auto test = &ptr[i];
-        qDebug() << test->m_name;
-        m_pressureList << &ptr[i];
-    }
+void Quartile::addPressurePtrs(const QVector<ControllerData*>& ptr){
+    m_pressureList = ptr;
 }
 
-void Quartile::addTemperaturePtrs(ControllerData ptr[], int temperatureCnt){
-    for(int i = 0; i < temperatureCnt; ++i){
-        auto test = &ptr[i];
-        qDebug() << test->m_name;
-        m_temperatureList << &ptr[i];
-    }
+void Quartile::addTemperaturePtrs(const QVector<ControllerData*>& ptr){
+    m_temperatureList = ptr;
 }
 
 void Quartile::addPressureNode(const QString& nodeName, const QString& volA, const QString& volB){
@@ -70,18 +57,19 @@ void AddRemoveQuartile::setSupplyPressurePtr(FilterData* high, FilterData* low){
 }
 
 int AddRemoveQuartile::getLightPlotPtr(LightPlotItem* lightPlotPointer){
+    QVector<FilterData*> chartPtrs;
     switch(m_supplyPressurePlots.count()){
         // better rewrite using node pressure
         case 0:
         {
-            FilterData* chartPtrs[1] = {m_supplyPressureHigh};
-            lightPlotPointer->setDataPointers(chartPtrs, 1);
+            chartPtrs.append(m_supplyPressureHigh);
+            lightPlotPointer->setDataPointers(chartPtrs);
             break;
         }
         case 1:
         {
-            FilterData* chartPtrs[1] = {m_supplyPressureLow};
-            lightPlotPointer->setDataPointers(chartPtrs, 1);
+            chartPtrs.append(m_supplyPressureLow);
+            lightPlotPointer->setDataPointers(chartPtrs);
             break;
         }
         default:
@@ -176,12 +164,8 @@ void StorageQuartile::setQuartileDataTemperature(QuartileData* quartileData){
     temperatureStorageQuartile = quartileData;
 }
 
-void StorageQuartile::setCVolumePtr(DataCollection** ptr, int cVolumeCnt){
-    for(int i = 0; i < cVolumeCnt; ++i){
-        auto test = ptr[i];
-        qDebug() << test->m_name;
-        cVolumePressure.append(ptr[i]);
-    }
+void StorageQuartile::setCVolumePtr(const QVector<DataCollection*>& ptr){
+    cVolumePressure = ptr;
 }
 
 void StorageQuartile::setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD1){
@@ -189,12 +173,8 @@ void StorageQuartile::setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD
     d1VolumePressure = ptrD1;
 }
 
-void StorageQuartile::setMolesPtr(MolesData** ptr, int molesCnt){
-    for(int i = 0; i < molesCnt; ++i){
-        auto test = ptr[i];
-        qDebug() << test->m_name;
-        m_molesDataList << ptr[i];
-    }
+void StorageQuartile::setMolesPtr(const QVector<MolesData*>& ptr){
+    m_molesDataList = ptr;
 }
 
 void StorageQuartile::addPressureNode(const QString& nodeName, const QString& volA, const QString& volB){
@@ -266,7 +246,6 @@ void StorageQuartile::updateVolumeObjects(){
 
 void StorageQuartile::updateMoles(){
     for(auto moleSensor : m_molesDataList){
-        qDebug() << moleSensor->m_name;
         moleSensor->addPoint(m_volumeObjects[moleSensor->m_name].getMoles());
     }
 }

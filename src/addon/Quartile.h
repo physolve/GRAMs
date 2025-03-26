@@ -15,9 +15,9 @@ public:
     virtual ~Quartile();
     void setVolume(double volume);
     void addVolume(const QString& name, double volume);
-    void addValvePtrs(Valve** ptr, int valvesCnt);
-    void addPressurePtrs(ControllerData ptr[], int pressureCnt);
-    void addTemperaturePtrs(ControllerData ptr[], int temperatureCnt);
+    void addValvePtrs(const QVector<Valve*>& ptr);
+    void addPressurePtrs(const QVector<ControllerData*>& ptr);
+    void addTemperaturePtrs(const QVector<ControllerData*>& ptr);
     virtual void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB);
     // pressure sensor pointers
 protected:
@@ -69,9 +69,9 @@ public:
     virtual ~StorageQuartile();
     void calculateTotalVolume();
     void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB) override;
-    void setCVolumePtr(DataCollection** ptr, int cVolumeCnt);
+    void setCVolumePtr(const QVector<DataCollection*>& ptr);
     void setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD1);
-    void setMolesPtr(MolesData** ptr, int molesCnt);
+    void setMolesPtr(const QVector<MolesData*>& ptr);
     void setQuartileDataPressure(QuartileData* quartileData);
     void setQuartileDataTemperature(QuartileData* quartileData);
     void setIndexValveRange(int index);
@@ -82,11 +82,11 @@ public:
     void updateMoles();
 private:
     // additional volumes not objects
-    QList<DataCollection*> cVolumePressure;
+    QVector<DataCollection*> cVolumePressure;
     DataCollection* bVolumePressure;
     DataCollection* d1VolumePressure;
     // moles info
-    QList<MolesData*> m_molesDataList;
+    QVector<MolesData*> m_molesDataList;
     // active volume
     QuartileData* pressureStorageQuartile;
     QuartileData* temperatureStorageQuartile;

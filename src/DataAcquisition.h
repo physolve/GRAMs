@@ -29,12 +29,12 @@ public:
 
     bool getGRAMsIntegrity();
 
-    void setValvePointers(Valve ptr[], int valvesCnt);
+    void setValvePointers(const QVector<Valve*>& ptr);
     bool setValveStates();
     void setTimePointer(ControllerData* ptr);
-    void setPressurePointers(ControllerData ptr[], int pressureCnt);
-    void setTempPointers(ControllerData ptr[], int tempCnt);
-    void setFiltersDataPointers(FilterData ptr[], int filtersCnt);
+    void setPressurePointers(const QVector<ControllerData*>& ptr);
+    void setTempPointers(const QVector<ControllerData*>& ptr);
+    void setFiltersDataPointers(const QVector<FilterData*>& ptr);
     
     Q_INVOKABLE void updateFilter(int chartIndex); // move to DataAcquisition
     
@@ -55,24 +55,28 @@ private:
     
     AdvantechDO reqValveDO;
     // valve pointers
-    Valve* m_valves[16]; // to reqValveDO 
-    int m_valvesCnt;
+    QVector<Valve*> m_valves;
+    // Valve* m_valves[16]; // to reqValveDO 
+    // int m_valvesCnt;
     
     AdvantechBuff reqSensorAI;
     // AI pointers
         // pres
-    ControllerData* m_pressureSensors[8];
-    int m_pressureSensorsCnt;
+    QVector<ControllerData*> m_pressureSensors;
+    // ControllerData* m_pressureSensors[8];
+    // int m_pressureSensorsCnt;
     
     AdvantechAI reqTempAI;
     // AI pointers
         // temp
-    ControllerData* m_tempSensors[8];
-    int m_tempSensorsCnt;
+    QVector<ControllerData*> m_tempSensors;
+    // ControllerData* m_tempSensors[8];
+    // int m_tempSensorsCnt;
     
     FilterView filterView;
-    FilterData* m_filtersData[8];
-    int m_filtersDataCnt;
+    QVector<FilterData*> m_filtersData;
+    // FilterData* m_filtersData[8];
+    // int m_filtersDataCnt;
 
     bool m_supplyMeasure;
     FilterData* m_supplyPressureHigh;
