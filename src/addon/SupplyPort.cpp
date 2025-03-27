@@ -72,7 +72,13 @@ void SupplyPort::addMeasure(double pressure_quartile){
 }
 
 double SupplyPort::getFlowCoefficient(double turn){
-    return turn > 1 ? 0.0037*turn-0.0024 : 0.00137; // for s series from 2 to 8 turns
+    switch(m_portId){
+        case 0: return 0.00137; break;
+        case 1: return 0.00137; break;
+        case 2: return 0.0031; break;
+        default: return 0; break;
+    }
+    // return turn > 1 ? 0.0037*turn-0.0024 : 0.00137; // for s series from 2 to 8 turns
 }
 
 void SupplyPort::calculateRate(double flow_factor, double pressure){

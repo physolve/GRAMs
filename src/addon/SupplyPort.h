@@ -22,6 +22,9 @@ public:
     double getFlowCoefficient(double turn);
     void calculateRate(double flow_factor, double pressure);
     void saveResultsToFile();
+
+    void preCalculateTime(); // target?
+
 private:
     double calcualteModelPass(double time_differ);
     int m_portId;
