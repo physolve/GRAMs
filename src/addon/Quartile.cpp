@@ -95,7 +95,7 @@ int AddRemoveQuartile::getLightPlotPtr(LightPlotItem* lightPlotPointer){
 }
 
 void AddRemoveQuartile::setSupplyAdjustParameters(QVariantMap parameters){
-    m_currentSupplyPort = 2 - parameters["supplyPort"].toInt();
+    m_currentSupplyPort = parameters["supplyPort"].toInt();
     const auto& turn = parameters["turn"].toDouble();
     const auto& portPressure = parameters["portPressure"].toDouble();
     m_supplyPort[m_currentSupplyPort].setInitialParametersSupply(m_currentSupplyPort, turn, portPressure);
@@ -109,7 +109,7 @@ void AddRemoveQuartile::startSupplyMeasure(bool measure){
         // initial_flow = quartile_storage->moles to std cm3
         const auto& initial_flow = static_cast<StorageQuartile*>(m_storageQuartile)->getQuartileMoleVolume();
         m_supplyPort[m_currentSupplyPort].startCalc(m_storageQuartilePressure->getCurValue(), initial_flow);
-        m_supplyPressurePlots[0]->initPlotData();
+        m_supplyPressurePlots[0]->initPlotData(); // only high pressure
         m_expUpdate->start();
     }
     else{
@@ -119,8 +119,8 @@ void AddRemoveQuartile::startSupplyMeasure(bool measure){
         //clear
         m_supplyPort[m_currentSupplyPort].endCalc();
 
-        m_supplyPressurePlots[0]->savePlotData();
-        m_supplyPressurePlots[0]->clearPlotData();
+        m_supplyPressurePlots[0]->savePlotData();  // only high pressure
+        m_supplyPressurePlots[0]->clearPlotData();  // only high pressure
         m_currentSupplyPort = -1;
     }
 }
@@ -131,31 +131,17 @@ void AddRemoveQuartile::expEvent(){
 
 void AddRemoveQuartile::updatePortState(){
     // update all ports
-    for(int i = 0; i < m_valves.count(); ++i){ // if drain ptr!
+    for(int i = 0; i < m_valves.count(); ++i){ // if drain ptr! exceed count to 4
         m_supplyPort[i].setPortOpen(m_valves[i]->getState());
     }
 }
 
 void AddRemoveQuartile::fillSupplyPortData(){
-    switch(m_currentSupplyPort){
-        // this is supply port for low pressure
-        // better rewrite using node pressure
-        case 2:
-        {
-            // but graph update values from m_supplyPressureLow
-            m_supplyPressurePlots[1]->dataUpdated();
-            break;
-        }
-        case 1: // this is supply port for high pressure
-        {
-            // but this graph update values from m_supplyPressureHigh
-            m_supplyPressurePlots[0]->dataUpdated();
-            break;
-        }
-        default:{
-            break;
-        }
-    }
+    // but graph update values from m_supplyPressureLow
+    // m_supplyPressurePlots[1]->dataUpdated();
+    // but this graph update values from m_supplyPressureHigh
+    m_supplyPressurePlots[0]->dataUpdated();
+
     m_supplyPort[m_currentSupplyPort].setPortOpen(m_valves[m_currentSupplyPort]->getState());
     m_supplyPort[m_currentSupplyPort].addMeasure(m_storageQuartilePressure->getCurValue());
 }
