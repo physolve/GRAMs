@@ -59,13 +59,13 @@ Window {
                     if(checked){
                         AddRemoveQuar.setSupplyAdjustParameters(parameters)
                     }
-                    DataSource.setSupplyMeasure(checked)
-                    AddRemoveQuar.startSupplyMeasure(checked)
+                    if(DataSource.setSupplyMeasure(checked))
+                        AddRemoveQuar.startSupplyMeasure(checked)
                 }
             }
             ComboBox{
                 id: gasPortChoose
-                model: ["Порты справа-налево...", "Инертный газ", "Высокое давление H2", "Низкое давление H2"]
+                model: ["Порты слева-направо...", "Инертный газ", "Высокое давление H2", "Низкое давление H2"]
                 Layout.preferredWidth: 200
                 implicitContentWidthPolicy: ComboBox.ContentItemImplicitWidth
                 onActivated: {

@@ -21,8 +21,8 @@ void SupplyPort::setInitialParametersSupply(int portId, double turn, double port
     m_portPressure = portPressure;
 }
 
-void SupplyPort::initResultFile(){
-    supplyResultFile.setFileName(QString("data/SupplyPort_%1_%2.txt").arg(m_portId).arg(supplyResultCount));
+void SupplyPort::initResultFile(bool debug){
+    supplyResultFile.setFileName(QString("data/SupplyPort_%1_%2.txt").arg(m_portId+3*debug).arg(supplyResultCount));
     if (!supplyResultFile.open(QIODevice::WriteOnly | QIODevice::Text)){
         qDebug() << "File don't exist";
         return;
@@ -91,7 +91,7 @@ void SupplyPort::calculateRate(double flow_factor, double pressure){
     //
     // N2 = 6950 std L/min (bar, K)
     // G_g = 0.07 (H2)
-    const auto& diff_pres = (pressure<m_portPressure)?m_portPressure-pressure:0;
+    const auto& diff_pres = (m_portPressure-pressure>0.33)?m_portPressure-pressure:0;
     if(pressure < 0.5*m_portPressure){
         m_currentRate = 0.471*6950*flow_factor*m_portPressure*sqrt(1/(specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
     }
@@ -102,6 +102,25 @@ void SupplyPort::calculateRate(double flow_factor, double pressure){
 
 double SupplyPort::calcualteModelPass(double time_pass){
     return m_currentRate * time_pass; // cm3/s*s -> cm3
+}
+
+bool SupplyPort::addModelMeasure(double pressure_model, double time_model){
+    const auto& flow_factor = getFlowCoefficient(m_turn);
+    calculateRate(flow_factor, pressure_model);
+    if(m_portOpen){
+        auto time_pass = time_model;
+        m_timePoints << time_pass;
+        m_pressurePoints << pressure_model;
+        m_ratePoints << m_currentRate;
+        m_flowPass += calcualteModelPass(time_pass-last_time_pass);
+        m_modelPassPoints << m_flowPass;
+        last_time_pass = time_pass;
+    }
+    return (m_currentRate < 1);
+}
+
+double SupplyPort::getFlowPass() const{
+    return m_flowPass;
 }
 
 void SupplyPort::saveResultsToFile(){

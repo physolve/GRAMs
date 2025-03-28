@@ -143,8 +143,12 @@ void DataAcquisition::stopAcquisition(){
     // clear additionally
 }
 
-void DataAcquisition::setSupplyMeasure(bool supplyMeasure){
+bool DataAcquisition::setSupplyMeasure(bool supplyMeasure){
+    if(!reqTempAI.isConnected()||!reqSensorAI.isConnected()){
+        return false;
+    }
     m_supplyMeasure = supplyMeasure;
+    return true;
 }
 
 void DataAcquisition::processEvents(){

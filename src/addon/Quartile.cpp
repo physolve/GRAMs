@@ -100,8 +100,9 @@ void AddRemoveQuartile::setSupplyAdjustParameters(QVariantMap parameters){
     const auto& portPressure = parameters["portPressure"].toDouble();
     m_supplyPort[m_currentSupplyPort].setInitialParametersSupply(m_currentSupplyPort, turn, portPressure);
     qDebug() << "Begin supply with parameters:" << QString("%1 %2 %3").arg(m_currentSupplyPort).arg(turn).arg(portPressure);
-}
 
+    preCalculateSupplyTime(m_currentSupplyPort, turn, portPressure);
+}
 void AddRemoveQuartile::startSupplyMeasure(bool measure){
     if(measure){
         qDebug() << "Current supply port state: " << m_valves[m_currentSupplyPort]->getState();
@@ -118,24 +119,20 @@ void AddRemoveQuartile::startSupplyMeasure(bool measure){
         m_supplyPort[m_currentSupplyPort].saveResultsToFile();
         //clear
         m_supplyPort[m_currentSupplyPort].endCalc();
-
         m_supplyPressurePlots[0]->savePlotData();  // only high pressure
         m_supplyPressurePlots[0]->clearPlotData();  // only high pressure
         m_currentSupplyPort = -1;
     }
 }
-
 void AddRemoveQuartile::expEvent(){
     fillSupplyPortData();
 }
-
 void AddRemoveQuartile::updatePortState(){
     // update all ports
     for(int i = 0; i < m_valves.count(); ++i){ // if drain ptr! exceed count to 4
         m_supplyPort[i].setPortOpen(m_valves[i]->getState());
     }
 }
-
 void AddRemoveQuartile::fillSupplyPortData(){
     // but graph update values from m_supplyPressureLow
     // m_supplyPressurePlots[1]->dataUpdated();
@@ -144,6 +141,30 @@ void AddRemoveQuartile::fillSupplyPortData(){
 
     m_supplyPort[m_currentSupplyPort].setPortOpen(m_valves[m_currentSupplyPort]->getState());
     m_supplyPort[m_currentSupplyPort].addMeasure(m_storageQuartilePressure->getCurValue());
+}
+
+void AddRemoveQuartile::preCalculateSupplyTime(int portId, double turn, double portPressure){
+    // initial_flow = quartile_storage->moles to std cm3
+    SupplyPort model_port;
+    model_port.setInitialParametersSupply(m_currentSupplyPort, turn, portPressure);
+    model_port.initResultFile(true);
+    StorageQuartile* storageQuartile = static_cast<StorageQuartile*>(m_storageQuartile);
+    const auto& initial_flow = storageQuartile->getQuartileMoleVolume();
+    model_port.startCalc(m_storageQuartilePressure->getCurValue(), initial_flow);
+    model_port.setPortOpen(true);
+    double model_pressure = m_storageQuartilePressure->getCurValue();
+    double model_time;
+    for(model_time = 0; model_time < 10; model_time += 0.01){
+        if(model_port.addModelMeasure(model_pressure, model_time)) break;
+        const double& flow_pass = model_port.getFlowPass();
+        model_pressure = storageQuartile->getQuartileModelPressure(flow_pass);
+        // target check
+        // total time
+    }
+    model_port.setPortOpen(false);
+    qDebug() << "Total model_time = " << model_time;
+    // this total time can be used to stop supply
+    model_port.saveResultsToFile();
 }
 
 StorageQuartile::StorageQuartile(QObject *parent) :
@@ -282,6 +303,18 @@ double StorageQuartile::getQuartileMoleVolume() const{
     const auto& moles = getQuartileMole();
     return moles*temperature_std_K*gas_constant*10/pressure_std_bar; // moles * K *Jl/(mol*K) / (10^5*bar) -> m3 -> * 10^6 -> cm3
 }
+
+double StorageQuartile::getQuartileModelPressure(double model_flow){
+    const auto& moles = model_flow*pressure_std_bar/(temperature_std_K*gas_constant*10);
+    double volume = m_volumeObjects[m_mainVolume].volume;
+    for(const auto& valveToVolume:m_valveToVolumeList){
+        if(m_valves[valveToVolume.first]->getState()){
+            volume+=m_volumeObjects[valveToVolume.second].volume;
+        }
+    }
+    return moles*gas_constant*temperature_std_K*10/volume;
+}
+
 
 ReactionQuartile::ReactionQuartile(QObject *parent) :
     Quartile(parent){       

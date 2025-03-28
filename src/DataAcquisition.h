@@ -39,7 +39,7 @@ public:
     Q_INVOKABLE void updateFilter(int chartIndex); // move to DataAcquisition
     
     void setSupplyPressurePtr(FilterData* high, FilterData* low);
-    Q_INVOKABLE void setSupplyMeasure(bool supplyMeasure);
+    Q_INVOKABLE bool setSupplyMeasure(bool supplyMeasure);
     
 private slots:
     void processEvents();

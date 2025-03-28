@@ -14,19 +14,18 @@ public:
     void setInitialParametersSupply(int portId, double turn, double portPressure);
     // info about port
     // data to file
-    void initResultFile();
+    void initResultFile(bool debug = false);
     void startCalc(double pressure_quartile, double initial_flow);
     void setPortOpen(bool state);
     void endCalc();
     void addMeasure(double pressure_quartile);
-    double getFlowCoefficient(double turn);
     void calculateRate(double flow_factor, double pressure);
     void saveResultsToFile();
-
-    void preCalculateTime(); // target?
-
+    double getFlowPass() const;
+    bool addModelMeasure(double pressure_model, double time_model);
 private:
     double calcualteModelPass(double time_differ);
+    double getFlowCoefficient(double turn);
     int m_portId;
     double m_turn;
     double m_currentRate;

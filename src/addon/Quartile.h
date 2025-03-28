@@ -46,8 +46,9 @@ public:
     
     void setStorageQuartilePressure(QuartileData* storageQuartilePressure);
     void setStorageQuartilePtr(Quartile* storageQuartile);
-
     void updatePortState();
+
+    void preCalculateSupplyTime(int portId, double turn, double portPressure);
 
     Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
     Q_INVOKABLE void setSupplyAdjustParameters(QVariantMap parameters);
@@ -92,9 +93,10 @@ public:
     void updateVolumeObjects();
     void updateMoles();
     double getQuartileMoleVolume() const;
-    double getQuartileMole() const;
+    double getQuartileModelPressure(double model_flow);
 private:
     // additional volumes not objects
+    double getQuartileMole() const;
     QVector<DataCollection*> cVolumePressure;
     DataCollection* bVolumePressure;
     DataCollection* d1VolumePressure;
