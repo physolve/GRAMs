@@ -26,6 +26,7 @@ public:
 private:
     double calcualteModelPass(double time_differ);
     double getFlowCoefficient(double turn);
+    double getFlowGap() const;
     int m_portId;
     double m_turn;
     double m_currentRate;

@@ -75,10 +75,19 @@ double SupplyPort::getFlowCoefficient(double turn){
     switch(m_portId){
         case 0: return 0.00137; break;
         case 1: return 0.00137; break;
-        case 2: return 0.0031; break;
+        case 2: return 0.0037; break;
         default: return 0; break;
     }
     // return turn > 1 ? 0.0037*turn-0.0024 : 0.00137; // for s series from 2 to 8 turns
+}
+
+double SupplyPort::getFlowGap() const{
+    switch(m_portId){
+        case 0: return 0.33; break;
+        case 1: return 0.33; break;
+        case 2: return 0.06; break;
+        default: return 0; break;
+    }
 }
 
 void SupplyPort::calculateRate(double flow_factor, double pressure){
@@ -91,7 +100,8 @@ void SupplyPort::calculateRate(double flow_factor, double pressure){
     //
     // N2 = 6950 std L/min (bar, K)
     // G_g = 0.07 (H2)
-    const auto& diff_pres = (m_portPressure-pressure>0.33)?m_portPressure-pressure:0;
+    const auto& flow_gap = getFlowGap();
+    const auto& diff_pres = (m_portPressure-pressure>flow_gap)?m_portPressure-pressure:0;
     if(pressure < 0.5*m_portPressure){
         m_currentRate = 0.471*6950*flow_factor*m_portPressure*sqrt(1/(specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
     }
