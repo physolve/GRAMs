@@ -1,10 +1,10 @@
 #pragma once
-
+#include "../Constants.h"
 #include <QObject>
 #include <QFile>
 #include <QElapsedTimer>
 // let's make it as experiment object with file saves
-static float constexpr specific_gravity{0.07};
+
 class SupplyPort : public QObject
 {
     Q_OBJECT // ?

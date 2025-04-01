@@ -5,6 +5,7 @@
 #include "../DataCollection.h"
 #include "NodePressure.h"
 #include "SupplyPort.h"
+#include "GasLeakage.h"
 #include "LightPlotItem.h"
 // Quartile object is used to store parameters from one of four volumes
 class Quartile : public QObject
@@ -48,8 +49,6 @@ public:
     void setStorageQuartilePtr(Quartile* storageQuartile);
     void updatePortState();
 
-    void preCalculateSupplyTime(int portId, double turn, double portPressure);
-
     Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
     Q_INVOKABLE void setSupplyAdjustParameters(QVariantMap parameters);
     Q_INVOKABLE void startSupplyMeasure(bool measure);
@@ -58,6 +57,7 @@ private slots:
 
 private:
     void fillSupplyPortData();
+    void preCalculateSupplyTime(int portId, double turn, double portPressure);
     double m_supplySpeed; // current
     double m_drainSpeed;
     int m_currentSupplyPort;
@@ -111,10 +111,6 @@ private:
     int s_pressure_low;
     int s_temperature_main;
     QList<QPair<int,QString>> m_valveToVolumeList;
-
-    static float constexpr pressure_std_bar{1.0};
-    static float constexpr temperature_std_K{273};
-    static float constexpr gas_constant{8.31446};
 };
 
 class ReactionQuartile : public Quartile
@@ -125,10 +121,66 @@ public:
     virtual ~ReactionQuartile();
     void calculateTotalVolume();
     void setChamber(const QString& chamber);
+    void setQuartileDataPressure(QuartileData* quartileData);
+    void setQuartileDataTemperature(QuartileData* quartileData);
+    void setED2VolumePtr(DataCollection* ptrE, DataCollection* ptrD2Atm, DataCollection* ptrD2Low);
+    void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB) override;
+    void setMolesPtr(const QVector<MolesData*>& ptr);
+    void setIndexValveRange(int index);
+    void setIndexPressureHighLow(int indexHigh, int pressureAtm, int indexLow);
+    void setIndexTemperatureMain(int index);
+    void fillVolumePairs(const QMap<QString,QString>& volumeToValve);
+    void updateQuartileData();
+    void updateVolumeObjects();
+    void updateMoles();
+    double getQuartileMoleVolume() const;
+    double getQuartileModelPressure(double model_flow);
+    
+    void setReactionPressurePtr(FilterData* high, FilterData* low); // filters
+    void setStorageQuartilePressure(QuartileData* storageQuartilePressure);
+    void setStorageQuartilePtr(StorageQuartile* storageQuartile);
+
+    void updateLeakageState();
+
+    Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
+    Q_INVOKABLE void setReactionAdjustParameters(QVariantMap parameters);
+    Q_INVOKABLE void startLeakageMeasure(bool measure);
+private slots:
+    void expEvent();
 private:
     // chamber object
     QString profileChamber;
     // sample object
+    // additional volumes not objects
+    double getQuartileMole() const;
+    void fillGasLeakageData();
+    void preCalculateLeakageTime(int portId, double turn);
+    DataCollection* eVolumePressure;
+    DataCollection* d2VolumePressureAtm;
+    DataCollection* d2VolumePressureLow;
+    // active volume
+    QuartileData* pressureReactionQuartile;
+    QuartileData* temperatureReactionQuartile;
+    // moles info
+    QVector<MolesData*> m_molesDataList;
+    // valve flow object
+    int m_currentGasLeakage;
+    GasLeakage m_gasLeakage[3];
+    //
+    FilterData* m_reactionPressureHigh;
+    FilterData* m_reactionPressureLow;
+    QuartileData* m_storageQuartilePressure;
+    StorageQuartile* m_storageQuartile;
+    QList<LightPlotItem*> m_reactionPressurePlots;
+    // index of pressure range valve
+    int v_pressure_range;
+    int s_pressure_high;
+    int s_pressure_atm;
+    int s_pressure_low;
+    int s_temperature_main;
+    QList<QPair<int,QString>> m_valveToVolumeList;
+
+    QTimer* m_expUpdate;
 };
 
 class SecondLineQuartile : public Quartile

@@ -1,4 +1,12 @@
 #include "NodePressure.h"
+#include "../Constants.h"
+
+double VolumeObject::getMoles(){
+    if(pressure<=0 || temperature == 0)
+        return 1e-9; 
+    return volume * pressure/(10 * Constants::gas_constant * (temperature + Constants::temperature_std_K));
+}
+
 
 NodePressure::NodePressure()
 {
@@ -18,7 +26,7 @@ void NodePressure::setVolumeB(VolumeObject* B){
 double NodePressure::getEquilibrium() const{
     const double& moleTempA = m_A->getMoles()*m_A->temperature;
     const double& moleTempB = m_B->getMoles()*m_B->temperature;
-    const double& pressureTotal = R_const*(moleTempA + moleTempB)/(m_A->volume+m_B->volume);
+    const double& pressureTotal = Constants::gas_constant*(moleTempA + moleTempB)/(m_A->volume+m_B->volume);
     // temperature?
     return pressureTotal;
 }

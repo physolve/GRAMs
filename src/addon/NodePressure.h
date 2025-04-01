@@ -4,18 +4,12 @@
 #include "../ValveModel.h"
 // Quartile object is used to store parameters from one of four volumes
 
-static const double R_const = 8.31446;
-
 struct VolumeObject{
     QString name;
     double volume; // cm3
     double pressure; // bar
     double temperature; // C
-    double getMoles(){
-        if(pressure<=0 || temperature == 0)
-            return 1e-9; 
-        return volume * pressure/(10 * R_const * (temperature+273.15));
-    }
+    double getMoles();
 };
 
 class NodePressure

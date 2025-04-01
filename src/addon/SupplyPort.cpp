@@ -103,10 +103,10 @@ void SupplyPort::calculateRate(double flow_factor, double pressure){
     const auto& flow_gap = getFlowGap();
     const auto& diff_pres = (m_portPressure-pressure>flow_gap)?m_portPressure-pressure:0;
     if(pressure < 0.5*m_portPressure){
-        m_currentRate = 0.471*6950*flow_factor*m_portPressure*sqrt(1/(specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
+        m_currentRate = 0.471*6950*flow_factor*m_portPressure*sqrt(1/(Constants::specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
     }
     else{
-        m_currentRate = 6950*flow_factor*m_portPressure*(1-2*diff_pres/(3*m_portPressure))*sqrt(diff_pres/(m_portPressure*specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
+        m_currentRate = 6950*flow_factor*m_portPressure*(1-2*diff_pres/(3*m_portPressure))*sqrt(diff_pres/(m_portPressure*Constants::specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
     }
 }
 

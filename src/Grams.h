@@ -14,7 +14,6 @@
 #include "CustomPlotItem.h"
 #include "addon/LightPlotItem.h"
 
-
 struct guiValsPres{ // sample
     Q_GADGET
     // it might be linked to json for import and multi-result log

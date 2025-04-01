@@ -13,7 +13,13 @@
         "fstream": "cpp",
         "vector": "cpp",
         "utility": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "qelapsedtimer": "cpp",
+        "cmath": "cpp",
+        "qobject": "cpp",
+        "*.tcc": "cpp",
+        "compare": "cpp",
+        "ostream": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [
