@@ -62,7 +62,9 @@
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "visualizerFile": "${workspaceFolder}/natvis/qt6.natvis",
+            "showDisplayString": true
         }
 
     ]

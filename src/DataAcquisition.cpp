@@ -89,6 +89,7 @@ void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
 void DataAcquisition::updateFilter(int chartIndex){
     filterView.readKalman();
     filterView.parseKalman();
+    // other filters to update 
     reqSensorAI.setVolageFilter(0, filterView.getJsonMatrix());
     // if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
     //     return;
@@ -143,13 +144,6 @@ void DataAcquisition::stopAcquisition(){
     // clear additionally
 }
 
-bool DataAcquisition::setSupplyMeasure(bool supplyMeasure){
-    if(!reqTempAI.isConnected()||!reqSensorAI.isConnected()){
-        return false;
-    }
-    m_supplyMeasure = supplyMeasure;
-    return true;
-}
 
 void DataAcquisition::processEvents(){
     if(!reqTempAI.isConnected()||!reqSensorAI.isConnected()){
@@ -173,6 +167,17 @@ void DataAcquisition::processEvents(){
     if(m_supplyMeasure){
         fillSupplyARQ();
     }
+    if(m_leakageMeasure){
+        fillLeakageRQ();
+    }
+}
+
+bool DataAcquisition::setSupplyMeasure(bool supplyMeasure){
+    if(!reqTempAI.isConnected()||!reqSensorAI.isConnected()){
+        return false;
+    }
+    m_supplyMeasure = supplyMeasure;
+    return true;
 }
 
 void DataAcquisition::setSupplyPressurePtr(FilterData* high, FilterData* low){
@@ -201,54 +206,36 @@ void DataAcquisition::fillSupplyARQ(){
     m_supplyPressureLow->addData(filteredReal);
 }
 
+bool DataAcquisition::setLeakageMeasure(bool leakageMeasure){
+    if(!reqTempAI.isConnected()||!reqSensorAI.isConnected()){
+        return false;
+    }
+    m_leakageMeasure = leakageMeasure;
+    return true;
+}
 
-// void DataAcquisition::filterEvent(){
-    // auto controller = m_controllerList["pressure"].staticCast<AdvantechBuff>();
-    // // only for first channel
-    // filterView.appendDataToView(0, controller->getTimeBuffer(), controller->getBufferedData(0));
-    // filterView.appendDataToXhatS(0, controller->getTimeBuffer(), controller->getXhatS(0));
-    // filterView.appendDataToXhatT(0, controller->getTimeBuffer(), controller->getXhatT(0));
-    // if(filterView.getSafeCheck()){
-    //     auto originalBuffer = controller->getOriginalData(0);
-    //     if(originalBuffer.isEmpty())
-    //         return;
-    //     filterView.saveToFile(originalBuffer);
-    // }
-    // if(filterView.getAppendCheck()){
-    //     auto originalBuffer = controller->getOriginalData(0);
-    //     if(originalBuffer.isEmpty())
-    //         return;
-    //     filterView.appendToFile(originalBuffer); 
-    // }
-// }
+void DataAcquisition::setLeakagePressurePtr(FilterData* high, FilterData* low){
+    m_leakagePressureHigh = high;
+    m_leakagePressureLow = low;
+}
 
-// QMap<QString,QVector<double>> DataAcquisition::getMeasures(){ // const & >
-    // QMap<QString,QVector<double>> dataMap;
-    // auto default_val = QVector<double>(8,0.0);
-    // for(const QString &type : {"pressure", "temperature"}){
-    //     if(GRAMsIntegrity[type]!=ControllerConnection::Online){
-    //         dataMap.insert(type, default_val);
-    //         continue;
-    //     }
-    //     auto controller = m_controllerList[type].staticCast<AdvantechBuff>(); //AdvantechAI  // type of static_cast from profile?
-    //     // rewrite this somehow maybe using lambda or idk
-    //     // if(controller.isNull()) 
-    //     //     dataMap.insert(type, default_val); 
-    //     dataMap.insert(type, controller->getData());
-    // }
-    // return dataMap;
-// }
-
-// QVector<bool> DataAcquisition::getValves(){
-    // auto default_val = QVector<bool>(16,false);
-    // if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
-    //     return default_val; 
-    // auto controller = m_controllerList["valves"].staticCast<AdvantechDO>(); // type of static_cast from profile?
-    // return controller->getData();
-    // return QVector<bool>(16,false);
-// }
-
-// void DataAcquisition::testRead(){ // died
-//     if(getGRAMsIntegrity())
-//         processEvents();
-// }
+void DataAcquisition::fillLeakageRQ(){
+    QVector<double> filteredReal;
+    int index = 2;
+    const auto& filteredVoltage_high = reqSensorAI.getBufferedData(index);
+    const auto& lin_A_high = m_pressureSensors[index]->getLin_A();
+    const auto& lin_B_high = m_pressureSensors[index]->getLin_B();
+    for(const auto& val : filteredVoltage_high){
+        filteredReal << lin_A_high * val + lin_B_high;
+    }
+    m_leakagePressureHigh->addData(filteredReal);
+    filteredReal.clear();
+    index = 3;
+    const auto& filteredVoltage_low = reqSensorAI.getBufferedData(index);
+    const auto& lin_A_low = m_pressureSensors[index]->getLin_A();
+    const auto& lin_B_low = m_pressureSensors[index]->getLin_B();
+    for(const auto& val : filteredVoltage_low){
+        filteredReal << lin_A_low * val + lin_B_low;
+    }
+    m_leakagePressureLow->addData(filteredReal);
+}

@@ -110,6 +110,7 @@ private:
     void initSafeModule();
     void initAddRemoveQuartile();
     void initStorageQuartile();
+    void initReactionQuartile();
     void guiValsUpdate();
     void valveChangeUpdater(const QString& valveName);
     Initialize initSource;
@@ -229,7 +230,16 @@ private:
     MolesData mlD1;
     
     ReactionQuartile m_reactionQuartile;
+    FilterData m_reactionPressureHigh;
+    FilterData m_reactionPressureLow;
     QuartileData prRQ;
+    QuartileData tmRQ;
+    DataCollection prRE;
+    MolesData mlE;
+    DataCollection prRD2Atm;
+    DataCollection prRD2Low;
+    MolesData mlD2;
+
     SecondLineQuartile m_secondLineQuartile; 
 
     QElapsedTimer m_benchmarkTime;

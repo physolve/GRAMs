@@ -28,5 +28,6 @@
         <file>qml/ChartFilter.qml</file>
         <file>qml/SupplyAdjust.qml</file>
         <file>qml/ExpCreator.qml</file>
+        <file>qml/LeakageAdjust.qml</file>
     </qresource>
 </RCC>

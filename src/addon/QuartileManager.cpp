@@ -31,49 +31,61 @@ void QuartileManager::parseAddons(){
     profileJson = document.object();
 }
 
-void QuartileManager::fillAddRemoveQuartile(AddRemoveQuartile& addRemoveQuartile){
+void QuartileManager::fillAddRemoveQuartile(AddRemoveQuartile* addRemoveQuartile){
     QJsonObject addRemoveQuar = profileJson["addRemoveQuar"].toObject();
-    addRemoveQuartile.setVolume(addRemoveQuar["volume"].toDouble());
+    addRemoveQuartile->setVolume(addRemoveQuar["volume"].toDouble());
     // flow coefficient parameters
     // inlet pressure paramters
     // supply speed [3]
     // drain speed [2]
 }
 
-QStringList QuartileManager::fillStorageQuartile(StorageQuartile& storageQuartile){
+QStringList QuartileManager::fillStorageQuartile(StorageQuartile* storageQuartile){
     QJsonObject storageQuar = profileJson["storageQuar"].toObject();
+    QString mainVolume = storageQuar["mainVolume"].toString();
+    storageQuartile->setMainVolume(mainVolume);
     QVariantMap volumes = storageQuar["volume"].toObject().toVariantMap();
     QStringList volumeNames;
     for(const auto& [key,value] : volumes.asKeyValueRange()){
-        storageQuartile.addVolume(key,value.toDouble());
-        volumeNames << key;
+        storageQuartile->addVolume(key,value.toDouble());
+        if(key == mainVolume) volumeNames.prepend(key);
+        else volumeNames << key;
     }
-    storageQuartile.setMainVolume(volumeNames[0]);
-    storageQuartile.calculateTotalVolume();
+    storageQuartile->calculateTotalVolume();
     QVariantMap volumeToValve = storageQuar["volumeToValve"].toObject().toVariantMap();
     QMap<QString,QString> volumeToValveMap;
     for(const auto& [key,value] : volumeToValve.asKeyValueRange()){
         volumeToValveMap[key] = value.toString();
     }
-    storageQuartile.fillVolumePairs(volumeToValveMap);
-    return volumeNames;
+    storageQuartile->fillVolumePairs(volumeToValveMap);
+    return volumeNames; // make order!
 }
 
 
-void QuartileManager::fillReactionQuartile(ReactionQuartile& reactionQuartile){
+QStringList QuartileManager::fillReactionQuartile(ReactionQuartile* reactionQuartile){
     QJsonObject reactionQuar = profileJson["reactionQuar"].toObject();
+    QString mainVolume = reactionQuar["mainVolume"].toString();
+    reactionQuartile->setMainVolume(mainVolume);
     QVariantMap volumes = reactionQuar["volume"].toObject().toVariantMap();
     QStringList volumeNames;
     for(const auto& [key,value] : volumes.asKeyValueRange()){
-        reactionQuartile.addVolume(key,value.toDouble());
-        volumeNames << key;
+        reactionQuartile->addVolume(key,value.toDouble());
+        if(key == mainVolume) volumeNames.prepend(key);
+        else volumeNames << key;
     }
-    reactionQuartile.setMainVolume(volumeNames[0]);
-    reactionQuartile.calculateTotalVolume();
-    reactionQuartile.setChamber(reactionQuar["chamber"].toString());
+    reactionQuartile->calculateTotalVolume();
+
+    QVariantMap volumeToValve = reactionQuar["volumeToValve"].toObject().toVariantMap();
+    QMap<QString,QString> volumeToValveMap;
+    for(const auto& [key,value] : volumeToValve.asKeyValueRange()){
+        volumeToValveMap[key] = value.toString();
+    }
+    reactionQuartile->fillVolumePairs(volumeToValveMap);
+    reactionQuartile->setChamber(reactionQuar["chamber"].toString());
+    return volumeNames; // make order!
 }
 
-void QuartileManager::fillSecondLineQuartile(SecondLineQuartile& secondLineQuartile){
+void QuartileManager::fillSecondLineQuartile(SecondLineQuartile* secondLineQuartile){
     QJsonObject secondLineQuar = profileJson["secondLineQuar"].toObject();
-    secondLineQuartile.setVolume(secondLineQuar["volume"].toDouble());
+    secondLineQuartile->setVolume(secondLineQuar["volume"].toDouble());
 }

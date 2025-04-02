@@ -21,7 +21,7 @@ void GasLeakage::setInitialParametersLeakage(int portId, double turn, double sPr
 }
 
 int GasLeakage::todayRunCount(){
-    QDir dir("data/LeakageData");
+    QDir dir("data/leakageData");
     // let's find out today run count
     const auto& directoryRunNames = dir.entryList(QStringList() << "*.txt",QDir::Files);
     QString compareToDate = QDate::currentDate().toString("yyyy-MM-dd");
@@ -38,10 +38,9 @@ int GasLeakage::todayRunCount(){
 
 void GasLeakage::initResultFile(bool debug){
     QDir dir("data");
-    dir.cd("LeakageData");
+    dir.cd("leakageData");
     if (!dir.exists())
-        dir.mkpath("LeakageData");
-    QFile leakageResultFile;
+        dir.mkpath("leakageData");
     QString model_str = debug ? "_model" : "";
     const auto& baseFileName = QDate::currentDate().toString("yyyy-MM-dd")+QString("_R%1_").arg(m_portId)+QString::number(todayRuns=todayRunCount())+model_str+".txt";
     leakageResultFile.setFileName(dir.filePath(baseFileName));
@@ -50,13 +49,13 @@ void GasLeakage::initResultFile(bool debug){
         return;
     }
     QTextStream out(&leakageResultFile);
-    out << "LeakagePort " << m_portId << "\tCurrent turn " << m_turn << "\tStart pressure storage " << m_storagePressure << "\treaction " << m_reactionPressure << "\n";
+    out << "LeakagePort " << m_portId << "\tCurrent turn " << m_turn << "\tPressure storage " << m_storagePressure << "\tPressure reaction " << m_reactionPressure << "\n";
     out << "Elapsed\t" << "Storage\t" << "Reaction\t" << "Flow rate\t" << "Modelled cm3 H2\t"<< "\n";
     todayRuns++;
 }
 
 double GasLeakage::calculateRate(double flow_factor, double sPressure, double rPressure) const{
-    const auto& diff_pres = sPressure-rPressure; // inward 
+    const auto& diff_pres = (sPressure-rPressure>0)?sPressure-rPressure:0; // inward
     if(rPressure < 0.5*sPressure){
         return 0.471*6950*flow_factor*sPressure*sqrt(1/(Constants::specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
     }
@@ -93,6 +92,9 @@ bool GasLeakage::addModelMeasure(double model_sPressure, double model_rPressure,
     const auto& flow_rate = calculateRate(flow_factor, model_sPressure, model_rPressure); // positive to reaction quartile 
     const auto& time_pass = time_model;
     // without port open check
+    if(qIsNaN(flow_rate))
+        return true;
+
     m_timePoints << time_pass;
     m_sPPoints << model_sPressure;
     m_rPPoints << model_rPressure;

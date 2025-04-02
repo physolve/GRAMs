@@ -6,35 +6,62 @@ import QtQuick.Controls.Material 2.12
 Item {
     id: rootItem
     Component.onCompleted: {
-        containerSettings.window = childWindow
+        containerSettings.window = leakageAdjustWindow
     }
-    function detachWindow(state){
+    function detachWindowSupply(state){ // sender object as arg?
         if(state) {
             containerSettings.window = placeholder
-            childWindow.flags = Qt.Window
-            childWindow.show()
-            childWindow.width = 600
-            childWindow.height = 800
+            supplyAdjustWindow.flags = Qt.Window
+            supplyAdjustWindow.show()
+            supplyAdjustWindow.width = 600
+            supplyAdjustWindow.height = 800
         }
         else {
-            childWindow.flags = Qt.FramelessWindowHint
-            childWindow.hide()
-            containerSettings.window = childWindow
+            supplyAdjustWindow.flags = Qt.FramelessWindowHint
+            supplyAdjustWindow.hide()
+            containerSettings.window = supplyAdjustWindow
+        }
+    }
+    function detachWindowLeakage(state){
+        if(state) {
+            containerSettings.window = placeholder
+            leakageAdjustWindow.flags = Qt.Window
+            leakageAdjustWindow.show()
+            leakageAdjustWindow.width = 600
+            leakageAdjustWindow.height = 800
+        }
+        else {
+            leakageAdjustWindow.flags = Qt.FramelessWindowHint
+            leakageAdjustWindow.hide()
+            containerSettings.window = leakageAdjustWindow
         }
     }
     ColumnLayout{
         anchors.fill: parent
         anchors.margins: 10
         spacing: 5
-        Button{
-            id: holderButton
-            implicitHeight: 40
-            implicitWidth: 140
-            Layout.alignment: Qt.AlignHCenter
-            text: "test detach"
-            onClicked:{
-                detachWindow(true)
-                holderButton.visible = false
+        Row{
+            Button{
+                id: holderButtonSupply
+                implicitHeight: 40
+                implicitWidth: 140
+                Layout.alignment: Qt.AlignHCenter
+                text: "Detach supply"
+                onClicked:{
+                    detachWindowSupply(true)
+                    holderButtonSupply.visible = false
+                }
+            }
+            Button{
+                id: holderButtonLeakage
+                implicitHeight: 40
+                implicitWidth: 140
+                Layout.alignment: Qt.AlignHCenter
+                text: "Detach supply"
+                onClicked:{
+                    detachWindowLeakage(true)
+                    holderButtonLeakage.visible = false
+                }
             }
         }
         WindowContainer {
@@ -52,15 +79,28 @@ Item {
     // connectionWindow page?
 
     SupplyAdjust{
-        id: childWindow
+        id: supplyAdjustWindow
         title: "Настройка подачи газа "
         onClosing: {
-            holderButton.visible = true
-            detachWindow(false)
+            holderButtonSupply.visible = true
+            detachWindowSupply(false)
         }
         Component.onCompleted: {
-            detachWindow(true)
-            holderButton.visible = false
+            detachWindowSupply(true)
+            holderButtonSupply.visible = false
+        }
+    }
+
+    LeakageAdjust{
+        id: leakageAdjustWindow
+        title: "Настройка натекания газа "
+        onClosing: {
+            holderButtonLeakage.visible = true
+            detachWindowLeakage(false)
+        }
+        Component.onCompleted: {
+            detachWindowLeakage(true)
+            holderButtonLeakage.visible = false
         }
     }
 }

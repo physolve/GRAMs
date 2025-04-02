@@ -501,7 +501,7 @@ int ReactionQuartile::getLightPlotPtr(LightPlotItem* lightPlotPointer){
 }
 
 void ReactionQuartile::setReactionAdjustParameters(QVariantMap parameters){
-    m_currentGasLeakage = parameters["GasLeakage"].toInt();
+    m_currentGasLeakage = parameters["leakageValve"].toInt();
     const auto& turn = parameters["turn"].toDouble();
     const double& initial_storage_pressure = m_storageQuartilePressure->getCurValue();
     const double& initial_reaction_pressure = pressureReactionQuartile->getCurValue();
@@ -528,7 +528,8 @@ void ReactionQuartile::preCalculateLeakageTime(int portId, double turn){
     float seconds_max = 25;
     double model_time;
     for(model_time = 0; model_time < seconds_max; model_time += 0.01){ // more than 10 seconds?
-        if(model_leakage.addModelMeasure(model_storage_pressure, model_reaction_pressure, model_time)) break;
+        if(model_leakage.addModelMeasure(model_storage_pressure, model_reaction_pressure, model_time))
+            break;
         const double& flow_pass = model_leakage.getLastFlowPass();
         model_reaction_pressure = getQuartileModelPressure(flow_pass);
         model_storage_pressure = m_storageQuartile->getQuartileModelPressure(flow_pass);

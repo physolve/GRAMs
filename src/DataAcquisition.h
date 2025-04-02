@@ -39,14 +39,15 @@ public:
     Q_INVOKABLE void updateFilter(int chartIndex); // move to DataAcquisition
     
     void setSupplyPressurePtr(FilterData* high, FilterData* low);
+    void setLeakagePressurePtr(FilterData* high, FilterData* low);
     Q_INVOKABLE bool setSupplyMeasure(bool supplyMeasure);
-    
+    Q_INVOKABLE bool setLeakageMeasure(bool leakageMeasure);
 private slots:
     void processEvents();
     
 private:
     void fillSupplyARQ();
-    // QMap<QString, QSharedPointer<AdvantechCtrl>> m_controllerList; // for read
+    void fillLeakageRQ();
     QMap<QString, ControllerConnection> GRAMsIntegrity;
     QElapsedTimer m_elapsedTimer;
     
@@ -56,30 +57,25 @@ private:
     AdvantechDO reqValveDO;
     // valve pointers
     QVector<Valve*> m_valves;
-    // Valve* m_valves[16]; // to reqValveDO 
-    // int m_valvesCnt;
     
     AdvantechBuff reqSensorAI;
     // AI pointers
         // pres
     QVector<ControllerData*> m_pressureSensors;
-    // ControllerData* m_pressureSensors[8];
-    // int m_pressureSensorsCnt;
     
     AdvantechAI reqTempAI;
     // AI pointers
         // temp
     QVector<ControllerData*> m_tempSensors;
-    // ControllerData* m_tempSensors[8];
-    // int m_tempSensorsCnt;
     
     FilterView filterView;
     QVector<FilterData*> m_filtersData;
-    // FilterData* m_filtersData[8];
-    // int m_filtersDataCnt;
 
     bool m_supplyMeasure;
     FilterData* m_supplyPressureHigh;
     FilterData* m_supplyPressureLow;
+    bool m_leakageMeasure;
+    FilterData* m_leakagePressureHigh;
+    FilterData* m_leakagePressureLow;
     
 };
