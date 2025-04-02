@@ -295,6 +295,18 @@ int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
             filterPlotPointer->setDataPointers(&timeFilter, chartPtrs);
             break;
         }
+        case 2:
+        {
+            chartPtrs.append(&fl_prRH);
+            filterPlotPointer->setDataPointers(&timeFilter, chartPtrs);
+            break;
+        }
+        case 3:
+        {
+            chartPtrs.append(&fl_prRA);
+            filterPlotPointer->setDataPointers(&timeFilter, chartPtrs);
+            break;
+        }
         default:
             qDebug() << "default\n"; // no error
             break;
@@ -356,10 +368,12 @@ void Grams::guiValsUpdate(){
 void Grams::softEvent(){
     guiValsUpdate();
     m_testPlot->dataUpdated();
-    m_filterPlots[0]->dataSetUpdated();
-    m_filterPlots[1]->dataSetUpdated();
+    for(auto plot : m_filterPlots){
+        plot->dataSetUpdated(); 
+    }
     // additional checks
     m_storageQuartile.updateQuartileData();
+    m_reactionQuartile.updateQuartileData();
 }
 
 guiValsPres Grams::getGuiValsPres() const{

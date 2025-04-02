@@ -40,7 +40,7 @@ void GasLeakage::initResultFile(bool debug){
     QDir dir("data");
     dir.cd("leakageData");
     if (!dir.exists())
-        dir.mkpath("leakageData");
+        dir.mkpath("leakageData"); // doesnt add folder for some reason
     QString model_str = debug ? "_model" : "";
     const auto& baseFileName = QDate::currentDate().toString("yyyy-MM-dd")+QString("_R%1_").arg(m_portId)+QString::number(todayRuns=todayRunCount())+model_str+".txt";
     leakageResultFile.setFileName(dir.filePath(baseFileName));
@@ -74,6 +74,8 @@ void GasLeakage::setLeakageOpen(bool state){
 void GasLeakage::addMeasure(double sPressure, double rPressure){
     const auto& flow_factor = getFlowCoefficient(m_turn);
     const auto& flow_rate = calculateRate(flow_factor, sPressure, rPressure); // positive to reaction quartile 
+    if(qIsNaN(flow_rate))
+        qDebug() << "ERROR FLOW";
     if(m_leakageOpen){
         auto time_pass = 0.0;
         if(progressTime.isValid())
@@ -84,6 +86,7 @@ void GasLeakage::addMeasure(double sPressure, double rPressure){
         m_ratePoints << flow_rate;
         m_modelPassPoints << m_modelPassPoints.last() + flow_rate * (time_pass-last_time_pass);
         last_time_pass = time_pass;
+        qDebug() << "Current leak time " << time_pass << "; flow " << flow_rate;
     }
 }
 
@@ -111,8 +114,8 @@ double GasLeakage::getLastFlowPass() const{
 double GasLeakage::getFlowCoefficient(double turn){
     // case 2 - instant
     switch(m_portId){
-        case 0: return turn > 5 ? 0.0006*turn-0.0017 : 0.0007; break;// for s series from 2 to 8 turns break; //
-        case 1: return turn > 1 ? 0.0035*turn-0.001 : 0.002; break;
+        case 0: return turn >= 5 ? 0.0006*turn-0.0017 : 0.0007; break;// for s series from 2 to 8 turns break; //
+        case 1: return turn >= 1 ? 0.0035*turn-0.001 : 0.002; break;
         case 2: return 0.0037; break;
         default: return 0; break;
     }

@@ -94,4 +94,34 @@ Item {
             filterWindow1.height = 600
         }
     }
+
+    ChartFilter{
+        id: filterWindow2
+        onClosing: {
+            filterWindow2.flags = Qt.FramelessWindowHint
+            filterWindow2.hide()
+            // containerSettings.window = filterWindow
+        }
+        Component.onCompleted: {
+            filterWindow2.flags = Qt.Window
+            filterWindow2.show()
+            filterWindow2.width = 525
+            filterWindow2.height = 600
+        }
+    }
+
+    ChartFilter{
+        id: filterWindow3
+        onClosing: {
+            filterWindow3.flags = Qt.FramelessWindowHint
+            filterWindow3.hide()
+            // containerSettings.window = filterWindow
+        }
+        Component.onCompleted: {
+            filterWindow3.flags = Qt.Window
+            filterWindow3.show()
+            filterWindow3.width = 525
+            filterWindow3.height = 600
+        }
+    }
 }

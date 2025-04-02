@@ -19,7 +19,8 @@
         "qobject": "cpp",
         "*.tcc": "cpp",
         "compare": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "filesystem": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

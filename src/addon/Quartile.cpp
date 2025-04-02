@@ -580,7 +580,15 @@ void ReactionQuartile::expEvent(){
 }
 
 void ReactionQuartile::fillGasLeakageData(){
-
+    // but graph update values from m_reactionPressureLow
+    // m_reactionPressurePlots[1]->dataUpdated();
+    // but this graph update values from m_reactionPressureHigh
+    m_reactionPressurePlots[0]->dataUpdated();
+    const bool& currentLeakageValve = m_valves[m_currentGasLeakage]->getState();
+    const double& storage_pressure = m_storageQuartilePressure->getCurValue();
+    const double& reaction_pressure = pressureReactionQuartile->getCurValue();
+    m_gasLeakage[m_currentGasLeakage].setLeakageOpen(currentLeakageValve);
+    m_gasLeakage[m_currentGasLeakage].addMeasure(storage_pressure, reaction_pressure);
 }
 
 SecondLineQuartile::SecondLineQuartile(QObject *parent) :
