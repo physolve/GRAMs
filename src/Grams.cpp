@@ -242,9 +242,9 @@ void Grams::initGUI(){
     m_engine.addImportPath(":/");
     const QUrl url(QString("qrc:/%1/qml/Main.qml").arg(applicationName));
     QObject::connect(
-                &m_engine, &QQmlApplicationEngine::objectCreated, this,
-                [url](QObject *obj, const QUrl &objUrl) {
-                    if(!obj && url == objUrl) QCoreApplication::exit(-1);
+        &m_engine, &QQmlApplicationEngine::objectCreated, this,
+        [url](QObject *obj, const QUrl &objUrl) {
+            if(!obj && url == objUrl) QCoreApplication::exit(-1);
     },
     Qt::QueuedConnection);
     

@@ -452,7 +452,7 @@ double ReactionQuartile::getQuartileMoleVolume() const{
     return moles*Constants::temperature_std_K*Constants::gas_constant*10/Constants::pressure_std_bar; // moles * K *Jl/(mol*K) / (10^5*bar) -> m3 -> * 10^6 -> cm3
 }
 double ReactionQuartile::getQuartileModelPressure(double model_flow){
-    // chamer object difference
+    // chamber object difference
     const auto& moles = model_flow*Constants::pressure_std_bar/(Constants::temperature_std_K*Constants::gas_constant*10);
     double volume = m_volumeObjects[m_mainVolume].volume;
     for(const auto& valveToVolume:m_valveToVolumeList){
