@@ -24,6 +24,7 @@ public:
   void placeGraph();
 
   void initPlotData();
+  void initPlotData(const QString& dirName, const QString& suffix);
   void savePlotData();
   void clearPlotData();
 

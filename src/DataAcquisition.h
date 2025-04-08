@@ -20,6 +20,7 @@ class DataAcquisition : public QObject
     Q_OBJECT
 public:
     explicit DataAcquisition(QObject *parent = 0);
+    virtual ~DataAcquisition();
     void initDaqDO(const daqParameters &parameterDO); 
     void initDaqAIpres(const daqParameters &parameterAIpres);
     void initDaqAItemp(const daqParameters &parameterAItemp);

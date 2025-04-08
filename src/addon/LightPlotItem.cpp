@@ -124,10 +124,29 @@ void LightPlotItem::dataUpdated(){
     for(int i = 1; i <= 512*bufferCount; i++){
         indexTime << time + i; 
     }
+
+    // check lenght using getCumulativeData() maybe
+
     pseudo_time.setData(indexTime);
-    const auto &timePoint = pseudo_time.getCurValue(); 
+    const auto &timePoint = pseudo_time.getCurValue();
+    // USE ITERATORS! 
     for(unsigned short i = 0; auto* ptr : m_sensors){
-        m_CustomPlot->graph(i)->addData(pseudo_time.getValue(), ptr->getCumulativeData());
+        if(!ptr->isCumulativeReady()){
+            ++i;
+            qDebug() << "Cumulative data not READY";
+            continue;
+        }
+        const auto& time_value = pseudo_time.getValue();
+        if(time_value.isEmpty()){
+            qDebug() << "TIME IS EMPTY";
+            continue;  
+        } 
+        const auto& data_value = ptr->getCumulativeData();
+        if(data_value.isEmpty()){
+            qDebug() << "Cumulative data IS EMPTY";
+            continue;
+        } 
+        m_CustomPlot->graph(i)->addData(time_value, data_value);
         ++i;
         ptr->clearCumulative();
     }  
@@ -185,6 +204,20 @@ void LightPlotItem::initPlotData(){
     fastFile.setFileName(QString("data/fastResult_%1.csv").arg(fastResultCount));
     if (!fastFile.open(QIODevice::WriteOnly | QIODevice::Text)){
         qDebug() << "File don't exist";
+        return;
+    }
+    fastResultCount++;
+}
+
+void LightPlotItem::initPlotData(const QString& dirName, const QString& suffix){
+    QDir dir("data");
+    dir.cd(dirName);
+    if (!dir.exists())
+        dir.mkdir(dirName);
+    const auto& baseFileName = QDate::currentDate().toString("yyyy-MM-dd")+"_fastResult"+suffix+".csv";
+    fastFile.setFileName(dir.filePath(baseFileName));
+    if (!fastFile.open(QIODevice::WriteOnly | QIODevice::Text)){
+        qDebug() << "File doesn't exist";
         return;
     }
     fastResultCount++;

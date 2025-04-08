@@ -236,9 +236,9 @@ void AdvantechBuff::ConfigureDeviceBuff(){ // after accept
 	errorCode = m_waveformAiCtrl->getConversion()->setChannelStart(m_info.channelStart());
 	CheckError(errorCode);
 	// clockRate > 1 && clockRate < 100000000 
-	errorCode = m_waveformAiCtrl->getConversion()->setClockRate(9600); //first try 32 kHz
+	errorCode = m_waveformAiCtrl->getConversion()->setClockRate(32768); //first try 32 kHz
 	CheckError(errorCode);
-	errorCode = m_waveformAiCtrl->getRecord()->setSectionLength(m_sectionLength+88); // 512 + 88 = 600
+	errorCode = m_waveformAiCtrl->getRecord()->setSectionLength(m_sectionLength); // 512 + 88 = 600
 	CheckError(errorCode);
 	errorCode = m_waveformAiCtrl->getRecord()->setSectionCount(1); // 0
 	CheckError(errorCode);
@@ -309,6 +309,10 @@ void AdvantechBuff::OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *use
 
 void AdvantechBuff::setVoltageToFilter(const QVector<double> &voltageBuffer){
 	const auto& channelCount = m_info.channelCount();
+	if(voltageBuffer.count() < m_sectionLength * channelCount){
+		qDebug() << " setVoltageToFilter Problem";
+		return;
+	}
 	for(int i = 0; i < m_sectionLength; i++){
 		for(int j = 0; j < channelCount; j++){
 			m_voltageFilters[j].appendToBuffer(voltageBuffer[i*channelCount + j]);

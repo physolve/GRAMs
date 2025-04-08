@@ -12,13 +12,14 @@ public:
     ~GasLeakage();
     void setInitialParametersLeakage(int portId, double turn, double sPressure, double rPressure);
     void initResultFile(bool debug = false);
-    void startCalc(double sPressure, double rPressure, double initial_r_flow);
+    void startCalc(double sPressure, double rPressure, double rTempAbs, double initial_r_flow);
     void endCalc();
     void setLeakageOpen(bool state);
-    void addMeasure(double sPressure, double rPressure);
-    bool addModelMeasure(double model_sPressure, double model_rPressure, double time_model);
+    void addMeasure(double sPressure, double rPressure, double rTempAbs);
+    bool addModelMeasure(double model_sPressure, double model_rPressure, double rTempAbs, double time_model);
     void saveResultsToFile();
     double getLastFlowPass() const;
+    QString getResultFileSuffix() const;
 private:
     int m_portId;
     double m_turn;
@@ -30,8 +31,9 @@ private:
     int todayRuns;
     int todayRunCount();
     double getFlowCoefficient(double turn);
-    double calculateRate(double flow_factor, double sPressure, double rPressure) const;
+    double calculateRate(double flow_factor, double sPressure, double rPressure, double rTempAbs) const;
     QFile leakageResultFile;
+    QString resultFileSuffix;
     QElapsedTimer progressTime;
     QList<double> m_timePoints;
     QList<double> m_sPPoints;

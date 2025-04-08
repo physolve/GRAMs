@@ -42,6 +42,7 @@ public:
     virtual ~FilterData();
     void setData(const QVector<double> &y);
     void addData(const QVector<double> &y);
+    bool isCumulativeReady() const;
     QVector<double> getCumulativeData() const;
     int getCumulativeCount();
     void clearCumulative();

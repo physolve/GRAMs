@@ -447,7 +447,7 @@ double ReactionQuartile::getQuartileMole() const{
 }
 double ReactionQuartile::getQuartileMoleVolume() const{
     // same as in storage quartile, make as quartile class method
-        // chamer object difference
+        // chamber object difference
     const auto& moles = getQuartileMole();
     return moles*Constants::temperature_std_K*Constants::gas_constant*10/Constants::pressure_std_bar; // moles * K *Jl/(mol*K) / (10^5*bar) -> m3 -> * 10^6 -> cm3
 }
@@ -455,7 +455,7 @@ double ReactionQuartile::getQuartileModelPressure(double model_flow){
     // chamber object difference
     const auto& moles = model_flow*Constants::pressure_std_bar/(Constants::temperature_std_K*Constants::gas_constant*10);
     double volume = m_volumeObjects[m_mainVolume].volume;
-    for(const auto& valveToVolume:m_valveToVolumeList){
+    for(const auto& valveToVolume:m_valveToVolumeList){ // chamber
         if(m_valves[valveToVolume.first]->getState()){
             volume+=m_volumeObjects[valveToVolume.second].volume;
         }
@@ -521,18 +521,22 @@ void ReactionQuartile::preCalculateLeakageTime(int portId, double turn){
     model_leakage.setInitialParametersLeakage(portId, turn, initial_storage_pressure, initial_reaction_pressure);
     model_leakage.initResultFile(true);
     const auto& initial_flow = getQuartileMoleVolume();
-    model_leakage.startCalc(initial_storage_pressure, initial_reaction_pressure, initial_flow);
+    const auto& initial_out = m_storageQuartile->getQuartileMoleVolume();
+    const auto& initial_temp = temperatureReactionQuartile->getCurValue()+Constants::temperature_std_K;
+    model_leakage.startCalc(initial_storage_pressure, initial_reaction_pressure, initial_temp, initial_flow);
     model_leakage.setLeakageOpen(true);
     double model_reaction_pressure = pressureReactionQuartile->getCurValue();
     double model_storage_pressure = m_storageQuartilePressure->getCurValue();
-    float seconds_max = 25;
+    float seconds_max = 120;
     double model_time;
-    for(model_time = 0; model_time < seconds_max; model_time += 0.01){ // more than 10 seconds?
-        if(model_leakage.addModelMeasure(model_storage_pressure, model_reaction_pressure, model_time))
+    for(model_time = 0; model_time < seconds_max; model_time += 0.1){ // more than 10 seconds? -> 120
+        if(model_leakage.addModelMeasure(model_storage_pressure, model_reaction_pressure, initial_temp, model_time))
             break;
         const double& flow_pass = model_leakage.getLastFlowPass();
+        const double& flow_taken = initial_out - (flow_pass - initial_flow);
         model_reaction_pressure = getQuartileModelPressure(flow_pass);
-        model_storage_pressure = m_storageQuartile->getQuartileModelPressure(flow_pass);
+        model_storage_pressure = m_storageQuartile->getQuartileModelPressure(flow_taken);
+        // qDebug() << "Model leak pass " << flow_pass << "; taken " << flow_taken;
         // target check
         // total time
     }
@@ -550,9 +554,9 @@ void ReactionQuartile::startLeakageMeasure(bool measure){
         const double& initial_storage_pressure = m_storageQuartilePressure->getCurValue();
         const double& initial_reaction_pressure = pressureReactionQuartile->getCurValue();
         const auto& initial_flow = getQuartileMoleVolume();
-        m_storageQuartile->getQuartileMoleVolume();
-        m_gasLeakage[m_currentGasLeakage].startCalc(initial_storage_pressure, initial_reaction_pressure, initial_flow);
-        m_reactionPressurePlots[0]->initPlotData(); // only high pressure
+        const auto& initial_temp = temperatureReactionQuartile->getCurValue()+Constants::temperature_std_K;
+        m_gasLeakage[m_currentGasLeakage].startCalc(initial_storage_pressure, initial_reaction_pressure, initial_temp, initial_flow);
+        m_reactionPressurePlots[0]->initPlotData("leakageData", m_gasLeakage[m_currentGasLeakage].getResultFileSuffix()); // only high pressure
         m_expUpdate->start();
     }
     else{
@@ -583,12 +587,17 @@ void ReactionQuartile::fillGasLeakageData(){
     // but graph update values from m_reactionPressureLow
     // m_reactionPressurePlots[1]->dataUpdated();
     // but this graph update values from m_reactionPressureHigh
+    
+    // ASSERT ERROR
+    // qDebug() << "Before Assersion";
     m_reactionPressurePlots[0]->dataUpdated();
+    // qDebug() << "After Assersion";
     const bool& currentLeakageValve = m_valves[m_currentGasLeakage]->getState();
     const double& storage_pressure = m_storageQuartilePressure->getCurValue();
     const double& reaction_pressure = pressureReactionQuartile->getCurValue();
+    const auto& reaction_temp = temperatureReactionQuartile->getCurValue()+Constants::temperature_std_K;
     m_gasLeakage[m_currentGasLeakage].setLeakageOpen(currentLeakageValve);
-    m_gasLeakage[m_currentGasLeakage].addMeasure(storage_pressure, reaction_pressure);
+    m_gasLeakage[m_currentGasLeakage].addMeasure(storage_pressure, reaction_pressure, reaction_temp);
 }
 
 SecondLineQuartile::SecondLineQuartile(QObject *parent) :

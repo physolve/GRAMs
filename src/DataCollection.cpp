@@ -82,9 +82,17 @@ void FilterData::setData(const QVector<double> &y){
 }
 
 void FilterData::addData(const QVector<double> &y){
+    if(y.isEmpty()){
+        qDebug() << "EMPTY FILTER DATA";
+        return;
+    }
     setData(y);
     cumulativeData << m_y;
     cumulativeCount++;
+}
+
+bool FilterData::isCumulativeReady() const{
+    return cumulativeCount>0;
 }
 
 QVector<double> FilterData::getCumulativeData() const{

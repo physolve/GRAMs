@@ -1,21 +1,27 @@
 #include "DataAcquisition.h"
 
 DataAcquisition::DataAcquisition(QObject *parent) :
-    QObject(parent), m_acquisitionTimer(new QTimer), m_supplyMeasure(false)
+    QObject(parent), m_acquisitionTimer(new QTimer), m_supplyMeasure(false), m_leakageMeasure(false)
 {
     GRAMsIntegrity["pressure"] = ControllerConnection::Offline;
     GRAMsIntegrity["temperature"] = ControllerConnection::Offline;
     GRAMsIntegrity["valves"] = ControllerConnection::Offline;
     connect(m_acquisitionTimer, &QTimer::timeout, this, &DataAcquisition::processEvents);
+    
+    // add thread for acquisition
+    // m_acquisitionTimer->moveToThread(new QThread());
+
     // for valvesCnt m_valves = nullptr
     // for pressureCnt m_pressureSensors = nullptr
     // for tempCnt m_tempSensors = nullptr
     m_elapsedTimer.start();
 }
 
-// DataAcquisition::~DataAcquisition(){
-//     // qDebug() ?
-// }
+DataAcquisition::~DataAcquisition(){
+    if(m_acquisitionTimer->isActive())
+        m_acquisitionTimer->stop();
+    delete m_acquisitionTimer;
+}
 
 bool DataAcquisition::getGRAMsIntegrity(){
     //auto l_integrity = [](const QList<ControllerConnection> a) { 
@@ -135,7 +141,8 @@ void DataAcquisition::startAcquisition(){
         qDebug() << "Reading disabled";
         return;
     }
-    m_acquisitionTimer->setInterval(500); // make default value
+    m_acquisitionTimer->setTimerType(Qt::PreciseTimer);
+    m_acquisitionTimer->setInterval(333); // make default value
     m_acquisitionTimer->start();
 }
 
