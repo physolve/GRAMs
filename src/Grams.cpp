@@ -56,8 +56,8 @@ void Grams::initDigitalData(){
     vS3.m_name = "S3"; // "Large storage";
     vS4.m_name = "S4"; // "Pressure range storage";
 
-    vR1.m_name = "R1"; // "Leakage slow";
-    vR2.m_name = "R2"; // "Leakage fast";
+    vR1.m_name = "R1"; // "Leakage medium";
+    vR2.m_name = "R2"; // "Leakage slow";
     vR3.m_name = "R3"; // "Leakage tube";
     vR4.m_name = "R4"; // "Pressure range reaction";
     vR5.m_name = "R5"; // "Chamber manual valve";

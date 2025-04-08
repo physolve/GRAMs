@@ -134,8 +134,8 @@ private:
     Valve vS1;  // 9 k131
     Valve vS2;  // 10 k133
     Valve vS3;  // 11 k135
-    Valve vR1;  // 12 k155
-    Valve vR2;  // 13 k153
+    Valve vR1;  // 12 k153 (medium)
+    Valve vR2;  // 13 k155 (slow)
     Valve vR3;  // 14 k151
     Valve vR4;  // 15 k173 
     Valve vR5; // chamber manual (config)
