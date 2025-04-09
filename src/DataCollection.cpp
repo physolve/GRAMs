@@ -82,6 +82,7 @@ void FilterData::setData(const QVector<double> &y){
 }
 
 void FilterData::addData(const QVector<double> &y){
+    // FREQUENLY CHECK - REMOVE
     if(y.isEmpty()){
         qDebug() << "EMPTY FILTER DATA";
         return;

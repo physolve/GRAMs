@@ -62,16 +62,26 @@ QString GasLeakage::getResultFileSuffix() const{
 }
 
 double GasLeakage::calculateRate(double flow_factor, double sPressure, double rPressure, double rTempAbs) const{
-    if(rPressure < 0.528*sPressure){
-        // return 0.019*1360*flow_factor*sPressure*sqrt((0.53*sPressure)/(0.0696*rTempAbs))*16.6667;
-        // return 152.98*flow_factor*sPressure*sqrt(1/(0.07*rTempAbs))*16.6667; // L/min -> 16.6667*cm3/s
-        return 0.471*6950*flow_factor*sPressure*sqrt(1/(Constants::specific_gravity*300))*16.6667; 
+    const double& gamma = Constants::gamma_H;
+    const double& M = Constants::M_H;
+    const double& R = Constants::gas_constant;
+    const double& Pup = sPressure*1e5;
+    const double& Pdown = rPressure*1e5;
+    const double& critical_p = pow((2 / (gamma + 1)),(gamma / (gamma - 1))); 
+    const double& Cv = flow_factor * 1.7e-5; // (m³/s·Pa^0.5)
+    const double& T = rTempAbs;
+    if(Pdown / Pup < critical_p){
+        //return 0.471*6950*flow_factor*sPressure*sqrt(1/(Constants::specific_gravity*300))*16.6667;
+        const double& dp_coef = 0.0375*(sPressure-rPressure)+1;
+        const double& m_dot = Cv * dp_coef * Pup * sqrt((gamma * M) / (R * T) * pow((2 / (gamma + 1)),((gamma + 1) / (gamma - 1))));        
+        return m_dot / M; // кг/c / кг/моль -> моль/c
     }
     else{
-        const auto& diff_pres = (sPressure-rPressure>0)?sPressure-rPressure:0; // sPressure-rPressure:0; // inward
-        // return 0.013*1360*flow_factor*sPressure*sqrt(diff_pres/(0.0696*rTempAbs))*16.6667;
-        // return 306.91*flow_factor*sqrt(diff_pres_sq)/(0.07*rTempAbs)*16.6667;
-        return 6950*flow_factor*sPressure*(1-2*diff_pres/(3*sPressure))*sqrt(diff_pres/(sPressure*Constants::specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
+        // return 6950*flow_factor*sPressure*(1-2*diff_pres/(3*sPressure))*sqrt(diff_pres/(sPressure*Constants::specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
+        const double& dp_coef = 0.00455*(sPressure-rPressure)+0.66451;
+        const double& term = pow((Pdown / Pup),(2 / gamma)) - pow((Pdown / Pup),((gamma + 1) / gamma));
+        const double& m_dot = Cv * Pup * dp_coef * sqrt((2 * gamma * M) / ((gamma - 1) * R * T) * term);
+        return m_dot / M; // кг/c / кг/моль -> моль/c
     }
 }
 
@@ -85,6 +95,7 @@ void GasLeakage::setLeakageOpen(bool state){
 void GasLeakage::addMeasure(double sPressure, double rPressure, double rTempAbs){
     const auto& flow_factor = getFlowCoefficient(m_turn);
     const auto& flow_rate = calculateRate(flow_factor, sPressure, rPressure, rTempAbs); // positive to reaction quartile 
+    // FREQUENLY CHECK - REMOVE
     if(qIsNaN(flow_rate)){
         qDebug() << "ERROR FLOW";
         return;
@@ -96,7 +107,7 @@ void GasLeakage::addMeasure(double sPressure, double rPressure, double rTempAbs)
         m_timePoints << time_pass;
         m_sPPoints << sPressure;
         m_rPPoints << rPressure;
-        m_ratePoints << flow_rate;
+        m_ratePoints << flow_rate*Constants::M_H*1e3; // моль/с * кг/моль * 1e3 -> г/с
         m_modelPassPoints << m_modelPassPoints.last() + flow_rate * (time_pass-last_time_pass);
         last_time_pass = time_pass;
     }
@@ -113,7 +124,7 @@ bool GasLeakage::addModelMeasure(double model_sPressure, double model_rPressure,
     m_timePoints << time_pass;
     m_sPPoints << model_sPressure;
     m_rPPoints << model_rPressure;
-    m_ratePoints << flow_rate;
+    m_ratePoints << flow_rate*Constants::M_H*1e3; // моль/с * кг/моль * 1e3 -> г/с
     m_modelPassPoints << m_modelPassPoints.last() + flow_rate * (time_pass-last_time_pass);
     last_time_pass = time_pass;
     return (model_sPressure - model_rPressure < 0.01);
@@ -126,7 +137,7 @@ double GasLeakage::getLastFlowPass() const{
 double GasLeakage::getFlowCoefficient(double turn){
     // case 2 - instant
     switch(m_portId){
-        case 0: return turn >= 1 ? 0.00379*turn-0.00129 : 0.002; break; // for m series from 1 to 8 turns
+        case 0: return turn >= 1 ? 0.00379*turn-0.00129 : 0.00085*1.1; break; // for m series from 1 to 8 turns
         case 1: return turn >= 5 ? 0.00054*turn-0.0014 : 0.0007; break; // for s series from 5 to 8 turns 
         case 2: return 0.05; break;
         default: return 0; break;

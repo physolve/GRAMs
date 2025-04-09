@@ -131,21 +131,14 @@ void LightPlotItem::dataUpdated(){
     const auto &timePoint = pseudo_time.getCurValue();
     // USE ITERATORS! 
     for(unsigned short i = 0; auto* ptr : m_sensors){
+        // FREQUENLY CHECK - REMOVE
         if(!ptr->isCumulativeReady()){
             ++i;
             qDebug() << "Cumulative data not READY";
             continue;
         }
         const auto& time_value = pseudo_time.getValue();
-        if(time_value.isEmpty()){
-            qDebug() << "TIME IS EMPTY";
-            continue;  
-        } 
         const auto& data_value = ptr->getCumulativeData();
-        if(data_value.isEmpty()){
-            qDebug() << "Cumulative data IS EMPTY";
-            continue;
-        } 
         m_CustomPlot->graph(i)->addData(time_value, data_value);
         ++i;
         ptr->clearCumulative();

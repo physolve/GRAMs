@@ -467,7 +467,6 @@ bool AdvantechDO::setData(const QVector<bool> &changedState){
 				stack|=1u<<j; // this is just adding _1_ to ith [0,0,0,_i_,0,0,0,0]
 		}
 		portStates[i] = stack;
-		qDebug() << portStates[i];
 	}
 	ErrorCode errorCode = Success;
 	errorCode = m_instantDoCtrl->Write(0, portCount, portStates);

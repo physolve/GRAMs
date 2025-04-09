@@ -20,7 +20,8 @@
         "*.tcc": "cpp",
         "compare": "cpp",
         "ostream": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "valarray": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

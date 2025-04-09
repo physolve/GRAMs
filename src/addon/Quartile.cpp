@@ -108,7 +108,7 @@ void AddRemoveQuartile::startSupplyMeasure(bool measure){
         qDebug() << "Current supply port state: " << m_valves[m_currentSupplyPort]->getState();
         m_supplyPort[m_currentSupplyPort].initResultFile();
         // initial_flow = quartile_storage->moles to std cm3
-        const auto& initial_flow = static_cast<StorageQuartile*>(m_storageQuartile)->getQuartileMoleVolume();
+        const auto& initial_flow = static_cast<StorageQuartile*>(m_storageQuartile)->getQuartileMoleVolume(); // maybe change to 
         m_supplyPort[m_currentSupplyPort].startCalc(m_storageQuartilePressure->getCurValue(), initial_flow);
         m_supplyPressurePlots[0]->initPlotData(); // only high pressure
         m_expUpdate->start();
@@ -315,6 +315,16 @@ double StorageQuartile::getQuartileModelPressure(double model_flow){
     return moles*Constants::gas_constant*Constants::temperature_std_K*10/volume;
 }
 
+double StorageQuartile::getQuartileModelPressureFromMoles(double moles) const{
+    double volume = m_volumeObjects[m_mainVolume].volume;
+    for(const auto& valveToVolume:m_valveToVolumeList){
+        if(m_valves[valveToVolume.first]->getState()){
+            volume+=m_volumeObjects[valveToVolume.second].volume;
+        }
+    }
+    const double& temp = m_volumeObjects[m_mainVolume].temperature + Constants::temperature_std_K; 
+    return moles*Constants::gas_constant*temp*10/volume; // bar
+}
 
 ReactionQuartile::ReactionQuartile(QObject *parent) : Quartile(parent), m_expUpdate(new QTimer){
     for(int i{2}; i >= 0; --i){
@@ -463,6 +473,16 @@ double ReactionQuartile::getQuartileModelPressure(double model_flow){
     return moles*Constants::gas_constant*Constants::temperature_std_K*10/volume;
 }
 
+double ReactionQuartile::getQuartileModelPressureFromMoles(double moles) const{
+    double volume = m_volumeObjects[m_mainVolume].volume;
+    for(const auto& valveToVolume:m_valveToVolumeList){ // chamber
+        if(m_valves[valveToVolume.first]->getState()){
+            volume+=m_volumeObjects[valveToVolume.second].volume;
+        }
+    }
+    const double& temp = m_volumeObjects[m_mainVolume].temperature + Constants::temperature_std_K; 
+    return moles*Constants::gas_constant*temp*10/volume; // bar
+}
 
 void ReactionQuartile::setReactionPressurePtr(FilterData* high, FilterData* low){
     m_reactionPressureHigh = high;
@@ -520,22 +540,22 @@ void ReactionQuartile::preCalculateLeakageTime(int portId, double turn){
     const double& initial_reaction_pressure = pressureReactionQuartile->getCurValue();
     model_leakage.setInitialParametersLeakage(portId, turn, initial_storage_pressure, initial_reaction_pressure);
     model_leakage.initResultFile(true);
-    const auto& initial_flow = getQuartileMoleVolume();
-    const auto& initial_out = m_storageQuartile->getQuartileMoleVolume();
+    const auto& initial_reaction_moles = getQuartileMole(); // moles //getQuartileMoleVolume();
+    const auto& initial_storarge_moles = m_storageQuartile->getQuartileMole(); // moles
     const auto& initial_temp = temperatureReactionQuartile->getCurValue()+Constants::temperature_std_K;
-    model_leakage.startCalc(initial_storage_pressure, initial_reaction_pressure, initial_temp, initial_flow);
+    model_leakage.startCalc(initial_storage_pressure, initial_reaction_pressure, initial_temp, initial_reaction_moles);
     model_leakage.setLeakageOpen(true);
     double model_reaction_pressure = pressureReactionQuartile->getCurValue();
     double model_storage_pressure = m_storageQuartilePressure->getCurValue();
     float seconds_max = 120;
     double model_time;
-    for(model_time = 0; model_time < seconds_max; model_time += 0.1){ // more than 10 seconds? -> 120
+    for(model_time = 0; model_time < seconds_max; model_time += 0.01){ // more than 10 seconds? -> 120
         if(model_leakage.addModelMeasure(model_storage_pressure, model_reaction_pressure, initial_temp, model_time))
             break;
-        const double& flow_pass = model_leakage.getLastFlowPass();
-        const double& flow_taken = initial_out - (flow_pass - initial_flow);
-        model_reaction_pressure = getQuartileModelPressure(flow_pass);
-        model_storage_pressure = m_storageQuartile->getQuartileModelPressure(flow_taken);
+        const double& moles_pass = model_leakage.getLastFlowPass();
+        const double& moles_taken = initial_storarge_moles - (moles_pass - initial_reaction_moles);
+        model_reaction_pressure = getQuartileModelPressureFromMoles(moles_pass);
+        model_storage_pressure = m_storageQuartile->getQuartileModelPressureFromMoles(moles_taken);
         // qDebug() << "Model leak pass " << flow_pass << "; taken " << flow_taken;
         // target check
         // total time

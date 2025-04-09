@@ -65,7 +65,7 @@ Window {
             }
             ComboBox{
                 id: leakageValveChoose
-                model: ["Порты сверху-вниз...", "Медленный", "Средний", "Быстрый"]
+                model: ["Порты сверху-вниз...", "Средний", "Медленный", "Быстрый"]
                 Layout.preferredWidth: 200
                 implicitContentWidthPolicy: ComboBox.ContentItemImplicitWidth
                 onActivated: {

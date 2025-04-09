@@ -93,10 +93,11 @@ public:
     void updateVolumeObjects();
     void updateMoles();
     double getQuartileMoleVolume() const;
+    double getQuartileMole() const; // move to Quartile base class
     double getQuartileModelPressure(double model_flow);
+    double getQuartileModelPressureFromMoles(double model_moles) const;
 private:
     // additional volumes not objects
-    double getQuartileMole() const;
     QVector<DataCollection*> cVolumePressure;
     DataCollection* bVolumePressure;
     DataCollection* d1VolumePressure;
@@ -135,6 +136,8 @@ public:
     void updateMoles();
     double getQuartileMoleVolume() const;
     double getQuartileModelPressure(double model_flow);
+    double getQuartileModelPressureFromMoles(double model_moles) const;
+
     
     void setReactionPressurePtr(FilterData* high, FilterData* low); // filters
     void setStorageQuartilePressure(QuartileData* storageQuartilePressure);
