@@ -233,4 +233,7 @@ void LightPlotItem::clearPlotData(){
         m_CustomPlot->graph(i)->data()->clear();
     }
     pseudo_time.clearPoints();
+    for(auto* ptr : m_sensors){
+        ptr->clearCumulative();
+    }
 }

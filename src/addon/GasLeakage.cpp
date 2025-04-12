@@ -61,26 +61,24 @@ QString GasLeakage::getResultFileSuffix() const{
     return resultFileSuffix;
 }
 
-double GasLeakage::calculateRate(double flow_factor, double sPressure, double rPressure, double rTempAbs) const{
+double GasLeakage::calculateRate(double sPressure, double rPressure, double rTempAbs) const{
     const double& gamma = Constants::gamma_H;
     const double& M = Constants::M_H;
     const double& R = Constants::gas_constant;
     const double& Pup = sPressure*1e5;
     const double& Pdown = rPressure*1e5;
     const double& critical_p = pow((2 / (gamma + 1)),(gamma / (gamma - 1))); 
-    const double& Cv = flow_factor * 1.7e-5; // (m³/s·Pa^0.5)
+    const double& Cv = this->last_flow_coef * 1.7e-5; // (m³/s·Pa^0.5)
     const double& T = rTempAbs;
     if(Pdown / Pup < critical_p){
         //return 0.471*6950*flow_factor*sPressure*sqrt(1/(Constants::specific_gravity*300))*16.6667;
-        const double& dp_coef = 0.0375*(sPressure-rPressure)+1;
-        const double& m_dot = Cv * dp_coef * Pup * sqrt((gamma * M) / (R * T) * pow((2 / (gamma + 1)),((gamma + 1) / (gamma - 1))));        
+        const double& m_dot = Cv * Pup * sqrt((gamma * M) / (R * T) * pow((2 / (gamma + 1)),((gamma + 1) / (gamma - 1))));        
         return m_dot / M; // кг/c / кг/моль -> моль/c
     }
     else{
         // return 6950*flow_factor*sPressure*(1-2*diff_pres/(3*sPressure))*sqrt(diff_pres/(sPressure*Constants::specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
-        const double& dp_coef = 0.00455*(sPressure-rPressure)+0.66451;
         const double& term = pow((Pdown / Pup),(2 / gamma)) - pow((Pdown / Pup),((gamma + 1) / gamma));
-        const double& m_dot = Cv * Pup * dp_coef * sqrt((2 * gamma * M) / ((gamma - 1) * R * T) * term);
+        const double& m_dot = Cv * Pup * sqrt((2 * gamma * M) / ((gamma - 1) * R * T) * term);
         return m_dot / M; // кг/c / кг/моль -> моль/c
     }
 }
@@ -93,8 +91,7 @@ void GasLeakage::setLeakageOpen(bool state){
 }
 
 void GasLeakage::addMeasure(double sPressure, double rPressure, double rTempAbs){
-    const auto& flow_factor = getFlowCoefficient(m_turn);
-    const auto& flow_rate = calculateRate(flow_factor, sPressure, rPressure, rTempAbs); // positive to reaction quartile 
+    const auto& flow_rate = calculateRate(sPressure, rPressure, rTempAbs); // positive to reaction quartile 
     // FREQUENLY CHECK - REMOVE
     if(qIsNaN(flow_rate)){
         qDebug() << "ERROR FLOW";
@@ -114,8 +111,7 @@ void GasLeakage::addMeasure(double sPressure, double rPressure, double rTempAbs)
 }
 
 bool GasLeakage::addModelMeasure(double model_sPressure, double model_rPressure, double rTempAbs, double time_model){
-    const auto& flow_factor = getFlowCoefficient(m_turn);
-    const auto& flow_rate = calculateRate(flow_factor, model_sPressure, model_rPressure, rTempAbs); // positive to reaction quartile 
+    const auto& flow_rate = calculateRate(model_sPressure, model_rPressure, rTempAbs); // positive to reaction quartile 
     const auto& time_pass = time_model;
     // without port open check
     // qDebug() << "Model leak time " << time_pass << "; flow " << flow_rate;
@@ -134,20 +130,20 @@ double GasLeakage::getLastFlowPass() const{
     return m_modelPassPoints.last();
 }
 
-double GasLeakage::getFlowCoefficient(double turn){
+double GasLeakage::getFlowCoefficient(double turn, double sPressure, double rPressure){
     // case 2 - instant
     switch(m_portId){
-        case 0: return turn >= 1 ? 0.00379*turn-0.00129 : 0.00085*1.1; break; // for m series from 1 to 8 turns
-        case 1: return turn >= 5 ? 0.00054*turn-0.0014 : 0.0007; break; // for s series from 5 to 8 turns 
+        case 0: return turn >= 1 ? 0.00379*turn-0.00129 : 0.00085*(0.02714*(sPressure-rPressure)+0.6143); break; // for m series from 1 to 8 turns
+        case 1: return turn >= 5 ? 0.00055*turn-0.00145 : 0.00017*(0.025*(sPressure-rPressure)+0.8); break; // for s series from 5 to 8 turns 
         case 2: return 0.05; break;
         default: return 0; break;
     }
 }
 
 void GasLeakage::startCalc(double sPressure, double rPressure, double rTempAbs, double initial_r_flow){
-    const auto& flow_factor = getFlowCoefficient(m_turn);
+    this->last_flow_coef = getFlowCoefficient(m_turn, sPressure, rPressure);
     const auto& diff_pres = sPressure - rPressure; // initial
-    const auto& flow_rate = calculateRate(flow_factor, sPressure, rPressure, rTempAbs);
+    const auto& flow_rate = calculateRate(sPressure, rPressure, rTempAbs);
     m_modelPassPoints << initial_r_flow;
     // addPreValveFlow(); // prepare preValveFlow for different supply ports
     last_time_pass = 0;

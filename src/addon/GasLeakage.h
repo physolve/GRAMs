@@ -26,12 +26,13 @@ private:
     double m_storagePressure;
     double m_reactionPressure;
     double last_time_pass;
+    double last_flow_coef;
     bool m_leakageOpen;
     // double m_currentRate; 
     int todayRuns;
     int todayRunCount();
-    double getFlowCoefficient(double turn);
-    double calculateRate(double flow_factor, double sPressure, double rPressure, double rTempAbs) const;
+    double getFlowCoefficient(double turn, double sPressure, double rPressure);
+    double calculateRate(double sPressure, double rPressure, double rTempAbs) const;
     QFile leakageResultFile;
     QString resultFileSuffix;
     QElapsedTimer progressTime;
