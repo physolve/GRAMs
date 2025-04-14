@@ -22,6 +22,10 @@ void GasLeakage::setInitialParametersLeakage(int portId, double turn, double sPr
     m_reactionPressure = rPressure;
 }
 
+void GasLeakage::setUsedVolumes(const QStringList& volumesNames){
+    m_usedVolumes = volumesNames;
+}
+
 int GasLeakage::todayRunCount(){
     QDir dir("data/leakageData");
     // let's find out today run count
@@ -52,7 +56,13 @@ void GasLeakage::initResultFile(bool debug){
         return;
     }
     QTextStream out(&leakageResultFile);
-    out << "LeakagePort " << m_portId << "\tCurrent turn " << m_turn << "\tPressure storage " << m_storagePressure << "\tPressure reaction " << m_reactionPressure << "\n";
+    out << "LeakagePort " << m_portId << "\tCurrent turn " << m_turn << "\tPressure storage " << m_storagePressure << "\tPressure reaction " << m_reactionPressure
+    << "\tUsed volumes ";
+    int i = m_usedVolumes.count()-1;
+    for(const auto& str : m_usedVolumes){
+        out << str << (i == 0 ? "\n" : ", ");
+        --i;
+    }
     out << "Elapsed\t" << "Storage\t" << "Reaction\t" << "Flow rate\t" << "Modelled cm3 H2\t"<< "\n";
     todayRuns++;
 }
@@ -68,17 +78,15 @@ double GasLeakage::calculateRate(double sPressure, double rPressure, double rTem
     const double& Pup = sPressure*1e5;
     const double& Pdown = rPressure*1e5;
     const double& critical_p = pow((2 / (gamma + 1)),(gamma / (gamma - 1))); 
-    const double& Cv = this->last_flow_coef * 1.7e-5; // (m³/s·Pa^0.5)
+    const double& Cv = m_flow_coef * 1.7e-5; // (m³/s·Pa^0.5)
     const double& T = rTempAbs;
     if(Pdown / Pup < critical_p){
-        //return 0.471*6950*flow_factor*sPressure*sqrt(1/(Constants::specific_gravity*300))*16.6667;
-        const double& m_dot = Cv * Pup * sqrt((gamma * M) / (R * T) * pow((2 / (gamma + 1)),((gamma + 1) / (gamma - 1))));        
+        const double& m_dot = Cv * m_choked_curr * Pup * sqrt((gamma * M) / (R * T) * pow((2 / (gamma + 1)),((gamma + 1) / (gamma - 1))));        
         return m_dot / M; // кг/c / кг/моль -> моль/c
     }
     else{
-        // return 6950*flow_factor*sPressure*(1-2*diff_pres/(3*sPressure))*sqrt(diff_pres/(sPressure*Constants::specific_gravity*300))*16.6667; // 300 K is a room temperature (27 C), L/min -> 16.6667*cm3/s
         const double& term = pow((Pdown / Pup),(2 / gamma)) - pow((Pdown / Pup),((gamma + 1) / gamma));
-        const double& m_dot = Cv * Pup * sqrt((2 * gamma * M) / ((gamma - 1) * R * T) * term);
+        const double& m_dot = Cv  * m_subsonic_curr * Pup * sqrt((2 * gamma * M) / ((gamma - 1) * R * T) * term);
         return m_dot / M; // кг/c / кг/моль -> моль/c
     }
 }
@@ -130,19 +138,20 @@ double GasLeakage::getLastFlowPass() const{
     return m_modelPassPoints.last();
 }
 
-double GasLeakage::getFlowCoefficient(double turn, double sPressure, double rPressure){
+double GasLeakage::getFlowCoefficient(double turn){
     // case 2 - instant
     switch(m_portId){
-        case 0: return turn >= 1 ? 0.00379*turn-0.00129 : 0.00085*(0.02714*(sPressure-rPressure)+0.6143); break; // for m series from 1 to 8 turns
-        case 1: return turn >= 5 ? 0.00055*turn-0.00145 : 0.00017*(0.025*(sPressure-rPressure)+0.8); break; // for s series from 5 to 8 turns 
+        case 0: return turn >= 1 ? 0.00379*turn-0.00129 : 0.00085 * 0.8; break; // for m series from 1 to 8 turns
+        case 1: return turn >= 5 ? 0.00055*turn-0.00145 : 0.00017; break; // for s series from 5 to 8 turns 
         case 2: return 0.05; break;
         default: return 0; break;
     }
 }
 
 void GasLeakage::startCalc(double sPressure, double rPressure, double rTempAbs, double initial_r_flow){
-    this->last_flow_coef = getFlowCoefficient(m_turn, sPressure, rPressure);
-    const auto& diff_pres = sPressure - rPressure; // initial
+    m_flow_coef = getFlowCoefficient(m_turn);
+    m_choked_curr = 1.35*log10(sPressure-rPressure);
+    m_subsonic_curr = 0.75*log10(sPressure-rPressure); 
     const auto& flow_rate = calculateRate(sPressure, rPressure, rTempAbs);
     m_modelPassPoints << initial_r_flow;
     // addPreValveFlow(); // prepare preValveFlow for different supply ports

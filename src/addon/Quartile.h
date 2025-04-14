@@ -52,6 +52,7 @@ public:
     Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
     Q_INVOKABLE void setSupplyAdjustParameters(QVariantMap parameters);
     Q_INVOKABLE void startSupplyMeasure(bool measure);
+
 private slots:
     void expEvent();
 
@@ -96,6 +97,7 @@ public:
     double getQuartileMole() const; // move to Quartile base class
     double getQuartileModelPressure(double model_flow);
     double getQuartileModelPressureFromMoles(double model_moles) const;
+    QStringList getUsedVolumes() const;
 private:
     // additional volumes not objects
     QVector<DataCollection*> cVolumePressure;
@@ -138,13 +140,12 @@ public:
     double getQuartileModelPressure(double model_flow);
     double getQuartileModelPressureFromMoles(double model_moles) const;
 
-    
     void setReactionPressurePtr(FilterData* high, FilterData* low); // filters
     void setStorageQuartilePressure(QuartileData* storageQuartilePressure);
     void setStorageQuartilePtr(StorageQuartile* storageQuartile);
 
     void updateLeakageState();
-
+    QStringList getUsedVolumes() const;
     Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
     Q_INVOKABLE void setReactionAdjustParameters(QVariantMap parameters);
     Q_INVOKABLE void startLeakageMeasure(bool measure);

@@ -326,6 +326,17 @@ double StorageQuartile::getQuartileModelPressureFromMoles(double moles) const{
     return moles*Constants::gas_constant*temp*10/volume; // bar
 }
 
+QStringList StorageQuartile::getUsedVolumes() const{
+    QStringList usedVolumes;
+    usedVolumes << m_volumeObjects[m_mainVolume].name;
+    for(const auto& valveToVolume:m_valveToVolumeList){
+        if(m_valves[valveToVolume.first]->getState()){
+            usedVolumes << m_volumeObjects[valveToVolume.second].name;
+        }
+    }
+    return usedVolumes;
+}
+
 ReactionQuartile::ReactionQuartile(QObject *parent) : Quartile(parent), m_expUpdate(new QTimer){
     for(int i{2}; i >= 0; --i){
         m_gasLeakage[i].setInitialParametersLeakage(i,0,1,1);
@@ -528,6 +539,11 @@ void ReactionQuartile::setReactionAdjustParameters(QVariantMap parameters){
     m_gasLeakage[m_currentGasLeakage].setInitialParametersLeakage(
         m_currentGasLeakage, turn, initial_storage_pressure, initial_reaction_pressure
     );
+    // what volumes are currently used?
+    QStringList usedVolumes;
+    usedVolumes.append(this->getUsedVolumes());
+    usedVolumes.append(m_storageQuartile->getUsedVolumes());
+    m_gasLeakage[m_currentGasLeakage].setUsedVolumes(usedVolumes);
     qDebug() << "Begin leakage with parameters:" << QString("%1 %2 %3 bar %4 bar").arg(m_currentGasLeakage).arg(turn)
     .arg(initial_storage_pressure).arg(initial_reaction_pressure);
     preCalculateLeakageTime(m_currentGasLeakage, turn);
@@ -539,6 +555,11 @@ void ReactionQuartile::preCalculateLeakageTime(int portId, double turn){
     const double& initial_storage_pressure = m_storageQuartilePressure->getCurValue();
     const double& initial_reaction_pressure = pressureReactionQuartile->getCurValue();
     model_leakage.setInitialParametersLeakage(portId, turn, initial_storage_pressure, initial_reaction_pressure);
+    // what volumes are currently used?
+    QStringList usedVolumes;
+    usedVolumes.append(this->getUsedVolumes());
+    usedVolumes.append(m_storageQuartile->getUsedVolumes());
+    model_leakage.setUsedVolumes(usedVolumes);
     model_leakage.initResultFile(true);
     const auto& initial_reaction_moles = getQuartileMole(); // moles //getQuartileMoleVolume();
     const auto& initial_storarge_moles = m_storageQuartile->getQuartileMole(); // moles
@@ -618,6 +639,17 @@ void ReactionQuartile::fillGasLeakageData(){
     const auto& reaction_temp = temperatureReactionQuartile->getCurValue()+Constants::temperature_std_K;
     m_gasLeakage[m_currentGasLeakage].setLeakageOpen(currentLeakageValve);
     m_gasLeakage[m_currentGasLeakage].addMeasure(storage_pressure, reaction_pressure, reaction_temp);
+}
+
+QStringList ReactionQuartile::getUsedVolumes() const{
+    QStringList usedVolumes;
+    usedVolumes << m_volumeObjects[m_mainVolume].name;
+    for(const auto& valveToVolume:m_valveToVolumeList){
+        if(m_valves[valveToVolume.first]->getState()){
+            usedVolumes << m_volumeObjects[valveToVolume.second].name;
+        }
+    }
+    return usedVolumes;
 }
 
 SecondLineQuartile::SecondLineQuartile(QObject *parent) :

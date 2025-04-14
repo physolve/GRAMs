@@ -9,8 +9,10 @@ class GasLeakage : public QObject
     Q_OBJECT // ?
 public:
     GasLeakage(QObject *parent = nullptr);
+    GasLeakage(const GasLeakage &) = default;
     ~GasLeakage();
     void setInitialParametersLeakage(int portId, double turn, double sPressure, double rPressure);
+    void setUsedVolumes(const QStringList& volumesNames);
     void initResultFile(bool debug = false);
     void startCalc(double sPressure, double rPressure, double rTempAbs, double initial_r_flow);
     void endCalc();
@@ -26,12 +28,17 @@ private:
     double m_storagePressure;
     double m_reactionPressure;
     double last_time_pass;
-    double last_flow_coef;
+
+    double m_flow_coef; // make conts
+    double m_choked_curr;
+    double m_subsonic_curr;
+
     bool m_leakageOpen;
+    QStringList m_usedVolumes;
     // double m_currentRate; 
     int todayRuns;
     int todayRunCount();
-    double getFlowCoefficient(double turn, double sPressure, double rPressure);
+    double getFlowCoefficient(double turn); // replace to const
     double calculateRate(double sPressure, double rPressure, double rTempAbs) const;
     QFile leakageResultFile;
     QString resultFileSuffix;
