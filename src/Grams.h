@@ -13,6 +13,7 @@
 #include "addon/QuartileManager.h"
 #include "CustomPlotItem.h"
 #include "addon/LightPlotItem.h"
+#include "measure/Chamber.h"
 
 struct guiValsPres{ // sample
     Q_GADGET
@@ -93,6 +94,8 @@ public:
     Q_PROPERTY (guiValsTemp guiTemp READ getGuiValsTemp NOTIFY guiValsTempChanged) // requiredTempAI
     Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer);
     Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer);
+
+    Q_INVOKABLE void chamberSetUp();
 signals:
     void valveChanged();
     void guiValsPresChanged();
@@ -239,6 +242,7 @@ private:
     DataCollection prRD2Atm;
     DataCollection prRD2Low;
     MolesData mlD2;
+    Chamber m_chamber;
 
     SecondLineQuartile m_secondLineQuartile; 
 

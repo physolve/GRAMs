@@ -360,6 +360,14 @@ void ReactionQuartile::setChamber(const QString& chamber){
     profileChamber = chamber;
 }
 
+void ReactionQuartile::setChamberPointer(Chamber* chamberPtr){
+    m_chamber = chamberPtr;
+}
+
+void ReactionQuartile::setChamberStatus(bool statusOpen){
+    m_chamber->setStatusOpen(statusOpen);
+}
+
 void ReactionQuartile::setQuartileDataPressure(QuartileData* quartileData){
     pressureReactionQuartile = quartileData;
 }
@@ -486,11 +494,13 @@ double ReactionQuartile::getQuartileModelPressure(double model_flow){
 
 double ReactionQuartile::getQuartileModelPressureFromMoles(double moles) const{
     double volume = m_volumeObjects[m_mainVolume].volume;
+
     for(const auto& valveToVolume:m_valveToVolumeList){ // chamber
         if(m_valves[valveToVolume.first]->getState()){
             volume+=m_volumeObjects[valveToVolume.second].volume;
         }
     }
+
     const double& temp = m_volumeObjects[m_mainVolume].temperature + Constants::temperature_std_K; 
     return moles*Constants::gas_constant*temp*10/volume; // bar
 }

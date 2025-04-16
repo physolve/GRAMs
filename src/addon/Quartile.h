@@ -7,6 +7,7 @@
 #include "SupplyPort.h"
 #include "GasLeakage.h"
 #include "LightPlotItem.h"
+#include "../measure/Chamber.h"
 // Quartile object is used to store parameters from one of four volumes
 class Quartile : public QObject
 {
@@ -124,6 +125,8 @@ public:
     virtual ~ReactionQuartile();
     void calculateTotalVolume();
     void setChamber(const QString& chamber);
+    void setChamberPointer(Chamber* chamberPtr);
+    void setChamberStatus(bool status);
     void setQuartileDataPressure(QuartileData* quartileData);
     void setQuartileDataTemperature(QuartileData* quartileData);
     void setED2VolumePtr(DataCollection* ptrE, DataCollection* ptrD2Atm, DataCollection* ptrD2Low);
@@ -183,6 +186,9 @@ private:
     int s_pressure_low;
     int s_temperature_main;
     QList<QPair<int,QString>> m_valveToVolumeList;
+    // suppose that chamber not apply to Volume List
+    // but has it's own Volume object to update
+    Chamber* m_chamber; 
 
     QTimer* m_expUpdate;
 };

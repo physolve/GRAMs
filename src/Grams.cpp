@@ -202,6 +202,8 @@ void Grams::initReactionQuartile(){
     m_reactionQuartile.setIndexPressureHighLow(0, 1, 2); // prRH, prRA
     m_reactionQuartile.setIndexTemperatureMain(0); // tmSK
     // chamber options
+    m_reactionQuartile.setChamberPointer(&m_chamber);
+    // chamber options
     m_reactionQuartile.setQuartileDataPressure(&prRQ);
     m_reactionQuartile.setQuartileDataTemperature(&tmRQ);
     m_reactionQuartile.setED2VolumePtr(&prRE, &prRD2Atm, &prRD2Low);
@@ -261,7 +263,7 @@ void Grams::initGUI(){
     // m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
     m_engine.rootContext()->setContextProperty("safeModule", &m_safeModule);
     qmlRegisterSingletonInstance("Grams.backendSourceSingleton", 1, 0, "Grams", this);
-
+    qmlRegisterSingletonInstance("Grams.chamberChooserSingleton", 1, 0, "ChamberChooser", &m_chamber);
     m_engine.load(url);
 
     // m_benchmarkTime.start();
@@ -374,6 +376,16 @@ void Grams::softEvent(){
     // additional checks
     m_storageQuartile.updateQuartileData();
     m_reactionQuartile.updateQuartileData();
+}
+
+void Grams::chamberSetUp(){
+    VolumeObject chamber;
+    chamber.name = "10-02";
+    chamber.volume = 25.405;
+    m_chamber.setChamberVolume(chamber);
+    m_chamber.setStatusOpen(true); // might do it in quartile later
+    m_reactionQuartile.setChamber(chamber.name);
+    // m_reactionQuartile.setChamberPointer(&m_chamber) done it in the initReactionQuartile
 }
 
 guiValsPres Grams::getGuiValsPres() const{

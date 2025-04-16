@@ -7,6 +7,10 @@ Item {
     id: rootItem
     Component.onCompleted: {
         containerSettings.window = childWindow
+        // filterWindow.show()
+        // filterWindow1.show()
+        // filterWindow2.show()
+        // filterWindow3.show()
     }
     function detachWindow(state){
         if(state) {
@@ -75,7 +79,6 @@ Item {
         }
         Component.onCompleted: {
             filterWindow.flags = Qt.Window
-            filterWindow.show()
             filterWindow.width = 525
             filterWindow.height = 600
         }
@@ -89,7 +92,6 @@ Item {
         }
         Component.onCompleted: {
             filterWindow1.flags = Qt.Window
-            filterWindow1.show()
             filterWindow1.width = 525
             filterWindow1.height = 600
         }
@@ -104,7 +106,6 @@ Item {
         }
         Component.onCompleted: {
             filterWindow2.flags = Qt.Window
-            filterWindow2.show()
             filterWindow2.width = 525
             filterWindow2.height = 600
         }
@@ -119,7 +120,6 @@ Item {
         }
         Component.onCompleted: {
             filterWindow3.flags = Qt.Window
-            filterWindow3.show()
             filterWindow3.width = 525
             filterWindow3.height = 600
         }

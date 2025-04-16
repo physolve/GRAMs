@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Grams.backendSourceSingleton 1.0
+import Grams.backendSourceSingleton 1.0 // desing studio has problems with it
 
 Item {
     width: gRAMsMimicNew.width

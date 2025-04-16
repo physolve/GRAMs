@@ -43,6 +43,13 @@ if(NOT DEFINED CPP_ADDON)
     file(GLOB CPP_ADDON ${CMAKE_CURRENT_SOURCE_DIR}/addon/*.cpp)
 endif()
 
+if(NOT DEFINED HPP_MEASURE)
+    file(GLOB HPP_MEASURE ${CMAKE_CURRENT_SOURCE_DIR}/measure/*.h)
+endif()
+
+if(NOT DEFINED CPP_MEASURE)
+    file(GLOB CPP_MEASURE ${CMAKE_CURRENT_SOURCE_DIR}/measure/*.cpp)
+endif()
 
 if (LINUX)            
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libDAQ)
@@ -61,6 +68,7 @@ qt6_add_executable(${EXECUTABLE_NAME} ${SOURCES}
 ${CPP_CONTROLLERS}
 ${CPP_LIBS} 
 ${CPP_ADDON}
+${CPP_MEASURE}
 ${QML_RESOURCES})
 if (WIN32)
     target_link_libraries(${EXECUTABLE_NAME}
