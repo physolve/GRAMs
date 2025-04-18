@@ -6,6 +6,7 @@ import Grams.backendSourceSingleton 1.0
 
 //import "mnemo/GRAM300_mnemo/GRAM300_mnemoContent"
 import "mnemo/GRAM50_mnemo/GRAM50_mnemoContent"
+import "measure"
 
 ApplicationWindow {
     id: main
@@ -135,10 +136,10 @@ ApplicationWindow {
                 //height: 100
                 Repeater{
                     id: barMainRepeater
-                    model: ["Graph", "Experiment", "Settings"]
+                    model: ["График А", "Натекание", "Измерение", "Параметры"]
                     TabButton{
                         text: modelData
-                        width: Math.max(120, barMain.width/3)
+                        width: Math.max(120, barMain.width/4)
                         font.pointSize: 12
                     }
                 }
@@ -164,8 +165,13 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
+                ChamberChoose{
+                    id: chamberChooser
+                    Layout.fillWidth: true
+                    // Layout.fillHeight: true
+                }
                 SettingsWindow{
-                    id: test3
+                    id: test4
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }

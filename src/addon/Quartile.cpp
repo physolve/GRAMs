@@ -489,19 +489,22 @@ double ReactionQuartile::getQuartileModelPressure(double model_flow){
             volume+=m_volumeObjects[valveToVolume.second].volume;
         }
     }
+    if(m_chamber->getStatusOpen())
+        volume+=m_chamber->getVolume();
     return moles*Constants::gas_constant*Constants::temperature_std_K*10/volume;
 }
 
 double ReactionQuartile::getQuartileModelPressureFromMoles(double moles) const{
     double volume = m_volumeObjects[m_mainVolume].volume;
-
     for(const auto& valveToVolume:m_valveToVolumeList){ // chamber
         if(m_valves[valveToVolume.first]->getState()){
             volume+=m_volumeObjects[valveToVolume.second].volume;
         }
     }
-
-    const double& temp = m_volumeObjects[m_mainVolume].temperature + Constants::temperature_std_K; 
+    if(m_chamber->getStatusOpen())
+        volume+=m_chamber->getVolume();
+    const double& temp = m_volumeObjects[m_mainVolume].temperature + Constants::temperature_std_K;
+    // chamber temperature? 
     return moles*Constants::gas_constant*temp*10/volume; // bar
 }
 
@@ -553,6 +556,9 @@ void ReactionQuartile::setReactionAdjustParameters(QVariantMap parameters){
     QStringList usedVolumes;
     usedVolumes.append(this->getUsedVolumes());
     usedVolumes.append(m_storageQuartile->getUsedVolumes());
+    if(m_chamber->getStatusOpen())
+        usedVolumes.append("F");
+        // rewrite to quartile volume later
     m_gasLeakage[m_currentGasLeakage].setUsedVolumes(usedVolumes);
     qDebug() << "Begin leakage with parameters:" << QString("%1 %2 %3 bar %4 bar").arg(m_currentGasLeakage).arg(turn)
     .arg(initial_storage_pressure).arg(initial_reaction_pressure);

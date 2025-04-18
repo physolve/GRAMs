@@ -203,6 +203,8 @@ void Grams::initReactionQuartile(){
     m_reactionQuartile.setIndexTemperatureMain(0); // tmSK
     // chamber options
     m_reactionQuartile.setChamberPointer(&m_chamber);
+    // test
+    this->chamberSetUp();
     // chamber options
     m_reactionQuartile.setQuartileDataPressure(&prRQ);
     m_reactionQuartile.setQuartileDataTemperature(&tmRQ);

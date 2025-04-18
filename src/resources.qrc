@@ -29,5 +29,7 @@
         <file>qml/SupplyAdjust.qml</file>
         <file>qml/ExpCreator.qml</file>
         <file>qml/LeakageAdjust.qml</file>
+        <file>qml/measure/ChamberChoose.qml</file>
+
     </qresource>
 </RCC>

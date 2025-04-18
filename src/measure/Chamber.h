@@ -8,9 +8,11 @@ struct ChamberParameters{
     Q_GADGET
     Q_PROPERTY (QString chamberName MEMBER m_chamberName)
     Q_PROPERTY (double volume MEMBER m_volume)
+    Q_PROPERTY (bool status MEMBER m_status)
 public:
-    QString m_sensorName;
+    QString m_chamberName;
     double m_volume;
+    bool m_status;
 };
 
 class Chamber : public QObject
@@ -24,11 +26,11 @@ public:
     void setChamberVolume(const VolumeObject& chamberVolume);
     void setStatusOpen(bool status);
     bool getStatusOpen() const;
+    double getVolume() const;
     ChamberParameters getChamberParams() const;
 signals:
     void chamberParamsChanged();
 private:
     VolumeObject m_chamberVolume;
     ChamberParameters m_chamberParams;
-    bool statusOpen;
 };
