@@ -575,6 +575,9 @@ void ReactionQuartile::preCalculateLeakageTime(int portId, double turn){
     QStringList usedVolumes;
     usedVolumes.append(this->getUsedVolumes());
     usedVolumes.append(m_storageQuartile->getUsedVolumes());
+    if(m_chamber->getStatusOpen())
+        usedVolumes.append("F");
+        // rewrite to quartile volume later
     model_leakage.setUsedVolumes(usedVolumes);
     model_leakage.initResultFile(true);
     const auto& initial_reaction_moles = getQuartileMole(); // moles //getQuartileMoleVolume();

@@ -384,7 +384,8 @@ void Grams::chamberSetUp(){
     VolumeObject chamber;
     chamber.name = "10-02";
     chamber.volume = 25.405;
-    m_chamber.setChamberVolume(chamber);
+    m_chamber.setChamberVolume(chamber); // rewrite Volume object for chamber to use in quartile with other
+    m_chamber.setCraneToChamber(26.1327 - 25.7941);
     m_chamber.setStatusOpen(true); // might do it in quartile later
     m_reactionQuartile.setChamber(chamber.name);
     // m_reactionQuartile.setChamberPointer(&m_chamber) done it in the initReactionQuartile

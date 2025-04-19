@@ -57,7 +57,7 @@ void GasLeakage::initResultFile(bool debug){
     }
     QTextStream out(&leakageResultFile);
     out << "LeakagePort " << m_portId << "\tCurrent turn " << m_turn << "\tPressure storage " << m_storagePressure << "\tPressure reaction " << m_reactionPressure
-    << "\tUsed volumes ";
+    << "\tUsed volumes:";
     int i = m_usedVolumes.count()-1;
     for(const auto& str : m_usedVolumes){
         out << str << (i == 0 ? "\n" : ", ");

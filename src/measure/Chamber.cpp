@@ -24,6 +24,10 @@ void Chamber::setChamberVolume(const VolumeObject& chamberVolume){
     emit chamberParamsChanged();
 }
 
+void Chamber::setCraneToChamber(double craneToChamber){
+    m_chamberParams.m_craneToChamber = craneToChamber;
+}
+
 void Chamber::setStatusOpen(bool status){
     m_chamberParams.m_status = status;
     emit chamberParamsChanged();
@@ -38,7 +42,7 @@ ChamberParameters Chamber::getChamberParams() const {
 }
 
 double Chamber::getVolume() const{
-    return m_chamberParams.m_volume;
+    return (m_chamberParams.m_volume+m_chamberParams.m_craneToChamber);
 }
 
 
