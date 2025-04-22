@@ -9,7 +9,13 @@
 #include "Initialize.h"
 #include "Security.h"
 #include "DataCollection.h"
+
 #include "addon/Quartile.h"
+#include "addon/StorageQuartile.h"
+#include "addon/AddRemoveQuartile.h"
+#include "addon/ReactionQuartile.h"
+#include "addon/SecondLineQuartile.h"
+
 #include "addon/QuartileManager.h"
 #include "CustomPlotItem.h"
 #include "addon/LightPlotItem.h"
@@ -243,6 +249,8 @@ private:
     DataCollection prRD2Low;
     MolesData mlD2;
     Chamber m_chamber;
+    DataCollection prRF;
+    MolesData mlF; // EF?
 
     SecondLineQuartile m_secondLineQuartile; 
 

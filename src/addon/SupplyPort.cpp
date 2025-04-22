@@ -100,6 +100,7 @@ void SupplyPort::calculateRate(double flow_factor, double pressure){
     //
     // N2 = 6950 std L/min (bar, K)
     // G_g = 0.07 (H2)
+    // rewrite using moles 
     const auto& flow_gap = getFlowGap();
     const auto& diff_pres = (m_portPressure-pressure>flow_gap)?m_portPressure-pressure:0;
     if(pressure < 0.5*m_portPressure){

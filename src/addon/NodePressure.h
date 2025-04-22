@@ -4,13 +4,15 @@
 #include "../ValveModel.h"
 // Quartile object is used to store parameters from one of four volumes
 
+
 struct VolumeObject{
     QString name;
     double volume; // cm3
     double pressure; // bar
     double temperature; // C
-    double getMoles();
+    double getMoles() const;
 };
+
 
 class NodePressure
 {
@@ -25,5 +27,10 @@ public:
 private:
     VolumeObject* m_A;
     VolumeObject* m_B;
+};
+
+namespace CalcMoles{
+    double getMolesSum(const QList<VolumeObject>& volumes);
+    double getPressureFromMoles(const double& moles, const QList<VolumeObject> &volumeObjects);
 };
 

@@ -302,17 +302,18 @@ void AdvantechBuff::OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *use
 		getDataCout = qMin(bufSize, remainingCount);
 		((WaveformAiCtrl*)sender)->GetData(args->Count, kalmanBuffer.data(), 0, &returnedCount, NULL, NULL, NULL);
 		remainingCount -= returnedCount;
-		uParam->setVoltageToFilter(kalmanBuffer);
+		// uParam->setVoltageToFilter(kalmanBuffer);
 	} while (remainingCount > 0); //Usually get full bufSize of data (m_sectionLength * m_channelCount)
+	if(kalmanBuffer.count() < bufSize){
+		qDebug() << " setVoltageToFilter Problem";
+		return;
+	}
+	uParam->setVoltageToFilter(kalmanBuffer);
 	uParam->doFilter(); //?
 }
 
 void AdvantechBuff::setVoltageToFilter(const QVector<double> &voltageBuffer){
 	const auto& channelCount = m_info.channelCount();
-	if(voltageBuffer.count() < m_sectionLength * channelCount){
-		qDebug() << " setVoltageToFilter Problem";
-		return;
-	}
 	for(int i = 0; i < m_sectionLength; i++){
 		for(int j = 0; j < channelCount; j++){
 			m_voltageFilters[j].appendToBuffer(voltageBuffer[i*channelCount + j]);
@@ -321,12 +322,8 @@ void AdvantechBuff::setVoltageToFilter(const QVector<double> &voltageBuffer){
 }
 
 void AdvantechBuff::doFilter(){
-	// pass to FilterView
-	// update data in
 	for(int i = 0; i < m_voltageFilters.count(); i++){ // m_info.channelCount()
-		// 
 		const auto &allVoltage = m_voltageFilters[i].getFilteredVoltage(false);
-		// qDebug() << allVoltage;
 		m_vector[i] = allVoltage.last();
 	}
 }

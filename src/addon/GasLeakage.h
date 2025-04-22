@@ -12,7 +12,7 @@ public:
     GasLeakage(const GasLeakage &) = default;
     ~GasLeakage();
     void setInitialParametersLeakage(int portId, double turn, double sPressure, double rPressure);
-    void setUsedVolumes(const QStringList& volumesNames);
+    void setVolumeNames(const QStringList& volumeNames);
     void initResultFile(bool debug = false);
     void startCalc(double sPressure, double rPressure, double rTempAbs, double initial_r_flow);
     void endCalc();
@@ -34,7 +34,7 @@ private:
     double m_subsonic_curr;
 
     bool m_leakageOpen;
-    QStringList m_usedVolumes;
+    QStringList m_volumeNames;
     // double m_currentRate; 
     int todayRuns;
     int todayRunCount();

@@ -4,6 +4,10 @@
 #include <QJsonObject>
 
 #include "Quartile.h"
+#include "StorageQuartile.h"
+#include "AddRemoveQuartile.h"
+#include "ReactionQuartile.h"
+#include "SecondLineQuartile.h"
 #include "../Initialize.h"
 
 // Quartile object is used to store parameters from one of four volumes

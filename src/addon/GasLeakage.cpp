@@ -22,8 +22,8 @@ void GasLeakage::setInitialParametersLeakage(int portId, double turn, double sPr
     m_reactionPressure = rPressure;
 }
 
-void GasLeakage::setUsedVolumes(const QStringList& volumesNames){
-    m_usedVolumes = volumesNames;
+void GasLeakage::setVolumeNames(const QStringList& volumesNames){
+    m_volumeNames = volumesNames;
 }
 
 int GasLeakage::todayRunCount(){
@@ -58,8 +58,8 @@ void GasLeakage::initResultFile(bool debug){
     QTextStream out(&leakageResultFile);
     out << "LeakagePort " << m_portId << "\tCurrent turn " << m_turn << "\tPressure storage " << m_storagePressure << "\tPressure reaction " << m_reactionPressure
     << "\tUsed volumes:";
-    int i = m_usedVolumes.count()-1;
-    for(const auto& str : m_usedVolumes){
+    int i = m_volumeNames.count()-1;
+    for(const auto& str : m_volumeNames){
         out << str << (i == 0 ? "\n" : ", ");
         --i;
     }

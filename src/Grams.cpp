@@ -173,6 +173,7 @@ void Grams::initStorageQuartile(){
     for(int i = 1; i < storage_names.count(); ++i){
         QString addNode = storage_names[i];
         m_storageQuartile.addPressureNode(baseNode+addNode, baseNode, addNode);
+        // base nodes before changing
     }
     // test
     m_storageQuartile.updateQuartileData();
@@ -191,21 +192,19 @@ void Grams::initReactionQuartile(){
     m_reactionQuartile.setIndexValveRange(3); // vR4
     
     const auto& storage_names = m_quartileManager.fillReactionQuartile(&m_reactionQuartile);
-    QVector<MolesData*> molesDataList = {&mlE, &mlD2};
+
+    QVector<MolesData*> molesDataList = {&mlE, &mlD2}; // chamber F as option
     for(int i = 0; i < molesDataList.count(); ++i){
         molesDataList[i]->m_name = storage_names[i];
     }
+    
     QVector<ControllerData*> pressureSensorsList = {&prRH, &prRA, &prRL};
     m_reactionQuartile.addPressurePtrs(pressureSensorsList);
     QVector<ControllerData*> temperatureSensorsList = {&tmRTube, &tmF};
     m_reactionQuartile.addTemperaturePtrs(temperatureSensorsList);
     m_reactionQuartile.setIndexPressureHighLow(0, 1, 2); // prRH, prRA
     m_reactionQuartile.setIndexTemperatureMain(0); // tmSK
-    // chamber options
-    m_reactionQuartile.setChamberPointer(&m_chamber);
-    // test
-    this->chamberSetUp();
-    // chamber options
+    
     m_reactionQuartile.setQuartileDataPressure(&prRQ);
     m_reactionQuartile.setQuartileDataTemperature(&tmRQ);
     m_reactionQuartile.setED2VolumePtr(&prRE, &prRD2Atm, &prRD2Low);
@@ -214,8 +213,14 @@ void Grams::initReactionQuartile(){
     for(int i = 1; i < storage_names.count(); ++i){ // chamber Node
         QString addNode = storage_names[i];
         m_reactionQuartile.addPressureNode(baseNode+addNode, baseNode, addNode);
+        // base nodes before changing
     }
+    // chamber options
+    m_reactionQuartile.setChamberPointer(&m_chamber);
+    m_reactionQuartile.setFVolumePtr(&prRF);
     // test
+    this->chamberSetUp();
+    // chamber options
     m_reactionQuartile.updateQuartileData();
 }
 
@@ -259,6 +264,7 @@ void Grams::initGUI(){
 
     qmlRegisterSingletonInstance("Grams.addRemoveQuartileSingleton", 1, 0, "AddRemoveQuar", &m_addRemoveQuartile);
     qmlRegisterSingletonInstance("Grams.reactionQuartileSingleton", 1, 0, "ReactionQuar", &m_reactionQuartile);
+    
     m_engine.rootContext()->setContextProperty("initSource", &initSource); // make singleton later
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     // m_engine.rootContext()->setContextProperty("_valveModel", &valveModel);
@@ -389,6 +395,7 @@ void Grams::chamberSetUp(){
     m_chamber.setStatusOpen(true); // might do it in quartile later
     m_reactionQuartile.setChamber(chamber.name);
     // m_reactionQuartile.setChamberPointer(&m_chamber) done it in the initReactionQuartile
+    m_reactionQuartile.updateChamberToQuartile();
 }
 
 guiValsPres Grams::getGuiValsPres() const{
