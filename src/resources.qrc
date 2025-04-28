@@ -1,11 +1,11 @@
 <RCC>
     <qresource prefix="/">
         <file>qtquickcontrols2.conf</file>
+        <file alias="SomeAliasedSVG.svg">icons/collapse.svg</file>
     </qresource>
     <qresource prefix="/GRAMs">
         <file>../fonts/LoveLetter.TTF</file>
         <file>../fonts/Momot___.ttf</file>
-
         <!-- <file>qml/mnemo/GRAM300_mnemo/GRAM300_mnemoContent/MnemoBase.qml</file>
         <file>qml/mnemo/GRAM300_mnemo/GRAM300_mnemoContent/background/GRAMsMimicNew.png</file>
         <file>qml/mnemo/GRAM300_mnemo/GRAM300_mnemoContent/ValveButton.qml</file>
@@ -30,6 +30,6 @@
         <file>qml/ExpCreator.qml</file>
         <file>qml/LeakageAdjust.qml</file>
         <file>qml/measure/ChamberChoose.qml</file>
-
+        <file>qml/measure/TestField.qml</file>
     </qresource>
 </RCC>

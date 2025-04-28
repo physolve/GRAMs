@@ -115,18 +115,52 @@ ApplicationWindow {
     SplitView {
         id: grid
         anchors.fill: parent
-        MnemoBase{
-            id: rectangle
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.leftMargin: 5
-            anchors.rightMargin: 5
-
+        Item{
             SplitView.minimumWidth: 1390
+            TabBar {
+                id: barMneno
+                width: parent.width
+                anchors.top: parent.top
+                anchors.left: parent.left
+                Repeater{
+                    id: barMnenoRepeater
+                    model: ["Мнемосхема", "Упрощение"]
+                    TabButton{
+                        text: modelData
+                        width: Math.max(120, barMneno.width/2)
+                        font.pointSize: 12
+                    }
+                }
+            }
+            StackLayout {
+                id: layoutMneno
+                anchors.top: barMneno.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                currentIndex: barMneno.currentIndex
+                MnemoBase{
+                    id: rectangle
+                    // anchors.left: parent.left
+                    // anchors.top: parent.top
+                    // anchors.leftMargin: 5
+                    // anchors.rightMargin: 5
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.leftMargin: 5
+                    Layout.rightMargin: 5
+                    // SplitView.minimumWidth: 1390
+                }
+                TestField{
+                    id: testMnemo
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.leftMargin: 50
+                    Layout.rightMargin: 50
+                }
+            }
         }
         Item{
-            // SplitView.minimumWidth: 500
-            // SplitView.preferredWidth: 670
             TabBar {
                 id: barMain
                 width: parent.width

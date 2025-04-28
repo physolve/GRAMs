@@ -21,6 +21,8 @@
 #include "addon/LightPlotItem.h"
 #include "measure/Chamber.h"
 
+#include "addon/TestField.h"
+
 struct guiValsPres{ // sample
     Q_GADGET
     // it might be linked to json for import and multi-result log
@@ -120,8 +122,12 @@ private:
     void initAddRemoveQuartile();
     void initStorageQuartile();
     void initReactionQuartile();
+    
+    void initTestField();
+    
     void guiValsUpdate();
     void valveChangeUpdater(const QString& valveName);
+
     Initialize initSource;
     QQmlApplicationEngine m_engine;
     DataAcquisition dataSource; // pass from constructor
@@ -255,4 +261,6 @@ private:
     SecondLineQuartile m_secondLineQuartile; 
 
     QElapsedTimer m_benchmarkTime;
+
+    TestField m_testField;
 };

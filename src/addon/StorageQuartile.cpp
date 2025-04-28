@@ -37,14 +37,6 @@ void StorageQuartile::setMolesPtr(const QVector<MolesData*>& ptr){
     m_molesDataList = ptr;
 }
 
-void StorageQuartile::addPressureNode(const QString& nodeName, const QString& volA, const QString& volB){
-    // gas store valves   
-    m_pressureNodes.insert(nodeName, NodePressure());
-    m_pressureNodes[nodeName].setVolumeA(&m_volumeObjects[volA]);
-    m_pressureNodes[nodeName].setVolumeB(&m_volumeObjects[volB]);
-    // recalculate node? and moles?
-}
-
 void StorageQuartile::setIndexValveRange(int index){
     v_pressure_range = index;
 }

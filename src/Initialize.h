@@ -127,9 +127,9 @@ class Initialize : public QObject
     Q_OBJECT
 public:
     Initialize(QObject *parent = 0, const QString &curInitProfile = "GRAM50");
-    Q_PROPERTY(QVariantMap profileJson MEMBER m_profileJson CONSTANT)
-    Q_PROPERTY(QStringList profileNames MEMBER m_profileNames CONSTANT)
-    Q_PROPERTY(QStringList advantechDeviceMap MEMBER m_advantechDeviceMap NOTIFY advantechDeviceMapChanged)
+    // Q_PROPERTY(QVariantMap profileJson MEMBER m_profileJson CONSTANT)
+    // Q_PROPERTY(QStringList profileNames MEMBER m_profileNames CONSTANT)
+    // Q_PROPERTY(QStringList advantechDeviceMap MEMBER m_advantechDeviceMap NOTIFY advantechDeviceMapChanged)
     Q_PROPERTY(hardwareParameters hardware MEMBER m_hardware CONSTANT)
     Q_PROPERTY(addRemoveQuarParameters addRemoveQuar MEMBER m_addRemoveQuar CONSTANT)
     Q_PROPERTY(storageQuarParameters storageQuar MEMBER m_storageQuar CONSTANT)
@@ -145,7 +145,6 @@ public:
     QList<PressureSensor> getPressureSensors() const;
     QStringList getTempSensors() const;
 
-
     hardwareParameters              m_hardware; // need m_valves and m_twoOfThree
     securityParameters              m_security; // need m_contradictionValves
     addRemoveQuarParameters         m_addRemoveQuar; // need m_gasSupplyValves
@@ -154,7 +153,7 @@ public:
 
     bool isInitializeOk() const;
 signals:
-    void advantechDeviceMapChanged();
+    // void advantechDeviceMapChanged();
     //void advantechDeviceSettingsChanged();
     void daqGuiChanged();
     

@@ -33,6 +33,9 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
 
     initGUI();
     initSafeModule();
+
+    initTestField();
+
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
     softTimer->setInterval(500);
     softTimer->start();
@@ -218,6 +221,7 @@ void Grams::initReactionQuartile(){
     // chamber options
     m_reactionQuartile.setChamberPointer(&m_chamber);
     m_reactionQuartile.setFVolumePtr(&prRF);
+    m_reactionQuartile.setIndexTemperatureChamber(1); // tmF
     // test
     this->chamberSetUp();
     // chamber options
@@ -272,9 +276,8 @@ void Grams::initGUI(){
     m_engine.rootContext()->setContextProperty("safeModule", &m_safeModule);
     qmlRegisterSingletonInstance("Grams.backendSourceSingleton", 1, 0, "Grams", this);
     qmlRegisterSingletonInstance("Grams.chamberChooserSingleton", 1, 0, "ChamberChooser", &m_chamber);
+    qmlRegisterSingletonInstance("Grams.testFieldSingleton", 1, 0, "TestFieldBack", &m_testField);
     m_engine.load(url);
-
-    // m_benchmarkTime.start();
 }
 
 void Grams::getCustomPlotPtr(CustomPlotItem* customPlotPointer){
@@ -348,6 +351,11 @@ void Grams::initSafeModule(){
     m_safeModule.setGasLeakageValves(initSource.m_reactionQuar.m_gasLeakageValves);
 }
 
+void Grams::initTestField(){
+    m_testField.setStorageNodes(m_storageQuartile.getPressureNodes());
+    m_testField.setReactionNodes(m_reactionQuartile.getPressureNodes());
+    m_testField.runTest();
+}
 
 void Grams::guiValsUpdate(){
     m_pressureVals.g_prSH = prSH.getCurValue();

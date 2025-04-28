@@ -9,7 +9,6 @@ public:
     explicit StorageQuartile(QObject *parent = nullptr);
     virtual ~StorageQuartile();
     void calculateTotalVolume();
-    void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB) override;
     void setCVolumePtr(const QVector<DataCollection*>& ptr);
     void setBD1VolumePtr(DataCollection* ptrB, DataCollection* ptrD1);
     void setMolesPtr(const QVector<MolesData*>& ptr);

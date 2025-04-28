@@ -21,11 +21,11 @@ public:
     void addValvePtrs(const QVector<Valve*>& ptr);
     void addPressurePtrs(const QVector<ControllerData*>& ptr);
     void addTemperaturePtrs(const QVector<ControllerData*>& ptr);
-    virtual void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB);
     // pressure sensor pointers
     VolumeObject getVolumeByName(const QString& name) const;
     void fillVolumePairs(const QMap<QString,QString>& volumeToValve);
-
+    void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB);
+    QMap<QString, NodePressure> getPressureNodes(); 
 protected:
     double m_volume;
     QString m_mainVolume;
@@ -38,6 +38,6 @@ protected:
     QList<Valve*> m_valves;
     // pressure nodes
     // QList<NodeData*> m_nodeDataList;
-    QMap<QString, NodePressure> m_pressureNodes;
+    QMap<QString, NodePressure> m_pressureNodes; // those are stable and will not change otherwise.
     QMap<int, QString> m_valveToVolumeMap;
 };

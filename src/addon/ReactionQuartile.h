@@ -21,7 +21,6 @@ public:
     void setQuartileDataTemperature(QuartileData* quartileData);
     void setED2VolumePtr(DataCollection* ptrE, DataCollection* ptrD2Atm, DataCollection* ptrD2Low);
     void setFVolumePtr(DataCollection* ptrF);
-    void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB) override;
     void setMolesPtr(const QVector<MolesData*>& ptr);
 
     // can be filled as profile info

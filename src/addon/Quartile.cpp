@@ -37,10 +37,6 @@ void Quartile::addTemperaturePtrs(const QVector<ControllerData*>& ptr){
     m_temperatureList = ptr;
 }
 
-void Quartile::addPressureNode(const QString& nodeName, const QString& volA, const QString& volB){
-
-}
-
 VolumeObject Quartile::getVolumeByName(const QString& name) const{
     return m_volumeObjects[name];
 }
@@ -56,4 +52,19 @@ void Quartile::fillVolumePairs(const QMap<QString,QString>& volumeToValve){
         // m_valveToVolumeList.append({index, volume});
         m_valveToVolumeMap[index] = volume;
     }
+}
+
+void Quartile::addPressureNode(const QString& nodeName, const QString& volA, const QString& volB){
+    // same as in storage quartile, make as quartile class method
+    // gas store valves   
+    m_pressureNodes.insert(nodeName, NodePressure());
+    m_pressureNodes[nodeName].setVolumeA(&m_volumeObjects[volA]);
+    m_pressureNodes[nodeName].setVolumeB(&m_volumeObjects[volB]);
+    // recalculate node? and moles?
+        // recalcualte in depth
+    
+}
+
+QMap<QString, NodePressure> Quartile::getPressureNodes(){
+    return m_pressureNodes;
 }
