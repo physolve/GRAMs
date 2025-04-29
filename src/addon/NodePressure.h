@@ -17,11 +17,12 @@ struct VolumeObject{
 };
 
 struct VirtualVolume : public VolumeObject{
-    VirtualVolume(VolumeObject* prior);
+    VirtualVolume(VolumeObject* prior = nullptr);
+    ~VirtualVolume();
     void updateToPrior();
     double getPriorMoles() const;
-    std::unique_ptr<VirtualVolume> operator+(VirtualVolume const& obj);
-    std::unique_ptr<VirtualVolume> operator-(VirtualVolume const& obj);
+    VirtualVolume operator+(VirtualVolume const& obj);
+    VirtualVolume operator-(VirtualVolume const& obj);
 private:
     VolumeObject* prior_volume;
 };
@@ -32,19 +33,18 @@ class NodePressure
 public:
     explicit NodePressure();
     virtual ~NodePressure();
-    void setVolumeA(VolumeObject* A);
-    void setVolumeB(VolumeObject* B);
+    void setVolumeA(const VirtualVolume& A);
+    void setVolumeB(const VirtualVolume& B);
+    void update();
     double getEquilibrium() const;
-    // double getMolesChangeA() const;
-    // double getMolesChangeB() const;
     QString getNameA() const;
     QString getNameB() const;
     double getPressureA() const;
     double getPressureB() const;
-    std::unique_ptr<VirtualVolume> collapse();
+    VirtualVolume collapse() const;
 private:
-    VolumeObject* m_A;
-    VolumeObject* m_B;
+    VirtualVolume m_A;
+    VirtualVolume m_B;
 };
 
 namespace CalcMoles{

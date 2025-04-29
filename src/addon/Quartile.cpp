@@ -56,13 +56,13 @@ void Quartile::fillVolumePairs(const QMap<QString,QString>& volumeToValve){
 
 void Quartile::addPressureNode(const QString& nodeName, const QString& volA, const QString& volB){
     // same as in storage quartile, make as quartile class method
-    // gas store valves   
-    m_pressureNodes.insert(nodeName, NodePressure());
-    m_pressureNodes[nodeName].setVolumeA(&m_volumeObjects[volA]);
-    m_pressureNodes[nodeName].setVolumeB(&m_volumeObjects[volB]);
+    // gas store valves
+    NodePressure pressureNode;
+    pressureNode.setVolumeA(VirtualVolume(&m_volumeObjects[volA]));
+    pressureNode.setVolumeB(VirtualVolume(&m_volumeObjects[volB]));
+    m_pressureNodes.insert(nodeName,pressureNode);
     // recalculate node? and moles?
         // recalcualte in depth
-    
 }
 
 QMap<QString, NodePressure> Quartile::getPressureNodes(){

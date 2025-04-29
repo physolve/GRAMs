@@ -15,12 +15,12 @@ Item {
         flow: GridView.FlowLeftToRight
         // anchors.topMargin:10
         // anchors.leftMargin: 5
-        cellWidth: 140; cellHeight: 110
+        cellWidth: 160; cellHeight: 110
         model: TestFieldBack.guiNodes
         clip: true
         interactive: false
         delegate: Rectangle { 
-            width: 140
+            width: 160
             height: 100
             color:"transparent"; border.color: "#464646";
             GridLayout{
@@ -34,47 +34,34 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     spacing: 5
                     Layout.fillWidth: true
-                    Text { text: `${modelData.aName}:`; font.pointSize: 9; color: "white"; 
-                        font.family: "Verdana"
-                    }
-                    Label{
-                        // readOnly: true
+                    Text { text: `${modelData.aName}:`; font.pointSize: 9; color: "white"; font.family: "Verdana" }
+                    Text{
                         text: modelData.prA + " бар"
-                        font { family: 'Courier'; pointSize: 9; }
-                        horizontalAlignment: TextInput.AlignHCenter
-                        // selectByMouse: true
+                        font.pointSize: 9; color: "white"; font.family: "Verdana" 
+                        // font { family: 'Courier'; pointSize: 9; }
                     }
                 }
                 Row{
                     Layout.alignment: Qt.AlignHCenter
                     spacing: 5
-                    Text { text: `${modelData.bName}:`; font.pointSize: 9; color: "white"; 
-                        font.family: "Verdana"
-                    }
+                    Text { text: `${modelData.bName}:`; font.pointSize: 9; color: "white"; font.family: "Verdana" }
                     Label{
-                        // readOnly: true
                         text: modelData.prB + " бар"
-                        font { family: 'Courier'; pointSize: 9; }
-                        horizontalAlignment: TextInput.AlignHCenter
-                        // selectByMouse: true
+                        font.pointSize: 9; color: "white"; font.family: "Verdana" 
                     }
                 }
                 Row{
                     Layout.fillWidth: true
                     spacing: 5
-                    Text { text: `${modelData.nodeName}: `; font.pointSize: 9; color: "white"; 
-                        font.family: "Verdana"
-                    }
+                    Text { text: `${modelData.nodeName}: `; font.pointSize: 9; color: "white"; font.family: "Verdana" }
                     Label{
                         // readOnly: true
                         text: modelData.prC + " бар"
-                        font { family: 'Courier'; pointSize: 9; }
-                        horizontalAlignment: TextInput.AlignHCenter
-                        // selectByMouse: true
+                        font.pointSize: 9; color: "white"; font.family: "Verdana" 
                     }
                 }
                 Button{
-                    id: collapseNode
+                    id: collapseNode // between two
                     Layout.fillHeight: true
                     Layout.fillWidth: true
                     Layout.margins: 10
@@ -86,8 +73,10 @@ Item {
                         radius: parent.width/4
                     }
                     icon.source: "qrc:/SomeAliasedSVG.svg"
-                    icon.color: pressed ? "red" : "blacks"
-
+                    icon.color: pressed ? "red" : "black"
+                    onClicked: {
+                        TestFieldBack.runCollapse(index)
+                    }
                     // icon.width: 25
                     // icon.height: 25
                 }

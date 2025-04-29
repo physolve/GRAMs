@@ -8,24 +8,29 @@ double VolumeObject::getMoles() const{
 }
 
 VirtualVolume::VirtualVolume(VolumeObject* prior) : VolumeObject(), prior_volume{prior}{
-    name = prior->name;
-    volume = prior->volume;
-    updateToPrior();
+    name = "null";
+    if(prior!=nullptr){
+        qDebug() << "Created " << prior->name << " virtual volume";
+        name = prior->name;
+        volume = prior->volume;
+        updateToPrior();
+    }
+}
+VirtualVolume::~VirtualVolume(){
+    qDebug() << "Virtual volume " << name << " deleted";
+    prior_volume = nullptr;
 }
 
-std::unique_ptr<VirtualVolume> VirtualVolume::operator+(VirtualVolume const& obj){
-    auto res_C = std::make_unique<VirtualVolume>(prior_volume);
-    // VirtualVolume* res_C = new VirtualVolume(prior_volume);
-    res_C->name = name+obj.name;
-    res_C->volume = volume + obj.volume;
+VirtualVolume VirtualVolume::operator+(VirtualVolume const& obj){
+    VirtualVolume res_C(prior_volume);
+    res_C.name = name+obj.name;
+    res_C.volume = volume + obj.volume;
     return res_C;
-    // return res_C;
 }
-
-std::unique_ptr<VirtualVolume> VirtualVolume::operator-(VirtualVolume const& obj){
-    auto res_C = std::make_unique<VirtualVolume>(prior_volume);
-    res_C->name = name.remove(obj.name);
-    res_C->volume = volume - obj.volume;
+VirtualVolume VirtualVolume::operator-(VirtualVolume const& obj){
+    VirtualVolume res_C(prior_volume);
+    res_C.name = name.remove(obj.name);
+    res_C.volume = volume - obj.volume;
     return res_C;
 }
 
@@ -47,42 +52,46 @@ NodePressure::NodePressure()
 NodePressure::~NodePressure(){
 }
 
-void NodePressure::setVolumeA(VolumeObject* A){
+
+void NodePressure::setVolumeA(const VirtualVolume& A){
     m_A = A;
 }
 
-void NodePressure::setVolumeB(VolumeObject* B){
+void NodePressure::setVolumeB(const VirtualVolume& B){
     m_B = B;
 }
 
+void NodePressure::update(){
+    m_A.updateToPrior();
+    m_B.updateToPrior();
+}
 double NodePressure::getEquilibrium() const{
-    const double& moleTempA = m_A->getMoles()*m_A->temperature;
-    const double& moleTempB = m_B->getMoles()*m_B->temperature;
-    const double& pressureTotal = Constants::gas_constant*(moleTempA + moleTempB)/(m_A->volume+m_B->volume);
+    const double& moleTempA = m_A.getMoles()*m_A.temperature;
+    const double& moleTempB = m_B.getMoles()*m_B.temperature;
+    const double& pressureTotal = Constants::gas_constant*(moleTempA + moleTempB)/(m_A.volume+m_B.volume);
     // temperature?
     return pressureTotal;
 }
 
 double NodePressure::getPressureA() const{
-    return m_A->pressure;
+    return m_A.pressure;
 }
 
 double NodePressure::getPressureB() const{
-    return m_B->pressure;
+    return m_B.pressure;
 }
 
 QString NodePressure::getNameA() const{
-    return m_A->name;
+    return m_A.name;
 }
 
 QString NodePressure::getNameB() const{
-    return m_B->name;
+    return m_B.name;
 }
 
-std::unique_ptr<VirtualVolume> NodePressure::collapse(){
-    return VirtualVolume(m_A) + VirtualVolume(m_B); 
+VirtualVolume NodePressure::collapse() const{
+    return VirtualVolume(m_A)+VirtualVolume(m_B);
 }
-
 
 namespace CalcMoles{
 

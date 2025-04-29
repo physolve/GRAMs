@@ -26,7 +26,6 @@ class TestField : public QObject
 {
     Q_OBJECT // ?
     Q_PROPERTY(QList<guiNode> guiNodes READ getGuiNodes NOTIFY guiNodesChanged)
-    Q_INVOKABLE void runCollapse(const QString& nodeName); // second, main is known
 public:
     TestField(QObject *parent = nullptr);
     ~TestField();
@@ -34,10 +33,12 @@ public:
     void setReactionNodes(const QMap<QString, NodePressure>& reactionNodes);
     void runTest();
     QList<guiNode> getGuiNodes();
+    Q_INVOKABLE void runCollapse(const int& index); //const QString& nodeName // second, main is known
 signals:
     void guiNodesChanged();
 private:
     QMap<QString, NodePressure> m_storageNodes;
     QMap<QString, NodePressure> m_reactionNodes;
-    QList<guiNode> m_guiNodes;
+    QList<guiNode> m_guiNodes; // to Collapse
+    // other list to split?
 };
