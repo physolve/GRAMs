@@ -1,7 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>qtquickcontrols2.conf</file>
-        <file alias="SomeAliasedSVG.svg">icons/collapse.svg</file>
+        <file alias="collapseSVG.svg">icons/collapse.svg</file>
+        <file alias="splitSVG.svg">icons/split.svg</file>
     </qresource>
     <qresource prefix="/GRAMs">
         <file>../fonts/LoveLetter.TTF</file>

@@ -42,6 +42,7 @@ public:
     double getPressureA() const;
     double getPressureB() const;
     VirtualVolume collapse() const;
+    VirtualVolume split(const VirtualVolume& bNode) const;
 private:
     VirtualVolume m_A;
     VirtualVolume m_B;

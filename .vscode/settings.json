@@ -1,4 +1,5 @@
 {
+    "editor.selectionClipboard": false,
     "files.associations": {
         "qsettings": "cpp",
         "qquickstyle": "cpp",

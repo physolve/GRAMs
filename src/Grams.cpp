@@ -354,6 +354,7 @@ void Grams::initSafeModule(){
 void Grams::initTestField(){
     m_testField.setStorageNodes(m_storageQuartile.getPressureNodes());
     m_testField.setReactionNodes(m_reactionQuartile.getPressureNodes());
+    m_testField.setInitialNodes();
     m_testField.runTest();
 }
 

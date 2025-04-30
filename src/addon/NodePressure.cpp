@@ -93,8 +93,11 @@ VirtualVolume NodePressure::collapse() const{
     return VirtualVolume(m_A)+VirtualVolume(m_B);
 }
 
-namespace CalcMoles{
+VirtualVolume NodePressure::split(const VirtualVolume& bNode) const{
+    return VirtualVolume(m_A)-bNode;
+}
 
+namespace CalcMoles{
     double getMolesSum(const QList<VolumeObject> &volumes){
         double moles = 0;
         for(const auto& volume : volumes){
