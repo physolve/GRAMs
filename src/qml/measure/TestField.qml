@@ -89,7 +89,7 @@ Item {
         interactive: false
         delegate: Rectangle { 
             width: 200
-            height: 150
+            height: 70
             color:"transparent"; border.color: "#464646";
             GridLayout{
                 width: parent.width
@@ -97,11 +97,7 @@ Item {
                 columns: 2
                 rowSpacing: 5
                 uniformCellWidths: true
-                Text { text: `${modelData.aName}`; font.pointSize: 13; color: "white";
-                font.family: "Verdana"; Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter }
-                Text { text: `${modelData.bName}`; font.pointSize: 13; color: "white";
-                font.family: "Verdana"; Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter }
-                Text { text: `${modelData.nodeName}`; font.pointSize: 13; color: "white";
+                Text { text: `${modelData}`; font.pointSize: 13; color: "white";
                 font.family: "Verdana"; Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter }
                 Button{
                     id: splitNode // between two
@@ -118,7 +114,7 @@ Item {
                     icon.source: "qrc:/splitSVG.svg"
                     icon.color: pressed ? "red" : "black"
                     onClicked: {
-                        TestFieldBack.runSplit(index)
+                        TestFieldBack.runSplit(modelData)
                     }
                 }
             }

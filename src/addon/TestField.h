@@ -27,26 +27,25 @@ class TestField : public QObject
     Q_OBJECT // ?
     Q_PROPERTY(QList<guiNode> guiNodes READ getGuiNodes NOTIFY guiNodesChanged)
     // collapsed list
-    Q_PROPERTY(QList<guiNode> guiCollapsed READ getGuiCollapsed NOTIFY guiCollapsedChanged)
+    Q_PROPERTY(QStringList guiCollapsed READ getGuiCollapsed NOTIFY guiCollapsedChanged)
 public:
     TestField(QObject *parent = nullptr);
     ~TestField();
     void setStorageNodes(const QMap<QString, NodePressure>& storageNodes);
     void setReactionNodes(const QMap<QString, NodePressure>& reactionNodes);
-    void setInitialNodes();
     void runTest();
-    QList<guiNode> getGuiNodes();
+    QList<guiNode> getGuiNodes() const;
     Q_INVOKABLE void runCollapse(const int& index); //const QString& nodeName // second, main is known
-    QList<guiNode> getGuiCollapsed();
-    Q_INVOKABLE void runSplit(const int& index);
+    QStringList getGuiCollapsed() const;
+    Q_INVOKABLE void runSplit(const QString& key);
 signals:
     void guiNodesChanged();
     void guiCollapsedChanged();
 private:
     QMap<QString, NodePressure> m_storageNodes;
     QMap<QString, NodePressure> m_reactionNodes;
-    QMap<QString, NodePressure> m_initialNodes;
-    QList<guiNode> m_guiNodes; // to Collapse
-    // other list to split?
-    QList<guiNode> m_guiCollapsed;
+    
+    QList<guiNode> m_guiNodes;
+    NodePressure allCollapsed;
+    QMap<QString, VirtualVolume> folded_volumes;
 };

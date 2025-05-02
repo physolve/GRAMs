@@ -21,10 +21,12 @@ struct VirtualVolume : public VolumeObject{
     ~VirtualVolume();
     void updateToPrior();
     double getPriorMoles() const;
+    // VirtualVolume getFoldedVolume(const QString& name) const;
     VirtualVolume operator+(VirtualVolume const& obj);
     VirtualVolume operator-(VirtualVolume const& obj);
 private:
     VolumeObject* prior_volume;
+    // QMap<QString, VirtualVolume> folded_volumes;
 };
 
 
@@ -41,8 +43,9 @@ public:
     QString getNameB() const;
     double getPressureA() const;
     double getPressureB() const;
-    VirtualVolume collapse() const;
-    VirtualVolume split(const VirtualVolume& bNode) const;
+    QPair<VirtualVolume,VirtualVolume> collapse();
+    VirtualVolume split(const VirtualVolume& foldedVolume);
+    
 private:
     VirtualVolume m_A;
     VirtualVolume m_B;

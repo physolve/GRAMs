@@ -21,6 +21,10 @@ VirtualVolume::~VirtualVolume(){
     prior_volume = nullptr;
 }
 
+// VirtualVolume VirtualVolume::getFoldedVolume(const QString& name) const{
+//     return folded_volumes[name];
+// }
+
 VirtualVolume VirtualVolume::operator+(VirtualVolume const& obj){
     VirtualVolume res_C(prior_volume);
     res_C.name = name+obj.name;
@@ -89,12 +93,13 @@ QString NodePressure::getNameB() const{
     return m_B.name;
 }
 
-VirtualVolume NodePressure::collapse() const{
-    return VirtualVolume(m_A)+VirtualVolume(m_B);
+QPair<VirtualVolume,VirtualVolume> NodePressure::collapse(){
+    m_B.pressure = m_A.pressure = getEquilibrium();
+    return {VirtualVolume(m_A)+VirtualVolume(m_B),m_B};
 }
 
-VirtualVolume NodePressure::split(const VirtualVolume& bNode) const{
-    return VirtualVolume(m_A)-bNode;
+VirtualVolume NodePressure::split(const VirtualVolume& foldedVolume){
+    return VirtualVolume(m_A)-foldedVolume;
 }
 
 namespace CalcMoles{

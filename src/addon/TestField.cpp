@@ -21,11 +21,6 @@ void TestField::setReactionNodes(const QMap<QString, NodePressure>& reactionNode
     m_reactionNodes = reactionNodes;
 }
 
-void TestField::setInitialNodes(){
-    m_initialNodes.insert(m_storageNodes);
-    m_initialNodes.insert(m_reactionNodes);
-}
-
 void TestField::runTest(){
     // lets join B and C1:
     for(const auto& [key, node] : m_storageNodes.asKeyValueRange()){
@@ -46,34 +41,28 @@ void TestField::runTest(){
 void TestField::runCollapse(const int& index){
     qDebug() << index;
     QString nodeKey = m_guiNodes[index].m_nodeName;
-
-    if(m_storageNodes.count() == 1){
-        qDebug() << "No more Nodes";
+    const auto& vol_pair = m_storageNodes.take(nodeKey).collapse();
+    const auto& vol1 = vol_pair.first;
+    folded_volumes.insert(vol_pair.second.name, vol_pair.second);
+    if(m_storageNodes.count() == 0){
+        NodePressure newNode;
+        newNode.setVolumeA(vol1);
+        newNode.setVolumeB(VirtualVolume());
+        allCollapsed = newNode;
+        m_guiNodes.clear();
+        emit guiCollapsedChanged();
+        emit guiNodesChanged();
         return;
     }
-    auto node1 = m_storageNodes.take(nodeKey);
-    
-    auto vol1 = node1.collapse();
-    // m_guiCollapsed << m_guiNodes[index];
-
     QMap<QString, NodePressure> newStorageNodes;
+    QList<guiNode> newGuiNodes;
+    NodePressure newNode;
     for(const auto& [key, node] : m_storageNodes.asKeyValueRange()){
-        NodePressure newNode = node;
+        newNode = node;
         newNode.setVolumeA(vol1);
         const auto& newKey = nodeKey + node.getNameB();
-        newStorageNodes.insert(newKey,newNode);     
-    }
-    m_storageNodes.clear();
-    m_storageNodes = newStorageNodes;
-    // m_guiNodes.remove(index);
-    m_guiCollapsed << m_guiNodes.takeAt(index);
-    emit guiCollapsedChanged();
+        newStorageNodes.insert(newKey,newNode);
 
-    QList<guiNode> newGuiNodes;
-    for(const auto& nodeGui : m_guiNodes){
-        const auto& newKey = nodeKey + nodeGui.m_bName;
-        // m_storageNodes[newKey].update();
-        const auto& newNode = m_storageNodes[newKey];
         guiNode ab;
         ab.m_prC = newNode.getEquilibrium();
         ab.m_nodeName = newKey;
@@ -83,34 +72,67 @@ void TestField::runCollapse(const int& index){
         ab.m_bName = newNode.getNameB();
         newGuiNodes << ab;
     }
+    m_storageNodes.clear();
+    m_storageNodes = newStorageNodes;
+    emit guiCollapsedChanged();
     m_guiNodes.clear();
     m_guiNodes = newGuiNodes;
     emit guiNodesChanged();
 }
 
-QList<guiNode> TestField::getGuiNodes(){
+QList<guiNode> TestField::getGuiNodes() const{
     return m_guiNodes;
 }
 
-QList<guiNode> TestField::getGuiCollapsed(){
-    return m_guiCollapsed;
+QStringList TestField::getGuiCollapsed() const{
+    return folded_volumes.keys();
 }
 
-void TestField::runSplit(const int& index){
-    qDebug() << index;
-    QString nodeSplitKey = m_guiCollapsed[index].m_bName;
+void TestField::runSplit(const QString& key){;
+
+    auto vol2 = folded_volumes.take(key);
     QMap<QString, NodePressure> newStorageNodes;
-    for(const auto& [key, node] : m_storageNodes.asKeyValueRange()){
-        const auto& nodeToSplit = m_initialNodes[nodeSplitKey];
-        node.split(nodeToSplit.);
-        
-        NodePressure newNode = node;
-        newNode.setVolumeA(vol1);
-        const auto& newKey = nodeKey + node.getNameB();
-        newStorageNodes.insert(newKey,newNode);     
+    QList<guiNode> newGuiNodes;
+    NodePressure newNode;
+    if(m_storageNodes.count() > 0){
+        newNode = m_storageNodes.first();
+        newNode.setVolumeA(newNode.split(vol2));
+        newNode.setVolumeB(vol2);
     }
+    else{
+        newNode.setVolumeA(allCollapsed.split(vol2));
+        newNode.setVolumeB(vol2);
+    }
+    vol2.pressure = newNode.getPressureA();
+    newStorageNodes.insert(newNode.getNameA()+newNode.getNameB(),newNode);
+    guiNode ab;
+    ab.m_prC = newNode.getEquilibrium();
+    ab.m_nodeName = newNode.getNameA()+newNode.getNameB();
+    ab.m_prA = newNode.getPressureA();
+    ab.m_aName = newNode.getNameA();
+    ab.m_prB = newNode.getPressureB();
+    ab.m_bName = newNode.getNameB();
+    newGuiNodes << ab;
+    for(const auto& [key, node] : m_storageNodes.asKeyValueRange()){
+        newNode = node;
+        newNode.setVolumeA(newNode.split(vol2));
+        const auto& newKey = newNode.getNameA()+newNode.getNameB();
+        newStorageNodes.insert(newKey,newNode);
 
+        guiNode ab;
+        ab.m_prC = newNode.getEquilibrium();
+        ab.m_nodeName = newNode.getNameA()+newNode.getNameB();
+        ab.m_prA = newNode.getPressureA();
+        ab.m_aName = newNode.getNameA();
+        ab.m_prB = newNode.getPressureB();
+        ab.m_bName = newNode.getNameB();
+        newGuiNodes << ab;
+    }
+    m_storageNodes = newStorageNodes;
+    emit guiCollapsedChanged();
 
-
-    auto node1 = m_storageNodes.take(nodeKey);
+   
+    m_guiNodes.clear();
+    m_guiNodes = newGuiNodes;
+    emit guiNodesChanged();
 }
