@@ -12,6 +12,8 @@
 #include <QLibraryInfo>
 #include <QSettings>
 
+#include "db/PostgreDB.h"
+
 void myMessageHandler(QtMsgType type, const QMessageLogContext & context, const QString & msg)
 {
     QString txt;
@@ -57,10 +59,12 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationDomain(QStringLiteral("tpu.ru"));
     // pass to settings application
     // qputenv("QT_FONT_DPI", QByteArray("128")); //96/128 set for High DPI screen
+    
     const auto &curInitProfile = QString("GRAM50");
-
+    
     Grams app(argc, argv, curInitProfile);
     int ret;
+    createConnection();
     try{
         ret = app.exec(); 
     } catch (const std::bad_alloc &){

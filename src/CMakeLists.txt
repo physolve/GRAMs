@@ -51,6 +51,14 @@ if(NOT DEFINED CPP_MEASURE)
     file(GLOB CPP_MEASURE ${CMAKE_CURRENT_SOURCE_DIR}/measure/*.cpp)
 endif()
 
+if(NOT DEFINED HPP_DB)
+    file(GLOB HPP_DB ${CMAKE_CURRENT_SOURCE_DIR}/db/*.h)
+endif()
+
+if(NOT DEFINED CPP_DB)
+    file(GLOB CPP_DB ${CMAKE_CURRENT_SOURCE_DIR}/db/*.cpp)
+endif()
+
 if (LINUX)            
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libDAQ)
 endif (LINUX)
@@ -69,7 +77,9 @@ ${CPP_CONTROLLERS}
 ${CPP_LIBS} 
 ${CPP_ADDON}
 ${CPP_MEASURE}
+${CPP_DB}
 ${QML_RESOURCES})
+
 if (WIN32)
     target_link_libraries(${EXECUTABLE_NAME}
         PRIVATE Qt6::Core
@@ -79,6 +89,7 @@ if (WIN32)
                 Qt6::PrintSupport
                 Qt6::SerialPort
                 Qt6::OpenGL
+                Qt6::Sql
                 # biodaq
                 opengl32
         Eigen3::Eigen
@@ -92,6 +103,7 @@ else()
             Qt6::PrintSupport
             Qt6::SerialPort
             Qt6::OpenGL
+            Qt6::Sql
             biodaq
     )
 endif()
