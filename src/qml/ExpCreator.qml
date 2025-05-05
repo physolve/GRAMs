@@ -85,10 +85,10 @@ Item {
             holderButtonSupply.visible = true
             detachWindowSupply(false)
         }
-        Component.onCompleted: {
-            detachWindowSupply(true)
-            holderButtonSupply.visible = false
-        }
+        // Component.onCompleted: {
+        //     detachWindowSupply(true)
+        //     holderButtonSupply.visible = false
+        // }
     }
 
     LeakageAdjust{
@@ -98,9 +98,9 @@ Item {
             holderButtonLeakage.visible = true
             detachWindowLeakage(false)
         }
-        Component.onCompleted: {
-            detachWindowLeakage(true)
-            holderButtonLeakage.visible = false
-        }
+        // Component.onCompleted: {
+        //     detachWindowLeakage(true)
+        //     holderButtonLeakage.visible = false
+        // }
     }
 }

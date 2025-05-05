@@ -31,6 +31,7 @@
         <file>qml/ExpCreator.qml</file>
         <file>qml/LeakageAdjust.qml</file>
         <file>qml/measure/ChamberChoose.qml</file>
+        <file>qml/TimeStampCheck.qml</file>
         <file>qml/measure/TestField.qml</file>
     </qresource>
 </RCC>

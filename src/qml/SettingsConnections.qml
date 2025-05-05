@@ -12,7 +12,7 @@ GridLayout{
     GroupBox {
         title: qsTr("Hardware")
         Layout.minimumHeight: 350
-        Layout.minimumWidth: 490
+        Layout.minimumWidth: 460
         Layout.leftMargin: 10
         Layout.rightMargin: 10
         Layout.fillWidth: true
@@ -125,7 +125,7 @@ GridLayout{
     GroupBox {
         title: qsTr("Controllers")
         Layout.minimumHeight: 350
-        Layout.minimumWidth: 490
+        Layout.minimumWidth: 460
         Layout.leftMargin: 10
         Layout.rightMargin: 10
         Layout.fillWidth: true
@@ -180,5 +180,14 @@ GridLayout{
         // secondLineQuarParameters
         // securityParameters
         // now concentrate 
+    }
+    //timestamp parameters
+    TimeStampCheck{
+        Layout.minimumHeight: 350
+        Layout.minimumWidth: 460
+        Layout.leftMargin: 10
+        Layout.rightMargin: 10
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignTop, Qt.AlignHCenter
     }
 }

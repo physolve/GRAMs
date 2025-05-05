@@ -9,7 +9,6 @@
 #include "Initialize.h"
 #include "Security.h"
 #include "DataCollection.h"
-
 #include "addon/Quartile.h"
 #include "addon/StorageQuartile.h"
 #include "addon/AddRemoveQuartile.h"
@@ -21,6 +20,8 @@
 #include "addon/LightPlotItem.h"
 #include "measure/Chamber.h"
 
+#include "db/PostgreDB.h"
+#include "TimeStamp.h"
 #include "addon/TestField.h"
 
 struct guiValsPres{ // sample
@@ -66,20 +67,9 @@ public:
     double g_tmF;
 };
 
-// add virtual volumes
-
 class Grams : public QApplication
 {
     Q_OBJECT
-
-public:
-    Grams(int &argc, char **argvm, const QString &curInitProfile);
-    ~Grams();
-    // Q_INVOKABLE void initializeReading();
-    //Q_INVOKABLE void testRead();
-    // add JSON and profile here?
-    Q_INVOKABLE void setValveState(bool state, int valveId);
-    // Q_INVOKABLE void setValveState(const QString &name, const bool &state);
     Q_PROPERTY (bool vAR1State      READ getVAR1State   NOTIFY valveChanged)
     Q_PROPERTY (bool vAR2State      READ getVAR2State   NOTIFY valveChanged)
     Q_PROPERTY (bool vAR3State      READ getVAR3State   NOTIFY valveChanged)
@@ -97,11 +87,18 @@ public:
     Q_PROPERTY (bool vR5State       READ getVR5State    NOTIFY valveChanged)
     Q_PROPERTY (bool vSL1State      READ getVSL1State   NOTIFY valveChanged)
     Q_PROPERTY (bool vSL2State      READ getVSL2State   NOTIFY valveChanged)
-
     Q_PROPERTY (guiValsPres guiPres READ getGuiValsPres NOTIFY guiValsPresChanged) // requiredPresAI
     Q_PROPERTY (guiValsTemp guiTemp READ getGuiValsTemp NOTIFY guiValsTempChanged) // requiredTempAI
-    Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer);
-    Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer);
+public:
+    Grams(int &argc, char **argvm, const QString &curInitProfile);
+    ~Grams();
+    // Q_INVOKABLE void initializeReading();
+    //Q_INVOKABLE void testRead();
+    // add JSON and profile here?
+    Q_INVOKABLE void setValveState(bool state, int valveId);
+    // Q_INVOKABLE void setValveState(const QString &name, const bool &state);
+    Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer); // unique
+    Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer); // unique
 
     Q_INVOKABLE void chamberSetUp();
 signals:
@@ -123,6 +120,7 @@ private:
     void initStorageQuartile();
     void initReactionQuartile();
     
+    void initTimeStamp();
     void initTestField();
     
     void guiValsUpdate();
@@ -132,7 +130,7 @@ private:
     QQmlApplicationEngine m_engine;
     DataAcquisition dataSource; // pass from constructor
     // ValveModel valveModel;
-    QTimer* softTimer;
+    QTimer* softTimer;  // unique
     // MyModel dataModel;
     Security m_safeModule; // naming?
 
@@ -193,7 +191,7 @@ private:
     ControllerData tmRTube;     // 6 DT358
     ControllerData tmF;         // 7 DT359
 
-    CustomPlotItem* m_testPlot;
+    CustomPlotItem* m_testPlot;  // unique
     // make it QList
     guiValsPres m_pressureVals;
     guiValsPres getGuiValsPres() const;
@@ -201,8 +199,8 @@ private:
     guiValsTemp getGuiValsTemp() const;
     
     // filters
-    CustomPlotItem* m_mainPlot;
-    QList<CustomPlotItem*> m_filterPlots;
+    CustomPlotItem* m_mainPlot;  // unique
+    QList<CustomPlotItem*> m_filterPlots;  // unique
     FilterData timeFilter;
     FilterData fl_prSH;    // 0 DD311
     FilterData fl_prSA;    // 1 DD312
@@ -212,7 +210,7 @@ private:
     FilterData fl_prSK;    // 5 DD341
     FilterData fl_tmSK;    // 6 DT341
     FilterData fl_tmS;     // 7 DT314
-    QVector<FilterData*> getFilterPointers() {
+    QVector<FilterData*> getFilterPointers() {  // unique
         QVector<FilterData*> pointers;
         pointers.append(&fl_prSH);
         pointers.append(&fl_prSA);
@@ -260,7 +258,8 @@ private:
 
     SecondLineQuartile m_secondLineQuartile; 
 
-    QElapsedTimer m_benchmarkTime;
-
+    TimeStamp m_timeStamp;
     TestField m_testField;
+
+    QElapsedTimer m_benchmarkTime;
 };

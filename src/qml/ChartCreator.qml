@@ -64,10 +64,10 @@ Item {
             holderButton.visible = true
             detachWindow(false)
         }
-        Component.onCompleted: {
-            detachWindow(true)
-            holderButton.visible = false
-        }
+        // Component.onCompleted: {
+        //     detachWindow(true)
+        //     holderButton.visible = false
+        // }
     }
 
     ChartFilter{

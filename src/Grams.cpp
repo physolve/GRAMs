@@ -31,10 +31,11 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     initStorageQuartile();
     initReactionQuartile();
 
+    initTimeStamp();
+    initTestField();
+
     initGUI();
     initSafeModule();
-
-    initTestField();
 
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
     softTimer->setInterval(500);
@@ -75,7 +76,7 @@ void Grams::initDigitalData(){
         indexData << i;
     }
     timeFilter.setData(indexData);
-    for(auto filtersData : getFilterPointers()){
+    for(auto filtersData : getFilterPointers()){ // ?
         filtersData->setData(QVector<double>(512,0.0));
     }
 }
@@ -276,6 +277,7 @@ void Grams::initGUI(){
     m_engine.rootContext()->setContextProperty("safeModule", &m_safeModule);
     qmlRegisterSingletonInstance("Grams.backendSourceSingleton", 1, 0, "Grams", this);
     qmlRegisterSingletonInstance("Grams.chamberChooserSingleton", 1, 0, "ChamberChooser", &m_chamber);
+    qmlRegisterSingletonInstance("Grams.timeStampSingleton", 1, 0, "TimeStamp", &m_timeStamp);
     qmlRegisterSingletonInstance("Grams.testFieldSingleton", 1, 0, "TestFieldBack", &m_testField);
     m_engine.load(url);
 }
@@ -349,6 +351,33 @@ void Grams::initSafeModule(){
     
     m_safeModule.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
     m_safeModule.setGasLeakageValves(initSource.m_reactionQuar.m_gasLeakageValves);
+}
+
+void Grams::initTimeStamp(){
+    QVariantList initialTimeStamp;
+    createConnection(initialTimeStamp);
+    // current id check
+    // current time check
+    // int id;
+    int id = initialTimeStamp[0].toInt();
+    qDebug() << initialTimeStamp[1].toString();
+    QDateTime timeStamp = initialTimeStamp[1].toDateTime();
+    qDebug() << initialTimeStamp[1].toDateTime().toString();
+    qDebug() << timeStamp.toString();
+    //QDateTime::fromString(initialTimeStamp[1].toDateTime().toString(),Qt::ISODate);
+
+    guiValsPresVirtual pressureVals;
+    pressureVals.g_prSQ = initialTimeStamp[2].toDouble();
+    pressureVals.g_prRQ = initialTimeStamp[3].toDouble();
+    pressureVals.g_prSC1 = initialTimeStamp[4].toDouble();
+    pressureVals.g_prSC2 = initialTimeStamp[5].toDouble();
+    pressureVals.g_prSC3 = initialTimeStamp[6].toDouble();
+    pressureVals.g_prSB = initialTimeStamp[7].toDouble();
+    pressureVals.g_prSD1 = initialTimeStamp[8].toDouble();
+    pressureVals.g_prRE = initialTimeStamp[9].toDouble();
+    pressureVals.g_prRD2 = initialTimeStamp[10].toDouble();
+    pressureVals.g_prRF = initialTimeStamp[11].toDouble();
+    m_timeStamp.setInitialPressure(timeStamp, pressureVals);
 }
 
 void Grams::initTestField(){
