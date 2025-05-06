@@ -101,6 +101,7 @@ public:
     Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer); // unique
 
     Q_INVOKABLE void chamberSetUp();
+    Q_INVOKABLE void refreshTestField();
 signals:
     void valveChanged();
     void guiValsPresChanged();

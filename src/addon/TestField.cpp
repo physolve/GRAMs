@@ -13,13 +13,13 @@ TestField::~TestField()
     qDebug() << "TestField class is destroyed";
 }
 
-void TestField::setStorageNodes(const QMap<QString, NodePressure>& storageNodes){
-    m_storageNodes = storageNodes;
-}
+// void TestField::setStorageNodes(const QMap<QString, NodePressure>& storageNodes){
+//     m_storageNodes = storageNodes;
+// }
 
-void TestField::setReactionNodes(const QMap<QString, NodePressure>& reactionNodes){
-    m_reactionNodes = reactionNodes;
-}
+// void TestField::setReactionNodes(const QMap<QString, NodePressure>& reactionNodes){
+//     m_reactionNodes = reactionNodes;
+// }
 
 guiNode TestField::newGuiNode(const NodePressure &node, const QString& nodeKey) const{
     guiNode a;
@@ -32,21 +32,33 @@ guiNode TestField::newGuiNode(const NodePressure &node, const QString& nodeKey) 
     return a;
 }
 
-void TestField::runTest(){
-    // lets join B and C1:
+void TestField::updateTestField(const QMap<QString, NodePressure>& storageNodes, QStringList usedVolumes){
+    previousState.clear();
+
+    m_storageNodes = storageNodes;
+    m_guiNodes.clear();
+    map_guiCollapsed.clear();
     for(const auto& [key, node] : m_storageNodes.asKeyValueRange()){
         node.update();
         m_guiNodes << newGuiNode(node, key);
     }
+    emit guiCollapsedChanged();
     emit guiNodesChanged();
+    auto currentStorageVolume = usedVolumes.takeFirst();
+    if(usedVolumes.isEmpty()){
+        return;
+    }
+    for(const auto& usedVolume : usedVolumes){
+        currentStorageVolume+=usedVolume;
+        runCollapse(currentStorageVolume); // just for storage
+    }
 }
 
-void TestField::runCollapse(const int& index){
-    qDebug() << index;
-    QString nodeKey = m_guiNodes[index].m_nodeName;
-    const auto& vol_pair = m_storageNodes.take(nodeKey).collapse();
+void TestField::runCollapse(const QString& nodeName){
+    previousState << StateCopy{m_storageNodes, m_guiNodes, map_guiCollapsed};
+    const auto& vol_pair = m_storageNodes.take(nodeName).collapse();
     const auto& vol1 = vol_pair.first;
-    folded_volumes.insert(vol_pair.second.name, vol_pair.second);
+    map_guiCollapsed.insert(vol_pair.second.name, vol_pair.second);
     if(m_storageNodes.count() == 0){
         NodePressure newNode;
         newNode.setVolumeA(vol1);
@@ -59,13 +71,15 @@ void TestField::runCollapse(const int& index){
     }
     QMap<QString, NodePressure> newStorageNodes;
     QList<guiNode> newGuiNodes;
+   
     NodePressure newNode;
     for(const auto& [key, node] : m_storageNodes.asKeyValueRange()){
         newNode = node;
         newNode.setVolumeA(vol1);
-        const auto& newKey = nodeKey + node.getNameB();
+        const auto& newKey = nodeName + node.getNameB();
         newStorageNodes.insert(newKey,newNode);
-        newGuiNodes << newGuiNode(newNode, newKey);
+        
+        newGuiNodes << newGuiNode(newNode, newKey); // external
     }
     m_storageNodes.clear();
     m_storageNodes = newStorageNodes;
@@ -75,17 +89,9 @@ void TestField::runCollapse(const int& index){
     emit guiNodesChanged();
 }
 
-QList<guiNode> TestField::getGuiNodes() const{
-    return m_guiNodes;
-}
-
-QStringList TestField::getGuiCollapsed() const{
-    return folded_volumes.keys();
-}
-
-void TestField::runSplit(const QString& key){;
-
-    auto vol2 = folded_volumes.take(key);
+void TestField::runSplit(const QString& foldedName){
+    previousState << StateCopy{m_storageNodes, m_guiNodes, map_guiCollapsed};
+    auto vol2 = map_guiCollapsed.take(foldedName);
     QMap<QString, NodePressure> newStorageNodes;
     QList<guiNode> newGuiNodes;
     NodePressure newNode;
@@ -114,4 +120,23 @@ void TestField::runSplit(const QString& key){;
     m_guiNodes.clear();
     m_guiNodes = newGuiNodes;
     emit guiNodesChanged();
+}
+
+void TestField::cancelLast(){
+    if(previousState.count() == 0)
+        return;
+    const auto& lastState = previousState.takeLast();
+    m_storageNodes = lastState.buff_storageNodes;
+    m_guiNodes = lastState.buff_guiNodes;
+    map_guiCollapsed = lastState.buff_folded_volumes;
+    emit guiCollapsedChanged();
+    emit guiNodesChanged();
+}
+
+QList<guiNode> TestField::getGuiNodes() const{
+    return m_guiNodes;
+}
+
+QStringList TestField::getGuiCollapsed() const{
+    return map_guiCollapsed.keys();
 }

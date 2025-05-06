@@ -352,7 +352,6 @@ void Grams::initSafeModule(){
         initSource.m_reactionQuar.m_pressureRange_open,initSource.m_reactionQuar.m_pressureRange_close);
     m_safeModule.setSafeReleaseValves(initSource.m_storageQuar.m_gasReleaseValve, "storageQuar", 
         initSource.m_storageQuar.m_gasRelease);
-    
     m_safeModule.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
     m_safeModule.setGasLeakageValves(initSource.m_reactionQuar.m_gasLeakageValves);
 }
@@ -393,11 +392,15 @@ void Grams::initTimeStamp(){
 }
 
 void Grams::initTestField(){
+    refreshTestField();
+}
+
+void Grams::refreshTestField(){
     m_storageQuartile.updateVolumeObjects();
     m_reactionQuartile.updateVolumeObjects();
-    m_testField.setStorageNodes(m_storageQuartile.getPressureNodes());
-    m_testField.setReactionNodes(m_reactionQuartile.getPressureNodes());
-    m_testField.runTest();
+    // m_testField.setStorageNodes(m_storageQuartile.getPressureNodes());
+    // m_testField.setReactionNodes(m_reactionQuartile.getPressureNodes());
+    m_testField.updateTestField(m_storageQuartile.getPressureNodes(), m_storageQuartile.getUsedVolumes()); // storage nodes +m_reactionQuartile.getUsedVolumes()
 }
 
 void Grams::guiValsUpdate(){

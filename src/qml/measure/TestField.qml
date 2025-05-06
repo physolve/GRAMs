@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Grams.backendSourceSingleton 1.0
 import Grams.testFieldSingleton 1.0
 
 Item {
@@ -71,7 +72,7 @@ Item {
                     icon.source: "qrc:/collapseSVG.svg"
                     icon.color: pressed ? "red" : "black"
                     onClicked: {
-                        TestFieldBack.runCollapse(index)
+                        TestFieldBack.runCollapse(modelData.nodeName)
                     }
                 }
             }
@@ -128,12 +129,18 @@ Item {
             text:qsTr("🗘")
             Layout.preferredHeight: 40
             Layout.preferredWidth: 40
+            onClicked: {
+                Grams.refreshTestField()
+            }
         }
         Button{
             id: back
             text:qsTr("❮")
             Layout.preferredHeight: 40
             Layout.preferredWidth: 40
+            onClicked: {
+                TestFieldBack.cancelLast()
+            }
         }
     }
 }
