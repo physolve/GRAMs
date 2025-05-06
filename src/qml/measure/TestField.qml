@@ -11,14 +11,14 @@ Item {
     GridView {
         id: viewTestField
         width: parent.width
-        height: parent.height/2 - 10
+        height: parent.height/3
         flow: GridView.FlowLeftToRight
-        cellWidth: 220; cellHeight: 160
+        cellWidth: 250; cellHeight: 160
         model: TestFieldBack.guiNodes
         clip: true
         interactive: false
         delegate: Rectangle { 
-            width: 200
+            width: 240
             height: 150
             color:"transparent"; border.color: "#464646";
             GridLayout{
@@ -33,7 +33,7 @@ Item {
                     Layout.fillWidth: true
                     Text { text: `${modelData.aName}:`; font.pointSize: 10; color: "white"; font.family: "Verdana" }
                     Text{
-                        text: modelData.prA + " бар"
+                        text: modelData.prA.toFixed(3) + " бар"
                         font.pointSize: 10; color: "white"; font.family: "Verdana"
                     }
                 }
@@ -42,7 +42,7 @@ Item {
                     spacing: 5
                     Text { text: `${modelData.bName}:`; font.pointSize: 10; color: "white"; font.family: "Verdana" }
                     Label{
-                        text: modelData.prB + " бар"
+                        text: modelData.prB.toFixed(3) + " бар"
                         font.pointSize: 10; color: "white"; font.family: "Verdana" 
                     }
                 }
@@ -52,7 +52,7 @@ Item {
                     Text { text: `${modelData.nodeName}: `; font.pointSize: 10; color: "white"; font.family: "Verdana" }
                     Label{
                         // readOnly: true
-                        text: modelData.prC + " бар"
+                        text: modelData.prC.toFixed(3) + " бар"
                         font.pointSize: 10; color: "white"; font.family: "Verdana" 
                     }
                 }
@@ -79,9 +79,9 @@ Item {
     }
     GridView {
         id: viewCollapsed
-        y: parent.height/2 + 5
+        y: parent.height/3 + 5
         width: parent.width
-        height: parent.height/2 - 10
+        height: parent.height/3 - 10
         flow: GridView.FlowLeftToRight
         cellWidth: 220; cellHeight: 160
         model: TestFieldBack.guiCollapsed
@@ -118,6 +118,22 @@ Item {
                     }
                 }
             }
+        }
+    }
+    RowLayout{
+        // tool box
+        y: 2*parent.height/3 + 5
+        Button{
+            id: refresh
+            text:qsTr("🗘")
+            Layout.preferredHeight: 40
+            Layout.preferredWidth: 40
+        }
+        Button{
+            id: back
+            text:qsTr("❮")
+            Layout.preferredHeight: 40
+            Layout.preferredWidth: 40
         }
     }
 }

@@ -249,8 +249,8 @@ private:
     QuartileData tmRQ;
     DataCollection prRE;
     MolesData mlE;
-    DataCollection prRD2Atm;
-    DataCollection prRD2Low;
+    DataCollection prRD2Atm; // ?
+    DataCollection prRD2Low; // ? rename to one
     MolesData mlD2;
     Chamber m_chamber;
     DataCollection prRF;

@@ -13,17 +13,13 @@ VirtualVolume::VirtualVolume(VolumeObject* prior) : VolumeObject(), prior_volume
         qDebug() << "Created " << prior->name << " virtual volume";
         name = prior->name;
         volume = prior->volume;
-        updateToPrior();
+        updateToPrior(); // ?
     }
 }
 VirtualVolume::~VirtualVolume(){
     qDebug() << "Virtual volume " << name << " deleted";
     prior_volume = nullptr;
 }
-
-// VirtualVolume VirtualVolume::getFoldedVolume(const QString& name) const{
-//     return folded_volumes[name];
-// }
 
 VirtualVolume VirtualVolume::operator+(VirtualVolume const& obj){
     VirtualVolume res_C(prior_volume);
@@ -70,9 +66,9 @@ void NodePressure::update(){
     m_B.updateToPrior();
 }
 double NodePressure::getEquilibrium() const{
-    const double& moleTempA = m_A.getMoles()*m_A.temperature;
-    const double& moleTempB = m_B.getMoles()*m_B.temperature;
-    const double& pressureTotal = Constants::gas_constant*(moleTempA + moleTempB)/(m_A.volume+m_B.volume);
+    const double& absTempA = m_A.temperature + Constants::temperature_std_K;
+    const double& absTempB = m_B.temperature + Constants::temperature_std_K;
+    const double& pressureTotal = 10*Constants::gas_constant*(m_A.getMoles()*absTempA + m_B.getMoles()*absTempB)/(m_A.volume+m_B.volume);
     // temperature?
     return pressureTotal;
 }
@@ -94,12 +90,15 @@ QString NodePressure::getNameB() const{
 }
 
 QPair<VirtualVolume,VirtualVolume> NodePressure::collapse(){
-    m_B.pressure = m_A.pressure = getEquilibrium();
-    return {VirtualVolume(m_A)+VirtualVolume(m_B),m_B};
+    auto m_C = VirtualVolume(m_A)+VirtualVolume(m_B);
+    m_C.pressure = m_B.pressure = getEquilibrium();
+    return {m_C, m_B};
 }
 
 VirtualVolume NodePressure::split(const VirtualVolume& foldedVolume){
-    return VirtualVolume(m_A)-foldedVolume;
+    auto m_C = VirtualVolume(m_A)-VirtualVolume(foldedVolume);
+    m_C.pressure = m_A.pressure;
+    return m_C;
 }
 
 namespace CalcMoles{

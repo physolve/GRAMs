@@ -23,11 +23,13 @@
     - [ ] Security основывается на pressure node
         - [x] Перемести pressure node в quartile
         - [x] Test field для прогона pressure node
-            - [ ] Нужно как-то заполнять
+            - [ ] После действия pressure node должен запоминать новое значение (collapse после split)
+            - [ ] Обнови folded перед split  
+        - [ ] Действия refresh back и forward
 - [ ] GUI update chamber
 - [ ] Упрощенная мнемо / модель
-    - [ ] Представление блоками
-        - [ ] Collapse - объединение и split - разделение
+    - [x] Представление блоками
+        - [x] Collapse - объединение и split - разделение
         - [ ] Sync синхронизация с реальной схемой как reset и update
 
 ## Задачи до 04.05.2025

@@ -21,6 +21,15 @@ public:
     double m_prB;
 };
 
+struct StateCopy {
+    // previous state copy :(
+    QMap<QString, NodePressure> buff_storageNodes;
+    QList<guiNode> buff_guiNodes;
+    QMap<QString, VirtualVolume> buff_folded_volumes;
+    
+    // Pointer to the next node
+    struct StateCopy* next;
+};
 
 class TestField : public QObject
 {
@@ -34,6 +43,7 @@ public:
     void setStorageNodes(const QMap<QString, NodePressure>& storageNodes);
     void setReactionNodes(const QMap<QString, NodePressure>& reactionNodes);
     void runTest();
+    
     QList<guiNode> getGuiNodes() const;
     Q_INVOKABLE void runCollapse(const int& index); //const QString& nodeName // second, main is known
     QStringList getGuiCollapsed() const;
@@ -44,8 +54,10 @@ signals:
 private:
     QMap<QString, NodePressure> m_storageNodes;
     QMap<QString, NodePressure> m_reactionNodes;
-    
+
+    guiNode newGuiNode(const NodePressure &node, const QString& nodeKey) const;
     QList<guiNode> m_guiNodes;
+
     NodePressure allCollapsed;
     QMap<QString, VirtualVolume> folded_volumes;
 };

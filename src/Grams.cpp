@@ -22,6 +22,8 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     m_safeModule(), // check
     softTimer(new QTimer)
 {
+    
+    
     initDigitalData();
     initAnalogData();
     advDoController();
@@ -39,7 +41,9 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
 
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
     softTimer->setInterval(500);
-    softTimer->start();
+    if(initSource.isInitializeOk()){ // dataSource getGRAMsIntegrity ?
+        softTimer->start();
+    }
     dataSource.startAcquisition();
 }
 
@@ -360,11 +364,7 @@ void Grams::initTimeStamp(){
     // current time check
     // int id;
     int id = initialTimeStamp[0].toInt();
-    qDebug() << initialTimeStamp[1].toString();
     QDateTime timeStamp = initialTimeStamp[1].toDateTime();
-    qDebug() << initialTimeStamp[1].toDateTime().toString();
-    qDebug() << timeStamp.toString();
-    //QDateTime::fromString(initialTimeStamp[1].toDateTime().toString(),Qt::ISODate);
 
     guiValsPresVirtual pressureVals;
     pressureVals.g_prSQ = initialTimeStamp[2].toDouble();
@@ -378,9 +378,23 @@ void Grams::initTimeStamp(){
     pressureVals.g_prRD2 = initialTimeStamp[10].toDouble();
     pressureVals.g_prRF = initialTimeStamp[11].toDouble();
     m_timeStamp.setInitialPressure(timeStamp, pressureVals);
+    prSQ.addPoint(initialTimeStamp[2].toDouble());
+    tmSQ.addPoint(27);
+    prRQ.addPoint(initialTimeStamp[3].toDouble());
+    tmRQ.addPoint(27);
+    prSC1.addPoint(initialTimeStamp[4].toDouble());
+    prSC2.addPoint(initialTimeStamp[5].toDouble());
+    prSC3.addPoint(initialTimeStamp[6].toDouble());
+    prSB.addPoint(initialTimeStamp[7].toDouble());
+    prSD1.addPoint(initialTimeStamp[8].toDouble());
+    prRE.addPoint(initialTimeStamp[9].toDouble());
+    prRD2Atm.addPoint(initialTimeStamp[10].toDouble());
+    prRF.addPoint(initialTimeStamp[11].toDouble());
 }
 
 void Grams::initTestField(){
+    m_storageQuartile.updateVolumeObjects();
+    m_reactionQuartile.updateVolumeObjects();
     m_testField.setStorageNodes(m_storageQuartile.getPressureNodes());
     m_testField.setReactionNodes(m_reactionQuartile.getPressureNodes());
     m_testField.runTest();

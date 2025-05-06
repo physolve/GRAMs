@@ -26,7 +26,6 @@ struct VirtualVolume : public VolumeObject{
     VirtualVolume operator-(VirtualVolume const& obj);
 private:
     VolumeObject* prior_volume;
-    // QMap<QString, VirtualVolume> folded_volumes;
 };
 
 
