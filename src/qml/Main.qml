@@ -7,6 +7,7 @@ import Grams.backendSourceSingleton 1.0
 //import "mnemo/GRAM300_mnemo/GRAM300_mnemoContent"
 import "mnemo/GRAM50_mnemo/GRAM50_mnemoContent"
 import "measure"
+import "lumber"
 
 ApplicationWindow {
     id: main
@@ -124,10 +125,10 @@ ApplicationWindow {
                 anchors.left: parent.left
                 Repeater{
                     id: barMnenoRepeater
-                    model: ["Мнемосхема", "Упрощение"]
+                    model: ["Мнемосхема", "Упрощение", "Модель"]
                     TabButton{
                         text: modelData
-                        width: Math.max(120, barMneno.width/2)
+                        width: Math.max(120, barMneno.width/3)
                         font.pointSize: 12
                     }
                 }
@@ -141,15 +142,18 @@ ApplicationWindow {
                 currentIndex: barMneno.currentIndex
                 MnemoBase{
                     id: rectangle
-                    // anchors.left: parent.left
-                    // anchors.top: parent.top
-                    // anchors.leftMargin: 5
-                    // anchors.rightMargin: 5
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.leftMargin: 5
                     Layout.rightMargin: 5
                     // SplitView.minimumWidth: 1390
+                }
+                Lumber{
+                    id: lumber
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.leftMargin: 5
+                    Layout.rightMargin: 5
                 }
                 TestField{
                     id: testMnemo

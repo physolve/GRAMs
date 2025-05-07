@@ -358,7 +358,10 @@ void Grams::initSafeModule(){
 
 void Grams::initTimeStamp(){
     QVariantList initialTimeStamp;
-    createConnection(initialTimeStamp);
+    if(!createConnection(initialTimeStamp)){
+        return;
+    }
+
     // current id check
     // current time check
     // int id;

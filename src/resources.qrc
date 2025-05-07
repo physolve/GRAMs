@@ -21,6 +21,8 @@
         <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/TempWidget.qml</file>
         <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/ShortComboBox.qml</file>
 
+        <file>qml/lumber/Lumber.qml</file>
+
         <file>qml/Main.qml</file>
         <file>qml/SettingsWindow.qml</file>
         <file>qml/SettingsConnections.qml</file>
