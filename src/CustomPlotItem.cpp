@@ -5,8 +5,9 @@
 CustomPlotItem::CustomPlotItem(QQuickItem *parent)
     : QQuickPaintedItem(parent), m_CustomPlot(nullptr), rescalingON(true), lastPointKey(0), rangeLow(0) {
     setFlag(QQuickItem::ItemHasContents, true);
+    this->setRenderTarget(this->renderTarget());
     setAcceptedMouseButtons(Qt::AllButtons);
-
+    initCustomPlot();
     connect(this, &QQuickPaintedItem::widthChanged, this,
             &CustomPlotItem::updateCustomPlotSize);
     connect(this, &QQuickPaintedItem::heightChanged, this,
@@ -32,6 +33,8 @@ void CustomPlotItem::initCustomPlot() {
         updateCustomPlotSize();
         backgroundCustomPlot();
         setupPlot(m_CustomPlot); // time
+        this->setWidth(1000);
+        this->setHeight(1000);
     }
 }
 

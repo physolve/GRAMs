@@ -6,14 +6,10 @@ import Grams.testFieldSingleton 1.0
 
 Item {
     id: lumber
-    // color: "#2B2B2B"
-    // height: 600
-    // width: 1300
-    x:20
-    y:20
     Rectangle{
         id: mS
-        y: 5
+        x: 5
+        y: lumber.width/32+5
         height: 460
         width: 3*parent.width/8 + parent.width/16  + 15
         color:"transparent"; border.color: "#464646";
@@ -28,16 +24,16 @@ Item {
         Rectangle{
             id: mARA
             x: 5
-            y: 5 
+            y: -lumber.width/32+5
             height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
             Rectangle{
-                x: parent.width - 25
-                y: parent.height/2 - 25
-                width: 50
-                height: 50
-                radius: 25
+                x: parent.width - 20
+                y: parent.height/2 - 20
+                width: 40
+                height: 40
+                radius: 20
                 border.color: "#464646";
             }
         }
@@ -92,11 +88,59 @@ Item {
     }
     Rectangle{
         id: mR
-        x: 3*parent.width/8 + parent.width/16 + 15
-        y: 5
+        x: 3*parent.width/8 + parent.width/16 + 20
+        y: lumber.width/32+5
         height: 460
         width: parent.width/2
         color:"transparent"; border.color: "#464646";
+        Rectangle{
+            id: mRR1
+            x: -lumber.width/16
+            y: 2*height + 5 
+            height: 80
+            width: lumber.width/16
+            color:"transparent"; border.color: "#464646";
+            Rectangle{
+                x: parent.width - 20
+                y: parent.height/2 - 20
+                width: 40
+                height: 40
+                radius: 20
+                border.color: "#464646";
+            }
+        }
+        Rectangle{
+            id: mRR2
+            x: -lumber.width/16
+            y: 3*height + 10
+            height: 80
+            width: lumber.width/16
+            color:"transparent"; border.color: "#464646";
+            Rectangle{
+                x: parent.width - 20
+                y: parent.height/2 - 20
+                width: 40
+                height: 40
+                radius: 20
+                border.color: "#464646";
+            }
+        }
+        Rectangle{
+            id: mRR3
+            x: -lumber.width/16
+            y: 4*height + 15
+            height: 80
+            width: lumber.width/16
+            color:"transparent"; border.color: "#464646";
+            Rectangle{
+                x: parent.width - 20
+                y: parent.height/2 - 20
+                width: 40
+                height: 40
+                radius: 20
+                border.color: "#464646";
+            }
+        }
         Rectangle{
             id: mRF
             x: 3*lumber.width/8 - 5 
@@ -104,6 +148,20 @@ Item {
             height: 220
             width: parent.width/4
             color:"transparent"; border.color: "#464646";
+            Rectangle{
+                x: -20
+                y: height-20
+                height: 80
+                width: lumber.width/16
+                color:"transparent"; border.color: "#464646";
+                Rectangle{
+                    y: parent.height/2 - 20
+                    width: 40
+                    height: 40
+                    radius: 20
+                    border.color: "#464646";
+                }
+            }
         }
         Rectangle{
             id: furnace
@@ -118,15 +176,16 @@ Item {
     Rectangle{
         id: mARG
         x: 5
-        y: 470
+        y: lumber.width/32 + 470
         height: 330
         width: parent.width/4
         color:"transparent"; border.color: "#464646";
         Rectangle{
             id: mARG1
+            x: 5
             y: 5
             height: 100
-            width: lumber.width/8
+            width: lumber.width/16
             color:"transparent"; border.color: "#464646";
             Rectangle{
                 x: parent.width - 25
@@ -139,9 +198,10 @@ Item {
         }
         Rectangle{
             id: mARG2
+            x: 5
             y: height + 10
             height: 100
-            width: lumber.width/8
+            width: lumber.width/16
             color:"transparent"; border.color: "#464646";
             Rectangle{
                 x: parent.width - 25
@@ -154,9 +214,10 @@ Item {
         }
         Rectangle{
             id: mARG3
+            x: 5
             y: 2*height + 15
             height: 100
-            width: lumber.width/8
+            width: lumber.width/16
             color:"transparent"; border.color: "#464646";
             Rectangle{
                 x: parent.width - 25
@@ -170,10 +231,62 @@ Item {
     }
     Rectangle{
         id: mARV
-        x: parent.width/4 + 10
-        y: 470
+        x: parent.width/4 + 15
+        y: lumber.width/32 + 470
         height: 330
         width: parent.width/8 + parent.width/16 
+        color:"transparent"; border.color: "#464646";
+        Rectangle{
+            // x: lumber.width/32
+            y: -20
+            height: 80
+            width: lumber.width/16
+            color:"transparent"; border.color: "#464646";
+            Rectangle{
+                x: parent.width/2 - 20
+                // y: parent.height/2 - 20
+                width: 40
+                height: 40
+                radius: 20
+                border.color: "#464646";
+            }
+        }
+        Rectangle{
+            // x: lumber.width/32
+            y: height-20
+            height: 80
+            width: lumber.width/16
+            color:"transparent"; border.color: "#464646";
+            Rectangle{
+                x: parent.width/2 - 20
+                // y: parent.height/2 - 20
+                width: 40
+                height: 40
+                radius: 20
+                border.color: "#464646";
+            }
+        }
+        Rectangle{
+            x: parent.width - 40
+            y: height-20
+            height: 80
+            width: lumber.width/16
+            color:"transparent"; border.color: "#464646";
+            Rectangle{
+                y: parent.height/2 - 20
+                width: 40
+                height: 40
+                radius: 20
+                border.color: "#464646";
+            }
+        }
+    }
+    Rectangle{
+        id: tools
+        x: 3*parent.width/8 + parent.width/16 + 20
+        y: lumber.width/32 + 470
+        height: 330
+        width: parent.width/2
         color:"transparent"; border.color: "#464646";
     }
 }

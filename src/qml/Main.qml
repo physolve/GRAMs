@@ -113,11 +113,13 @@ ApplicationWindow {
             }
         }
     }
-    SplitView {
+    RowLayout { //SplitView
         id: grid
         anchors.fill: parent
         Item{
-            SplitView.minimumWidth: 1390
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 1390
             TabBar {
                 id: barMneno
                 width: parent.width
@@ -142,29 +144,25 @@ ApplicationWindow {
                 currentIndex: barMneno.currentIndex
                 MnemoBase{
                     id: rectangle
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.leftMargin: 5
-                    Layout.rightMargin: 5
-                    // SplitView.minimumWidth: 1390
+                    // Layout.fillWidth: true
+                    // Layout.fillHeight: true
                 }
                 Lumber{
                     id: lumber
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.leftMargin: 5
-                    Layout.rightMargin: 5
+                    // Layout.fillWidth: true
+                    // Layout.fillHeight: true
                 }
                 TestField{
                     id: testMnemo
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.leftMargin: 50
-                    Layout.rightMargin: 50
+                    // Layout.fillWidth: true
+                    // Layout.fillHeight: true
                 }
             }
         }
         Item{
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 500
             TabBar {
                 id: barMain
                 width: parent.width
@@ -174,44 +172,46 @@ ApplicationWindow {
                 //height: 100
                 Repeater{
                     id: barMainRepeater
-                    model: ["График А", "Натекание", "Измерение", "Параметры"]
+                    model: ["Параметры"] // "График А", "Натекание", "Измерение", 
                     TabButton{
                         text: modelData
-                        width: Math.max(120, barMain.width/4)
+                        width: Math.max(120, barMain.width) // /4
                         font.pointSize: 12
                     }
                 }
             }
             StackLayout {
                 id: layoutMain
-                //Layout.fillWidth: true
-                //width: 600
-                //height: 800
                 anchors.top: barMain.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                //width: parent.width
                 currentIndex: barMain.currentIndex
-                ExpCreator{
-                    id: test1
+                // ExpCreator{
+                //     id: test1
+                //     Layout.fillWidth: true
+                //     Layout.fillHeight: true
+                // }  
+                // ChartCreator{
+                //     id: test2
+                //     Layout.fillWidth: true
+                //     Layout.fillHeight: true
+                // }
+                // ChamberChoose{
+                //     id: chamberChooser
+                //     Layout.fillWidth: true
+                //     // Layout.fillHeight: true
+                // }
+                // SettingsWindow{
+                //     id: test4
+                //     Layout.fillWidth: true
+                //     Layout.fillHeight: true
+                // }
+                ScrollView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                }  
-                ChartCreator{
-                    id: test2
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-                ChamberChoose{
-                    id: chamberChooser
-                    Layout.fillWidth: true
-                    // Layout.fillHeight: true
-                }
-                SettingsWindow{
-                    id: test4
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    SettingsConnections{
+                    }
                 }
             } 
         }
