@@ -24,6 +24,7 @@
         <file>qml/lumber/Lumber.qml</file>
         <file>qml/lumber/LStorage.qml</file>
         <file>qml/lumber/LReaction.qml</file>
+        <file>qml/lumber/LChamber.qml</file>
         <file>qml/lumber/content/CircularSlider.qml</file>
 
         <file>qml/Main.qml</file>
@@ -38,5 +39,6 @@
         <file>qml/measure/ChamberChoose.qml</file>
         <file>qml/TimeStampCheck.qml</file>
         <file>qml/measure/TestField.qml</file>
+        <file>qml/SideMenu.qml</file>
     </qresource>
 </RCC>

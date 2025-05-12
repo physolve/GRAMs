@@ -6,6 +6,8 @@ import Grams.testFieldSingleton 1.0
 
 Item {
     id: lumber
+    signal pickChamber()
+    signal connParams()
     Rectangle{
         id: mS
         x: 5
@@ -163,6 +165,10 @@ Item {
             height: 225
             width: parent.width/4
             color:"transparent"; border.color: "#464646";
+            LChamber{
+                id: lChamber
+                onPickChamber: lumber.pickChamber()
+            }
             Rectangle{
                 x: -20
                 y: height-20
@@ -303,5 +309,14 @@ Item {
         height: 330
         width: parent.width/2
         color:"transparent"; border.color: "#464646";
+        Button{
+            id: connParamsBtn
+            x: 5
+            y: 5
+            width: 150
+            height: 50
+            text: "Открыть параметры"
+            onClicked: lumber.connParams()
+        }
     }
 }
