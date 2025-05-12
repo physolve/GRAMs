@@ -25,43 +25,43 @@ Item {
             property var timeStampMap: [
                 {
                     "name": "SQ",
-                    "value": TimeStamp.guiPresVirtual.prSQ
+                    "value": TimeStamp.guiPresTimestamp.prSQ
                 },
                 {   
                     "name": "RQ",
-                    "value": TimeStamp.guiPresVirtual.prRQ
+                    "value": TimeStamp.guiPresTimestamp.prRQ
                 },
                 {
                     "name": "SC1",
-                    "value": TimeStamp.guiPresVirtual.prSC1
+                    "value": TimeStamp.guiPresTimestamp.prSC1
                 },
                 {
                     "name": "SC2",
-                    "value": TimeStamp.guiPresVirtual.prSC2
+                    "value": TimeStamp.guiPresTimestamp.prSC2
                 },
                 {
                     "name": "SC3",
-                    "value": TimeStamp.guiPresVirtual.prSC3
+                    "value": TimeStamp.guiPresTimestamp.prSC3
                 },
                 {
                     "name": "SB",
-                    "value": TimeStamp.guiPresVirtual.prSB
+                    "value": TimeStamp.guiPresTimestamp.prSB
                 },
                 {
                     "name": "SD1",
-                    "value": TimeStamp.guiPresVirtual.prSD1
+                    "value": TimeStamp.guiPresTimestamp.prSD1
                 },
                 {
                     "name": "RE",
-                    "value": TimeStamp.guiPresVirtual.prRE
+                    "value": TimeStamp.guiPresTimestamp.prRE
                 },
                 {
                     "name": "RD2",
-                    "value": TimeStamp.guiPresVirtual.prRD2
+                    "value": TimeStamp.guiPresTimestamp.prRD2
                 },
                 {
                     "name": "RF",
-                    "value": TimeStamp.guiPresVirtual.prRF
+                    "value": TimeStamp.guiPresTimestamp.prRF
                 }
             ]
             model: timeStampMap // rewrite as property

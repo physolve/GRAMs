@@ -32,13 +32,13 @@ public:
 class TimeStamp : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY (guiValsPresVirtual guiPresTimestamp MEMBER m_guiValsPresTimestamp CONSTANT)
     Q_PROPERTY (QDateTime checkStampTime MEMBER m_checkStampTime CONSTANT)
-    Q_PROPERTY (guiValsPresVirtual guiPresVirtual MEMBER m_guiValsPresVirtual CONSTANT)
 public:
     explicit TimeStamp(QObject *parent  = nullptr);
     ~TimeStamp();
-    void setInitialPressure(const QDateTime& checkStampTime, const guiValsPresVirtual& guiValsPresVirtual); // gui struct as value?
+    void setInitialPressure(const QDateTime& checkStampTime, const guiValsPresVirtual& guiValsPresTimestamp); // gui struct as value?
 private:
+    guiValsPresVirtual m_guiValsPresTimestamp;
     QDateTime m_checkStampTime;
-    guiValsPresVirtual m_guiValsPresVirtual;
 };

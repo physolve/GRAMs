@@ -13,13 +13,16 @@ Item {
         height: 460
         width: 3*parent.width/8 + parent.width/16  + 15
         color:"transparent"; border.color: "#464646";
-        Rectangle{
+        Rectangle{ // Storage quartile metrics
             id: mSBD1
             x: lumber.width/16 + 10
             y: 5 
             height: 450
             width: lumber.width/4 + lumber.width/8
             color:"transparent"; border.color: "#464646";
+            LStorage{
+                anchors.centerIn: parent
+            }
         }
         Rectangle{
             id: mARA
@@ -93,6 +96,18 @@ Item {
         height: 460
         width: parent.width/2
         color:"transparent"; border.color: "#464646";
+        Rectangle{ // Storage quartile metrics
+            id: mSED2
+            x: 5
+            y: 5 
+            height: 450
+            width: lumber.width/4 + lumber.width/8 - 15
+            color:"transparent"; border.color: "#464646";
+            LReaction{
+                anchors.centerIn: parent
+            }
+        }
+
         Rectangle{
             id: mRR1
             x: -lumber.width/16
@@ -145,7 +160,7 @@ Item {
             id: mRF
             x: 3*lumber.width/8 - 5 
             y: 5
-            height: 220
+            height: 225
             width: parent.width/4
             color:"transparent"; border.color: "#464646";
             Rectangle{
@@ -166,7 +181,7 @@ Item {
         Rectangle{
             id: furnace
             x: 3*lumber.width/8 - 5 
-            y: height + 10
+            y: height + 15
             height: 220
             width: parent.width/4
             color:"transparent"; border.color: "#464646";

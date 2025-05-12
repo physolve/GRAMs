@@ -168,19 +168,22 @@ Item {
             value: Grams.guiPres.prSA
         }
         SensorWidget {
-            id: s_SBS
-            x: 162
-            y: 189
-        }
-        SensorWidget {
             id: s_SBL
             x: 162
             y: 83
+            value: Grams.guiPresVirtual.prSC3
+        }
+        SensorWidget {
+            id: s_SBS
+            x: 162
+            y: 189
+            value: Grams.guiPresVirtual.prSC2
         }
         SensorWidget {
             id: s_SBT
             x: 162
             y: 285
+            value: Grams.guiPresVirtual.prSC1
         }
         SensorWidget {
             id: s_SHM
@@ -233,6 +236,7 @@ Item {
             id: s_RC
             x: 1221
             y: 327
+            value: Grams.guiPresVirtual.prRF
         }
         SensorWidget {
             id: s_ARV

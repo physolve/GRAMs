@@ -77,7 +77,7 @@ ColumnLayout{
             orientation: Qt.Vertical
             model: initSource.hardware.pressureSensors // rewrite as property
             delegate: Rectangle { 
-                width: 350
+                width: 300
                 height: 20
                 color: "transparent"; border.color: "#464646";
                 Text { text: `${modelData.sensorName}, A = ${modelData.A}, B = ${modelData.B}, R = ${modelData.R}, ch = ${modelData.cch}` ; font.pointSize: 9
@@ -121,7 +121,7 @@ ColumnLayout{
     }
     GroupBox {
         title: qsTr("Controllers")
-        Layout.minimumHeight: 350
+        Layout.minimumHeight: 200
         Layout.minimumWidth: 460
         Layout.leftMargin: 10
         Layout.rightMargin: 10
@@ -152,7 +152,7 @@ ColumnLayout{
             anchors.top: parent.top
             anchors.left: lblAdvantechMap.right
             anchors.right: parent.right
-            height: 20 * 8
+            height: 20 * 4
             anchors.topMargin: 10
             anchors.leftMargin: 5
             spacing: 5
@@ -161,7 +161,7 @@ ColumnLayout{
             orientation: Qt.Vertical
             model: initSource.daqGui
             delegate: Rectangle { 
-                width: 350
+                width: 300
                 height: 20
                 color: modelData.state ? "#36454f" : "transparent"
                 border.color: "#464646"
@@ -180,7 +180,7 @@ ColumnLayout{
     }
     //timestamp parameters
     TimeStampCheck{
-        Layout.minimumHeight: 350
+        Layout.minimumHeight: 200
         Layout.minimumWidth: 460
         Layout.leftMargin: 10
         Layout.rightMargin: 10

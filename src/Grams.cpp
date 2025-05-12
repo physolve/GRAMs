@@ -392,6 +392,8 @@ void Grams::initTimeStamp(){
     prRE.addPoint(initialTimeStamp[9].toDouble());
     prRD2Atm.addPoint(initialTimeStamp[10].toDouble());
     prRF.addPoint(initialTimeStamp[11].toDouble());
+
+    guiValsUpdate();
 }
 
 void Grams::initTestField(){
@@ -430,6 +432,17 @@ void Grams::guiValsUpdate(){
     // prSC1
     // prSC2
     // prSC3
+    m_guiPresVirtual.g_prSQ = prSQ.getCurValue();
+    m_guiPresVirtual.g_prRQ = prRQ.getCurValue();
+    m_guiPresVirtual.g_prSC1 = prSC1.getCurValue();
+    m_guiPresVirtual.g_prSC2 = prSC2.getCurValue();
+    m_guiPresVirtual.g_prSC3 = prSC3.getCurValue();
+    m_guiPresVirtual.g_prSB = prSB.getCurValue();
+    m_guiPresVirtual.g_prSD1 = prSD1.getCurValue();
+    m_guiPresVirtual.g_prRE = prRE.getCurValue();
+    m_guiPresVirtual.g_prRD2 = prRD2Atm.getCurValue();
+    m_guiPresVirtual.g_prRF = prRF.getCurValue();
+    emit guiPresVirtualChanged();
 }
 
 void Grams::softEvent(){
@@ -461,6 +474,10 @@ guiValsPres Grams::getGuiValsPres() const{
 
 guiValsTemp Grams::getGuiValsTemp() const{
     return m_tempVals;
+}
+
+guiValsPresVirtual Grams::getGuiPresVirtual() const{
+    return m_guiPresVirtual;
 }
 
 bool Grams::getVAR1State() const{

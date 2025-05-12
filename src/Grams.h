@@ -89,6 +89,7 @@ class Grams : public QApplication
     Q_PROPERTY (bool vSL2State      READ getVSL2State   NOTIFY valveChanged)
     Q_PROPERTY (guiValsPres guiPres READ getGuiValsPres NOTIFY guiValsPresChanged) // requiredPresAI
     Q_PROPERTY (guiValsTemp guiTemp READ getGuiValsTemp NOTIFY guiValsTempChanged) // requiredTempAI
+    Q_PROPERTY (guiValsPresVirtual guiPresVirtual READ getGuiPresVirtual NOTIFY guiPresVirtualChanged)
 public:
     Grams(int &argc, char **argvm, const QString &curInitProfile);
     ~Grams();
@@ -106,6 +107,7 @@ signals:
     void valveChanged();
     void guiValsPresChanged();
     void guiValsTempChanged();
+    void guiPresVirtualChanged();
 
 private slots:
     void softEvent();
@@ -198,6 +200,8 @@ private:
     guiValsPres getGuiValsPres() const;
     guiValsTemp m_tempVals;
     guiValsTemp getGuiValsTemp() const;
+    guiValsPresVirtual m_guiPresVirtual;
+    guiValsPresVirtual getGuiPresVirtual() const;
     
     // filters
     CustomPlotItem* m_mainPlot;  // unique

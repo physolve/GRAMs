@@ -10,8 +10,8 @@ TimeStamp::~TimeStamp()
     qDebug() << "TimeStamp destructor";
 }
 
-void TimeStamp::setInitialPressure(const QDateTime& checkStampTime, const guiValsPresVirtual& guiValsPresVirtual)
+void TimeStamp::setInitialPressure(const QDateTime& checkStampTime, const guiValsPresVirtual& guiValsPresTimeStamp)
 {
-    m_guiValsPresVirtual = guiValsPresVirtual;
+    m_guiValsPresTimestamp = guiValsPresTimeStamp;
     m_checkStampTime = checkStampTime;
 }
