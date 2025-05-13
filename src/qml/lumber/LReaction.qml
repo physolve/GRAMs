@@ -8,6 +8,7 @@ Item {
     // color: "#2B2B2B"
     anchors.fill: parent
     // valve states
+    property double testVal: 1
     Rectangle {
         id: sliderPlacer
         width: 120
@@ -25,7 +26,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: 2
+            value: testVal
             maxValue: 50
             endAngle: 320
         }
@@ -39,7 +40,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: 2
+            value: testVal
             maxValue: 2
             endAngle: 320
         }
@@ -53,9 +54,10 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: (Math.log10(2)+5)/5
+            value: (Math.log10(testVal)+7)/7
             maxValue: 1
             endAngle: 320
+            tickCount: 9
         }
         Label {
             // width: 40

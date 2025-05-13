@@ -3,32 +3,22 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Rectangle {
-    id: lChamber
+    id: lVacuum
     color: "#464646"
-    border.color: "#79A6A4"
+    border.color: "#FAE0CF"
     anchors.fill: parent
-    signal pickChamber()
     Button{
-        id: chamberPickBtn
-        x: 5
+        id: vacuumBtn
+        x: 25
         y: 5
-        width: parent.width-10
+        width: parent.width-50
         height: 50
-        text: "Выбрать камеру"
-        onClicked: lChamber.pickChamber()
+        text: "Вакуумирование"
+        // onClicked: lChamber.pickChamber()
     }
     Text{
+        y: 60
         width: parent.width
-        y: 80
-        text: "Камера ..."
-        font.family: "Verdana"
-        horizontalAlignment: Text.AlignHCenter
-        font.pointSize: 14
-        color: "white"
-    }
-    Text{
-        width: parent.width
-        y: 130
         text: "Целевое давление"
         font.family: "Verdana"
         horizontalAlignment: Text.AlignHCenter
@@ -37,13 +27,12 @@ Rectangle {
     }
     TextField{
         x: 40
+        y: 100
         width: parent.width - 80
-        y: 170
         readOnly: true
         text: "0"
         font { family: 'Courier'; pixelSize: 16; }
         horizontalAlignment: TextInput.AlignHCenter
         selectByMouse: true
     }
-    
 }

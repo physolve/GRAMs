@@ -25,7 +25,14 @@
         <file>qml/lumber/LStorage.qml</file>
         <file>qml/lumber/LReaction.qml</file>
         <file>qml/lumber/LChamber.qml</file>
+        <file>qml/lumber/LFurnace.qml</file>
+        <file>qml/lumber/LSupply.qml</file>
+        <file>qml/lumber/LVacuum.qml</file>
+        <file>qml/lumber/LTools.qml</file>
         <file>qml/lumber/content/CircularSlider.qml</file>
+        <file>qml/lumber/content/VirtualPressure.qml</file>
+        <file>qml/lumber/content/VirtualFlow.qml</file>
+        <file>qml/lumber/content/ValveIndicator.qml</file>
 
         <file>qml/Main.qml</file>
         <file>qml/SettingsWindow.qml</file>

@@ -168,6 +168,8 @@ Item {
     */
     property alias cursorShape: trackMouse.cursorShape
 
+    property int tickCount: 10
+
     required property int diameter
 
     implicitWidth: diameter
@@ -276,7 +278,7 @@ Item {
         }
     }
     Repeater {
-        model: 10
+        model: control.tickCount
 
         Rectangle {
             id: indicator
@@ -285,7 +287,7 @@ Item {
             radius: width / 2
             visible: indicator.angle > control.startAngle && indicator.angle < control.endAngle 
             color: control.progressColor //indicator.angle > internal.angle ? "#ff0000" : "#7CFF6E"
-            readonly property real angle: index * 36
+            readonly property real angle: index * (360/control.tickCount)
             transform: [
                 Translate {
                     x: control.width / 2 - width / 2

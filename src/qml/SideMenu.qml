@@ -5,7 +5,7 @@ import "measure"
 Item{
     // property var menuList: ["Параметры", "Выбор камеры"]
     function setParametersMenu() {
-        barMainRepeater.model = ["Параметры"]
+        barMainRepeater.model = ["Настройки"]
         layoutMain.currentIndex = 0
     }
     function setChamberPickerMenu() {
@@ -21,7 +21,7 @@ Item{
         //height: 100
         Repeater{
             id: barMainRepeater
-            model: ["Параметры"] // "График А", "Натекание", "Измерение", 
+            model: ["Настройки"] // "График А", "Натекание", "Измерение", 
             TabButton{
                 text: modelData
                 width: Math.max(120, barMain.width) // /4
