@@ -28,8 +28,10 @@ ApplicationWindow {
                 onClicked: main.header.visible = false
             }
             ToolButton {
-                text: qsTr("1.")
+                // text: qsTr("1.")
+                icon.source: "qrc:/settingsSVG.svg"
                 Layout.preferredWidth: 50
+                onClicked: sideMenu.setParametersMenu()
             }
             ToolButton {
                 text: qsTr("2.")
@@ -145,7 +147,6 @@ ApplicationWindow {
                 Lumber{
                     id: lumber
                     onPickChamber: sideMenu.setChamberPickerMenu()
-                    onConnParams: sideMenu.setParametersMenu()
                 }
                 MnemoBase{
                     id: rectangle

@@ -16,23 +16,37 @@ Rectangle {
         text: "Вакуумирование"
         // onClicked: lChamber.pickChamber()
     }
-    Text{
-        y: 60
-        width: parent.width
-        text: "Целевое давление"
-        font.family: "Verdana"
-        horizontalAlignment: Text.AlignHCenter
-        font.pointSize: 12
-        color: "white"
-    }
-    TextField{
-        x: 40
-        y: 100
-        width: parent.width - 80
-        readOnly: true
-        text: "0"
-        font { family: 'Courier'; pixelSize: 16; }
-        horizontalAlignment: TextInput.AlignHCenter
-        selectByMouse: true
+    Row{
+        x: 25
+        y: 65
+        spacing: 10
+        Text{
+            // width: parent.width
+            text: "Целевое"
+            font.family: "Verdana"
+            horizontalAlignment: Text.AlignHCenter
+            anchors.verticalCenter: parent.verticalCenter
+            font.pointSize: 10
+            color: "white"
+        }
+        TextField{
+            // width: parent.width - 80
+            width: 75
+            height: 35
+            readOnly: true
+            text: "0"
+            font { family: 'Courier'; pointSize: 10; }
+            horizontalAlignment: TextInput.AlignHCenter
+            selectByMouse: true
+        }
+        Text{
+            // width: parent.width
+            text: ", бар"
+            font.family: "Verdana"
+            horizontalAlignment: Text.AlignHCenter
+            anchors.verticalCenter: parent.verticalCenter
+            font.pointSize: 10
+            color: "white"
+        }
     }
 }

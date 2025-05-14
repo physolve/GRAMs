@@ -11,7 +11,7 @@ Item {
         x: 5
         y: 5
         anchors.centerIn: parent
-        width: 80
+        width: 85
         height: 70
         radius: 10
         color: "lightgray"

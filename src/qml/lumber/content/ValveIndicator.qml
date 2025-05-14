@@ -4,19 +4,20 @@ import QtQuick.Controls
 import QtQuick.Controls.Material 2.12
 Item {
     id: valve
-    width: 40
-    height: 40
+    width: 30
+    height: 60
+    anchors.verticalCenter: parent.verticalCenter
     property bool state: false
-    RoundButton{
+    Button{
         id: indicator
         anchors.centerIn: parent
-        width: 40
-        height: 40
+        width: parent.width
+        height: parent.height
         checkable: true
         background: Rectangle{
             color: indicator.checked ? "#56BF66" : "#79A6A4"
             border.color: "#56BF66"
-            radius: 20
+            radius: 10
         }
         // checked: state
         // enabled: false

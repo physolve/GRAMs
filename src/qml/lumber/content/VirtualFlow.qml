@@ -10,7 +10,7 @@ Item {
         id: display
         x: 5
         y: 5
-        anchors.centerIn: parent
+        // anchors.centerIn: parent
         width: 80
         height: 70
         radius: 10

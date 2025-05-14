@@ -31,7 +31,7 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
             }
         }
-        Row {
+        Row{
             spacing: 4
             // anchors.bottom: sensor.bottom
             // anchors.horizontalCenter: sensor.horizontalCenter

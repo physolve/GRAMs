@@ -7,7 +7,6 @@ import "content"
 Item {
     id: lumber
     signal pickChamber()
-    signal connParams()
     Rectangle{
         id: mS
         x: 5
@@ -34,65 +33,64 @@ Item {
             height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 20
-                y: parent.height/2 - 20
-            }
             VirtualFlow{
-                anchors.centerIn: parent
                 name: "Сброс"
                 value: Infinity
+            }
+            ValveIndicator{
+                x: parent.width - 10
+                // y: parent.height/2 - 20
             }
         }
         Rectangle{
             id: mSC1
-            visible: false
+            // visible: false
             x: 5
             y: 2*height + 5 
             height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 25
-                y: parent.height/2 - 25
-            }
             VirtualPressure{
                 anchors.centerIn: parent
                 name: "большая"
             }
+            ValveIndicator{
+                x: parent.width - 10
+                // y: parent.height/2 - 25
+            }
         }
         Rectangle{
             id: mSC2
-            visible: false
+            // visible: false
             x: 5
             y: 3*height + 10
             height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 25
-                y: parent.height/2 - 25
-            }
             VirtualPressure{
                 anchors.centerIn: parent
                 name: "средняя"
             }
+            ValveIndicator{
+                x: parent.width - 10
+                // y: parent.height/2 - 25
+            }
         }
         Rectangle{
             id: mSC3
-            visible: false
+            // visible: false
             x: 5
             y: 4*height + 15
             height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 25
-                y: parent.height/2 - 25
-            }
             VirtualPressure{
                 anchors.centerIn: parent
-                name: "маленькая"
+                name: "малая"
+            }
+            ValveIndicator{
+                x: parent.width - 10
+                // y: parent.height/2 - 25
             }
         }
     }
@@ -114,7 +112,32 @@ Item {
                 anchors.centerIn: parent   
             }
         }
-
+        Rectangle{
+            id: mRRs
+            x: -lumber.width/32
+            y: 160
+            height: 100
+            width: lumber.width/16
+            color:"transparent"; border.color: "#464646";
+            VirtualFlow{
+                height: parent.height
+                name: "BEnode"
+                value: Infinity
+                
+            }
+            ValveIndicator{
+                x: parent.width - 30
+                anchors.verticalCenter: parent.bottom
+            }
+            ValveIndicator{
+                x: 0
+                anchors.verticalCenter: parent.bottom
+            }
+            ValveIndicator{
+                x: parent.width/2-15
+                anchors.verticalCenter: parent.bottom
+            }
+        }
         Rectangle{
             id: mRR1
             visible: false
@@ -123,14 +146,13 @@ Item {
             height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 20
-                y: parent.height/2 - 20
-            }
             VirtualFlow{
-                anchors.centerIn: parent
                 name: "быстрый"
                 value: Infinity
+            }
+            ValveIndicator{
+                x: parent.width - 20
+                // y: parent.height/2 - 20
             }
         }
         Rectangle{
@@ -141,14 +163,13 @@ Item {
             height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 20
-                y: parent.height/2 - 20
-            }
             VirtualFlow{
-                anchors.centerIn: parent
                 name: "средний"
                 value: Infinity
+            }
+            ValveIndicator{
+                x: parent.width - 20
+                // y: parent.height/2 - 20
             }
         }
         Rectangle{
@@ -159,14 +180,13 @@ Item {
             height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 20
-                y: parent.height/2 - 20
-            }
             VirtualFlow{
-                anchors.centerIn: parent
                 name: ""
                 value: Infinity
+            }
+            ValveIndicator{
+                x: parent.width - 20
+                // y: parent.height/2 - 20
             }
         }
         Rectangle{
@@ -182,17 +202,17 @@ Item {
             }
             Rectangle{
                 visible: true
-                x: -20
+                x: 0
                 y: height-20
                 height: 80
                 width: 2*lumber.width/16
                 color:"transparent"; border.color: "#464646";
-                ValveIndicator{
-                    y: parent.height/2 - 20
-                }
                 VirtualPressure{
                     anchors.centerIn: parent
                     name: "камера"
+                }
+                ValveIndicator{
+                    // y: parent.height/2 - 20
                 }
             }
         }
@@ -229,56 +249,53 @@ Item {
         }
         Rectangle{
             id: mARG1
-            visible: false
+            // visible: false
             x: 5
-            y: 5
-            height: 100
+            y: 15
+            height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 25
-                y: parent.height/2 - 25
-            }
             VirtualFlow{
-                anchors.centerIn: parent
                 name: "Газ 1"
                 value: Infinity
+            }
+            ValveIndicator{
+                x: parent.width - 10
+
             }
         }
         Rectangle{
             id: mARG2
-            visible: false
+            // visible: false
             x: 5
-            y: height + 10
-            height: 100
+            y: height + 15
+            height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 25
-                y: parent.height/2 - 25
-            }
             VirtualFlow{
-                anchors.centerIn: parent
                 name: "Газ 2"
                 value: Infinity
+            }
+            ValveIndicator{
+                x: parent.width - 10
+                // y: parent.height/2 - 25
             }
         }
         Rectangle{
             id: mARG3
-            visible: false
+            // visible: false
             x: 5
-            y: 2*height + 15
-            height: 100
+            y: 2*height + 20
+            height: 80
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                x: parent.width - 25
-                y: parent.height/2 - 25
-            }
             VirtualFlow{
-                anchors.centerIn: parent
                 name: "Газ 3"
                 value: Infinity
+            }
+            ValveIndicator{
+                x: parent.width - 10
+                // y: parent.height/2 - 25
             }
         }
     }
@@ -290,15 +307,27 @@ Item {
         width: parent.width/8 + parent.width/16 
         color:"transparent"; border.color: "#464646";
         Rectangle{
-            visible: false
-            x: lumber.width/32
-            y: 5
-            height: 150
-            width: parent.width - lumber.width/32
+            // visible: false
+            x: 5 //lumber.width/32
+            y: -5
+            height: 90
+            width: parent.width/3 // - lumber.width/16
             color:"transparent"; border.color: "#464646";
             VirtualPressure{
                 anchors.centerIn: parent
                 name: "бочка"
+                ValveIndicator{
+                    x: parent.width/2 - 15
+                    // y: 100
+                    rotation: 90
+                    anchors.verticalCenter: parent.top
+                }
+                ValveIndicator{
+                    x: parent.width/2 - 15
+                    // y: 100
+                    rotation: 90
+                    anchors.verticalCenter: parent.bottom
+                }
             }
         }
         Rectangle{
@@ -309,13 +338,12 @@ Item {
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
             VirtualFlow{
-                anchors.centerIn: parent
                 name: ""
                 value: Infinity
             }
             ValveIndicator{
                 x: parent.width/2 - 20
-                y: -10
+                // y: -10
             }
         }
         Rectangle{
@@ -326,13 +354,12 @@ Item {
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
             VirtualFlow{
-                anchors.centerIn: parent
                 name: ""
                 value: Infinity
             }
             ValveIndicator{
                 x: parent.width/2 - 20
-                y: -10
+                // y: -10
             }
             
         }
@@ -344,13 +371,13 @@ Item {
             width: lumber.width/16
             color:"transparent"; border.color: "#464646";
             ValveIndicator{
-                y: parent.height/2 - 20
+                // y: parent.height/2 - 20
             }
         }
         Rectangle{
             x: 5
-            y: 150
-            height: 175
+            y: 100
+            height: 225
             width: parent.width - 10
             color:"transparent"; border.color: "#464646";
             LVacuum{
@@ -368,14 +395,5 @@ Item {
         LTools{
             anchors.centerIn: parent
         }
-    }
-    Button{
-        id: connParamsBtn
-        x: parent.width-150
-        y: 5
-        width: 150
-        height: 50
-        text: "Открыть настройки"
-        onClicked: lumber.connParams()
     }
 }

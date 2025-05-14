@@ -3,6 +3,7 @@
         <file>qtquickcontrols2.conf</file>
         <file alias="collapseSVG.svg">icons/collapse.svg</file>
         <file alias="splitSVG.svg">icons/split.svg</file>
+        <file alias="settingsSVG.svg">icons/iconSettings.svg</file>
     </qresource>
     <qresource prefix="/GRAMs">
         <file>../fonts/LoveLetter.TTF</file>
