@@ -1,11 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material 2.12
 ColumnLayout{
-    // flow: GridLayout.LeftToRight
-    // columnSpacing: 10
-    // columns: width/490 
     GroupBox {
         title: qsTr("Hardware")
         Layout.minimumHeight: 350

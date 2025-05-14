@@ -7,6 +7,7 @@ import "content"
 Item {
     id: lumber
     signal pickChamber()
+    signal playVacuum()
     Rectangle{
         id: mS
         x: 5
@@ -27,7 +28,7 @@ Item {
         }
         Rectangle{
             id: mARA // relief
-            visible: false
+            // visible: false
             x: 5
             y: -lumber.width/32+5
             height: 80
@@ -40,6 +41,8 @@ Item {
             ValveIndicator{
                 x: parent.width - 10
                 // y: parent.height/2 - 20
+                rotation: 45
+                anchors.verticalCenter: parent.bottom
             }
         }
         Rectangle{
@@ -331,6 +334,21 @@ Item {
             }
         }
         Rectangle{
+            visible: true
+            x: parent.width/3 + 10
+            y: 5
+            height: 80
+            width: 2*parent.width/3 - 15
+            color:"transparent"; border.color: "#464646";
+            VirtualPressure{
+                anchors.centerIn: parent
+                name: "масс-спект"
+            }
+            ValveIndicator{
+                x: -15
+            }
+        }
+        Rectangle{
             // x: lumber.width/32
             visible: false
             y: -20
@@ -382,6 +400,7 @@ Item {
             color:"transparent"; border.color: "#464646";
             LVacuum{
                 anchors.centerIn: parent
+                onPlayVacuum: lumber.playVacuum()
             }
         }
     }

@@ -4,6 +4,7 @@
         <file alias="collapseSVG.svg">icons/collapse.svg</file>
         <file alias="splitSVG.svg">icons/split.svg</file>
         <file alias="settingsSVG.svg">icons/iconSettings.svg</file>
+        <file alias="vacuumSVG.svg">icons/vacuumPump.svg</file>
     </qresource>
     <qresource prefix="/GRAMs">
         <file>../fonts/LoveLetter.TTF</file>
@@ -44,9 +45,10 @@
         <file>qml/SupplyAdjust.qml</file>
         <file>qml/ExpCreator.qml</file>
         <file>qml/LeakageAdjust.qml</file>
-        <file>qml/measure/ChamberChoose.qml</file>
         <file>qml/TimeStampCheck.qml</file>
+        <file>qml/measure/ChamberChoose.qml</file>
         <file>qml/measure/TestField.qml</file>
+        <file>qml/measure/PVacuum.qml</file>
         <file>qml/SideMenu.qml</file>
     </qresource>
 </RCC>

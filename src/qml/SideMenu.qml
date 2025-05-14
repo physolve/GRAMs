@@ -12,6 +12,10 @@ Item{
         barMainRepeater.model = ["Выбор камеры"]
         layoutMain.currentIndex = 1
     }
+    function setPlayVacuumMenu() {
+        barMainRepeater.model = ["Вакуумирование"]
+        layoutMain.currentIndex = 2
+    }
     TabBar {
         id: barMain
         width: parent.width
@@ -60,6 +64,11 @@ Item{
         }
         ChamberChoose{
             id: chamberChooser
+            Layout.fillWidth: true
+            // Layout.fillHeight: true
+        }
+        PVacuum{
+            id: pVacuum
             Layout.fillWidth: true
             // Layout.fillHeight: true
         }

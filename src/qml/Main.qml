@@ -147,6 +147,7 @@ ApplicationWindow {
                 Lumber{
                     id: lumber
                     onPickChamber: sideMenu.setChamberPickerMenu()
+                    onPlayVacuum: sideMenu.setPlayVacuumMenu()
                 }
                 MnemoBase{
                     id: rectangle

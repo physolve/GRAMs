@@ -1,52 +1,64 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
+// import QtQuick.Layouts
+import "content"
 
 Rectangle {
     id: lVacuum
     color: "#464646"
     border.color: "#FAE0CF"
     anchors.fill: parent
+    signal playVacuum()
     Button{
         id: vacuumBtn
-        x: 25
+        x: 10
         y: 5
-        width: parent.width-50
-        height: 50
-        text: "Вакуумирование"
-        // onClicked: lChamber.pickChamber()
+        width: 50
+        height: 60
+        // background: Rectangle {
+        //     color: "white"
+        //     border.width: 1
+        //     border.color: "blue"
+        //     radius: parent.width/4
+        // }
+        icon.source: "qrc:/vacuumSVG.svg"
+        icon.color: pressed ? "red" : "black"
+        onClicked: lVacuum.playVacuum()
     }
-    Row{
-        x: 25
-        y: 65
-        spacing: 10
-        Text{
-            // width: parent.width
-            text: "Целевое"
-            font.family: "Verdana"
-            horizontalAlignment: Text.AlignHCenter
-            anchors.verticalCenter: parent.verticalCenter
-            font.pointSize: 10
-            color: "white"
+    property double testVal: 1e-3
+    Rectangle {
+        id: sliderPlacer1
+        width: 120
+        height: 120
+        radius: 60
+        color: "lightgray"
+        anchors.centerIn: parent
+        CircularSlider {
+            anchors.centerIn: parent
+            id: slider // pressure
+            diameter: 160
+            progressColor: "#56BF66"
+            minValue: 0
+            rotation: 180
+            progressWidth: 8
+            startAngle: 40
+            trackWidth: 13         
+            value: (Math.log10(testVal)+7)/7
+            maxValue: 1
+            endAngle: 320
+            tickCount: 9
         }
-        TextField{
-            // width: parent.width - 80
-            width: 75
-            height: 35
-            readOnly: true
-            text: "0"
-            font { family: 'Courier'; pointSize: 10; }
-            horizontalAlignment: TextInput.AlignHCenter
-            selectByMouse: true
-        }
-        Text{
-            // width: parent.width
-            text: ", бар"
+        Label {
+            // width: 40
+            // height: 20
+            color: "black"
             font.family: "Verdana"
-            horizontalAlignment: Text.AlignHCenter
+            text: `<p></p><p>${testVal.toFixed(3)} <i>бар</i></p><p>25 <i>°C</i></p>` // changing to exp function
+            // anchors.centerIn: parent
             anchors.verticalCenter: parent.verticalCenter
-            font.pointSize: 10
-            color: "white"
+            anchors.horizontalCenter: parent.horizontalCenter
+            horizontalAlignment: Text.AlignHCenter
+            font.pointSize: 15
         }
     }
 }
