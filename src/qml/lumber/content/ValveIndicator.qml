@@ -19,8 +19,7 @@ Item {
             border.color: "#56BF66"
             radius: 10
         }
-        // checked: state
-        // enabled: false
-        
+        checked: valve.state
+        enabled: false
     }
 }

@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
+import Grams.backendSourceSingleton 1.0
 import "content"
 
 Item {
@@ -8,7 +8,7 @@ Item {
     // color: "#2B2B2B"
     anchors.fill: parent
     // valve states
-    property double testVal: 1
+    // property double testVal: 1
     Rectangle {
         id: sliderPlacer
         width: 120
@@ -26,7 +26,8 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: testVal
+            // value: testVal
+            value: Grams.guiPresVirtual.prRQ
             maxValue: 50
             endAngle: 320
         }
@@ -40,7 +41,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: testVal
+            value: Grams.guiPresVirtual.prRQ
             maxValue: 2
             endAngle: 320
         }
@@ -54,7 +55,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: (Math.log10(testVal)+7)/7
+            value: (Math.log10(Grams.guiPresVirtual.prRQ)+7)/7
             maxValue: 1
             endAngle: 320
             tickCount: 9

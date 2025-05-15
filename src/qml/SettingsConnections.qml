@@ -114,10 +114,11 @@ ColumnLayout{
                 font.family: "Verdana"; anchors.centerIn: parent }
             }
         }
+
     }
     GroupBox {
         title: qsTr("Controllers")
-        Layout.minimumHeight: 200
+        Layout.minimumHeight: 310
         Layout.minimumWidth: 460
         Layout.leftMargin: 10
         Layout.rightMargin: 10
@@ -165,7 +166,79 @@ ColumnLayout{
                 color: "white"; font.family: "Verdana"; anchors.centerIn: parent }
             }
         } 
-        
+        Rectangle { 
+            id: lblVacuumInfo
+            anchors.top: viewDaqMap.bottom
+            anchors.left: parent.left
+            anchors.topMargin:10
+            width: 110
+            height: 20
+            color:"transparent"; border.color: "#464646";
+            Text {
+                text: "Vacuum info:" 
+                font.pointSize: 10; color: "white" 
+                font.family: "Verdana"
+                anchors.centerIn: parent
+            }
+        }
+        ColumnLayout{
+            anchors.top: viewDaqMap.bottom
+            anchors.left: lblVacuumInfo.right
+            anchors.topMargin: 10
+            anchors.leftMargin: 5
+            spacing: 5
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignTop, Qt.AlignHCenter
+            Rectangle {
+                Layout.preferredWidth: 300
+                Layout.preferredHeight: 20
+                color: "transparent"; border.color: "#464646";
+                Text { text: `Port Name: ${initSource.vacuum.portName}`; color: "white"; font.family: "Verdana";
+                font.pointSize: 9; anchors.centerIn: parent }
+            }
+            Rectangle { 
+                Layout.preferredWidth: 300
+                Layout.preferredHeight: 20
+                color: "transparent"; border.color: "#464646";
+                Text { text: `Description: turbo pump...`; color: "white"; font.family: "Verdana"; 
+                font.pointSize: 9; anchors.centerIn: parent }
+            }
+            Rectangle {
+                Layout.preferredWidth: 300
+                Layout.preferredHeight: 20
+                color: "transparent"; border.color: "#464646";
+                Text { text: `Baud Rate: ${initSource.vacuum.baudRate}`; color: "white"; font.family: "Verdana"; 
+                font.pointSize: 9; anchors.centerIn: parent }
+            }
+            Rectangle { 
+                Layout.preferredWidth: 300
+                Layout.preferredHeight: 20
+                color: "transparent"; border.color: "#464646";
+                Text { text: `Data Bits: ${initSource.vacuum.dataBits}`; color: "white"; font.family: "Verdana"; 
+                font.pointSize: 9; anchors.centerIn: parent }
+            }
+            Rectangle { 
+                Layout.preferredWidth: 300
+                Layout.preferredHeight: 20
+                color: "transparent"; border.color: "#464646";
+                Text { text: `Stop Bits: ${initSource.vacuum.stopBits}`; color: "white"; font.family: "Verdana"; 
+                font.pointSize: 9; anchors.centerIn: parent }
+            }
+            Rectangle { 
+                Layout.preferredWidth: 300
+                Layout.preferredHeight: 20
+                color: "transparent"; border.color: "#464646";
+                Text { text: `Parity: ${initSource.vacuum.parity}`; color: "white"; font.family: "Verdana"; 
+                font.pointSize: 9; anchors.centerIn: parent }
+            }
+            Rectangle { 
+                Layout.preferredWidth: 300
+                Layout.preferredHeight: 20
+                color: "transparent"; border.color: "#464646";
+                Text { text: `Time out: ${initSource.vacuum.timeout}`; color: "white"; font.family: "Verdana"; 
+                font.pointSize: 9; anchors.centerIn: parent }
+            }
+        }
         // let's view other things later
         // addRemoveQuarParameters
         // storageQuarParameters
@@ -176,7 +249,7 @@ ColumnLayout{
     }
     //timestamp parameters
     TimeStampCheck{
-        Layout.minimumHeight: 200
+        Layout.minimumHeight: 240
         Layout.minimumWidth: 460
         Layout.leftMargin: 10
         Layout.rightMargin: 10

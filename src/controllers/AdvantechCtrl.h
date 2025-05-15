@@ -6,8 +6,9 @@
 
 #include "VoltageFilter.h"
 
-using namespace Automation::BDaq;
+// using namespace Automation::BDaq;
 
+// inline bool advantechDeviceCheck(QStringList& deviceMap);
 
 class AdvantechCtrl : public QObject
 {
@@ -18,6 +19,7 @@ public:
     virtual void Initialization();
     virtual void readData();
     bool isConnected() const;
+    static bool advantechDeviceCheck(QStringList& deviceMap);
 protected:
     QString m_name;
     // set Info override?
@@ -34,7 +36,7 @@ public:
     void Initialization() ; //override
     void initialInfo();
     void ConfigureDeviceTemp(); 
-	void CheckError(ErrorCode errorCode);
+	void CheckError(Automation::BDaq::ErrorCode errorCode);
     const AdvAIType& getInfo() const; // move to base class
     void resizeDataVector(uint8_t size);
     void readData() override;
@@ -48,8 +50,8 @@ public slots:
 private:
     AdvAIType m_info;
     
-    ValueRange m_valueRange;
-    InstantAiCtrl* m_instantAiCtrl; // change to smart pointer or initialize inside class 
+    Automation::BDaq::ValueRange m_valueRange;
+    Automation::BDaq::InstantAiCtrl* m_instantAiCtrl; // change to smart pointer or initialize inside class 
     QVector<double> m_vector;
 	//double scaledData[16];
 };
@@ -63,7 +65,7 @@ public:
     void setInfo(const AdvAIType &info);
     void Initialization() ; //override
     void ConfigureDeviceBuff(); // rename TEST
-	void CheckError(ErrorCode errorCode);
+	void CheckError(Automation::BDaq::ErrorCode errorCode);
     const AdvAIType& getInfo() const; // move to base class
 
     void readData() override;
@@ -72,7 +74,7 @@ public:
     const QVector<double> getXhatS(uint8_t channelN);
     const QVector<double> getXhatT(uint8_t channelN);
     const QVector<double> getOriginalData(uint8_t channelN);
-    static void BDAQCALL OnStoppedEvent(void *sender, BfdAiEventArgs *args, void *userParam);
+    static void BDAQCALL OnStoppedEvent(void *sender, Automation::BDaq::BfdAiEventArgs *args, void *userParam);
 
     void setVolageFilter(uint8_t channelN, const FilterMatrix &parameters);
     
@@ -90,8 +92,8 @@ private:
     
     AdvAIType m_info;
     const int m_sectionLength = 512; // move to namespace
-    ValueRange m_valueRange;
-    WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class
+    Automation::BDaq::ValueRange m_valueRange;
+    Automation::BDaq::WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class
     QVector<double> m_vector; // should be list of values 
 	QList<VoltageFilter> m_voltageFilters; // to filterView?
 };
@@ -115,11 +117,11 @@ public slots:
     //void generateData(int type, int rowCount, int colCount);
 
 private:
-    void CheckError(ErrorCode errorCode);
+    void CheckError(Automation::BDaq::ErrorCode errorCode);
     void applyFeatures();
     void resizeDataVector(uint8_t size);
     AdvDOType m_info;
-    InstantDoCtrl* m_instantDoCtrl;  // change to smart pointer or initialize inside class
+    Automation::BDaq::InstantDoCtrl* m_instantDoCtrl;  // change to smart pointer or initialize inside class
     int portCount;
     QVector<bool> m_vector;
     quint8 m_portMasks;

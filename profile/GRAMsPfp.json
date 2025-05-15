@@ -96,7 +96,16 @@
                     "profile": "profile/usb-4718-ai-tc-8.xml",
                     "defaultType": 9
                 }
-            ]
+            ],
+            "Vacuum": {
+                "portName": "COM4",
+                "description": "vacuum",
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": 0,
+                "timeout": 500
+            }
         },
         "quartiles":{
             "addRemoveQuar":{

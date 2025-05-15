@@ -135,7 +135,10 @@ Item {
             x: 1106
             y: 366
             checked: Grams.vR5State
-            onClicked: checked ? console.log("Chamber open") : console.log("Chamber close")
+            onClicked: {
+                checked ? console.log("Chamber open") : console.log("Chamber close")
+                Grams.setManualChamberValve(checked)
+            }
         }
 
         ValveButton {

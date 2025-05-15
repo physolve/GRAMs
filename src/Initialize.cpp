@@ -8,8 +8,10 @@
 #include <QVariantList>
 
 #include "controllers/AdvantechCtrl.h"
-#include "lib/bdaqctrl.h"
-using namespace Automation::BDaq;
+#include "controllers/SerialInfo.h"
+
+// #include "lib/bdaqctrl.h"
+// using namespace Automation::BDaq;
 
 Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
     QObject(parent), m_curInitProfile(curInitProfile), initializeOk(false)
@@ -20,24 +22,29 @@ Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
     // fill the Map using the same properties as name and profile
     // like: current device : [{name_controller},{}]
     // later compare the maps to approve working state
-    bool checkPass = false;
+    bool checkPass = true;
     QString m_rawData;
-    checkPass = readProfile(m_rawData);
+    checkPass = checkPass&&readProfile(m_rawData);
     QJsonObject profileJson;
-    checkPass = jsonParser(m_rawData, profileJson);
+    checkPass = checkPass&&jsonParser(m_rawData, profileJson);
     
     //device map 
     //  -_ Advantech device map
     //if(profile advantech!!!)
-    checkPass = advantechDeviceCheck();
-
+    QStringList advantechDeviceNames;
+    checkPass = checkPass*AdvantechCtrl::advantechDeviceCheck(advantechDeviceNames);
+    QStringList serialNames;
+    checkPass = checkPass*SerialInfo::serialPortsInfo(serialNames);
+    qDebug() << serialNames;
     visualRepresentation(profileJson); // setted after gui run
+    bool initAdvantech, initVacuum;
     if(checkPass){
-        initializeOk = advantechCompareProfile();
+        initAdvantech = advantechCompareProfile(advantechDeviceNames);
+        initVacuum = serialCompareProfile(serialNames);
     }
     else qDebug() << "checkPass problem";
+    initializeOk = initAdvantech&&initVacuum;
     //check
-
 }
 
 bool Initialize::readProfile(QString &rawData){
@@ -61,24 +68,6 @@ bool Initialize::jsonParser(QString &rawData, QJsonObject &profileJson){
     
     m_profileNames = m.values();
     m_profileJson = profileJson.toVariantMap();
-    return true;
-}
-
-bool Initialize::advantechDeviceCheck(){
-    DeviceCtrl* deviceCtrl;
-    auto const &allSupportedDevices = deviceCtrl->getInstalledDevices();
-    if (allSupportedDevices->getCount() == 0)
-    {
-        qDebug() << "No advantech devices connected";
-        return false;
-    }
-    QStringList deviceMap;
-    for(int i = 0; i < allSupportedDevices->getCount(); i++){
-        DeviceTreeNode const &node = allSupportedDevices->getItem(i);
-        deviceMap << QString::fromWCharArray(node.Description);
-    }
-    m_advantechDeviceMap = deviceMap;
-    allSupportedDevices->Dispose();
     return true;
 }
 
@@ -113,6 +102,7 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
 
 //controllers
     const auto &controllersObject = profileObject["controllers"].toObject();
+    // Advantech
     const auto &advantechArray = controllersObject["Advantech"].toArray();
     auto temp_daq = QList<daqParameters>();
     for(const auto &value : advantechArray){
@@ -124,6 +114,15 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
         temp_daq << daqParameters{device, purpose, profile, defaultType, false}; 
     }
     m_daq = temp_daq;
+    // vacuum
+    const auto &vacuumObject = controllersObject["Vacuum"].toObject();
+    const auto& portName = vacuumObject["portName"].toString();
+    const auto& baudRate = vacuumObject["baudRate"].toInt();
+    const auto& dataBits = vacuumObject["dataBits"].toInt();
+    const auto& stopBits = vacuumObject["stopBits"].toInt();
+    const auto& parity = vacuumObject["parity"].toInt();
+    const auto& timeout = vacuumObject["timeout"].toInt();
+    m_vacuum = vacuumParameters{portName, baudRate, dataBits, stopBits, parity, timeout}; 
 //controllers
 
 // quartiles
@@ -202,12 +201,11 @@ void Initialize::fillSecondLineQuar(const QJsonObject &secondLineQuarObject){
 }
 
 // compare profile and real
-bool Initialize::advantechCompareProfile(){
-    // m_advantechDeviceMap compare to m_daq
+bool Initialize::advantechCompareProfile(const QStringList& advantechDeviceNames){
     // real to profile
     QStringList unrecognizedControllers;
     int recognizedCnt = 0;
-    for(const auto& val : m_advantechDeviceMap){
+    for(const auto& val : advantechDeviceNames){
         qDebug() << val;
         bool recognized = false;
         for(auto &profile : m_daq){
@@ -260,6 +258,19 @@ QList<PressureSensor> Initialize::getPressureSensors() const{
 QStringList Initialize::getTempSensors() const{
     return m_hardware.m_tempSensors;
 }
+
+bool Initialize::serialCompareProfile(const QStringList& serialNames){
+    // real to profile
+    QStringList unrecognizedControllers;
+    // int recognizedCnt = 0;
+    qDebug() << serialNames;
+    if(!serialNames.contains(m_vacuum.m_portName)){
+        return false;
+    }
+
+    return true;
+}
+
 
 bool Initialize::isInitializeOk() const{
     return initializeOk;

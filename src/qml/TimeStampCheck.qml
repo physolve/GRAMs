@@ -8,7 +8,7 @@ import Grams.timeStampSingleton 1.0
 Item {
     // id: root
     // color: "#2B2B2B"
-    height: 300
+    height: 230
     width: 400
     GroupBox {
         title: TimeStamp.checkStampTime.toISOString()//toUTCString()

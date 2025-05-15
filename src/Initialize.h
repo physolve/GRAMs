@@ -47,6 +47,23 @@ public:
     QString                     fullName;
 };
 
+struct vacuumParameters{
+    Q_GADGET
+    Q_PROPERTY (QString         portName        MEMBER m_portName)
+    Q_PROPERTY (int             baudRate        MEMBER m_baudRate)
+    Q_PROPERTY (int             dataBits        MEMBER m_dataBits)
+    Q_PROPERTY (int             stopBits        MEMBER m_stopBits)
+    Q_PROPERTY (int             parity          MEMBER m_parity)
+    Q_PROPERTY (int             timeout         MEMBER m_timeout)
+public:
+    QString m_portName;
+    int m_baudRate;
+    int m_dataBits;
+    int m_stopBits;
+    int m_parity;
+    int m_timeout;
+};
+
 struct addRemoveQuarParameters{
     Q_GADGET
     Q_PROPERTY (QStringList     gasSupplyValves     MEMBER m_gasSupplyValves)
@@ -136,6 +153,7 @@ public:
     Q_PROPERTY(reactionQuarParameters reactionQuar MEMBER m_reactionQuar CONSTANT)
     Q_PROPERTY(secondLineQuarParameters secondLineQuar MEMBER m_secondLineQuar CONSTANT)
     Q_PROPERTY(securityParameters security MEMBER m_security CONSTANT)
+    Q_PROPERTY(vacuumParameters vacuum MEMBER m_vacuum CONSTANT)
 
     Q_PROPERTY(QList<daqParameters> daqGui MEMBER m_daq CONSTANT ) // profiled but changing state should be external
     
@@ -150,6 +168,7 @@ public:
     addRemoveQuarParameters         m_addRemoveQuar; // need m_gasSupplyValves
     reactionQuarParameters          m_reactionQuar; // need m_gasLeakageValves and to ValveToRangePressure
     storageQuarParameters           m_storageQuar; // need to ValveToRangePressure
+    vacuumParameters                m_vacuum; // need ?
 
     bool isInitializeOk() const;
 signals:
@@ -160,16 +179,16 @@ signals:
 private:
     bool readProfile(QString &rawData);
     bool jsonParser(QString &rawData, QJsonObject &profileJson);
-    bool advantechDeviceCheck();
-    bool advantechCompareProfile();
-
+    // bool advantechDeviceCheck();
+    bool advantechCompareProfile(const QStringList& advantechDeviceNames);
+    bool serialCompareProfile(const QStringList& serialNames);
     QString m_curInitProfile;
     
     QVariantMap m_profileJson;
 
     QStringList m_profileNames;
 
-    QStringList m_advantechDeviceMap;
+    // QStringList m_advantechDeviceMap;
 
     //QJsonObject profileJson;
     //QVariantMap m_advantechDeviceSettings;
@@ -181,6 +200,7 @@ private:
     void fillSecondLineQuar(const QJsonObject &secondLineQuarObject);
     
     QList<daqParameters>            m_daq;
+
     secondLineQuarParameters        m_secondLineQuar;
     bool initializeOk;
 };

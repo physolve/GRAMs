@@ -43,10 +43,11 @@ Item {
                 // y: parent.height/2 - 20
                 rotation: 45
                 anchors.verticalCenter: parent.bottom
+                state: Grams.vAR4State
             }
         }
         Rectangle{
-            id: mSC1
+            id: mSC3
             // visible: false
             x: 5
             y: 2*height + 5 
@@ -56,10 +57,11 @@ Item {
             VirtualPressure{
                 anchors.centerIn: parent
                 name: "большая"
+                value: Grams.guiPresVirtual.prSC3
             }
             ValveIndicator{
                 x: parent.width - 10
-                // y: parent.height/2 - 25
+                state: Grams.vS3State
             }
         }
         Rectangle{
@@ -73,14 +75,15 @@ Item {
             VirtualPressure{
                 anchors.centerIn: parent
                 name: "средняя"
+                value: Grams.guiPresVirtual.prSC2
             }
             ValveIndicator{
                 x: parent.width - 10
-                // y: parent.height/2 - 25
+                state: Grams.vS2State
             }
         }
         Rectangle{
-            id: mSC3
+            id: mSC1
             // visible: false
             x: 5
             y: 4*height + 15
@@ -90,10 +93,11 @@ Item {
             VirtualPressure{
                 anchors.centerIn: parent
                 name: "малая"
+                value: Grams.guiPresVirtual.prSC1
             }
             ValveIndicator{
                 x: parent.width - 10
-                // y: parent.height/2 - 25
+                state: Grams.vS1State
             }
         }
     }
@@ -131,65 +135,17 @@ Item {
             ValveIndicator{
                 x: parent.width - 30
                 anchors.verticalCenter: parent.bottom
+                state: Grams.vR1State || Grams.vR2State || Grams.vR3State
             }
             ValveIndicator{
                 x: 0
                 anchors.verticalCenter: parent.bottom
+                state: Grams.vR1State || Grams.vR3State
             }
             ValveIndicator{
                 x: parent.width/2-15
                 anchors.verticalCenter: parent.bottom
-            }
-        }
-        Rectangle{
-            id: mRR1
-            visible: false
-            x: -lumber.width/16
-            y: 2*height + 5 
-            height: 80
-            width: lumber.width/16
-            color:"transparent"; border.color: "#464646";
-            VirtualFlow{
-                name: "быстрый"
-                value: Infinity
-            }
-            ValveIndicator{
-                x: parent.width - 20
-                // y: parent.height/2 - 20
-            }
-        }
-        Rectangle{
-            id: mRR2
-            visible: false
-            x: -lumber.width/16
-            y: 3*height + 10
-            height: 80
-            width: lumber.width/16
-            color:"transparent"; border.color: "#464646";
-            VirtualFlow{
-                name: "средний"
-                value: Infinity
-            }
-            ValveIndicator{
-                x: parent.width - 20
-                // y: parent.height/2 - 20
-            }
-        }
-        Rectangle{
-            id: mRR3
-            visible: false
-            x: -lumber.width/16
-            y: 4*height + 15
-            height: 80
-            width: lumber.width/16
-            color:"transparent"; border.color: "#464646";
-            VirtualFlow{
-                name: ""
-                value: Infinity
-            }
-            ValveIndicator{
-                x: parent.width - 20
-                // y: parent.height/2 - 20
+                state: Grams.vR3State
             }
         }
         Rectangle{
@@ -213,9 +169,10 @@ Item {
                 VirtualPressure{
                     anchors.centerIn: parent
                     name: "камера"
+                    value: Grams.guiPresVirtual.prRF
                 }
                 ValveIndicator{
-                    // y: parent.height/2 - 20
+                    state: Grams.vR5State
                 }
             }
         }
@@ -264,7 +221,7 @@ Item {
             }
             ValveIndicator{
                 x: parent.width - 10
-
+                state: Grams.vAR1State
             }
         }
         Rectangle{
@@ -281,7 +238,7 @@ Item {
             }
             ValveIndicator{
                 x: parent.width - 10
-                // y: parent.height/2 - 25
+                state: Grams.vAR2State
             }
         }
         Rectangle{
@@ -298,7 +255,7 @@ Item {
             }
             ValveIndicator{
                 x: parent.width - 10
-                // y: parent.height/2 - 25
+                state: Grams.vAR3State
             }
         }
     }
@@ -310,26 +267,25 @@ Item {
         width: parent.width/8 + parent.width/16 
         color:"transparent"; border.color: "#464646";
         Rectangle{
-            // visible: false
-            x: 5 //lumber.width/32
+            x: 5
             y: -5
             height: 90
-            width: parent.width/3 // - lumber.width/16
+            width: parent.width/3
             color:"transparent"; border.color: "#464646";
             VirtualPressure{
                 anchors.centerIn: parent
                 name: "бочка"
                 ValveIndicator{
                     x: parent.width/2 - 15
-                    // y: 100
                     rotation: 90
                     anchors.verticalCenter: parent.top
+                    state: Grams.vAR5State
                 }
                 ValveIndicator{
                     x: parent.width/2 - 15
-                    // y: 100
                     rotation: 90
                     anchors.verticalCenter: parent.bottom
+                    state: Grams.vAR6State
                 }
             }
         }
@@ -346,50 +302,7 @@ Item {
             }
             ValveIndicator{
                 x: -15
-            }
-        }
-        Rectangle{
-            // x: lumber.width/32
-            visible: false
-            y: -20
-            height: 80
-            width: lumber.width/16
-            color:"transparent"; border.color: "#464646";
-            VirtualFlow{
-                name: ""
-                value: Infinity
-            }
-            ValveIndicator{
-                x: parent.width/2 - 20
-                // y: -10
-            }
-        }
-        Rectangle{
-            // x: lumber.width/32
-            visible: false
-            y: height-20
-            height: 80
-            width: lumber.width/16
-            color:"transparent"; border.color: "#464646";
-            VirtualFlow{
-                name: ""
-                value: Infinity
-            }
-            ValveIndicator{
-                x: parent.width/2 - 20
-                // y: -10
-            }
-            
-        }
-        Rectangle{
-            visible: false
-            x: parent.width - 40
-            y: height-20
-            height: 80
-            width: lumber.width/16
-            color:"transparent"; border.color: "#464646";
-            ValveIndicator{
-                // y: parent.height/2 - 20
+                state: Grams.vSL2State
             }
         }
         Rectangle{

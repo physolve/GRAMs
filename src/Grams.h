@@ -87,19 +87,16 @@ class Grams : public QApplication
     Q_PROPERTY (bool vR5State       READ getVR5State    NOTIFY valveChanged)
     Q_PROPERTY (bool vSL1State      READ getVSL1State   NOTIFY valveChanged)
     Q_PROPERTY (bool vSL2State      READ getVSL2State   NOTIFY valveChanged)
-    Q_PROPERTY (guiValsPres guiPres READ getGuiValsPres NOTIFY guiValsPresChanged) // requiredPresAI
-    Q_PROPERTY (guiValsTemp guiTemp READ getGuiValsTemp NOTIFY guiValsTempChanged) // requiredTempAI
+    Q_PROPERTY (guiValsPres guiPres READ getGuiValsPres NOTIFY guiValsPresChanged)
+    Q_PROPERTY (guiValsTemp guiTemp READ getGuiValsTemp NOTIFY guiValsTempChanged)
     Q_PROPERTY (guiValsPresVirtual guiPresVirtual READ getGuiPresVirtual NOTIFY guiPresVirtualChanged)
 public:
     Grams(int &argc, char **argvm, const QString &curInitProfile);
     ~Grams();
-    // Q_INVOKABLE void initializeReading();
-    //Q_INVOKABLE void testRead();
-    // add JSON and profile here?
     Q_INVOKABLE void setValveState(bool state, int valveId);
-    // Q_INVOKABLE void setValveState(const QString &name, const bool &state);
-    Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer); // unique
-    Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer); // unique
+    Q_INVOKABLE void setManualChamberValve(bool state);
+    Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer);
+    Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer);
 
     Q_INVOKABLE void chamberSetUp();
     Q_INVOKABLE void refreshTestField();

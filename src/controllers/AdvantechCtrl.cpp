@@ -3,6 +3,24 @@
 #include <QDebug>
 #include <QBitArray>
 
+using namespace Automation::BDaq;
+
+bool AdvantechCtrl::advantechDeviceCheck(QStringList& deviceMap){
+	DeviceCtrl* deviceCtrl;
+    auto const &allSupportedDevices = deviceCtrl->getInstalledDevices();
+    if (allSupportedDevices->getCount() == 0)
+    {
+        qDebug() << "No advantech devices connected";
+        return false;
+    }
+    for(int i = 0; i < allSupportedDevices->getCount(); i++){
+        DeviceTreeNode const &node = allSupportedDevices->getItem(i);
+        deviceMap << QString::fromWCharArray(node.Description);
+    }
+    allSupportedDevices->Dispose();
+    return true;
+} 
+
 AdvantechCtrl::AdvantechCtrl(QObject *parent) : 
 	QObject(parent), connected(false)
 {

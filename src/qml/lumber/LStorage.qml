@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-// import QtQuick.Layouts
+import Grams.backendSourceSingleton 1.0
 import "content"
 
 Item {
@@ -34,7 +34,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: 3
+            value: Grams.guiPresVirtual.prSQ
             maxValue: 50
             endAngle: 320
         }
@@ -48,7 +48,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: 3
+            value: Grams.guiPresVirtual.prSQ
             maxValue: 2
             endAngle: 320
         }
