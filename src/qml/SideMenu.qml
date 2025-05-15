@@ -13,7 +13,7 @@ Item{
         layoutMain.currentIndex = 1
     }
     function setPlayVacuumMenu() {
-        barMainRepeater.model = ["Вакуумирование"]
+        barMainRepeater.model = ["Откачка"]
         layoutMain.currentIndex = 2
     }
     TabBar {

@@ -27,19 +27,15 @@ Rectangle {
                 text: Number(sensor.value.toPrecision(5))
                 font.pixelSize: 17
                 color: "white"
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.centerIn: parent
             }
         }
         Row{
             spacing: 4
-            // anchors.bottom: sensor.bottom
-            // anchors.horizontalCenter: sensor.horizontalCenter
             CheckBox {
                 id: control
                 width: 25
                 height: 25
-                // anchors.verticalCenter: parent.verticalCenter
                 indicator: Rectangle {
                     implicitWidth: 25
                     implicitHeight: 25
@@ -58,8 +54,7 @@ Rectangle {
                         color: control.checked ? "white" : "black"
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.centerIn: parent
                     }
                 }
             }
@@ -69,11 +64,4 @@ Rectangle {
             }
         }
     }
-
-//            RoundButton {
-//                id: button
-//                width: sensor.width - display.width
-    //                height: sensor.height
-    //            }
-
 }

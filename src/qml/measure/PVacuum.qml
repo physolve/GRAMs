@@ -1,18 +1,40 @@
 import QtQuick
 import QtQuick.Controls
 
-Rectangle { 
-    id: lblValveMap
-    anchors.top: parent.top
-    anchors.left: parent.left
-    anchors.topMargin:10
-    width: 100
-    height: 20
-    color:"transparent"; border.color: "#464646";
-    Text {
-        text: "valve map: " 
-        font.pointSize: 9; color: "white"
-        font.family: "Verdana" 
-        anchors.centerIn: parent
+Item {
+    id: root
+    // color: "#2B2B2B"
+    Row{
+        x: 25
+        y: 170
+        spacing: 10
+        Text{
+            // width: parent.width
+            text: "Целевое"
+            font.family: "Verdana"
+            horizontalAlignment: Text.AlignHCenter
+            anchors.verticalCenter: parent.verticalCenter
+            font.pointSize: 10
+            color: "white"
+        }
+        TextField{
+            // width: parent.width - 80
+            width: 75
+            height: 35
+            readOnly: true
+            text: "0"
+            font { family: 'Courier'; pointSize: 10; }
+            horizontalAlignment: TextInput.AlignHCenter
+            selectByMouse: true
+        }
+        Text{
+            // width: parent.width
+            text: ", бар"
+            font.family: "Verdana"
+            horizontalAlignment: Text.AlignHCenter
+            anchors.verticalCenter: parent.verticalCenter
+            font.pointSize: 10
+            color: "white"
+        }
     }
 }

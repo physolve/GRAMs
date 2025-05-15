@@ -7,6 +7,16 @@ Item {
     id: root
     // color: "#2B2B2B"
     anchors.fill: parent
+    Label {
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: 10
+        color: "White"
+        font.family: "Verdana"
+        text: "Эталонный резервуар" // changing to exp function
+        // anchors.centerIn: parent
+        horizontalAlignment: Text.AlignHCenter
+        font.pointSize: 15
+    }
     Rectangle {
         id: sliderPlacer1
         width: 120
@@ -48,9 +58,7 @@ Item {
             color: "black"
             font.family: "Verdana"
             text: `<p></p><p>${slider1.value.toFixed(3)} <i>бар</i></p><p>25 <i>°C</i></p>` // changing to exp function
-            // anchors.centerIn: parent
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: 15
         }

@@ -23,8 +23,7 @@ Item {
             color: "black"
             font.family: "Verdana"
             font.pixelSize: 15
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter
         }
     }

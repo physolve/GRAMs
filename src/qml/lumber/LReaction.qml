@@ -68,8 +68,7 @@ Item {
                     slider1.value.toExponential(2) : slider1.value.toFixed(3)
             text: `<p></p><p>${myValue} <i>бар</i></p><p>25 <i>°C</i></p>` // changing to exp function
             // anchors.centerIn: parent
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: 15
         }

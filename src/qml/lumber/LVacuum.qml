@@ -15,14 +15,17 @@ Rectangle {
         y: 5
         width: 50
         height: 60
+        text: "Вак."
+        font.pointSize: 9
+
         // background: Rectangle {
         //     color: "white"
         //     border.width: 1
         //     border.color: "blue"
         //     radius: parent.width/4
         // }
-        icon.source: "qrc:/vacuumSVG.svg"
-        icon.color: pressed ? "red" : "black"
+        // icon.source: "qrc:/vacuumSVG.svg"
+        // color: pressed ? "red" : "white"
         onClicked: lVacuum.playVacuum()
     }
     property double testVal: 1e-3
@@ -54,9 +57,7 @@ Rectangle {
             color: "black"
             font.family: "Verdana"
             text: `<p></p><p>${testVal.toFixed(3)} <i>бар</i></p><p>25 <i>°C</i></p>` // changing to exp function
-            // anchors.centerIn: parent
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: 15
         }

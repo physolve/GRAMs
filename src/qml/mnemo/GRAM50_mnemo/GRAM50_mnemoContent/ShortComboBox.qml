@@ -44,8 +44,7 @@ ComboBox{
         border.color: cmbx.down ? "#D7211C" : "#21be2b"
         border.width: cmbx.visualFocus ? 10 : 1
         radius: 5
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.centerIn: parent
     }
     indicator: Rectangle{
         width: 12

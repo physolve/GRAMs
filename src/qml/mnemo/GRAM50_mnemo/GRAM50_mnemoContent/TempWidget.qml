@@ -27,8 +27,7 @@ Rectangle {
                 text: Number(sensor.value.toPrecision(5))
                 font.pixelSize: 17
                 color: "white"
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.centerIn: parent
             }
         }
         ShortComboBox{
