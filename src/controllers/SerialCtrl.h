@@ -14,28 +14,23 @@ public:
     explicit SerialCtrl(QObject *parent = nullptr);
     virtual ~SerialCtrl();
     void setSerialPortInfo(const SerialPortInfo &serialInfo);
-    void startReading();
     void shuttingOff(); //?
-    void stopReading();
     void openSerialPort();
     void closeSerialPort();
-
+    virtual void requestData();
 private slots:
     virtual void readData();
     void handleError(QSerialPort::SerialPortError error);
-    void processEvents();
-
 signals:
     //void mySettingsChanged();
     void logChanged(QString);
 protected:
     void setLogText(const QString &text);
     QSerialPort *m_serial = nullptr;
-    QTimer* m_timer;
+    // QTimer* m_timer;
     uint8_t threshold;
-private:
-    virtual void writeData() ;
     SerialPortInfo m_serialInfo;
+private:
     QString logText;
 };
 
@@ -43,8 +38,8 @@ class VacuumController : public SerialCtrl
 {
     Q_OBJECT
 public:
-    VacuumController(const SerialPortInfo &serialInfo, QObject *parent = nullptr);
-    void stopReading();
+    VacuumController(QObject *parent = nullptr);
+    void requestData() override;
 signals:
     // void pressureChanged();
     // void pressureValChanged(); // temporally
@@ -52,13 +47,17 @@ signals:
 private slots:
     void readData() override;
 private:
-    void writeData();
-    const QString query;
     QString m_bufferData;
-
+    QByteArray requestArray;
     // QElapsedTimer m_programmTime;
     // QSharedPointer<ControllerData> timeData;
     // QSharedPointer<ControllerData> pressure;
     // QSharedPointer<ControllerData> vacuum;
-    // elapsedTimer?
+    QByteArray askData;
+    QByteArray enablePump;
+    QByteArray startPump;
+    QByteArray stopPump;
+    QByteArray getPumpSpeed;
+    QByteArray getPumpError;
+    // QByteArray getPumpSpd; //?
 };

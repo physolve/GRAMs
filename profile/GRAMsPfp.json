@@ -98,8 +98,8 @@
                 }
             ],
             "Vacuum": {
-                "portName": "COM4",
-                "description": "vacuum",
+                "portName": "COM10",
+                "description": "USB Serial Port",
                 "baudRate": 9600,
                 "dataBits": 8,
                 "stopBits": 1,
@@ -112,7 +112,7 @@
                 "v_gasSupply": ["AR1", "AR2", "AR3"],
                 "v_gasDrain": ["AR5", "AR6"],
                 "v_gasRelease": "AR4",
-                "m_vacuum": "vacuum_sensor"
+                "m_vacuum": "vacuumSensor"
             },
             "storageQuar":{
                 "v_gasStore": ["S1", "S2", "S3"],

@@ -35,12 +35,6 @@ Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
     checkPass = checkPass*AdvantechCtrl::advantechDeviceCheck(advantechDeviceNames);
     QStringList serialNames;
     checkPass = checkPass*SerialInfo::serialPortsInfo(serialNames);
-    if(serialNames.isEmpty()){
-        qDebug() << "No serial names";  
-    }
-    else{
-        qDebug() << serialNames;  
-    }
     visualRepresentation(profileJson); // setted after gui run
     bool initAdvantech = false, initVacuum = false;
     if(checkPass){
@@ -122,12 +116,13 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
     // vacuum
     const auto &vacuumObject = controllersObject["Vacuum"].toObject();
     const auto& portName = vacuumObject["portName"].toString();
+    const auto& description = vacuumObject["description"].toString();
     const auto& baudRate = vacuumObject["baudRate"].toInt();
     const auto& dataBits = vacuumObject["dataBits"].toInt();
     const auto& stopBits = vacuumObject["stopBits"].toInt();
     const auto& parity = vacuumObject["parity"].toInt();
     const auto& timeout = vacuumObject["timeout"].toInt();
-    m_vacuum = vacuumParameters{portName, baudRate, dataBits, stopBits, parity, timeout}; 
+    m_vacuum = vacuumParameters{portName, description, baudRate, dataBits, stopBits, parity, timeout}; 
 //controllers
 
 // quartiles
@@ -256,6 +251,10 @@ void Initialize::getParametersAItemp(daqParameters &params){
     }
 }
 
+vacuumParameters Initialize::getVacuumParameters() const{
+    return m_vacuum;
+}
+
 QList<PressureSensor> Initialize::getPressureSensors() const{
     return m_hardware.m_pressureSensors;
 }
@@ -269,11 +268,15 @@ bool Initialize::serialCompareProfile(const QStringList& serialNames){
     QStringList unrecognizedControllers;
     // int recognizedCnt = 0;
     qDebug() << serialNames;
-    if(!serialNames.contains(m_vacuum.m_portName)){
-        return false;
+    for(const auto& serial : serialNames){
+        const QString& description = serial.split(", ").at(0);
+        const QString& portName = serial.split(", ").at(1);
+        if(m_vacuum.m_description == description && m_vacuum.m_portName == portName){
+            qDebug() << "Found Vacuum";
+            return true;
+        }
     }
-
-    return true;
+    return false;
 }
 
 

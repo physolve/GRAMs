@@ -1,18 +1,15 @@
 #include "SerialCtrl.h"
 
 SerialCtrl::SerialCtrl(QObject *parent) : 
-    QObject(parent), m_timer(new QTimer), m_serial(new QSerialPort(this))
+    QObject(parent), m_serial(new QSerialPort(this)) // unique pointer
 {
     connect(m_serial, &QSerialPort::errorOccurred, this, &SerialCtrl::handleError);
-
-    connect(m_serial, &QSerialPort::readyRead, this, &SerialCtrl::readData);
-
-    connect(m_timer, &QTimer::timeout, this, &SerialCtrl::processEvents);
-
-    setLogText("Click connect");
+    // connect(m_serial, &QSerialPort::readyRead, this, &SerialCtrl::readData);
+    // setLogText("Click connect");
 }
 SerialCtrl::~SerialCtrl(){
-    m_timer->stop();
+    this->closeSerialPort();
+    delete m_serial;
 }
 
 void SerialCtrl::setSerialPortInfo(const SerialPortInfo &serialInfo){
@@ -28,11 +25,13 @@ void SerialCtrl::openSerialPort()
     m_serial->setStopBits(m_serialInfo.stopBits);
     m_serial->setFlowControl(QSerialPort::NoFlowControl);
     if (m_serial->open(QIODevice::ReadWrite)) {
-        setLogText(tr("Connected to %1 : %2, %3, %4, %5")
-                          .arg(m_serialInfo.portName).arg(m_serialInfo.stringBaudRate).arg(m_serialInfo.stringDataBits)
-                          .arg(m_serialInfo.stringParity).arg(m_serialInfo.stringStopBits));
+        qDebug() << "Connected to " << m_serialInfo.description;
+        // setLogText(tr("Connected to %1 : %2, %3, %4, %5")
+        //                   .arg(m_serialInfo.portName).arg(m_serialInfo.stringBaudRate).arg(m_serialInfo.stringDataBits)
+        //                   .arg(m_serialInfo.stringParity).arg(m_serialInfo.stringStopBits));
     } else {
-        setLogText(tr("Open error"));
+        // setLogText(tr("Open error"));
+        qDebug() << "Serial open error";
     }
 }
 
@@ -40,14 +39,20 @@ void SerialCtrl::closeSerialPort()
 {
     if (m_serial->isOpen())
         m_serial->close();
-    setLogText(tr("Disconnected"));
+    // setLogText(tr("Disconnected"));
+    qDebug() << "Serial disconnected";
 }
 
-void SerialCtrl::writeData() // virtual?
-{
+void SerialCtrl::requestData(){
     const QString query = "#01\r"; 
     m_serial->write(query.toLocal8Bit());
 }
+
+// void SerialCtrl::writeData() // virtual?
+// {
+//     const QString query = "#01\r"; 
+//     m_serial->write(query.toLocal8Bit());
+// }
 
 void SerialCtrl::readData() // virtual?
 {
@@ -57,7 +62,7 @@ void SerialCtrl::readData() // virtual?
 
 void SerialCtrl::shuttingOff(){
     qDebug() << "Wrong data in sensor!";
-    stopReading();
+    // stopReading();
     //emit to qml status about error   
 }
 
@@ -69,20 +74,6 @@ void SerialCtrl::handleError(QSerialPort::SerialPortError error)
     }
 }
 
-void SerialCtrl::startReading()
-{
-    threshold = 0;
-    m_timer->start(1000);
-}
-void SerialCtrl::stopReading(){
-    m_timer->stop();
-}
-
-void SerialCtrl::processEvents(){
-    //setLogText("");
-    writeData();
-}
-
 void SerialCtrl::setLogText(const QString &text)
 {
     if (text != logText)
@@ -92,38 +83,47 @@ void SerialCtrl::setLogText(const QString &text)
     }
 }
 
-VacuumController::VacuumController(const SerialPortInfo &serialInfo, QObject *parent) : SerialCtrl(parent)
+VacuumController::VacuumController(QObject *parent) : SerialCtrl(parent)
 {
-    this->setSerialPortInfo(serialInfo);
-    //query("#01\r")
-    //, currentPressure(0), currentVacuum(0)
+    // default request
+    requestArray.resize(6);
+    requestArray[0] = 0x50; // P
+    requestArray[1] = 0x52; // R
+    requestArray[2] = 0x31; // 1
+    requestArray[3] = 0x0D; // CR
+    requestArray[4] = 0x0A; // LF
+    requestArray[5] = 0x00; // NUL
+    askData.resize(6); 
+    const char a[6] = {'P', 'R', '1', '\r', '\n', '\0'};
+    askData = QByteArray::fromHex(a);
+    // other commands
+    connect(m_serial, &QSerialPort::readyRead, this, &VacuumController::readData);
+
 }
-// #010\r to read only first channel, #000\r to read all channels, but what is syntax? 
-void VacuumController::writeData(){
-    m_serial->write(query.toLocal8Bit());
+
+void VacuumController::requestData(){
+    m_serial->write(requestArray);
 }
 
 void VacuumController::readData(){
     const QByteArray data = m_serial->readAll();
-    //data format "+00.000\r" For ONE channel
-    //data format: +000.00+000.00+000.00...+000.00\r
-
-    // QString responce = QString::fromLocal8Bit(data);
+    QString responce = QString::fromLocal8Bit(data);
+    qDebug() << responce;
+    // if(!responce.endsWith('\r')){
+    //     m_bufferData = responce;
+    //     return;
+    // }
+    // responce = m_bufferData + responce;
     // responce.remove(0,1);
     // responce.chop(1);
+    // QStringList channelsVoltage = responce.split('+', Qt::SkipEmptyParts);
+    // //qDebug() << channelsVoltage;
+    // bool ok = true;
+    // auto voltageVacuum = channelsVoltage.at(1).toDouble(&ok);
 
-    QString responce = QString::fromLocal8Bit(data);
-    if(!responce.endsWith('\r')){
-        m_bufferData = responce;
-        return;
-    }
-    responce = m_bufferData + responce;
-    responce.remove(0,1);
-    responce.chop(1);
-    QStringList channelsVoltage = responce.split('+', Qt::SkipEmptyParts);
-    //qDebug() << channelsVoltage;
-    bool ok = true;
-    auto voltageVacuum = channelsVoltage.at(1).toDouble(&ok);
+    // ?
+    // char requestENQ[1];
+    // requestENQ[0] = 0x05; // ENQ
 
     // auto point_vac = 0.0;
     // if(voltageVacuum != 0 && ok){
@@ -137,26 +137,4 @@ void VacuumController::readData(){
     //     }
     // }
     
-    // currentVacuum = point_vac;
-    
-    // const auto &c_time = m_programmTime.elapsed()/1000;
-    // timeData->addPoint(c_time);
-    // pressure->addPoint(point_pr);
-    // emit pressureValChanged();
-    // vacuum->addPoint(point_vac);
-    // emit vacuumValChanged();
-    // emit pressureChanged();
-}
-
-// QMap<QString, double> PressureController::getLastChanged(){
-//     QMap<QString, double> points;
-//     points["pressure"] = currentPressure;
-//     points["vacuum"] = currentVacuum;
-//     return points;
-// }
-
-void VacuumController::stopReading(){
-    m_timer->stop();
-    // currentPressure = 0;
-    // currentVacuum = 0;
 }

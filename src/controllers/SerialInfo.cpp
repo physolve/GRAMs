@@ -26,9 +26,8 @@ bool SerialInfo::serialPortsInfo(QStringList& serialNames){
              << info.systemLocation()
              << (info.vendorIdentifier() ? QString::number(info.vendorIdentifier(), 16) : blankString)
              << (info.productIdentifier() ? QString::number(info.productIdentifier(), 16) : blankString);
-        QString c_name = info.portName();
-        qDebug() << c_name;
-        serialNames << info.description();
+        // make single description: description, port
+        serialNames << QString("%1, %2").arg(info.description(), info.portName());
     }
     return true;
 }

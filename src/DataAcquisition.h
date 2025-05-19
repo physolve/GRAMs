@@ -2,6 +2,7 @@
 
 #include <QTimer>
 #include "controllers/AdvantechCtrl.h"
+#include "controllers/SerialCtrl.h"
 #include "FilterView.h"
 #include "Initialize.h" 
 
@@ -24,6 +25,7 @@ public:
     void initDaqDO(const daqParameters &parameterDO); 
     void initDaqAIpres(const daqParameters &parameterAIpres);
     void initDaqAItemp(const daqParameters &parameterAItemp);
+    void initSerialVacuum(const vacuumParameters &parameterVacuum);
 
     void startAcquisition();
     void stopAcquisition();
@@ -36,7 +38,7 @@ public:
     void setPressurePointers(const QVector<ControllerData*>& ptr);
     void setTempPointers(const QVector<ControllerData*>& ptr);
     void setFiltersDataPointers(const QVector<FilterData*>& ptr);
-    
+    void setVacuumPointer(DataCollection* ptr);
     Q_INVOKABLE void updateFilter(int chartIndex); // move to DataAcquisition
     
     void setSupplyPressurePtr(FilterData* high, FilterData* low);
@@ -68,6 +70,9 @@ private:
     // AI pointers
         // temp
     QVector<ControllerData*> m_tempSensors;
+    
+    VacuumController reqVacuum;
+    DataCollection* m_vacuumSensor;
     
     FilterView filterView;
     QVector<FilterData*> m_filtersData;

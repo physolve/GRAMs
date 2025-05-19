@@ -50,6 +50,7 @@ public:
 struct vacuumParameters{
     Q_GADGET
     Q_PROPERTY (QString         portName        MEMBER m_portName)
+    Q_PROPERTY (QString         description     MEMBER m_description)
     Q_PROPERTY (int             baudRate        MEMBER m_baudRate)
     Q_PROPERTY (int             dataBits        MEMBER m_dataBits)
     Q_PROPERTY (int             stopBits        MEMBER m_stopBits)
@@ -57,6 +58,7 @@ struct vacuumParameters{
     Q_PROPERTY (int             timeout         MEMBER m_timeout)
 public:
     QString m_portName;
+    QString m_description;
     int m_baudRate;
     int m_dataBits;
     int m_stopBits;
@@ -157,9 +159,10 @@ public:
 
     Q_PROPERTY(QList<daqParameters> daqGui MEMBER m_daq CONSTANT ) // profiled but changing state should be external
     
-    void getParametersDO(daqParameters &params); //
-    void getParametersAIpres(daqParameters &params); //
-    void getParametersAItemp(daqParameters &params); //
+    void getParametersDO(daqParameters &params);
+    void getParametersAIpres(daqParameters &params);
+    void getParametersAItemp(daqParameters &params);
+    vacuumParameters getVacuumParameters() const;
     QList<PressureSensor> getPressureSensors() const;
     QStringList getTempSensors() const;
 

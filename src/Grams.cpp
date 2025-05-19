@@ -22,12 +22,11 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     m_safeModule(), // check
     softTimer(new QTimer) // unique pointer
 {
-    
-    
     initDigitalData();
     initAnalogData();
     advDoController();
     advAiController();
+    vacuumController();
 
     initAddRemoveQuartile();
     initStorageQuartile();
@@ -139,6 +138,16 @@ void Grams::advAiController(){
     dataSource.initDaqAItemp(parametersAItemp);
 
     guiValsUpdate();
+}
+
+void Grams::vacuumController(){
+    if(!initSource.isInitializeOk())
+        return;
+    const auto& parametersVacuum = initSource.getVacuumParameters();
+    m_vacuumSensor.m_name = "vacuumSensor";
+    dataSource.setVacuumPointer(&m_vacuumSensor);
+    dataSource.initSerialVacuum(parametersVacuum);
+    // update vacuum values
 }
 
 void Grams::initAddRemoveQuartile(){

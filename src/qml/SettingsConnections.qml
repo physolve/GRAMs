@@ -200,7 +200,7 @@ ColumnLayout{
                 Layout.preferredWidth: 300
                 Layout.preferredHeight: 20
                 color: "transparent"; border.color: "#464646";
-                Text { text: `Description: turbo pump...`; color: "white"; font.family: "Verdana"; 
+                Text { text: `Description: ${initSource.vacuum.description}`; color: "white"; font.family: "Verdana"; 
                 font.pointSize: 9; anchors.centerIn: parent }
             }
             Rectangle {

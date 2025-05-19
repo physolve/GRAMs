@@ -51,6 +51,10 @@ void DataAcquisition::setFiltersDataPointers(const QVector<FilterData*>& ptr){
     m_filtersData = ptr;
 }
 
+void DataAcquisition::setVacuumPointer(DataCollection* ptr){
+    m_vacuumSensor = ptr;
+}
+
 void DataAcquisition::initDaqDO(const daqParameters &parameter){
     // pass real info from Initialize
     AdvDOType a(parameter.fullName);
@@ -122,6 +126,21 @@ void DataAcquisition::initDaqAItemp(const daqParameters &parameter){
     }
 
     GRAMsIntegrity["temperature"] = ControllerConnection::Online;
+}
+
+void DataAcquisition::initSerialVacuum(const vacuumParameters &parameterVacuum){
+    SerialPortInfo a;
+    a.portName = parameterVacuum.m_portName;
+    a.description = parameterVacuum.m_description;
+    a.baudRate = QSerialPort::BaudRate(parameterVacuum.m_baudRate);
+    a.dataBits = QSerialPort::DataBits(parameterVacuum.m_dataBits);
+    a.parity = QSerialPort::Parity(parameterVacuum.m_parity);
+    a.stopBits = QSerialPort::StopBits(parameterVacuum.m_stopBits);
+    a.timeout = parameterVacuum.m_timeout;
+    reqVacuum.setSerialPortInfo(a);
+    reqVacuum.openSerialPort();
+    // if ok
+    reqVacuum.requestData();
 }
 
 bool DataAcquisition::setValveStates(){

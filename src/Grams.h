@@ -114,6 +114,7 @@ private:
     void initAnalogData();
     void advDoController();
     void advAiController();
+    void vacuumController();
     void initGUI();
     void initSafeModule();
     void initAddRemoveQuartile();
@@ -191,6 +192,8 @@ private:
     ControllerData tmRTube;     // 6 DT358
     ControllerData tmF;         // 7 DT359
 
+    DataCollection prVac; // name?
+
     CustomPlotItem* m_testPlot;  // unique
     // make it QList
     guiValsPres m_pressureVals;
@@ -230,6 +233,7 @@ private:
     AddRemoveQuartile m_addRemoveQuartile;
     FilterData m_supplyPressureHigh;
     FilterData m_supplyPressureLow;
+    DataCollection m_vacuumSensor;
     StorageQuartile m_storageQuartile;
     QuartileData prSQ;
     QuartileData tmSQ;

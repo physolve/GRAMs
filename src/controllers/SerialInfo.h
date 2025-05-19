@@ -5,14 +5,14 @@
 struct SerialPortInfo {
     QString portName;
     QString description;
-    qint32 baudRate;
-    QString stringBaudRate;
+    QSerialPort::BaudRate baudRate;
+    // QString stringBaudRate;
     QSerialPort::DataBits dataBits;
-    QString stringDataBits;
+    // QString stringDataBits;
     QSerialPort::Parity parity;
-    QString stringParity;
+    // QString stringParity;
     QSerialPort::StopBits stopBits;
-    QString stringStopBits;
+    int timeout;
 };
 
 class SerialInfo : public QObject
