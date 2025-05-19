@@ -192,8 +192,6 @@ private:
     ControllerData tmRTube;     // 6 DT358
     ControllerData tmF;         // 7 DT359
 
-    DataCollection prVac; // name?
-
     CustomPlotItem* m_testPlot;  // unique
     // make it QList
     guiValsPres m_pressureVals;
@@ -204,7 +202,7 @@ private:
     guiValsPresVirtual getGuiPresVirtual() const;
     
     // filters
-    CustomPlotItem* m_mainPlot;  // unique
+    //CustomPlotItem* m_mainPlot;  // unique
     QList<CustomPlotItem*> m_filterPlots;  // unique
     FilterData timeFilter;
     FilterData fl_prSH;    // 0 DD311

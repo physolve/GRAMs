@@ -25,6 +25,7 @@ static bool createConnection(QVariantList& initialTimeStamp)
     bool responseOK = query.exec("SELECT * FROM gramstate ORDER BY ts DESC LIMIT 1");
     if(!responseOK){
         qDebug() << query.lastError();
+        db.close();
         return false;
     }
     while (query.next()) {
@@ -52,7 +53,6 @@ static bool createConnection(QVariantList& initialTimeStamp)
     // q.exec(QString("INSERT INTO %1 (ts, id) VALUES ('%2', '3' )").arg(tableString).arg("2020-06-22 19:10:25-07"));
     // Call toLower() on the string so that it can be matched
     // QSqlRecord rec = db.record(tableString.toLower());
-
     db.close();
     return true;
 }

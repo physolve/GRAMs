@@ -83,7 +83,7 @@ void SerialCtrl::setLogText(const QString &text)
     }
 }
 
-VacuumController::VacuumController(QObject *parent) : SerialCtrl(parent)
+VacuumController::VacuumController(QObject *parent) : SerialCtrl(parent), lastData(0), isEnquiry(false)
 {
     // default request
     requestArray.resize(6);
@@ -96,19 +96,43 @@ VacuumController::VacuumController(QObject *parent) : SerialCtrl(parent)
     askData.resize(6); 
     const char a[6] = {'P', 'R', '1', '\r', '\n', '\0'};
     askData = QByteArray::fromHex(a);
+    // const char b[7] = {'\u','0','0','0'6\r\n};
     // other commands
     connect(m_serial, &QSerialPort::readyRead, this, &VacuumController::readData);
-
 }
 
 void VacuumController::requestData(){
+    // default request
     m_serial->write(requestArray);
 }
 
+void VacuumController::requestRepetitive(){
+    QByteArray enquiry;
+    enquiry.resize(1);
+    enquiry[0] = 0x05;
+    m_serial->write(enquiry);
+}
+
 void VacuumController::readData(){
-    const QByteArray data = m_serial->readAll();
-    QString responce = QString::fromLocal8Bit(data);
-    qDebug() << responce;
+    if(!isEnquiry){
+        const QByteArray data = m_serial->readAll();
+        const QString responce = QString::fromLocal8Bit(data);
+        QByteArray acknolegement;
+        acknolegement.resize(3);
+        acknolegement[0] = '\u0006';
+        acknolegement[1] = '\r';
+        acknolegement[2] = '\n';
+        if(data == acknolegement){
+            isEnquiry = true;
+        }
+        return;
+    }
+    if(m_serial->canReadLine()){
+        const QByteArray data = m_serial->readLine();
+        const QString responce = QString::fromLocal8Bit(data);
+        qDebug() << responce;
+    }
+    // if()
     // if(!responce.endsWith('\r')){
     //     m_bufferData = responce;
     //     return;
@@ -120,11 +144,9 @@ void VacuumController::readData(){
     // //qDebug() << channelsVoltage;
     // bool ok = true;
     // auto voltageVacuum = channelsVoltage.at(1).toDouble(&ok);
-
     // ?
     // char requestENQ[1];
     // requestENQ[0] = 0x05; // ENQ
-
     // auto point_vac = 0.0;
     // if(voltageVacuum != 0 && ok){
     //     point_vac = filterData_vac(voltageVacuum);
@@ -135,6 +157,9 @@ void VacuumController::readData(){
     //     if(++threshold>3){ //?
     //         shuttingOff();
     //     }
-    // }
-    
+    // }   
+}
+
+double VacuumController::getData() const{
+    return lastData;
 }

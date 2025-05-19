@@ -45,6 +45,7 @@ public:
     void setLeakagePressurePtr(FilterData* high, FilterData* low);
     Q_INVOKABLE bool setSupplyMeasure(bool supplyMeasure);
     Q_INVOKABLE bool setLeakageMeasure(bool leakageMeasure);
+    Q_INVOKABLE void testVacuumQuery();
 private slots:
     void processEvents();
     

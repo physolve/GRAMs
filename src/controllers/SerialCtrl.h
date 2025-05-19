@@ -40,6 +40,8 @@ class VacuumController : public SerialCtrl
 public:
     VacuumController(QObject *parent = nullptr);
     void requestData() override;
+    void requestRepetitive();
+    double getData() const;
 signals:
     // void pressureChanged();
     // void pressureValChanged(); // temporally
@@ -60,4 +62,6 @@ private:
     QByteArray getPumpSpeed;
     QByteArray getPumpError;
     // QByteArray getPumpSpd; //?
+    bool isEnquiry;
+    double lastData;
 };

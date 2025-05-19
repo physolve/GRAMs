@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import Grams.dataSourceSingleton 1.0
 
 Item {
     id: root
@@ -36,5 +37,11 @@ Item {
             font.pointSize: 10
             color: "white"
         }
+    }
+    Button{
+        x: 25
+        y: 210
+        text: "Test query"
+        onClicked: DataSource.testVacuumQuery()
     }
 }

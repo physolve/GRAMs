@@ -143,6 +143,10 @@ void DataAcquisition::initSerialVacuum(const vacuumParameters &parameterVacuum){
     reqVacuum.requestData();
 }
 
+void DataAcquisition::testVacuumQuery(){
+    reqVacuum.requestRepetitive();
+}
+
 bool DataAcquisition::setValveStates(){
     if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
         return false;

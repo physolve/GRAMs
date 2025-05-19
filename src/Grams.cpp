@@ -20,7 +20,8 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     // valveModel(), // replace
     // dataModel(), // replace
     m_safeModule(), // check
-    softTimer(new QTimer) // unique pointer
+    softTimer(new QTimer), // unique pointer
+    m_testPlot(nullptr)
 {
     initDigitalData();
     initAnalogData();
@@ -460,9 +461,12 @@ void Grams::guiValsUpdate(){
 
 void Grams::softEvent(){
     guiValsUpdate();
-    m_testPlot->dataUpdated();
-    for(auto plot : m_filterPlots){
-        plot->dataSetUpdated(); 
+    if(m_testPlot!=nullptr)
+        m_testPlot->dataUpdated();
+    if(!m_filterPlots.isEmpty()){
+        for(auto plot : m_filterPlots){
+            plot->dataSetUpdated(); 
+        }
     }
     // additional checks
     m_storageQuartile.updateQuartileData();

@@ -269,8 +269,10 @@ bool Initialize::serialCompareProfile(const QStringList& serialNames){
     // int recognizedCnt = 0;
     qDebug() << serialNames;
     for(const auto& serial : serialNames){
-        const QString& description = serial.split(", ").at(0);
-        const QString& portName = serial.split(", ").at(1);
+        auto splitName = serial.split(", ");
+        qDebug() << splitName;
+        const QString& description = splitName[0];
+        const QString& portName = splitName[1];
         if(m_vacuum.m_description == description && m_vacuum.m_portName == portName){
             qDebug() << "Found Vacuum";
             return true;
