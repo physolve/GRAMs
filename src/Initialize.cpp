@@ -35,15 +35,20 @@ Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
     checkPass = checkPass*AdvantechCtrl::advantechDeviceCheck(advantechDeviceNames);
     QStringList serialNames;
     checkPass = checkPass*SerialInfo::serialPortsInfo(serialNames);
-    qDebug() << serialNames;
+    if(serialNames.isEmpty()){
+        qDebug() << "No serial names";  
+    }
+    else{
+        qDebug() << serialNames;  
+    }
     visualRepresentation(profileJson); // setted after gui run
-    bool initAdvantech, initVacuum;
+    bool initAdvantech = false, initVacuum = false;
     if(checkPass){
         initAdvantech = advantechCompareProfile(advantechDeviceNames);
         initVacuum = serialCompareProfile(serialNames);
     }
     else qDebug() << "checkPass problem";
-    initializeOk = initAdvantech&&initVacuum;
+    initializeOk = initAdvantech*initVacuum;
     //check
 }
 

@@ -22,7 +22,11 @@ static bool createConnection(QVariantList& initialTimeStamp)
     QString tableString("gramstate");
     QVariantList lastTimeStamp;
     QSqlQuery query;
-    query.exec("SELECT * FROM gramstate ORDER BY ts DESC LIMIT 1");
+    bool responseOK = query.exec("SELECT * FROM gramstate ORDER BY ts DESC LIMIT 1");
+    if(!responseOK){
+        qDebug() << query.lastError();
+        return false;
+    }
     while (query.next()) {
         for(auto i = 0; i < query.record().count(); ++i)
             lastTimeStamp << query.value(i);

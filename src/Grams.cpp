@@ -20,7 +20,7 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     // valveModel(), // replace
     // dataModel(), // replace
     m_safeModule(), // check
-    softTimer(new QTimer)
+    softTimer(new QTimer) // unique pointer
 {
     
     
@@ -365,6 +365,10 @@ void Grams::initTimeStamp(){
     // current id check
     // current time check
     // int id;
+    if(initialTimeStamp.isEmpty()){
+        return;
+    }
+
     int id = initialTimeStamp[0].toInt();
     QDateTime timeStamp = initialTimeStamp[1].toDateTime();
 
