@@ -198,6 +198,7 @@ Item {
 
         function mapFromValue(inMin, inMax, outMin, outMax, inValue) {
             inValue > inMax ? inValue = inMax : 0;
+            inValue < inMin ? inValue = inMin : 0;
             return (inValue - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
         }
 

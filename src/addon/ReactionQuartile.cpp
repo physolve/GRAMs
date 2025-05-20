@@ -1,6 +1,7 @@
 #include "ReactionQuartile.h"
 
-ReactionQuartile::ReactionQuartile(QObject *parent) : Quartile(parent), m_expUpdate(new QTimer){
+ReactionQuartile::ReactionQuartile(QObject *parent) : Quartile(parent), m_expUpdate(new QTimer),
+m_chamber_connected(false){
     for(int i{2}; i >= 0; --i){
         m_gasLeakage[i].setInitialParametersLeakage(i,0,1,1);
     }

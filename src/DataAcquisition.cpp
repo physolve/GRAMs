@@ -193,7 +193,11 @@ void DataAcquisition::processEvents(){
         m_tempSensors[i]->addValue(readDataTemp[i]);
     }
     reqSensorAI.readData();
-
+    
+    // vacuum frequency of 333 ms is ok?
+    const auto &readDataVacuum = reqVacuum.getData();
+    m_vacuumSensor->addPoint(readDataVacuum);
+    
     if(m_supplyMeasure){
         fillSupplyARQ();
     }

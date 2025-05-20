@@ -20,7 +20,7 @@
 #include "addon/LightPlotItem.h"
 #include "measure/Chamber.h"
 
-#include "db/PostgreDB.h"
+#include "db/GramStateDB.h"
 #include "TimeStamp.h"
 #include "addon/TestField.h"
 
@@ -35,6 +35,7 @@ struct guiValsPres{ // sample
     Q_PROPERTY (double prSK     MEMBER g_prSK)
     Q_PROPERTY (double tmSK     MEMBER g_tmSK)
     Q_PROPERTY (double tmS      MEMBER g_tmS)
+    Q_PROPERTY (double prARV    MEMBER g_prARV)
 public:
     double g_prSH;  // bar
     double g_prSA;  // bar
@@ -44,6 +45,7 @@ public:
     double g_prSK;  // bar
     double g_tmSK;  // bar
     double g_tmS;   // bar
+    double g_prARV; // bar
 };
 
 struct guiValsTemp{ 

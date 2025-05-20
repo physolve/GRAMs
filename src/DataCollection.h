@@ -14,10 +14,14 @@ public:
     QVector<double> getValue() const;
     QVector<double> getLastToChart() const;
     double getCurValue() const;
+    void setAltUnitCoef(const double &coef);
+    double getAltUnit() const;
     QString m_name;
+    // alternative unit
 protected:
     QList<double> m_y; // one second data
     double m_curValue;
+    double m_altUnitA;
 };
 
 class ControllerData : public DataCollection

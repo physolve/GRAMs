@@ -127,37 +127,29 @@ void VacuumController::readData(){
         }
         return;
     }
-    if(m_serial->canReadLine()){
-        const QByteArray data = m_serial->readLine();
-        const QString responce = QString::fromLocal8Bit(data);
-        qDebug() << responce;
+    if(!m_serial->canReadLine()){
+        return;
     }
-    // if()
-    // if(!responce.endsWith('\r')){
-    //     m_bufferData = responce;
-    //     return;
-    // }
-    // responce = m_bufferData + responce;
-    // responce.remove(0,1);
-    // responce.chop(1);
-    // QStringList channelsVoltage = responce.split('+', Qt::SkipEmptyParts);
-    // //qDebug() << channelsVoltage;
-    // bool ok = true;
-    // auto voltageVacuum = channelsVoltage.at(1).toDouble(&ok);
-    // ?
-    // char requestENQ[1];
-    // requestENQ[0] = 0x05; // ENQ
-    // auto point_vac = 0.0;
-    // if(voltageVacuum != 0 && ok){
-    //     point_vac = filterData_vac(voltageVacuum);
-    //     threshold = 0;
-    // }
-    // else{
-    //     point_vac = 0.0;
-    //     if(++threshold>3){ //?
-    //         shuttingOff();
-    //     }
-    // }   
+    // requestArray value read from single gauge
+    const QByteArray data = m_serial->readLine();
+    // const QString responce = QString::fromLocal8Bit(data);
+    double value = 0;
+    if(data.startsWith('2')){
+        // 2 -> overrange
+        value = 761; // torr   
+    }
+    else if(data.startsWith('1')){
+        // 1 -> underrange
+        value = 1e-8; // torr ?
+    }
+    else if(data.startsWith('0')){
+        // 0 -> measurement OK
+        value = data.mid(3,10).toDouble(); // ok?
+    }
+    else{
+        qDebug() << "Upredicted vacuum responce";
+    }
+    lastData = value;
 }
 
 double VacuumController::getData() const{

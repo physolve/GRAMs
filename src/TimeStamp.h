@@ -28,7 +28,6 @@ public:
     double g_prRF;
 };
 
-
 class TimeStamp : public QObject
 {
     Q_OBJECT

@@ -146,6 +146,7 @@ void Grams::vacuumController(){
         return;
     const auto& parametersVacuum = initSource.getVacuumParameters();
     m_vacuumSensor.m_name = "vacuumSensor";
+    m_vacuumSensor.setAltUnitCoef(0.001333); // torr to bar
     dataSource.setVacuumPointer(&m_vacuumSensor);
     dataSource.initSerialVacuum(parametersVacuum);
     // update vacuum values
@@ -368,17 +369,17 @@ void Grams::initSafeModule(){
 
 void Grams::initTimeStamp(){
     QVariantList initialTimeStamp;
-    if(!createConnection(initialTimeStamp)){
+    if(!GramStateDB::createConnection(initialTimeStamp)){
+        // online or offline mode
         return;
     }
-
     // current id check
     // current time check
     // int id;
     if(initialTimeStamp.isEmpty()){
         return;
     }
-
+    // unpredictable behavior
     int id = initialTimeStamp[0].toInt();
     QDateTime timeStamp = initialTimeStamp[1].toDateTime();
 
@@ -431,6 +432,7 @@ void Grams::guiValsUpdate(){
     m_pressureVals.g_prSK = prSK.getCurValue();
     m_pressureVals.g_tmSK = tmSK.getCurValue();
     m_pressureVals.g_tmS = tmS.getCurValue();
+    m_pressureVals.g_prARV = m_vacuumSensor.getAltUnit(); // bar
     emit guiValsPresChanged();
     m_tempVals.g_tmX = tmX.getCurValue();
     m_tempVals.g_tmY = tmY.getCurValue();
@@ -441,11 +443,6 @@ void Grams::guiValsUpdate(){
     m_tempVals.g_tmRTube = tmRTube.getCurValue();
     m_tempVals.g_tmF = tmF.getCurValue();
     emit guiValsTempChanged();
-
-    // update storage volumes
-    // prSC1
-    // prSC2
-    // prSC3
     m_guiPresVirtual.g_prSQ = prSQ.getCurValue();
     m_guiPresVirtual.g_prRQ = prRQ.getCurValue();
     m_guiPresVirtual.g_prSC1 = prSC1.getCurValue();
@@ -480,7 +477,7 @@ void Grams::chamberSetUp(){
     m_chamber.setChamberVolume(chamber); // rewrite Volume object for chamber to use in quartile with other
     m_chamber.setCraneToChamber(26.1327 - 25.7941);
 
-    m_chamber.setStatusOpen(true); // might do it in quartile later
+    m_chamber.setStatusOpen(false); // might do it in quartile later
     // sync with vR5
     
     m_reactionQuartile.setChamber(chamber.name);
@@ -490,8 +487,9 @@ void Grams::chamberSetUp(){
 
 void Grams::setManualChamberValve(bool state){
     vR5.setState(state);
-    emit valveChanged();
     // chamber updater to bd and safestate
+    m_chamber.setStatusOpen(state);
+    emit valveChanged();
 }
 
 guiValsPres Grams::getGuiValsPres() const{

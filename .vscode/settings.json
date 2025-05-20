@@ -86,7 +86,8 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "qqmlapplicationengine": "cpp"
+        "qqmlapplicationengine": "cpp",
+        "qsqlerror": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

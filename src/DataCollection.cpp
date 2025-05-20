@@ -32,6 +32,15 @@ double DataCollection::getCurValue() const{
     return m_curValue;
 }
 
+void DataCollection::setAltUnitCoef(const double& coef){
+    m_altUnitA = coef;
+}
+
+double DataCollection::getAltUnit() const{
+    return m_altUnitA*m_curValue;
+}
+
+
 ControllerData::ControllerData(const QString &name, const double& A, const double& B) : DataCollection(name),
 lin_A(A), lin_B(B)
 {

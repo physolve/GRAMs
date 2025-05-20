@@ -28,7 +28,6 @@ Rectangle {
         // color: pressed ? "red" : "white"
         onClicked: lVacuum.playVacuum()
     }
-    property double testVal: 1e-3
     Rectangle {
         id: sliderPlacer1
         width: 120
@@ -46,7 +45,7 @@ Rectangle {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13         
-            value: (Math.log10(testVal)+7)/7
+            value: (Math.log10(Grams.guiPres.prARV)+7)/7
             maxValue: 1
             endAngle: 320
             tickCount: 9

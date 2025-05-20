@@ -1,12 +1,6 @@
-#pragma once
+#include "GramStateDB.h"
 
-#include <QMessageBox>
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QSqlRecord>
-
-static bool createConnection(QVariantList& initialTimeStamp)
+bool GramStateDB::createConnection(QVariantList& initialTimeStamp)
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
     db.setHostName("localhost"); // ?
@@ -34,13 +28,11 @@ static bool createConnection(QVariantList& initialTimeStamp)
         break; // one time?
     }
     initialTimeStamp = lastTimeStamp;
-    
     /*
     INSERT INTO gramstate (ts, prSQ, prRQ, prSC1, prSC2, prSC3, prSB, prSD1, prRE, prRD2, prRF)
     VALUES (current_timestamp,
     0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
     */
-
     /*
     SELECT *
     FROM gramstate
@@ -55,4 +47,26 @@ static bool createConnection(QVariantList& initialTimeStamp)
     // QSqlRecord rec = db.record(tableString.toLower());
     db.close();
     return true;
+}
+
+GramStateDB::GramStateDB(){
+
+}
+
+GramStateDB::~GramStateDB(){
+    if(gramState.isOpen()){
+        gramState.close();
+    }
+}
+
+bool GramStateDB::initDatabase(){
+    gramState = QSqlDatabase::addDatabase("QPSQL");
+    gramState.setHostName("localhost"); // ?
+    gramState.setDatabaseName("gramstate");
+    gramState.setUserName("gramapp");
+    gramState.setPassword("fast");
+    if (!gramState.open()) {
+        qDebug() << "Cannot open database";
+        return false;
+    }
 }
