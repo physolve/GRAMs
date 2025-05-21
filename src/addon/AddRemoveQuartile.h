@@ -37,4 +37,5 @@ private:
     QTimer* m_expUpdate;
     QuartileData* m_storageQuartilePressure;
     StorageQuartile* m_storageQuartile; // try more header files and just ask another
+    
 };

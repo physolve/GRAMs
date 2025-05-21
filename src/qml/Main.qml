@@ -146,8 +146,10 @@ ApplicationWindow {
                 currentIndex: barMneno.currentIndex
                 Lumber{
                     id: lumber
-                    onPickChamber: sideMenu.setChamberPickerMenu()
-                    onPlayVacuum: sideMenu.setPlayVacuumMenu()
+                    onPickChamber: sideMenu.setChamberPickerMenu();
+                    onPlaySample: sideMenu.setPlaySampleMenu();
+                    onPlayVacuum: sideMenu.setPlayVacuumMenu();
+                    onPlayInlet: sideMenu.setPlayInletMenu();
                 }
                 MnemoBase{
                     id: rectangle

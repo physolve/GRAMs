@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-// import QtQuick.Layouts
+import Grams.backendSourceSingleton 1.0
 import "content"
 
 Rectangle {
@@ -37,7 +37,7 @@ Rectangle {
         anchors.centerIn: parent
         CircularSlider {
             anchors.centerIn: parent
-            id: slider // pressure
+            id: slider1 // pressure
             diameter: 160
             progressColor: "#56BF66"
             minValue: 0
@@ -55,7 +55,9 @@ Rectangle {
             // height: 20
             color: "black"
             font.family: "Verdana"
-            text: `<p></p><p>${testVal.toFixed(3)} <i>бар</i></p><p>25 <i>°C</i></p>` // changing to exp function
+            property var myValue: (Grams.guiPres.prARV < 1e-2) ? 
+                    Grams.guiPres.prARV.toExponential(2) : Grams.guiPres.prARV.toFixed(3)
+            text: `<p></p><p>${myValue} <i>бар</i></p>` // changing to exp function
             anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: 15

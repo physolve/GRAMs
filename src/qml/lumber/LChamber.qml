@@ -8,6 +8,7 @@ Rectangle {
     border.color: "#79A6A4"
     anchors.fill: parent
     signal pickChamber()
+    signal setSample()
     Button{
         id: chamberPickBtn
         x: 5
@@ -26,39 +27,47 @@ Rectangle {
     //     font.pointSize: 14
     //     color: "white"
     // }
-    
-    Row{
-        x: 25
-        y: 170
-        spacing: 10
-        Text{
-            // width: parent.width
-            text: "" //Целевое
-            font.family: "Verdana"
-            horizontalAlignment: Text.AlignHCenter
-            anchors.verticalCenter: parent.verticalCenter
-            font.pointSize: 10
-            color: "white"
-        }
-        TextField{
-            // width: parent.width - 80
-            width: 75
-            height: 35
-            readOnly: true
-            text: "0"
-            font { family: 'Courier'; pointSize: 10; }
-            horizontalAlignment: TextInput.AlignHCenter
-            selectByMouse: true
-        }
-        Text{
-            // width: parent.width
-            text: ", бар"
-            font.family: "Verdana"
-            horizontalAlignment: Text.AlignHCenter
-            anchors.verticalCenter: parent.verticalCenter
-            font.pointSize: 10
-            color: "white"
-        }
+     Button{
+        id: samplePickBtn
+        x: 5
+        y: 150
+        width: parent.width-10
+        height: 50
+        text: "Образец и тигель"
+        onClicked: lChamber.setSample()
     }
+    // Row{
+    //     x: 25
+    //     y: 170
+    //     spacing: 10
+    //     Text{
+    //         // width: parent.width
+    //         text: "" //Целевое
+    //         font.family: "Verdana"
+    //         horizontalAlignment: Text.AlignHCenter
+    //         anchors.verticalCenter: parent.verticalCenter
+    //         font.pointSize: 10
+    //         color: "white"
+    //     }
+    //     TextField{
+    //         // width: parent.width - 80
+    //         width: 75
+    //         height: 35
+    //         readOnly: true
+    //         text: "0"
+    //         font { family: 'Courier'; pointSize: 10; }
+    //         horizontalAlignment: TextInput.AlignHCenter
+    //         selectByMouse: true
+    //     }
+    //     Text{
+    //         // width: parent.width
+    //         text: ", бар"
+    //         font.family: "Verdana"
+    //         horizontalAlignment: Text.AlignHCenter
+    //         anchors.verticalCenter: parent.verticalCenter
+    //         font.pointSize: 10
+    //         color: "white"
+    //     }
+    // }
     
 }

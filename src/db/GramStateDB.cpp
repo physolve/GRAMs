@@ -1,4 +1,5 @@
 #include "GramStateDB.h"
+#include <QDateTime>
 
 bool GramStateDB::createConnection(QVariantList& initialTimeStamp)
 {
@@ -13,7 +14,7 @@ bool GramStateDB::createConnection(QVariantList& initialTimeStamp)
         return false;
     }
 
-    QString tableString("gramstate");
+    // QString tableString("gramstate");
     QVariantList lastTimeStamp;
     QSqlQuery query;
     bool responseOK = query.exec("SELECT * FROM gramstate ORDER BY ts DESC LIMIT 1");
@@ -54,19 +55,46 @@ GramStateDB::GramStateDB(){
 }
 
 GramStateDB::~GramStateDB(){
-    if(gramState.isOpen()){
-        gramState.close();
+    if(m_gramState.isOpen()){
+        m_gramState.close();
     }
 }
 
 bool GramStateDB::initDatabase(){
-    gramState = QSqlDatabase::addDatabase("QPSQL");
-    gramState.setHostName("localhost"); // ?
-    gramState.setDatabaseName("gramstate");
-    gramState.setUserName("gramapp");
-    gramState.setPassword("fast");
-    if (!gramState.open()) {
+    m_gramState = QSqlDatabase::database();
+    m_gramState.setHostName("localhost"); // ?
+    m_gramState.setDatabaseName("gramstate");
+    m_gramState.setUserName("gramapp");
+    m_gramState.setPassword("fast");
+    if (!m_gramState.open()) {
         qDebug() << "Cannot open database";
         return false;
     }
+    // m_query = QSqlQuery(m_gramState);
+    return true;
+}
+
+// bool GramStateDB::queryTimeStamp(){
+//     if(!m_gramState.isOpen()){
+//         return false;
+//     }
+//     return true;
+//     return m_query.prepare("INSERT INTO gramstate (ts, prSQ, prRQ, prSC1, prSC2, prSC3, prSB, prSD1, prRE, prRD2, prRF) "
+//                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+//                     //"VALUES (:ts, :prSQ, :prRQ, :prSC1, :prSC2, :prSC3, :prSB, :prSD1, :prRE, :prRD2, :prRF)");
+// }
+
+bool GramStateDB::writeTimeStamp(const QVector<double> &values){
+    if(!m_gramState.isOpen()){
+        return false;
+    }
+    QSqlQuery query;
+    query.prepare("INSERT INTO gramstate (ts, prSQ, prRQ, prSC1, prSC2, prSC3, prSB, prSD1, prRE, prRD2, prRF) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    // qDebug() << QDateTime::currentDateTime();
+    query.addBindValue(QDateTime::currentDateTime().toString()); // utc?
+    for(const double& value: values){
+        query.addBindValue(value);
+    }
+    return query.exec();
 }

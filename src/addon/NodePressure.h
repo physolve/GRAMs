@@ -53,5 +53,6 @@ private:
 namespace CalcMoles{
     double getMolesSum(const QList<VolumeObject>& volumes);
     double getPressureFromMoles(const double& moles, const QList<VolumeObject> &volumeObjects);
+    double getMolesFromPressureChange(const double& pressureChange, const QList<VolumeObject> &volumeObjects);
 };
 

@@ -13,8 +13,9 @@ public:
     virtual ~GramStateDB();
     static bool createConnection(QVariantList& initialTimeStamp);
     bool initDatabase();
-    bool setTimeStamp();
+    // bool queryTimeStamp();
+    bool writeTimeStamp(const QList<double> &values);
 private:
-    QSqlDatabase gramState;
-
+    QSqlDatabase m_gramState;
+    // QSqlQuery m_query;
 };

@@ -16,6 +16,14 @@ Item{
         barMainRepeater.model = ["Откачка"]
         layoutMain.currentIndex = 2
     }
+    function setPlaySampleMenu(){
+        barMainRepeater.model = ["Образец и тигель"]
+        layoutMain.currentIndex = 3
+    }
+    function setPlayInletMenu(){
+        barMainRepeater.model = ["Напуск газа"]
+        layoutMain.currentIndex = 4
+    }
     TabBar {
         id: barMain
         width: parent.width
@@ -71,6 +79,14 @@ Item{
             id: pVacuum
             Layout.fillWidth: true
             // Layout.fillHeight: true
+        }
+        PSample{
+            id: pSample
+            Layout.fillWidth: true
+        }
+        PInlet{
+            id: pInlet
+            Layout.fillWidth: true
         }
     } 
 }

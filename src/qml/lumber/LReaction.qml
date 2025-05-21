@@ -8,7 +8,16 @@ Item {
     // color: "#2B2B2B"
     anchors.fill: parent
     // valve states
-    // property double testVal: 1
+    Label {
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: 10
+        color: "White"
+        font.family: "Verdana"
+        text: "Реакционный резервуар" // changing to exp function
+        // anchors.centerIn: parent
+        horizontalAlignment: Text.AlignHCenter
+        font.pointSize: 15
+    }
     Rectangle {
         id: sliderPlacer
         width: 120

@@ -44,6 +44,8 @@ public:
     Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
     Q_INVOKABLE void setReactionAdjustParameters(QVariantMap parameters);
     Q_INVOKABLE void startLeakageMeasure(bool measure);
+
+    changeToTarget getChangeToTarget(const double& targetPressure);
 private slots:
     void expEvent();
 private:
@@ -81,9 +83,7 @@ private:
     int s_temperature_chamber;
     
     // suppose that chamber not apply to Volume List
-
     // but has it's own Volume object to update
-    
     Chamber* m_chamber;
     bool m_chamber_connected;
 

@@ -23,6 +23,7 @@
 #include "db/GramStateDB.h"
 #include "TimeStamp.h"
 #include "addon/TestField.h"
+#include "playpath/PlayPressure.h"
 
 struct guiValsPres{ // sample
     Q_GADGET
@@ -102,6 +103,7 @@ public:
 
     Q_INVOKABLE void chamberSetUp();
     Q_INVOKABLE void refreshTestField();
+    Q_INVOKABLE void testPlayPressure();
 signals:
     void valveChanged();
     void guiValsPresChanged();
@@ -110,7 +112,7 @@ signals:
 
 private slots:
     void softEvent();
-
+    void beforeQuitting();
 private:
     void initDigitalData();
     void initAnalogData();
@@ -125,6 +127,10 @@ private:
     
     void initTimeStamp();
     void initTestField();
+    void initDatabase();
+    void saveTimeStamp();
+
+    void initPlayPressure();
     
     void guiValsUpdate();
     void valveChangeUpdater(const QString& valveName);
@@ -264,8 +270,11 @@ private:
 
     SecondLineQuartile m_secondLineQuartile; 
 
+    GramStateDB m_gramStateDB;
     TimeStamp m_timeStamp;
     TestField m_testField;
+    PlayPressure m_playPressure;
+
 
     QElapsedTimer m_benchmarkTime;
 };

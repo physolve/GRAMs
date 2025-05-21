@@ -119,4 +119,14 @@ namespace CalcMoles{
         // chamber temperature? gradient
         return moles*Constants::gas_constant*temp*10/volume; // bar, real
     }
+
+    double getMolesFromPressureChange(const double& pressureChange, const QList<VolumeObject> &volumeObjects) {
+        double volume = 0;
+        for(const auto& object : volumeObjects){
+            volume+=object.volume;
+        }
+        const double& temp = volumeObjects[0].temperature + Constants::temperature_std_K;
+        // chamber temperature? gradient
+        return pressureChange*volume/(Constants::gas_constant*temp*10); // moles
+    }
 };

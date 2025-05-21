@@ -49,6 +49,8 @@
         <file>qml/measure/ChamberChoose.qml</file>
         <file>qml/measure/TestField.qml</file>
         <file>qml/measure/PVacuum.qml</file>
+        <file>qml/measure/PSample.qml</file>
+        <file>qml/measure/PInlet.qml</file>
         <file>qml/SideMenu.qml</file>
     </qresource>
 </RCC>

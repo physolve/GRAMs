@@ -21,6 +21,8 @@ public:
     void updateVolumeObjects();
     void updateMoles();
     QStringList getUsedVolumes() const;
+    double getTargetFromMolesChange(const double& molesChange);
+    changeToTarget getChangeToTarget(const double& targetPressure);
 private:
     // additional volumes not objects
     QVector<DataCollection*> cVolumePressure;

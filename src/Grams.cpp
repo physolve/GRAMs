@@ -35,10 +35,12 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
 
     initTimeStamp();
     initTestField();
+    initDatabase();
+    initPlayPressure();
 
     initGUI();
     initSafeModule();
-
+    connect(this, &Grams::aboutToQuit, this, &Grams::beforeQuitting);
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
     softTimer->setInterval(500);
     if(initSource.isInitializeOk()){ // dataSource getGRAMsIntegrity ?
@@ -254,13 +256,16 @@ void Grams::setValveState(bool state, int index){
         if(!dataSource.setValveStates())
             valve->setState(originalState);
     emit valveChanged();
-    valveChangeUpdater(valve->m_name);
+    valveChangeUpdater(valve->m_name); // supply
 }
 
 void Grams::valveChangeUpdater(const QString& valveName){
     // from profile supply
     if(initSource.m_addRemoveQuar.m_gasSupplyValves.contains(valveName)){
         m_addRemoveQuartile.updatePortState();
+    }
+    if(initSource.m_storageQuar.m_gasStoreValves.contains(valveName)){
+        saveTimeStamp();
     }
 }
 
@@ -409,6 +414,7 @@ void Grams::initTimeStamp(){
     prRF.addPoint(initialTimeStamp[11].toDouble());
 
     guiValsUpdate();
+    // check to real
 }
 
 void Grams::initTestField(){
@@ -421,6 +427,46 @@ void Grams::refreshTestField(){
     // m_testField.setStorageNodes(m_storageQuartile.getPressureNodes());
     // m_testField.setReactionNodes(m_reactionQuartile.getPressureNodes());
     m_testField.updateTestField(m_storageQuartile.getPressureNodes(), m_storageQuartile.getUsedVolumes()); // storage nodes +m_reactionQuartile.getUsedVolumes()
+}
+
+void Grams::initDatabase(){
+    // user info
+    if(m_gramStateDB.initDatabase()){
+        // do something else
+        
+        // if(m_gramStateDB.queryTimeStamp())
+        //     qDebug() << "Query reserved"; // ok?
+        // else
+        //     qDebug() << "Query not reserved";
+    }
+}
+
+void Grams::saveTimeStamp(){
+    QList<double> timeStampValues;
+    timeStampValues << prSQ.getCurValue();
+    timeStampValues << prRQ.getCurValue();
+    timeStampValues << prSC1.getCurValue();
+    timeStampValues << prSC2.getCurValue();
+    timeStampValues << prSC3.getCurValue();
+    timeStampValues << prSB.getCurValue();
+    timeStampValues << prSD1.getCurValue();
+    timeStampValues << prRE.getCurValue();
+    timeStampValues << prRD2Atm.getCurValue();
+    timeStampValues << prRF.getCurValue();
+    if(m_gramStateDB.writeTimeStamp(timeStampValues))
+        qDebug() << "Time Stamp has been written";
+    else 
+        qDebug() << "Time Stamp has not been written";
+}
+
+void Grams::initPlayPressure(){
+    m_playPressure.setARQ(&m_addRemoveQuartile);
+    m_playPressure.setSQ(&m_storageQuartile);
+    m_playPressure.setRQ(&m_reactionQuartile);
+}
+
+void Grams::testPlayPressure(){
+    m_playPressure.play();
 }
 
 void Grams::guiValsUpdate(){
@@ -554,4 +600,12 @@ bool Grams::getVSL1State() const{
 }
 bool Grams::getVSL2State() const{
     return vSL2.getState();
+}
+
+void Grams::beforeQuitting(){
+    // quitting
+    bool autoSave = false;
+    if(autoSave){
+        saveTimeStamp();
+    }
 }

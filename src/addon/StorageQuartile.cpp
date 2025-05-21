@@ -113,3 +113,26 @@ void StorageQuartile::updateMoles(){
         moleSensor->addPoint(m_volumeObjects[moleSensor->m_name].getMoles());
     }
 }
+
+double StorageQuartile::getTargetFromMolesChange(const double& molesChange){
+    QList<VolumeObject> storageVolumes;
+    // not currently used, but will be used
+    for(const QString& name : getUsedVolumes()){
+        storageVolumes << getVolumeByName(name);
+    }
+    return CalcMoles::getPressureFromMoles(molesChange,storageVolumes);
+}
+
+changeToTarget StorageQuartile::getChangeToTarget(const double& targetPressure){
+    changeToTarget a;
+    a.targetPressure = targetPressure;
+    a.currentPressure = pressureStorageQuartile->getCurValue();
+    const double& pressureChange = a.targetPressure - a.currentPressure; 
+    QList<VolumeObject> storageVolumes;
+    // not currently used, but will be used
+    for(const QString& name : getUsedVolumes()){
+        storageVolumes << getVolumeByName(name);
+    }
+    a.molesChange = CalcMoles::getMolesFromPressureChange(pressureChange, storageVolumes);
+    return a;
+}

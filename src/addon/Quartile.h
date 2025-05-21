@@ -9,6 +9,13 @@
 #include "LightPlotItem.h"
 #include "../measure/Chamber.h"
 // Quartile object is used to store parameters from one of four volumes
+
+struct changeToTarget{
+    double currentPressure;
+    double targetPressure;
+    double molesChange;
+};
+
 class Quartile : public QObject
 {
     Q_OBJECT // ?

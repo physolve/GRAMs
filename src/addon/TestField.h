@@ -59,4 +59,5 @@ private:
     QMap<QString, VirtualVolume> map_guiCollapsed;
 
     QList<StateCopy> previousState;
+    
 };

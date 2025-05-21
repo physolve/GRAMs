@@ -1,25 +1,13 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
+// import Grams.dataSourceSingleton 1.0
 
-Rectangle {
-    id: lSupply
-    color: "#464646"
-    border.color: "#594E74"
-    anchors.fill: parent
-    signal playInlet()
-    Button{
-        id: supplyBtn
-        x: 25
-        y: 50
-        width: parent.width-50
-        height: 50
-        text: "Подача газа"
-        onClicked: lSupply.playInlet()
-    }
+Item {
+    id: root
+    // color: "#2B2B2B"
     Row{
         x: 25
-        y: 130
+        y: 170
         spacing: 10
         Text{
             // width: parent.width

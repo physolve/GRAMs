@@ -7,7 +7,9 @@ import "content"
 Item {
     id: lumber
     signal pickChamber()
+    signal playSample()
     signal playVacuum()
+    signal playInlet()
     Rectangle{
         id: mS
         x: 5
@@ -133,17 +135,17 @@ Item {
                 
             }
             ValveIndicator{
-                x: parent.width - 30
+                x: 0
                 anchors.verticalCenter: parent.bottom
                 state: Grams.vR1State || Grams.vR2State || Grams.vR3State
             }
             ValveIndicator{
-                x: 0
+                x: parent.width/2-15
                 anchors.verticalCenter: parent.bottom
-                state: Grams.vR1State || Grams.vR3State
+                state: Grams.vR1State || Grams.vR3State                
             }
             ValveIndicator{
-                x: parent.width/2-15
+                x: parent.width - 30
                 anchors.verticalCenter: parent.bottom
                 state: Grams.vR3State
             }
@@ -158,6 +160,7 @@ Item {
             LChamber{
                 id: lChamber
                 onPickChamber: lumber.pickChamber()
+                onSetSample: lumber.playSample()
             }
             Rectangle{
                 visible: true
@@ -205,6 +208,7 @@ Item {
             color:"transparent"; border.color: "#464646";
             LSupply{
                 anchors.centerIn: parent
+                onPlayInlet: lumber.playInlet()
             }
         }
         Rectangle{

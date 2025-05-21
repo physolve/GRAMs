@@ -245,6 +245,7 @@ Item {
             id: s_ARV
             x: 481
             y: 659
+            value: Grams.guiPres.prARV
         }
     }
 }

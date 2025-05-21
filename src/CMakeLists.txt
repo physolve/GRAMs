@@ -59,6 +59,14 @@ if(NOT DEFINED CPP_DB)
     file(GLOB CPP_DB ${CMAKE_CURRENT_SOURCE_DIR}/db/*.cpp)
 endif()
 
+if(NOT DEFINED HPP_PLAYPATH)
+    file(GLOB HPP_PLAYPATH ${CMAKE_CURRENT_SOURCE_DIR}/playpath/*.h)
+endif()
+
+if(NOT DEFINED CPP_PLAYPATH)
+    file(GLOB CPP_PLAYPATH ${CMAKE_CURRENT_SOURCE_DIR}/playpath/*.cpp)
+endif()
+
 if (LINUX)            
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libDAQ)
 endif (LINUX)
@@ -78,6 +86,7 @@ ${CPP_LIBS}
 ${CPP_ADDON}
 ${CPP_MEASURE}
 ${CPP_DB}
+${CPP_PLAYPATH}
 ${QML_RESOURCES})
 
 if (WIN32)
