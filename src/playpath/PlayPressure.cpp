@@ -31,7 +31,17 @@ void PlayPressure::play(){
     // Reaction currentPressure and molesChange to target pressure 
     // targetReaction.molesChange;
     // targetReaction. 
+
+    // Случай получения только одного запаса до chamberPressureTarget
+    // Начиная с целевого 
     const double& storagePressureTarget = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange);
+    // Какое количество запасных подач подать в storage чтобы хватило?
+    // Какое давление целевое с использованием C1?
+    const double& storagePressureTargetWithC1 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Small);
+    const double& storagePressureTargetWithC2 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Medium);
+    const double& storagePressureTargetWithC3 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Large);
+    // Еси добавить molesChange в банки будет по x дополнительный запас
+    // Попробуй: по 1 запас в B, С3, С2, С1 по очереди закрывая (C1, C2, C3)
     const auto& targetStorage = m_sQ->getChangeToTarget(storagePressureTarget);
     qDebug() << "Current B" << targetStorage.currentPressure;
     qDebug() << "Target B" << targetStorage.targetPressure;

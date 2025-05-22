@@ -114,25 +114,42 @@ void StorageQuartile::updateMoles(){
     }
 }
 
-double StorageQuartile::getTargetFromMolesChange(const double& molesChange){
+double StorageQuartile::getTargetFromMolesChange(const double& molesChange, addCVolume cVolume){
     QList<VolumeObject> storageVolumes;
     // not currently used, but will be used
-    for(const QString& name : getUsedVolumes()){
-        storageVolumes << getVolumeByName(name);
+    // for(const QString& name : getUsedVolumes()){
+    //     storageVolumes << getVolumeByName(name);
+    // }
+    storageVolumes << getVolumeByName(m_mainVolume);
+    // also D1 if will be used
+    switch(cVolume){
+        case addCVolume::Small: storageVolumes << getVolumeByName("C1"); break;
+        case addCVolume::Medium: storageVolumes << getVolumeByName("C2"); break;
+        case addCVolume::Large: storageVolumes << getVolumeByName("C3"); break;
+        default: break;
     }
     return CalcMoles::getPressureFromMoles(molesChange,storageVolumes);
 }
 
-changeToTarget StorageQuartile::getChangeToTarget(const double& targetPressure){
+changeToTarget StorageQuartile::getChangeToIntermediateTarget(const double& targetPressureR, addCVolume cVolume = addCVolume::None){
     changeToTarget a;
-    a.targetPressure = targetPressure;
+    a.targetPressure = targetPressureR;
     a.currentPressure = pressureStorageQuartile->getCurValue();
-    const double& pressureChange = a.targetPressure - a.currentPressure; 
     QList<VolumeObject> storageVolumes;
-    // not currently used, but will be used
-    for(const QString& name : getUsedVolumes()){
-        storageVolumes << getVolumeByName(name);
+    storageVolumes << getVolumeByName(m_mainVolume);
+    // also D1 if will be used
+    if(cVolume!=addCVolume::None){
+        NodePressure b;
+        b.setVolumeA(VirtualVolume(&getVolumeByName(m_mainVolume)));
+        switch(cVolume){
+            case addCVolume::Small: b.setVolumeB(VirtualVolume(&getVolumeByName("C1"))); storageVolumes << getVolumeByName("C1"); break;
+            case addCVolume::Medium: b.setVolumeB(VirtualVolume(&getVolumeByName("C2"))); storageVolumes << getVolumeByName("C2"); break;
+            case addCVolume::Large: b.setVolumeB(VirtualVolume(&getVolumeByName("C3"))); storageVolumes << getVolumeByName("C3"); break;
+            default: break;
+        }
+        a.currentPressure = b.getEquilibrium();
     }
+    const double& pressureChange = a.targetPressure - a.currentPressure; 
     a.molesChange = CalcMoles::getMolesFromPressureChange(pressureChange, storageVolumes);
     return a;
 }

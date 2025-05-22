@@ -2,6 +2,13 @@
 
 #include "Quartile.h"
 
+enum addCVolume{
+    None,
+    Small,
+    Medium,
+    Large
+};
+
 class StorageQuartile : public Quartile
 {
     Q_OBJECT
@@ -21,8 +28,10 @@ public:
     void updateVolumeObjects();
     void updateMoles();
     QStringList getUsedVolumes() const;
-    double getTargetFromMolesChange(const double& molesChange);
-    changeToTarget getChangeToTarget(const double& targetPressure);
+    double getTargetFromMolesChange(const double& molesChange, addCVolume cVolume = addCVolume::None);
+    changeToTarget getChangeToIntermediateTarget(const double& targetPressureR, addCVolume cVolume = addCVolume::None);
+    changeToTarget getChangeToTarget(const double& targetPressureS, const VirtualVolume& usedVolWithRTarget);
+    double getTargetCVolumeFromMolesChange(const double& molesChange, const VirtualVolume& sInRTarget);
 private:
     // additional volumes not objects
     QVector<DataCollection*> cVolumePressure;
