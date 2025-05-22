@@ -40,7 +40,7 @@ Rectangle {
     Column{
         x: 25
         y: 130
-        spacing: 25
+        spacing: 15
         Text{
             // width: parent.width
             text: "Давление в камере"
@@ -64,10 +64,110 @@ Rectangle {
     Column{
         x: 225
         y: 130
-        spacing: 25
+        spacing: 15
         Text{
             // width: parent.width
             text: "Давление в эталонном резервуаре"
+            font.family: "Verdana"
+            horizontalAlignment: Text.AlignHCenter
+            // anchors.verticalCenter: parent.verticalCenter
+            font.pointSize: 10
+            color: "white"
+        }
+        Row{
+            spacing: 10
+            Text{
+                text: "B  "
+                font.family: "Verdana"
+                horizontalAlignment: Text.AlignHCenter
+                // anchors.verticalCenter: parent.verticalCenter
+                font.pointSize: 10
+                color: "white"
+            }    
+            TextField{
+                // width: parent.width - 80
+                width: 75
+                height: 35
+                readOnly: true
+                // text: "?"
+                validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
+                placeholderText: "бар"
+                font { family: 'Courier'; pointSize: 10; }
+                horizontalAlignment: TextInput.AlignHCenter
+                selectByMouse: true
+            }
+            Text{
+                text: "C1"
+                font.family: "Verdana"
+                horizontalAlignment: Text.AlignHCenter
+                // anchors.verticalCenter: parent.verticalCenter
+                font.pointSize: 10
+                color: "white"
+            }    
+            TextField{
+                // width: parent.width - 80
+                width: 75
+                height: 35
+                readOnly: true
+                // text: "?"
+                validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
+                placeholderText: "бар"
+                font { family: 'Courier'; pointSize: 10; }
+                horizontalAlignment: TextInput.AlignHCenter
+                selectByMouse: true
+            }
+        }
+        Row{
+            spacing: 10
+            Text{
+                text: "C2"
+                font.family: "Verdana"
+                horizontalAlignment: Text.AlignHCenter
+                // anchors.verticalCenter: parent.verticalCenter
+                font.pointSize: 10
+                color: "white"
+            }    
+            TextField{
+                // width: parent.width - 80
+                width: 75
+                height: 35
+                readOnly: true
+                // text: "?"
+                validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
+                placeholderText: "бар"
+                font { family: 'Courier'; pointSize: 10; }
+                horizontalAlignment: TextInput.AlignHCenter
+                selectByMouse: true
+            }
+            Text{
+                text: "C3"
+                font.family: "Verdana"
+                horizontalAlignment: Text.AlignHCenter
+                // anchors.verticalCenter: parent.verticalCenter
+                font.pointSize: 10
+                color: "white"
+            }    
+            TextField{
+                // width: parent.width - 80
+                width: 75
+                height: 35
+                readOnly: true
+                // text: "?"
+                validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
+                placeholderText: "бар"
+                font { family: 'Courier'; pointSize: 10; }
+                horizontalAlignment: TextInput.AlignHCenter
+                selectByMouse: true
+            }
+        }
+    }
+    Column{
+        x: 500
+        y: 130
+        spacing: 15
+        Text{
+            // width: parent.width
+            text: "Количество накоплений"
             font.family: "Verdana"
             horizontalAlignment: Text.AlignHCenter
             // anchors.verticalCenter: parent.verticalCenter
@@ -79,9 +179,8 @@ Rectangle {
             width: 75
             height: 35
             readOnly: true
-            // text: "?"
-            validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
-            placeholderText: "бар"
+            placeholderText: "раз"
+            text: "?"
             font { family: 'Courier'; pointSize: 10; }
             horizontalAlignment: TextInput.AlignHCenter
             selectByMouse: true
@@ -89,8 +188,8 @@ Rectangle {
     }
     Column{
         x: 500
-        y: 130
-        spacing: 25
+        y: 225
+        spacing: 15
         Text{
             // width: parent.width
             text: "Количество напусков"

@@ -30,8 +30,8 @@ public:
     QStringList getUsedVolumes() const;
     double getTargetFromMolesChange(const double& molesChange, addCVolume cVolume = addCVolume::None);
     changeToTarget getChangeToIntermediateTarget(const double& targetPressureR, addCVolume cVolume = addCVolume::None);
-    changeToTarget getChangeToTarget(const double& targetPressureS, const VirtualVolume& usedVolWithRTarget);
-    double getTargetCVolumeFromMolesChange(const double& molesChange, const VirtualVolume& sInRTarget);
+    changeToTarget getChangeToTarget(const double& targetPressureS, const double& fromTargetPressureR, addCVolume cVolume = addCVolume::None);
+    double getTargetCVolumeFromMolesChange(const double& molesChange, addCVolume cVolume);
 private:
     // additional volumes not objects
     QVector<DataCollection*> cVolumePressure;

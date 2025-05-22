@@ -24,18 +24,10 @@ Item {
             height: 35
             readOnly: true
             text: "0"
+            placeholderText: "торр / бар"
             font { family: 'Courier'; pointSize: 10; }
             horizontalAlignment: TextInput.AlignHCenter
             selectByMouse: true
-        }
-        Text{
-            // width: parent.width
-            text: ", бар"
-            font.family: "Verdana"
-            horizontalAlignment: Text.AlignHCenter
-            anchors.verticalCenter: parent.verticalCenter
-            font.pointSize: 10
-            color: "white"
         }
     }
     Button{

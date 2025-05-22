@@ -21,6 +21,7 @@ void ReactionQuartile::calculateTotalVolume(){
 }
 
 void ReactionQuartile::setChamber(const QString& chamber){
+    m_chamber_connected = true;
     profileChamber = chamber; // m_chamber->getChamberName
 }
 
@@ -42,6 +43,8 @@ void ReactionQuartile::updateChamberToQuartile(){
 
 void ReactionQuartile::removeChamber(){
     // logic to remove from volume objects
+    m_chamber_connected = false;
+    // m_chamber = nullptr; ?
 }
 
 void ReactionQuartile::setQuartileDataPressure(QuartileData* quartileData){
@@ -329,10 +332,23 @@ void ReactionQuartile::fillGasLeakageData(){
     m_gasLeakage[m_currentGasLeakage].addMeasure(storage_pressure, reaction_pressure, reaction_temp);
 }
 
-changeToTarget ReactionQuartile::getChangeToTarget(const double& targetPressure){
+changeToTarget ReactionQuartile::getChangeToIntermediateTarget(const double& targetPressure){
     changeToTarget a;
     a.targetPressure = targetPressure;
     a.currentPressure = pressureReactionQuartile->getCurValue();
+    const double& pressureChange = a.targetPressure - a.currentPressure; 
+    QList<VolumeObject> reactionVolumes;
+    // not currently used, but will be used
+    for(const QString& name : getUsedVolumes()){
+        reactionVolumes << getVolumeByName(name);
+    }
+    a.molesChange = CalcMoles::getMolesFromPressureChange(pressureChange, reactionVolumes);
+    return a;
+}
+changeToTarget ReactionQuartile::getChangeToTarget(const double& targetPressure, const double& fromPressure){
+    changeToTarget a;
+    a.targetPressure = targetPressure;
+    a.currentPressure = fromPressure;
     const double& pressureChange = a.targetPressure - a.currentPressure; 
     QList<VolumeObject> reactionVolumes;
     // not currently used, but will be used

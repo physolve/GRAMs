@@ -23,7 +23,7 @@ Rectangle {
         spacing: 10
         Text{
             // width: parent.width
-            text: "Целевое"
+            text: "Целевое (индикатор)"
             font.family: "Verdana"
             horizontalAlignment: Text.AlignHCenter
             anchors.verticalCenter: parent.verticalCenter
@@ -35,19 +35,11 @@ Rectangle {
             width: 75
             height: 35
             readOnly: true
-            text: "0"
+            text: "0" 
+            placeholderText: "бар"
             font { family: 'Courier'; pointSize: 10; }
             horizontalAlignment: TextInput.AlignHCenter
             selectByMouse: true
-        }
-        Text{
-            // width: parent.width
-            text: ", бар"
-            font.family: "Verdana"
-            horizontalAlignment: Text.AlignHCenter
-            anchors.verticalCenter: parent.verticalCenter
-            font.pointSize: 10
-            color: "white"
         }
     }
 }

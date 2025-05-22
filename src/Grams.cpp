@@ -466,7 +466,9 @@ void Grams::initPlayPressure(){
 }
 
 void Grams::testPlayPressure(){
+    setManualChamberValve(true);
     m_playPressure.play();
+    m_playPressure.playWithAccuum();
 }
 
 void Grams::guiValsUpdate(){

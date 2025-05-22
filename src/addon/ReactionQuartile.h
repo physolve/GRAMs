@@ -45,7 +45,8 @@ public:
     Q_INVOKABLE void setReactionAdjustParameters(QVariantMap parameters);
     Q_INVOKABLE void startLeakageMeasure(bool measure);
 
-    changeToTarget getChangeToTarget(const double& targetPressure);
+    changeToTarget getChangeToIntermediateTarget(const double& targetPressure);
+    changeToTarget getChangeToTarget(const double& targetPressure, const double& fromPressure);
 private slots:
     void expEvent();
 private:
