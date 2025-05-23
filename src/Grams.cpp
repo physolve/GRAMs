@@ -299,6 +299,7 @@ void Grams::initGUI(){
     qmlRegisterSingletonInstance("Grams.chamberChooserSingleton", 1, 0, "ChamberChooser", &m_chamber);
     qmlRegisterSingletonInstance("Grams.timeStampSingleton", 1, 0, "TimeStamp", &m_timeStamp);
     qmlRegisterSingletonInstance("Grams.testFieldSingleton", 1, 0, "TestFieldBack", &m_testField);
+    qmlRegisterSingletonInstance("Grams.playPressureSingleton", 1, 0, "PlayPressure", &m_playPressure);
     m_engine.load(url);
 }
 

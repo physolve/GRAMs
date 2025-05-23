@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Grams.backendSourceSingleton 1.0
+import Grams.playPressureSingleton 1.0
 
 Rectangle {
     id: lTools
@@ -30,12 +31,10 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             font.pointSize: 12
         }
-    }
-    Button{
-        x: 25
-        y: 250
-        text: "Проверка play"
-        onClicked: Grams.testPlayPressure()
+        Button{
+            text: "Проверка play"
+            onClicked: Grams.testPlayPressure() //?
+        }
     }
     Column{
         x: 25
@@ -43,7 +42,7 @@ Rectangle {
         spacing: 15
         Text{
             // width: parent.width
-            text: "Давление в камере"
+            text: "Цель. давл. в камере"
             font.family: "Verdana"
             horizontalAlignment: Text.AlignHCenter
             // anchors.verticalCenter: parent.verticalCenter
@@ -54,20 +53,53 @@ Rectangle {
             // width: parent.width - 80
             width: 75
             height: 35
-            validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
+            validator: DoubleValidator { bottom: 0; top: lTools.topPressure}
+            text: PlayPressure.guiPresTarget.chPresTg.toFixed(3)
             placeholderText: "бар"
             font { family: 'Courier'; pointSize: 10; }
             horizontalAlignment: TextInput.AlignHCenter
             selectByMouse: true
+            onEditingFinished: PlayPressure.guiPresTarget.chPresTg = text
+            onAcceptableInputChanged:
+                color = acceptableInput ? "white" : "#D94625";
         }
     }
+    Column{
+        x: 25
+        y: 225
+        spacing: 15
+        Text{
+            // width: parent.width
+            text: "Нач. давл. в камере"
+            font.family: "Verdana"
+            horizontalAlignment: Text.AlignHCenter
+            // anchors.verticalCenter: parent.verticalCenter
+            font.pointSize: 10
+            color: "white"
+        }
+        TextField{
+            // width: parent.width - 80
+            width: 75
+            height: 35
+            validator: DoubleValidator { bottom: 0; top: lTools.topPressure}
+            text: PlayPressure.guiPresTarget.chPresInit.toFixed(3)
+            placeholderText: "бар"
+            font { family: 'Courier'; pointSize: 10; }
+            horizontalAlignment: TextInput.AlignHCenter
+            selectByMouse: true
+            onEditingFinished: PlayPressure.guiPresTarget.chPresInit = text
+            onAcceptableInputChanged:
+                    color = acceptableInput ? "white" : "#D94625";
+        }
+    }
+    // начальное давление в камере
     Column{
         x: 225
         y: 130
         spacing: 15
         Text{
             // width: parent.width
-            text: "Давление в эталонном резервуаре"
+            text: "Давл. в эталонном резервуаре"
             font.family: "Verdana"
             horizontalAlignment: Text.AlignHCenter
             // anchors.verticalCenter: parent.verticalCenter
@@ -89,12 +121,14 @@ Rectangle {
                 width: 75
                 height: 35
                 readOnly: true
-                // text: "?"
-                validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
+                text: PlayPressure.guiPresTarget.stPresTg.toFixed(3)
+                validator: DoubleValidator { bottom: 0; top: lTools.topPressure}
                 placeholderText: "бар"
                 font { family: 'Courier'; pointSize: 10; }
                 horizontalAlignment: TextInput.AlignHCenter
                 selectByMouse: true
+                onAcceptableInputChanged:
+                    color = acceptableInput ? "white" : "#D94625";
             }
             Text{
                 text: "C1"
@@ -109,12 +143,14 @@ Rectangle {
                 width: 75
                 height: 35
                 readOnly: true
-                // text: "?"
-                validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
+                text: PlayPressure.guiPresTarget.c1PresTg.toFixed(3)
+                validator: DoubleValidator { bottom: 0; top: lTools.topPressure}
                 placeholderText: "бар"
                 font { family: 'Courier'; pointSize: 10; }
                 horizontalAlignment: TextInput.AlignHCenter
                 selectByMouse: true
+                onAcceptableInputChanged:
+                    color = acceptableInput ? "white" : "#D94625";
             }
         }
         Row{
@@ -132,12 +168,14 @@ Rectangle {
                 width: 75
                 height: 35
                 readOnly: true
-                // text: "?"
-                validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
+                text: PlayPressure.guiPresTarget.c2PresTg.toFixed(3)
+                validator: DoubleValidator { bottom: 0; top: lTools.topPressure}
                 placeholderText: "бар"
                 font { family: 'Courier'; pointSize: 10; }
                 horizontalAlignment: TextInput.AlignHCenter
                 selectByMouse: true
+                onAcceptableInputChanged:
+                    color = acceptableInput ? "white" : "#D94625";
             }
             Text{
                 text: "C3"
@@ -152,12 +190,14 @@ Rectangle {
                 width: 75
                 height: 35
                 readOnly: true
-                // text: "?"
-                validator: DoubleValidator { bottom: 1e-6; top: lTools.topPressure}
+                text: PlayPressure.guiPresTarget.c3PresTg.toFixed(3)
+                validator: DoubleValidator { bottom: 0; top: lTools.topPressure}
                 placeholderText: "бар"
                 font { family: 'Courier'; pointSize: 10; }
                 horizontalAlignment: TextInput.AlignHCenter
                 selectByMouse: true
+                onAcceptableInputChanged:
+                    color = acceptableInput ? "white" : "#D94625";
             }
         }
     }
@@ -167,10 +207,9 @@ Rectangle {
         spacing: 15
         Text{
             // width: parent.width
-            text: "Количество накоплений"
+            text: "Количество подач"
             font.family: "Verdana"
             horizontalAlignment: Text.AlignHCenter
-            // anchors.verticalCenter: parent.verticalCenter
             font.pointSize: 10
             color: "white"
         }
@@ -178,12 +217,13 @@ Rectangle {
             // width: parent.width - 80
             width: 75
             height: 35
-            readOnly: true
+            // readOnly: true
             placeholderText: "раз"
-            text: "?"
+            text: PlayPressure.guiPresTarget.nAccum
             font { family: 'Courier'; pointSize: 10; }
             horizontalAlignment: TextInput.AlignHCenter
             selectByMouse: true
+            onEditingFinished: PlayPressure.guiPresTarget.nAccum = text
         }
     }
     Column{
@@ -205,7 +245,7 @@ Rectangle {
             height: 35
             readOnly: true
             placeholderText: "раз"
-            text: "?"
+            text: PlayPressure.guiPresTarget.supplyCount
             font { family: 'Courier'; pointSize: 10; }
             horizontalAlignment: TextInput.AlignHCenter
             selectByMouse: true
