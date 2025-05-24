@@ -75,6 +75,7 @@ void PlayPressure::play(){
 }
 
 void PlayPressure::playWithAccuum(){
+    m_guiPresTarget.m_storagePressureTarget = 0;
     m_guiPresTarget.m_c1PressureTarget = 0;
     m_guiPresTarget.m_c2PressureTarget = 0;
     m_guiPresTarget.m_c3PressureTarget = 0;
@@ -88,93 +89,146 @@ void PlayPressure::playWithAccuum(){
     // Случай получения только n запасов до chamberPressureTarget
     // m_guiPresTarget.m_nAccum = 5.1;
     // Чтобы получить 3 всего только из B подачи газа нужно 
-    
+
     const double& storagePressureTarget = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange);
+    const double& storagePressureTargetWithC1 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Small);
+    const double& storagePressureTargetWithC2 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Medium);
+    const double& storagePressureTargetWithC3 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Large);
+
     const double& supplyMax = 50; // from profile 
     // Если целевое давление больше, чем supplyMax, то сначала распространяй по банкам
     // Если с максимальной банкой больше, чем supplyMax пробуй несколько банок
     // Иначе, определить как в n подач  
     // Выбираем одну или никакую
     // Условие меньший объем и до supplyMax
-    const auto& targetStorage = m_sQ->getChangeToTarget(storagePressureTarget, chamberPressureTarget);
-    
+
+    // const auto& targetStorage = m_sQ->getChangeToTarget(storagePressureTarget, chamberPressureTarget);
     // const auto& targetStorageWithSmall = m_sQ->getChangeToTarget(storagePressureTargetWithC1, chamberPressureTarget, addCVolume::Small);
     // const auto& targetStorageWithMedium = m_sQ->getChangeToTarget(storagePressureTargetWithC2, chamberPressureTarget, addCVolume::Medium);
     // const auto& targetStorageWithLarge = m_sQ->getChangeToTarget(storagePressureTargetWithC3, chamberPressureTarget, addCVolume::Large);
 
-    // Накапливай в по очереди в каждый, когда n > 1, пока < supplyMax
     if(m_guiPresTarget.m_nAccum > 1.1){
         double nAccumLeft = m_guiPresTarget.m_nAccum;
         double nAccumB = 0;
         double nAccumC1 = 0;
         double nAccumC2 = 0;
         double nAccumC3 = 0;
-        int i = 0;
-        while(nAccumLeft>1){
-            nAccumLeft--;
-            switch(i){
-                case 0: nAccumB++; break; // проверяй на возможность превышения
-                case 1: nAccumC1++; break;
-                case 2: nAccumC2++; break;
-                case 3: nAccumC3++; break; 
+        
+        double change = 1;
+
+        double storagePressureTargetWithAccum = 0;
+        double storagePressureTargetC1WithAccum = 0;
+        double storagePressureTargetC2WithAccum = 0;
+        double storagePressureTargetC3WithAccum = 0;
+
+        while(nAccumLeft>0){
+            if(nAccumLeft<2){
+                change = nAccumLeft;
             }
-            i++;
-            if(i==4){
-                i=0;
+            storagePressureTargetWithAccum = chamberPressureTarget + m_sQ->getTargetFromMolesChange((nAccumB+change)*targetReaction.molesChange);
+            if(storagePressureTargetWithAccum <= supplyMax){
+                nAccumB+=change;
+                nAccumLeft-=change;
+                m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithAccum;
+                continue;
             }
-        }
-        nAccumB+=nAccumLeft;
-        // const auto& molesChangeWithAccum = m_guiPresTarget.m_nAccum*targetReaction.molesChange;
-        const double& storagePressureTargetWithAccum = chamberPressureTarget + m_sQ->getTargetFromMolesChange(nAccumB*targetReaction.molesChange);
-        m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithAccum;
-        // по очереди разделяй m_nAccum
-        if(nAccumC1>0){
-            const double& storagePressureTargetWithC1 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(nAccumC1*targetReaction.molesChange, addCVolume::Small);
-            const auto& targetStorageWithSmall = m_sQ->getChangeToTarget(storagePressureTargetWithC1, chamberPressureTarget, addCVolume::Small);
-            m_guiPresTarget.m_c1PressureTarget = chamberPressureTarget + m_sQ->getTargetCVolumeFromMolesChange(targetStorageWithSmall.molesChange, addCVolume::Small);
-        }
-        if(nAccumC2>0){
-            const double& storagePressureTargetWithC2 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(nAccumC2*targetReaction.molesChange, addCVolume::Medium);
-            const auto& targetStorageWithMedium = m_sQ->getChangeToTarget(storagePressureTargetWithC2, chamberPressureTarget, addCVolume::Medium);
-            m_guiPresTarget.m_c2PressureTarget = chamberPressureTarget + m_sQ->getTargetCVolumeFromMolesChange(targetStorageWithMedium.molesChange, addCVolume::Medium);    
-        }
-        if(nAccumC3>0){
-            const double& storagePressureTargetWithC3 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(nAccumC3*targetReaction.molesChange, addCVolume::Large);
-            const auto& targetStorageWithLarge = m_sQ->getChangeToTarget(storagePressureTargetWithC3, chamberPressureTarget, addCVolume::Large);
-            m_guiPresTarget.m_c3PressureTarget = chamberPressureTarget + m_sQ->getTargetCVolumeFromMolesChange(targetStorageWithLarge.molesChange, addCVolume::Large);
-        }
-        // количество напусков
-        m_guiPresTarget.m_supplyCount = (int)(m_guiPresTarget.m_storagePressureTarget/supplyMax)+1;
-    }
-    else{
-        if(storagePressureTarget > supplyMax){
-            const double& storagePressureTargetWithC1 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Small);
-            if(storagePressureTargetWithC1 > supplyMax){
-                const double& storagePressureTargetWithC2 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Medium);
-                if(storagePressureTargetWithC2 > supplyMax){
-                    const double& storagePressureTargetWithC3 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Large);
-                    if(storagePressureTargetWithC3 > supplyMax){
-                        //impossible to get for one supply
-                        m_guiPresTarget.m_storagePressureTarget = supplyMax;
-                        m_guiPresTarget.m_c3PressureTarget = supplyMax;
-                    }
-                    else{
-                        m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithC3;
-                        m_guiPresTarget.m_c3PressureTarget = storagePressureTargetWithC3;
-                    }
-                }
-                else{
-                    m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithC2;
-                    m_guiPresTarget.m_c2PressureTarget = storagePressureTargetWithC2;
-                }
+
+            if(nAccumB==0){
+                storagePressureTargetC1WithAccum = chamberPressureTarget + m_sQ->getTargetFromMolesChange((nAccumC1+change)*targetReaction.molesChange, addCVolume::Small);
             }
             else{
-                m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithC1;
-                m_guiPresTarget.m_c1PressureTarget = storagePressureTargetWithC1;
+                storagePressureTargetC1WithAccum = chamberPressureTarget + m_sQ->getTargetFromMolesChange((nAccumC1+change)*targetReaction.molesChange, addCVolume::Small);
+                const auto& targetStorageWithSmall = m_sQ->getChangeToTarget(storagePressureTargetC1WithAccum, chamberPressureTarget, addCVolume::Small);
+                storagePressureTargetC1WithAccum = chamberPressureTarget + m_sQ->getTargetCVolumeFromMolesChange(targetStorageWithSmall.molesChange, addCVolume::Small);
+            }
+            if(storagePressureTargetC1WithAccum <= supplyMax){
+                nAccumC1+=change;
+                nAccumLeft-=change;
+                m_guiPresTarget.m_c1PressureTarget = storagePressureTargetC1WithAccum;
+                continue;
+            }
+
+            if(nAccumB==0 && nAccumC1==0){
+                storagePressureTargetC2WithAccum = chamberPressureTarget + m_sQ->getTargetFromMolesChange((nAccumC2+change)*targetReaction.molesChange, addCVolume::Medium);
+            }
+            else{
+                storagePressureTargetC2WithAccum = chamberPressureTarget + m_sQ->getTargetFromMolesChange((nAccumC2+change)*targetReaction.molesChange, addCVolume::Medium);
+                const auto& targetStorageWithMedium = m_sQ->getChangeToTarget(storagePressureTargetC2WithAccum, chamberPressureTarget, addCVolume::Medium);
+                storagePressureTargetC2WithAccum = chamberPressureTarget + m_sQ->getTargetCVolumeFromMolesChange(targetStorageWithMedium.molesChange, addCVolume::Medium);
+            }
+            if(storagePressureTargetC2WithAccum <= supplyMax){
+                nAccumC2+=change;
+                nAccumLeft-=change;
+                m_guiPresTarget.m_c2PressureTarget = storagePressureTargetC2WithAccum;
+                continue;           
+            }
+
+            if(nAccumB==0 && nAccumC1==0 && nAccumC2==0){
+                storagePressureTargetC3WithAccum = chamberPressureTarget + m_sQ->getTargetFromMolesChange((nAccumC3+change)*targetReaction.molesChange, addCVolume::Large);
+            }
+            else{
+                storagePressureTargetC3WithAccum = chamberPressureTarget + m_sQ->getTargetFromMolesChange((nAccumC3+change)*targetReaction.molesChange, addCVolume::Large);
+                const auto& targetStorageWithLarge = m_sQ->getChangeToTarget(storagePressureTargetC3WithAccum, chamberPressureTarget, addCVolume::Large);
+                storagePressureTargetC3WithAccum = chamberPressureTarget + m_sQ->getTargetCVolumeFromMolesChange(targetStorageWithLarge.molesChange, addCVolume::Large);
+            }
+            if(storagePressureTargetC3WithAccum <= supplyMax){
+                nAccumC3+=change;
+                nAccumLeft-=change;
+                m_guiPresTarget.m_c3PressureTarget = storagePressureTargetC3WithAccum;
+                continue;    
+            }
+            else{
+                const auto& supplyMaxEnd = m_sQ->getChangeToTarget(supplyMax, chamberPressureTarget, addCVolume::Large);
+                const auto& nAccumByMaxSuppply = supplyMaxEnd.molesChange/targetReaction.molesChange; 
+                nAccumLeft+= nAccumC3;
+                nAccumLeft-= nAccumByMaxSuppply;
+                nAccumC3 = nAccumByMaxSuppply;
+                m_guiPresTarget.m_c3PressureTarget = supplyMax;
+                break;
             } 
         }
+        if(nAccumB==0 && nAccumC1==0 && nAccumC2==0){
+            m_guiPresTarget.m_storagePressureTarget = m_guiPresTarget.m_c3PressureTarget;
+        }
+        else if(nAccumB==0 && nAccumC1==0){
+            m_guiPresTarget.m_storagePressureTarget = m_guiPresTarget.m_c2PressureTarget;
+        }
+        else if(nAccumB==0){
+            m_guiPresTarget.m_storagePressureTarget = m_guiPresTarget.m_c1PressureTarget;
+        }
+        // количество напусков
+        if(nAccumLeft>0){
+            qDebug() << m_guiPresTarget.m_nAccum*targetReaction.molesChange << " нужно";
+            qDebug() << nAccumB*targetReaction.molesChange << " в B макс";
+            qDebug() << nAccumC1*targetReaction.molesChange << " в C1 макс";
+            qDebug() << nAccumC2*targetReaction.molesChange << " в C2 макс";
+            qDebug() << nAccumC3*targetReaction.molesChange << " в C3 макс";
+            m_guiPresTarget.m_supplyCount = (int)(m_guiPresTarget.m_nAccum/(nAccumB+nAccumC1+nAccumC2+nAccumC3))+1;
+            qDebug() << m_guiPresTarget.m_supplyCount << " напусков всего нужно";
+        }
         else{
+            m_guiPresTarget.m_supplyCount = 1;
+        }
+    }
+    else{
+        if(storagePressureTarget <= supplyMax){
             m_guiPresTarget.m_storagePressureTarget = storagePressureTarget;
+        }
+        else if(storagePressureTargetWithC1 <= supplyMax){
+            m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithC1;
+            m_guiPresTarget.m_c1PressureTarget = storagePressureTargetWithC1;
+        }
+        else if(storagePressureTargetWithC2 <= supplyMax){
+            m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithC2;
+            m_guiPresTarget.m_c2PressureTarget = storagePressureTargetWithC2;
+        }
+        else if(storagePressureTargetWithC3 <= supplyMax){
+            m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithC3;
+            m_guiPresTarget.m_c3PressureTarget = storagePressureTargetWithC3;
+        }
+        else{
+            m_guiPresTarget.m_storagePressureTarget = supplyMax;
+            m_guiPresTarget.m_c3PressureTarget = supplyMax;
         }
     }
     emit guiPresTargetChanged();
