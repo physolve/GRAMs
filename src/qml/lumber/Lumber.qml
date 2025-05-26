@@ -10,6 +10,7 @@ Item {
     signal playSample()
     signal playVacuum()
     signal playInlet()
+    signal expSupply()
     Rectangle{
         id: mS
         x: 5
@@ -328,8 +329,17 @@ Item {
         height: 330
         width: parent.width/2
         color:"transparent"; border.color: "#464646";
-        LTools{
-            anchors.centerIn: parent
+        Rectangle{
+            id: expTool
+            x: 5
+            y: 5
+            width: parent.width - 10
+            height: parent.height - 10 
+            color:"transparent"; border.color: "#464646";
+            LTools{
+                anchors.centerIn: parent
+                onOpenESupply: lumber.expSupply()
+            }   
         }
     }
 }

@@ -24,6 +24,10 @@ Item{
         barMainRepeater.model = ["Напуск газа"]
         layoutMain.currentIndex = 4
     }
+    function setExpSupplyMenu(){
+        barMainRepeater.model = ["Автоматическая подача газа"]
+        layoutMain.currentIndex = 5
+    }
     TabBar {
         id: barMain
         width: parent.width
@@ -86,6 +90,10 @@ Item{
         }
         PInlet{
             id: pInlet
+            Layout.fillWidth: true
+        }
+        ESupply{
+            id: eSupply
             Layout.fillWidth: true
         }
     } 

@@ -103,7 +103,6 @@ public:
 
     Q_INVOKABLE void chamberSetUp();
     Q_INVOKABLE void refreshTestField();
-    Q_INVOKABLE void testPlayPressure();
 signals:
     void valveChanged();
     void guiValsPresChanged();

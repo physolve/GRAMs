@@ -42,6 +42,7 @@ public:
     void playWithAccuum();
     guiPressureTarget getGuiPresTarget();
     void setGuiPresTarget(guiPressureTarget guiPresTarget);
+    Q_INVOKABLE void testPlayPressure();
 signals:
     void guiPresTargetChanged();
 private:

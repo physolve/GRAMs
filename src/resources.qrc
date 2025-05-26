@@ -51,6 +51,7 @@
         <file>qml/measure/PVacuum.qml</file>
         <file>qml/measure/PSample.qml</file>
         <file>qml/measure/PInlet.qml</file>
+        <file>qml/measure/ESupply.qml</file>
         <file>qml/SideMenu.qml</file>
     </qresource>
 </RCC>

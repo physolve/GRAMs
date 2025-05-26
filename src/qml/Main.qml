@@ -150,6 +150,7 @@ ApplicationWindow {
                     onPlaySample: sideMenu.setPlaySampleMenu();
                     onPlayVacuum: sideMenu.setPlayVacuumMenu();
                     onPlayInlet: sideMenu.setPlayInletMenu();
+                    onExpSupply: sideMenu.setExpSupplyMenu();
                 }
                 MnemoBase{
                     id: rectangle

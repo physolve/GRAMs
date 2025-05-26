@@ -466,12 +466,6 @@ void Grams::initPlayPressure(){
     m_playPressure.setRQ(&m_reactionQuartile);
 }
 
-void Grams::testPlayPressure(){
-    setManualChamberValve(true);
-    m_playPressure.play();
-    m_playPressure.playWithAccuum();
-}
-
 void Grams::guiValsUpdate(){
     m_pressureVals.g_prSH = prSH.getCurValue();
     m_pressureVals.g_prSA = prSA.getCurValue();
@@ -526,9 +520,7 @@ void Grams::chamberSetUp(){
     m_chamber.setChamberVolume(chamber); // rewrite Volume object for chamber to use in quartile with other
     m_chamber.setCraneToChamber(26.1327 - 25.7941);
 
-    m_chamber.setStatusOpen(false); // might do it in quartile later
-    // sync with vR5
-    
+    setManualChamberValve(true); // might do it in quartile later
     m_reactionQuartile.setChamber(chamber.name);
     // m_reactionQuartile.setChamberPointer(&m_chamber) done it in the initReactionQuartile
     m_reactionQuartile.updateChamberToQuartile();
