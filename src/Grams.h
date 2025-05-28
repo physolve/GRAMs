@@ -16,8 +16,9 @@
 #include "addon/SecondLineQuartile.h"
 
 #include "addon/QuartileManager.h"
-#include "CustomPlotItem.h"
-#include "addon/LightPlotItem.h"
+// #include "CustomPlotItem.h"
+// #include "addon/LightPlotItem.h"
+#include "charts/BasePlot.h"
 #include "measure/Chamber.h"
 
 #include "db/GramStateDB.h"
@@ -93,13 +94,21 @@ class Grams : public QApplication
     Q_PROPERTY (guiValsPres guiPres READ getGuiValsPres NOTIFY guiValsPresChanged)
     Q_PROPERTY (guiValsTemp guiTemp READ getGuiValsTemp NOTIFY guiValsTempChanged)
     Q_PROPERTY (guiValsPresVirtual guiPresVirtual READ getGuiPresVirtual NOTIFY guiPresVirtualChanged)
+    
+    Q_PROPERTY(BasePlot* mainPlot MEMBER m_mainPlot CONSTANT)
+    Q_PROPERTY(QList<BasePlot*> graphs READ getGraphs NOTIFY graphsChanged)
+
 public:
     Grams(int &argc, char **argvm, const QString &curInitProfile);
     ~Grams();
     Q_INVOKABLE void setValveState(bool state, int valveId);
     Q_INVOKABLE void setManualChamberValve(bool state);
-    Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer);
-    Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer);
+    // Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer);
+    // Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer);
+    Q_INVOKABLE void addGraph(const QString &key);
+    Q_INVOKABLE void removeGraph(const QString &key);
+    // BasePlot getGraph(const QString &key) const;
+
 
     Q_INVOKABLE void chamberSetUp();
     Q_INVOKABLE void refreshTestField();
@@ -108,6 +117,7 @@ signals:
     void guiValsPresChanged();
     void guiValsTempChanged();
     void guiPresVirtualChanged();
+    void graphsChanged();
 
 private slots:
     void softEvent();
@@ -118,6 +128,8 @@ private:
     void advDoController();
     void advAiController();
     void vacuumController();
+
+    void initCharts();
     void initGUI();
     void initSafeModule();
     void initAddRemoveQuartile();
@@ -199,7 +211,7 @@ private:
     ControllerData tmRTube;     // 6 DT358
     ControllerData tmF;         // 7 DT359
 
-    CustomPlotItem* m_testPlot;  // unique
+    // CustomPlotItem* m_testPlot;  // unique
     // make it QList
     guiValsPres m_pressureVals;
     guiValsPres getGuiValsPres() const;
@@ -210,7 +222,11 @@ private:
     
     // filters
     //CustomPlotItem* m_mainPlot;  // unique
-    QList<CustomPlotItem*> m_filterPlots;  // unique
+    // QList<CustomPlotItem*> m_filterPlots;  // unique
+    BasePlot* m_mainPlot;
+    QList<BasePlot*> m_graphs;
+    QList<BasePlot*> getGraphs() const;
+
     FilterData timeFilter;
     FilterData fl_prSH;    // 0 DD311
     FilterData fl_prSA;    // 1 DD312

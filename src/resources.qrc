@@ -5,6 +5,8 @@
         <file alias="splitSVG.svg">icons/split.svg</file>
         <file alias="settingsSVG.svg">icons/iconSettings.svg</file>
         <file alias="vacuumSVG.svg">icons/vacuumPump.svg</file>
+        <file alias="chartsSVG.svg">icons/charts.svg</file>
+        <file alias="shareSVG.svg">icons/share.svg</file>
     </qresource>
     <qresource prefix="/GRAMs">
         <file>../fonts/LoveLetter.TTF</file>
@@ -39,9 +41,12 @@
         <file>qml/Main.qml</file>
         <file>qml/SettingsWindow.qml</file>
         <file>qml/SettingsConnections.qml</file>
+
         <file>qml/ChartCreator.qml</file>
         <file>qml/ChartWindow.qml</file>
         <file>qml/ChartFilter.qml</file>
+        <file>qml/charts/GraphWindow.qml</file>
+
         <file>qml/SupplyAdjust.qml</file>
         <file>qml/ExpCreator.qml</file>
         <file>qml/LeakageAdjust.qml</file>

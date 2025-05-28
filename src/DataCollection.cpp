@@ -1,7 +1,7 @@
 #include "DataCollection.h"
 #include <QDebug>
 
-DataCollection::DataCollection(const QString &name) : m_name(name), m_curValue(0)
+DataCollection::DataCollection(const QString &name) : m_name(name), m_type(DataType::Dimensionless), m_curValue(0)
 {
     m_y.append(0);
 }

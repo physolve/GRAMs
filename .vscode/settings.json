@@ -87,7 +87,8 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "qqmlapplicationengine": "cpp",
-        "qsqlerror": "cpp"
+        "qsqlerror": "cpp",
+        "qstring": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

@@ -67,6 +67,14 @@ if(NOT DEFINED CPP_PLAYPATH)
     file(GLOB CPP_PLAYPATH ${CMAKE_CURRENT_SOURCE_DIR}/playpath/*.cpp)
 endif()
 
+if(NOT DEFINED HPP_CHARTS)
+    file(GLOB HPP_CHARTS ${CMAKE_CURRENT_SOURCE_DIR}/charts/*.h)
+endif()
+
+if(NOT DEFINED CPP_CHARTS)
+    file(GLOB CPP_CHARTS ${CMAKE_CURRENT_SOURCE_DIR}/charts/*.cpp)
+endif()
+
 if (LINUX)            
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libDAQ)
 endif (LINUX)
@@ -87,6 +95,7 @@ ${CPP_ADDON}
 ${CPP_MEASURE}
 ${CPP_DB}
 ${CPP_PLAYPATH}
+${CPP_CHARTS}
 ${QML_RESOURCES})
 
 if (WIN32)

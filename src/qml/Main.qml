@@ -34,8 +34,10 @@ ApplicationWindow {
                 onClicked: sideMenu.setParametersMenu()
             }
             ToolButton {
-                text: qsTr("2.")
+                // text: qsTr("2.")
+                icon.source: "qrc:/chartsSVG.svg"
                 Layout.preferredWidth: 50
+                onClicked: sideMenu.setGraphWindow()
             }
             ToolButton {
                 text: qsTr("3.")

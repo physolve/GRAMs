@@ -6,19 +6,21 @@ LightPlotItem::LightPlotItem(QQuickItem *parent)
     : QQuickPaintedItem(parent), m_CustomPlot(nullptr), rescalingON(true), lastPointKey(0), fastResultCount(0) {
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
+
     this->setWidth(1000);
     this->setHeight(1000);
+
     connect(this, &QQuickPaintedItem::widthChanged, this,
             &LightPlotItem::updateCustomPlotSize);
     connect(this, &QQuickPaintedItem::heightChanged, this,
             &LightPlotItem::updateCustomPlotSize);
-    qDebug() << "CustomPlotItem Created";
+    qDebug() << "LightPlotItem Created";
 }
 
 LightPlotItem::~LightPlotItem() {
     delete m_CustomPlot;
     m_CustomPlot = nullptr;
-    qDebug() << "CustomPlotItem Destroyed";
+    qDebug() << "LightPlotItem Destroyed";
 }
 
 LightPlotItem* LightPlotItem::getLightPlot()

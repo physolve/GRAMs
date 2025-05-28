@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "measure"
+import "charts"
 Item{
     // property var menuList: ["Параметры", "Выбор камеры"]
     function setParametersMenu() {
@@ -28,6 +29,10 @@ Item{
         barMainRepeater.model = ["Автоматическая подача газа"]
         layoutMain.currentIndex = 5
     }
+    function setGraphWindow(){
+        barMainRepeater.model = ["Графики"]
+        layoutMain.currentIndex = 6
+    }
     TabBar {
         id: barMain
         width: parent.width
@@ -37,7 +42,7 @@ Item{
         //height: 100
         Repeater{
             id: barMainRepeater
-            model: ["Настройки"] // "График А", "Натекание", "Измерение", 
+            model: ["Графики"] // "График А", "Натекание", "Измерение", 
             TabButton{
                 text: modelData
                 width: Math.max(120, barMain.width) // /4
@@ -52,7 +57,7 @@ Item{
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        currentIndex: 0//barMain.currentIndex
+        currentIndex: 6//barMain.currentIndex
         // ExpCreator{
         //     id: test1
         //     Layout.fillWidth: true
@@ -95,6 +100,11 @@ Item{
         ESupply{
             id: eSupply
             Layout.fillWidth: true
+        }
+        GraphWindow{
+            id: graphWindow
+            Layout.fillWidth: true
+            Layout.fillHeight: true
         }
     } 
 }

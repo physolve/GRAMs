@@ -17,11 +17,12 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     QApplication(argc, argv),
     initSource(),
     dataSource(),
-    // valveModel(), // replace
-    // dataModel(), // replace
     m_safeModule(), // check
-    softTimer(new QTimer), // unique pointer
+    softTimer(new QTimer)
+    /*
+    , // unique pointer
     m_testPlot(nullptr)
+    */
 {
     initDigitalData();
     initAnalogData();
@@ -37,6 +38,8 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     initTestField();
     initDatabase();
     initPlayPressure();
+
+    initCharts();
 
     initGUI();
     initSafeModule();
@@ -95,11 +98,13 @@ void Grams::initAnalogData(){
     for(int i = 0; i < 8; ++i){
         const auto& pressureSensor = pressureSensors[i];
         pressureSensorsList[i]->m_name = pressureSensor.m_sensorName;
+        pressureSensorsList[i]->m_type = DataType::Pressure;
         pressureSensorsList[i]->setCoeffs(pressureSensor.m_A/pressureSensor.m_R*1000.0, pressureSensor.m_B); //*1000.0 fix profile later
     }
     const auto& tempSensors = initSource.getTempSensors();
     for(int i = 0; i < 8; ++i){
         tempSensorsList[i]->m_name = tempSensors[i];
+        tempSensorsList[i]->m_type = DataType::Temperature;
         tempSensorsList[i]->setCoeffs(1.0, 0.0);
     }
     // mole Volume names from addons js
@@ -159,6 +164,7 @@ void Grams::initAddRemoveQuartile(){
     m_supplyPressureLow.m_name = "Supply low";
     m_addRemoveQuartile.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
     m_addRemoveQuartile.setStorageQuartilePtr(&m_storageQuartile);
+    
     m_addRemoveQuartile.setStorageQuartilePressure(&prSQ);
     dataSource.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
 
@@ -185,7 +191,11 @@ void Grams::initStorageQuartile(){
     prSC2.m_name = "prSC2";
     prSC3.m_name = "prSC3";
     QVector<DataCollection*> cVolumeSensorsList = {&prSC1, &prSC2, &prSC3};
+    prSQ.m_name = "Storage Pressure";
+    prSQ.m_type = DataType::Pressure;
     m_storageQuartile.setQuartileDataPressure(&prSQ);
+    tmSQ.m_name = "Storage Temperature";
+    tmSQ.m_type = DataType::Temperature;
     m_storageQuartile.setQuartileDataTemperature(&tmSQ);
     m_storageQuartile.setCVolumePtr(cVolumeSensorsList);
     m_storageQuartile.setBD1VolumePtr(&prSB, &prSD1);
@@ -225,8 +235,11 @@ void Grams::initReactionQuartile(){
     m_reactionQuartile.addTemperaturePtrs(temperatureSensorsList);
     m_reactionQuartile.setIndexPressureHighLow(0, 1, 2); // prRH, prRA
     m_reactionQuartile.setIndexTemperatureMain(0); // tmSK
-    
+    prRQ.m_name = "Reaction Pressure";
+    prRQ.m_type = DataType::Pressure;
     m_reactionQuartile.setQuartileDataPressure(&prRQ);
+    tmRQ.m_name = "Reaction Temperature";
+    tmRQ.m_type = DataType::Temperature;
     m_reactionQuartile.setQuartileDataTemperature(&tmRQ);
     m_reactionQuartile.setED2VolumePtr(&prRE, &prRD2Atm, &prRD2Low);
     m_reactionQuartile.setMolesPtr(molesDataList);
@@ -269,6 +282,22 @@ void Grams::valveChangeUpdater(const QString& valveName){
     }
 }
 
+void Grams::initCharts(){
+    m_mainPlot = new BasePlot();
+    QVector<DataCollection*> chartPtrs;
+    chartPtrs.append(&prSQ);
+    chartPtrs.append(&prRQ);
+    chartPtrs.append(&tmRQ);
+    chartPtrs.append(&tmF);
+    m_mainPlot->setDataPointers(&timeAnalog, chartPtrs);
+    m_mainPlot->setTwoAxisPlotColor();
+    m_mainPlot->initTwoAxisPlot();
+    m_mainPlot->dataUpdated();
+    // additional charts
+    // addGraph("vaccumChart");
+    // addGraph("secondChart");
+}
+
 void Grams::initGUI(){
     QQuickStyle::setStyle("Material");
     QString applicationName = "GRAMs"; // curInitProfile also?
@@ -282,8 +311,11 @@ void Grams::initGUI(){
     },
     Qt::QueuedConnection);
     
+    /*
     qmlRegisterType<CustomPlotItem>("CustomPlot", 1, 0, "CustomPlotItem");
     qmlRegisterType<LightPlotItem>("LightPlot", 1, 0, "LightPlotItem");
+    */
+    qmlRegisterType<BasePlot>("BasePlot", 1, 0, "BasePlotItem");
 
     qmlRegisterSingletonInstance("Grams.dataSourceSingleton", 1, 0, "DataSource", &dataSource);
 
@@ -302,7 +334,7 @@ void Grams::initGUI(){
     qmlRegisterSingletonInstance("Grams.playPressureSingleton", 1, 0, "PlayPressure", &m_playPressure);
     m_engine.load(url);
 }
-
+/*
 void Grams::getCustomPlotPtr(CustomPlotItem* customPlotPointer){
     m_testPlot = customPlotPointer;
     QVector<DataCollection*> chartPtrs;
@@ -315,7 +347,8 @@ void Grams::getCustomPlotPtr(CustomPlotItem* customPlotPointer){
     // connect(&testController, &TestController::valueChanged, m_testAxisTag, &CustomPlotItem::dataUpdated);
     // connect(&analogController, &IcpAICtrl::valueChanged, m_testAxisTag, &CustomPlotItem::dataUpdated);
 }
-
+*/
+/*
 int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
     QVector<DataCollection*> chartPtrs;
     switch(m_filterPlots.count()){
@@ -353,6 +386,50 @@ int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
     m_filterPlots << filterPlotPointer;
     return m_filterPlots.count() - 1;
 }
+*/
+QList<BasePlot*> Grams::getGraphs() const
+{
+    // QVariantMap map;
+    // for(auto it = m_graphs.begin(); it != m_graphs.end(); ++it) {
+    //     map.insert(it.key(), QVariant::fromValue(it.value()));
+    // }
+    return m_graphs;
+}
+
+Q_INVOKABLE void Grams::addGraph(const QString &key)
+{
+    // if(m_graphs.contains(key)) return;
+
+    // auto g = m_customPlot->addGraph();
+    // if(g == nullptr) return;
+    // g->setName(key);
+    // auto graph = new BasePlot();
+    // m_graphs.insert(key, graph);
+    auto graph = new BasePlot();
+
+    m_graphs << graph;
+    emit graphsChanged();
+}
+
+Q_INVOKABLE void Grams::removeGraph(const QString &key)
+{
+    // if(m_graphs.contains(key)) {
+    //     auto graph = m_graphs.take(key);
+    //     delete graph;
+    //     emit graphsChanged();
+    // }
+    auto last = m_graphs.takeLast();
+    delete last;
+    emit graphsChanged();
+}
+
+// BasePlot *Grams::getGraph(const QString &key) const
+// {
+//     if(m_graphs.contains(key)) {
+//         return m_graphs.value(key);
+//     }
+//     return nullptr;
+// }
 
 void Grams::initSafeModule(){
     m_safeModule.constructValveMap(initSource.m_hardware.m_valves);
@@ -501,6 +578,7 @@ void Grams::guiValsUpdate(){
 
 void Grams::softEvent(){
     guiValsUpdate();
+    /*
     if(m_testPlot!=nullptr)
         m_testPlot->dataUpdated();
     if(!m_filterPlots.isEmpty()){
@@ -508,6 +586,7 @@ void Grams::softEvent(){
             plot->dataSetUpdated(); 
         }
     }
+    */
     // additional checks
     m_storageQuartile.updateQuartileData();
     m_reactionQuartile.updateQuartileData();

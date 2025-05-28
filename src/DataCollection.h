@@ -3,6 +3,13 @@
 #include <QString>
 #include <QDebug>
 
+enum DataType{
+    Dimensionless,
+    Pressure,
+    Temperature,
+    Mass
+};
+
 class DataCollection //: public QObject
 {
     //Q_OBJECT
@@ -17,7 +24,9 @@ public:
     void setAltUnitCoef(const double &coef);
     double getAltUnit() const;
     QString m_name;
+    DataType m_type;
     // alternative unit
+
 protected:
     QList<double> m_y; // one second data
     double m_curValue;

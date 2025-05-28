@@ -7,7 +7,7 @@ Rectangle {
     id: eSupply
     color: "#464646"
     border.color: "#F2C029"
-    anchors.fill: parent
+    // anchors.fill: parent
     // reminder to change for other systems
     property double topPressure: 50 
     Button{
