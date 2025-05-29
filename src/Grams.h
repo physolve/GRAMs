@@ -19,6 +19,7 @@
 // #include "CustomPlotItem.h"
 // #include "addon/LightPlotItem.h"
 #include "charts/BasePlot.h"
+#include "charts/TwoAxisPlot.h"
 #include "measure/Chamber.h"
 
 #include "db/GramStateDB.h"
@@ -97,6 +98,7 @@ class Grams : public QApplication
     
     Q_PROPERTY(BasePlot* mainPlot MEMBER m_mainPlot CONSTANT)
     Q_PROPERTY(QList<BasePlot*> graphs READ getGraphs NOTIFY graphsChanged)
+    Q_PROPERTY(QStringList chartNames READ getChartsNames NOTIFY graphsChanged)
 
 public:
     Grams(int &argc, char **argvm, const QString &curInitProfile);
@@ -223,9 +225,10 @@ private:
     // filters
     //CustomPlotItem* m_mainPlot;  // unique
     // QList<CustomPlotItem*> m_filterPlots;  // unique
-    BasePlot* m_mainPlot;
+    TwoAxisPlot* m_mainPlot; // unique ptr
     QList<BasePlot*> m_graphs;
     QList<BasePlot*> getGraphs() const;
+    QStringList getChartsNames() const;
 
     FilterData timeFilter;
     FilterData fl_prSH;    // 0 DD311

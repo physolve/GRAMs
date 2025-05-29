@@ -53,6 +53,8 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
 }
 
 Grams::~Grams(){
+    delete m_mainPlot;
+    qDeleteAll(m_graphs);
     qInfo() << "Exit Grams safely \n\n";
 }
 
@@ -149,10 +151,13 @@ void Grams::advAiController(){
 }
 
 void Grams::vacuumController(){
+    m_vacuumSensor.m_name = "Вакууметр";
+    m_vacuumSensor.m_type = DataType::Pressure;
+
     if(!initSource.isInitializeOk())
         return;
+    
     const auto& parametersVacuum = initSource.getVacuumParameters();
-    m_vacuumSensor.m_name = "vacuumSensor";
     m_vacuumSensor.setAltUnitCoef(0.001333); // torr to bar
     dataSource.setVacuumPointer(&m_vacuumSensor);
     dataSource.initSerialVacuum(parametersVacuum);
@@ -283,18 +288,29 @@ void Grams::valveChangeUpdater(const QString& valveName){
 }
 
 void Grams::initCharts(){
-    m_mainPlot = new BasePlot();
+    m_mainPlot = new TwoAxisPlot(); // two axis plot Child
     QVector<DataCollection*> chartPtrs;
     chartPtrs.append(&prSQ);
     chartPtrs.append(&prRQ);
     chartPtrs.append(&tmRQ);
     chartPtrs.append(&tmF);
     m_mainPlot->setDataPointers(&timeAnalog, chartPtrs);
-    m_mainPlot->setTwoAxisPlotColor();
-    m_mainPlot->initTwoAxisPlot();
+    m_mainPlot->setPlotColor();
+    m_mainPlot->initPlot();
+    m_mainPlot->placeLegend();
     m_mainPlot->dataUpdated();
+    m_mainPlot->m_chartName = "Главный график";
     // additional charts
     // addGraph("vaccumChart");
+    auto vacuumChart = new BasePlot();
+    vacuumChart->setDataPointers(&timeAnalog, &m_vacuumSensor);
+    vacuumChart->setPlotColor();
+    vacuumChart->initPlot();
+    vacuumChart->placeLegend();
+    vacuumChart->setLogValueAxis();
+    vacuumChart->dataUpdated();
+    vacuumChart->m_chartName = "Вакуум";
+    m_graphs << vacuumChart;
     // addGraph("secondChart");
 }
 
@@ -387,12 +403,17 @@ int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
     return m_filterPlots.count() - 1;
 }
 */
+
+QStringList Grams::getChartsNames() const{
+    QStringList chartNames;
+    for(auto graph : m_graphs){
+        chartNames << graph->m_chartName;
+    }
+    return chartNames;
+}
+
 QList<BasePlot*> Grams::getGraphs() const
 {
-    // QVariantMap map;
-    // for(auto it = m_graphs.begin(); it != m_graphs.end(); ++it) {
-    //     map.insert(it.key(), QVariant::fromValue(it.value()));
-    // }
     return m_graphs;
 }
 

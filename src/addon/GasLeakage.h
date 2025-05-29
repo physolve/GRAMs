@@ -9,7 +9,7 @@ class GasLeakage : public QObject
     Q_OBJECT // ?
 public:
     GasLeakage(QObject *parent = nullptr);
-    GasLeakage(const GasLeakage &) = default;
+    // GasLeakage(const GasLeakage &) = default;
     ~GasLeakage();
     void setInitialParametersLeakage(int portId, double turn, double sPressure, double rPressure);
     void setVolumeNames(const QStringList& volumeNames);

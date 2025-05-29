@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QtQuick>
-#include "AxisTag.h"
 #include "../DataCollection.h"
 
 class QCustomPlot;
@@ -12,22 +11,23 @@ class BasePlot : public QQuickPaintedItem{
     Q_OBJECT
 
 public:
-    BasePlot(QQuickItem *parent = nullptr);
-    ~BasePlot();
-
+    explicit BasePlot(QQuickItem *parent = nullptr);
+    virtual ~BasePlot();
+    QString m_chartName;
     
+    void setDataPointers(DataCollection* x, DataCollection* ptr);
     void setDataPointers(DataCollection* x, const QVector<DataCollection*>& ptr);
 
-    void setBaseColor();
-    void initBasePlot();
-
-    void setTwoAxisPlotColor();
-    void initTwoAxisPlot();
     
-    QVariantMap graphs() const;
+    virtual void setPlotColor();
+    virtual void initPlot();
+    void placeLegend();
+    void setLogValueAxis();
+    // QVariantMap graphs() const;
+
     Q_INVOKABLE void rescaleAxes(bool onlyVisiblePlottables=false);
-    void paint(QPainter *painter);
-    void dataUpdated();
+    void paint(QPainter *painter) override;
+    virtual void dataUpdated();
 protected:
     virtual void onChartViewReplot() { update(); }
     virtual void onChartViewSizeChanged();
@@ -41,11 +41,9 @@ protected:
     void routeMouseEvents(QMouseEvent *event);
     void routeWheelEvents(QWheelEvent *event);
 
-private:
     QCustomPlot *m_CustomPlot;
     DataCollection* m_time;
     QVector<DataCollection*> m_sensors;
-    QVector<AxisTag*> m_tags;
 
     bool rescalingON;
     double lastPointKey;

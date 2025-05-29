@@ -33,7 +33,7 @@ public:
     AdvantechAI(QObject *parent = nullptr); 
     virtual ~AdvantechAI();
     void setInfo(const AdvAIType &info);
-    void Initialization() ; //override
+    void Initialization() override; //
     void initialInfo();
     void ConfigureDeviceTemp(); 
 	void CheckError(Automation::BDaq::ErrorCode errorCode);
@@ -63,7 +63,7 @@ public:
     AdvantechBuff(QObject *parent = nullptr); 
     virtual ~AdvantechBuff();
     void setInfo(const AdvAIType &info);
-    void Initialization() ; //override
+    void Initialization() override; //
     void ConfigureDeviceBuff(); // rename TEST
 	void CheckError(Automation::BDaq::ErrorCode errorCode);
     const AdvAIType& getInfo() const; // move to base class

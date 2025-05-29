@@ -10,7 +10,10 @@ Item{
         id: mainChart
         x: 5
         y: 5
-        padding: 10
+        topInset: -2
+        leftInset: -2
+        rightInset: -6
+        bottomInset: -6
         width: parent.width - 10
         height: 350
         contentItem: Grams.mainPlot
@@ -28,10 +31,10 @@ Item{
         //height: 100
         Repeater{
             id: barChartsRepeater
-            model: ["График 1", "График 2"] // "График А", "Натекание", "Измерение", 
+            model: Grams.chartNames//["График 1", "График 2"] // "График А", "Натекание", "Измерение", 
             TabButton{
                 text: modelData
-                width: Math.max(120, barCharts.width/2) // /4
+                width: Math.max(120, barCharts.width/barChartsRepeater.count) // /4
                 font.pointSize: 12
             }
         }
@@ -61,12 +64,15 @@ Item{
                         id: chartView
                         x: 5
                         y: 5
-                        padding: 10
+                        topInset: -6
+                        leftInset: -6
+                        rightInset: -6
+                        bottomInset: -6
                         width: parent.width - 10
                         height: Math.min(350, parent.height - 10)
                         contentItem: modelData
                         background: Rectangle {
-                            color:"transparent"; border.color: "#464646";
+                            color:"white"; border.color: "#464646";
                         }
                     }
                     Button{

@@ -12,21 +12,6 @@ BasePlot::BasePlot(QQuickItem *parent)
     connect(this, &QQuickPaintedItem::widthChanged, this, &BasePlot::onChartViewSizeChanged);
     connect(this, &QQuickPaintedItem::heightChanged, this, &BasePlot::onChartViewSizeChanged);   
     connect(m_CustomPlot, &QCustomPlot::afterReplot, this, &BasePlot::onChartViewReplot, Qt::UniqueConnection); // custom replot
-    // try {
-    //     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
-    //     timeTicker->setTimeFormat("%h:%m:%s");
-    //     m_CustomPlot->xAxis->setTicker(timeTicker);
-    //     m_CustomPlot->xAxis->setLabel("Время, с");
-    //     m_CustomPlot->xAxis->setLabelColor(Qt::white); //?
-    //     connect(m_CustomPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), m_CustomPlot->xAxis2, SLOT(setRange(QCPRange)));
-    //     connect(m_CustomPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), m_CustomPlot->yAxis2, SLOT(setRange(QCPRange)));
-    // }
-    // catch(const std::exception &e) {
-    //     qCritical() << e.what();
-    // }
-
-    // setBaseColor();
-    // rescaleAxes(true);
     update();
 }
 
@@ -35,8 +20,18 @@ BasePlot::~BasePlot()
     m_CustomPlot = nullptr;
 }
 
-void BasePlot::setBaseColor()
-{
+
+void BasePlot::setDataPointers(DataCollection* x, DataCollection* ptr){
+    m_time = x;
+    m_sensors << ptr;
+}
+
+void BasePlot::setDataPointers(DataCollection* x, const QVector<DataCollection*>& ptr){
+    m_time = x;
+    m_sensors = ptr;
+}
+
+void BasePlot::setPlotColor(){
     m_CustomPlot->setNoAntialiasingOnDrag(true);
     // set some pens, brushes and backgrounds:
     m_CustomPlot->xAxis->setBasePen(QPen(Qt::white, 1));
@@ -71,12 +66,11 @@ void BasePlot::setBaseColor()
     m_CustomPlot->axisRect()->setBackground(axisRectGradient);
 }
 
-void BasePlot::setDataPointers(DataCollection* x, const QVector<DataCollection*>& ptr){
-    m_time = x;
-    m_sensors = ptr;
-}
-
-void BasePlot::initBasePlot(){
+void BasePlot::initPlot(){
+    if(m_sensors.isEmpty()){
+        qDebug() << "BasePlot empty sensors";
+        return;
+    }
     try {
         QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
         timeTicker->setTimeFormat("%h:%m:%s");
@@ -96,128 +90,70 @@ void BasePlot::initBasePlot(){
     m_CustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     m_CustomPlot->setAttribute(Qt::WA_OpaquePaintEvent, true);
 
-    // to function
-    auto g = m_CustomPlot->addGraph();
-    auto pen = QPen(QColor("#cb8175"), 1.5);
-    m_CustomPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, pen, QBrush(Qt::white), 9));
-    m_CustomPlot->graph()->setPen(QPen(QColor(120, 120, 120), 2));
-    m_CustomPlot->graph()->setAdaptiveSampling(true);
-    
-    m_CustomPlot->graph(0)->addData({0, 10}, {1, 10});
-}
-
-
-void BasePlot::setTwoAxisPlotColor(){
-    m_CustomPlot->xAxis->setBasePen(QPen(Qt::white, 1));
-    m_CustomPlot->yAxis2->setBasePen(QPen(Qt::white, 1));
-    m_CustomPlot->xAxis->setTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->yAxis2->setTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->xAxis->setSubTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->yAxis2->setSubTickPen(QPen(Qt::white, 1));
-    m_CustomPlot->xAxis->setTickLabelColor(Qt::white);
-    m_CustomPlot->yAxis2->setTickLabelColor(Qt::white);
-    m_CustomPlot->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-    m_CustomPlot->yAxis2->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-    m_CustomPlot->xAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-    m_CustomPlot->yAxis2->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-    m_CustomPlot->xAxis->grid()->setSubGridVisible(true);
-    m_CustomPlot->yAxis2->grid()->setSubGridVisible(true);
-    m_CustomPlot->xAxis->grid()->setZeroLinePen(Qt::NoPen);
-    m_CustomPlot->yAxis2->grid()->setZeroLinePen(Qt::NoPen);
-    m_CustomPlot->xAxis->setUpperEnding(QCPLineEnding::esBar);
-    m_CustomPlot->yAxis2->setUpperEnding(QCPLineEnding::esBar);
-    QLinearGradient plotGradient;
-    plotGradient.setStart(0, 0);
-    plotGradient.setFinalStop(0, 350);
-    plotGradient.setColorAt(0, QColor(80, 80, 80));
-    plotGradient.setColorAt(1, QColor(50, 50, 50));
-    m_CustomPlot->setBackground(plotGradient);
-    QLinearGradient axisRectGradient;
-    axisRectGradient.setStart(0, 0);
-    axisRectGradient.setFinalStop(0, 350);
-    axisRectGradient.setColorAt(0, QColor(80, 80, 80));
-    axisRectGradient.setColorAt(1, QColor(30, 30, 30));
-    m_CustomPlot->axisRect()->setBackground(axisRectGradient);
-}
-
-void BasePlot::initTwoAxisPlot(){
-    if(m_sensors.isEmpty()){
-        return;
-    }
-    try {
-        QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
-        timeTicker->setTimeFormat("%h:%m:%s");
-        m_CustomPlot->xAxis->setTicker(timeTicker);
-        m_CustomPlot->xAxis->setLabel("Время, с");
-        m_CustomPlot->xAxis->setLabelColor(Qt::white); //?
-        // connect(m_CustomPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), m_CustomPlot->xAxis2, SLOT(setRange(QCPRange)));
-        connect(m_CustomPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), m_CustomPlot->yAxis2, SLOT(setRange(QCPRange)));
-    }
-    catch(const std::exception &e) {
-        qCritical() << e.what();
-    }
-    m_CustomPlot->yAxis->setTickLabels(false); //?
-
-    connect(m_CustomPlot->yAxis2, SIGNAL(rangeChanged(QCPRange)), m_CustomPlot->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    m_CustomPlot->yAxis2->setVisible(true);
-    
-    auto secondAxis = m_CustomPlot->axisRect()->addAxis(QCPAxis::atRight);
-    m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
-    m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 0)->setLabel("Давление, бар");
-    m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 1)->setLabel("Температура, °C");
-    
-    m_CustomPlot->yAxis2->setLabelColor(Qt::white);
-    secondAxis->setLabelColor(Qt::white);
-    
-    secondAxis->setBasePen(QPen(Qt::white, 1));
-    secondAxis->setTickPen(QPen(Qt::white, 1));
-    secondAxis->setSubTickPen(QPen(Qt::white, 1));
-    secondAxis->setTickLabelColor(Qt::white);
-    secondAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-    secondAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-    secondAxis->grid()->setSubGridVisible(true);
-    secondAxis->grid()->setZeroLinePen(Qt::NoPen);
-    secondAxis->setUpperEnding(QCPLineEnding::esBar);
-    
     // create graphs:
     QStringList pressureColors = {"#a8c8a6", "#6d8d8a", "#655057"}; // add more
     QStringList temperatureColors = {"#cb8175", "#e2a97e", "#f0cf8e"}; // add more
-    int axisIndex = 0;
+    DataType leftAxis = m_sensors[0]->m_type;
+    QCPAxis::AxisType axisSide = QCPAxis::atLeft;
     for(auto sensor : m_sensors){
         QColor lineColor;
         if(sensor->m_type == DataType::Pressure){
             lineColor = QColor(pressureColors.takeFirst());
-            axisIndex = 0;
         }
         else if(sensor->m_type == DataType::Temperature){
             lineColor = QColor(temperatureColors.takeFirst());
-            axisIndex = 1;
         }
         else{
             qDebug() << "unknown DataType at " << sensor->m_name;
         }
-        auto curGraph = m_CustomPlot->addGraph(m_CustomPlot->xAxis, m_CustomPlot->axisRect()->axis(QCPAxis::atRight, axisIndex));
-        curGraph->setPen(QPen(QColor(120, 120, 120), 2));
-        const auto& pen = QPen(lineColor, 1.5);
-        curGraph->setLineStyle(QCPGraph::LineStyle::lsLine);
-        curGraph->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, pen, QBrush(Qt::white), 5));
-        curGraph->setAdaptiveSampling(true);
-        auto mTag = new AxisTag(curGraph->valueAxis());
-        mTag->setPen(pen);
-        m_tags << mTag;
-        curGraph->setName(sensor->m_name);
+        axisSide = sensor->m_type == leftAxis ? QCPAxis::atLeft : QCPAxis::atRight; // 2, 3
+        auto curGraph = m_CustomPlot->addGraph(m_CustomPlot->xAxis, m_CustomPlot->axisRect()->axis(axisSide, 0));
+        auto pen = QPen(lineColor, 1.5);
+        m_CustomPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, pen, QBrush(Qt::white), 9));
+        m_CustomPlot->graph()->setPen(QPen(QColor(120, 120, 120), 2));
+        m_CustomPlot->graph()->setAdaptiveSampling(true);
+        m_CustomPlot->graph()->setName(sensor->m_name);
     }
 }
 
+void BasePlot::placeLegend(){
+    m_CustomPlot->legend->setVisible(true);
+    auto font = m_CustomPlot->legend->font();
+    font.setPointSize(9);
+    m_CustomPlot->legend->setFont(font);
+    m_CustomPlot->legend->setTextColor(QColor("white"));
+    m_CustomPlot->legend->setBorderPen(QPen(QColor("transparent")));
+    
+    m_CustomPlot->legend->setBrush(QBrush(QColor(0,0,0,63)));
+    // by default, the legend is in the inset layout of the main axis rect. So this is how we access it to change legend placement:
+    m_CustomPlot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignTop|Qt::AlignLeft);
+    
+    // QCPLayoutGrid *subLayout = new QCPLayoutGrid;
+    // m_CustomPlot->plotLayout()->addElement(1, 0, subLayout);
+    // subLayout->setMargins(QMargins(5, 0, 5, 5));
+    // subLayout->addElement(0, 0, m_CustomPlot->legend);
+    // // change the fill order of the legend, so it's filled left to right in columns:
+    // m_CustomPlot->legend->setFillOrder(QCPLegend::foColumnsFirst);
+    // // set legend's row stretch factor very small so it ends up with minimum height:
+    // m_CustomPlot->plotLayout()->setRowStretchFactor(1, 0.001);
+}
+
+void BasePlot::setLogValueAxis(){
+    m_CustomPlot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+    m_CustomPlot->yAxis2->setScaleType(QCPAxis::stLogarithmic);
+    QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+    m_CustomPlot->yAxis->setTicker(logTicker);
+    m_CustomPlot->yAxis2->setTicker(logTicker);
+    m_CustomPlot->yAxis->setNumberFormat("eb"); // e = exponential, b = beautiful decimal powers
+    m_CustomPlot->yAxis->setNumberPrecision(0); // makes sure "1*10^4" is displayed only as "10^4"
+    m_CustomPlot->xAxis->setRange(0, 10.0);
+    m_CustomPlot->yAxis->setRange(1e-6, 1);
+}
 
 void BasePlot::dataUpdated(){
     const auto &timePoint = m_time->getCurValue(); 
     for(unsigned short i = 0; auto* ptr : m_sensors){
-        const double& curValue = ptr->getCurValue();
-        m_CustomPlot->graph(i)->addData(timePoint, curValue); //ptr->getCurValue()
-        m_tags[i]->updatePosition(curValue);
-        m_tags[i]->setText(QString::number(curValue,'g',2));
+        m_CustomPlot->graph(i)->addData(timePoint, ptr->getCurValue());
         ++i;
     }
     if(lastPointKey < m_time->getCurValue())
@@ -228,11 +164,8 @@ void BasePlot::dataUpdated(){
         m_CustomPlot->yAxis->rescale(true);
         m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
     }
-    // case of two axis tags custom replot
-
     // if m_CustomPlot points more than x delete first y points
     m_CustomPlot->replot();
-
 }
 
 Q_INVOKABLE void BasePlot::rescaleAxes(bool onlyVisiblePlottables)
@@ -274,3 +207,11 @@ void BasePlot::routeWheelEvents(QWheelEvent *event)
                                             event->phase(), event->inverted());
     QCoreApplication::postEvent(m_CustomPlot, newEvent);
 }
+
+// QVariantMap BasePlot::graphs(){
+//     QVariantMap map;
+//     for(auto it = m_graphs.begin(); it != m_graphs.end(); ++it) {
+//         map.insert(it.key(), QVariant::fromValue(it.value()));
+//     }
+// }
+
