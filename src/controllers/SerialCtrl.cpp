@@ -107,6 +107,9 @@ void VacuumController::requestData(){
 }
 
 void VacuumController::requestRepetitive(){
+    if(!m_serial->isWritable()){
+        return;
+    }
     QByteArray enquiry;
     enquiry.resize(1);
     enquiry[0] = 0x05;

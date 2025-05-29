@@ -57,7 +57,7 @@ Item{
                 // signal detach(name: int)
                 window: Window {
                     id: childWindow
-                    color:"transparent"
+                    color:"#2B2B2B"
                     flags: Qt.FramelessWindowHint
                     
                     Control{
@@ -69,10 +69,10 @@ Item{
                         rightInset: -6
                         bottomInset: -6
                         width: parent.width - 10
-                        height: Math.min(350, parent.height - 10)
+                        height: myChartWindow.attached ? 350 : parent.height - 10
                         contentItem: modelData
                         background: Rectangle {
-                            color:"white"; border.color: "#464646";
+                            color:"transparent"; border.color: "#464646";
                         }
                     }
                     Button{
@@ -85,10 +85,10 @@ Item{
                         onClicked: {
                             var myChart = chartWindow.createObject(root,{win: myChartWindow.window, index})
                             myChartWindow.window = placeholder.createObject(root)
-                            myChart.flags = Qt.Window | Qt.WindowCloseButtonHint
+                            myChart.flags = Qt.Dialog
                             myChart.show()
                             myChart.width = 525
-                            myChart.height = 600
+                            myChart.height = 425
                             myChartWindow.attached = false
                         }
                     }
@@ -120,7 +120,7 @@ Item{
     Component{
         id: placeholder
         Window {
-            color: "transparent"
+            color: "#2B2B2B"
         }
     }
 

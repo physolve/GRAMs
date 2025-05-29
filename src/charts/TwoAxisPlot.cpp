@@ -124,20 +124,24 @@ void TwoAxisPlot::dataUpdated(){
         m_CustomPlot->graph(i)->addData(timePoint, curValue); //ptr->getCurValue()
         m_tags[i]->updatePosition(curValue);
         m_tags[i]->setText(QString::number(curValue,'g',2));
-        m_CustomPlot->graph(i)->rescaleValueAxis(false, true);
+        // m_CustomPlot->graph(i)->rescaleValueAxis(false, true);
         ++i;
     }
+    auto yAxis2a = m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 0);
+    yAxis2a->rescale(true);
+    yAxis2a->setRangeUpper(yAxis2a->range().upper*1.1);
 
-    // if(lastPointKey < m_time->getCurValue())
-    //     lastPointKey = m_time->getCurValue();
+    auto yAxis2b = m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 1);
+    yAxis2b->rescale(true);
+    yAxis2b->setRangeUpper(yAxis2b->range().upper*1.1);
+    yAxis2b->setRangeLower(yAxis2b->range().lower*0.9);
+
+    // m_CustomPlot->yAxis2->rescale(true);
+    // m_CustomPlot->yAxis2->setRangeUpper(m_CustomPlot->yAxis2->range().upper*1.1);
     
-    // if(rescalingON){
-    //     m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
-    //     m_CustomPlot->yAxis->rescale(true);
-    //     m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
-    // }
-    // case of two axis tags custom replot
-
+    m_CustomPlot->xAxis->setRange(m_CustomPlot->xAxis->range().upper, 10, Qt::AlignRight); // 10 and larger by memory scaling?
+    m_CustomPlot->xAxis->rescale();
+    m_CustomPlot->xAxis->setRange(m_CustomPlot->xAxis->range().upper, 10, Qt::AlignRight);
     // if m_CustomPlot points more than x delete first y points
     m_CustomPlot->replot();
 }

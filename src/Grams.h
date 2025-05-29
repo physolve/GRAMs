@@ -105,12 +105,9 @@ public:
     ~Grams();
     Q_INVOKABLE void setValveState(bool state, int valveId);
     Q_INVOKABLE void setManualChamberValve(bool state);
-    // Q_INVOKABLE void getCustomPlotPtr(CustomPlotItem* customPlotPointer);
     // Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer);
     Q_INVOKABLE void addGraph(const QString &key);
     Q_INVOKABLE void removeGraph(const QString &key);
-    // BasePlot getGraph(const QString &key) const;
-
 
     Q_INVOKABLE void chamberSetUp();
     Q_INVOKABLE void refreshTestField();

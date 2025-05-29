@@ -197,6 +197,7 @@ void DataAcquisition::processEvents(){
     // vacuum frequency of 333 ms is ok?
     const auto &readDataVacuum = reqVacuum.getData();
     m_vacuumSensor->addPoint(readDataVacuum);
+    reqVacuum.requestRepetitive();
     
     if(m_supplyMeasure){
         fillSupplyARQ();

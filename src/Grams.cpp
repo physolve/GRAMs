@@ -351,20 +351,6 @@ void Grams::initGUI(){
     m_engine.load(url);
 }
 /*
-void Grams::getCustomPlotPtr(CustomPlotItem* customPlotPointer){
-    m_testPlot = customPlotPointer;
-    QVector<DataCollection*> chartPtrs;
-    chartPtrs.append(&prSH);
-    chartPtrs.append(&prSA);
-    m_testPlot->setDataPointers(&timeAnalog, chartPtrs);
-    m_testPlot->initCustomPlot();
-    m_testPlot->placeGraph();
-    m_testPlot->dataUpdated();
-    // connect(&testController, &TestController::valueChanged, m_testAxisTag, &CustomPlotItem::dataUpdated);
-    // connect(&analogController, &IcpAICtrl::valueChanged, m_testAxisTag, &CustomPlotItem::dataUpdated);
-}
-*/
-/*
 int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
     QVector<DataCollection*> chartPtrs;
     switch(m_filterPlots.count()){
@@ -443,14 +429,6 @@ Q_INVOKABLE void Grams::removeGraph(const QString &key)
     delete last;
     emit graphsChanged();
 }
-
-// BasePlot *Grams::getGraph(const QString &key) const
-// {
-//     if(m_graphs.contains(key)) {
-//         return m_graphs.value(key);
-//     }
-//     return nullptr;
-// }
 
 void Grams::initSafeModule(){
     m_safeModule.constructValveMap(initSource.m_hardware.m_valves);
@@ -608,6 +586,10 @@ void Grams::softEvent(){
         }
     }
     */
+    m_mainPlot->dataUpdated();
+    for(auto graph : m_graphs){
+        graph->dataUpdated();
+    }
     // additional checks
     m_storageQuartile.updateQuartileData();
     m_reactionQuartile.updateQuartileData();
