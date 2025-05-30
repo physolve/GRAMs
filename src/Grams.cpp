@@ -80,7 +80,7 @@ void Grams::initDigitalData(){
     vSL1.m_name = "SL1"; // "Second line outlet";
     vSL2.m_name = "SL2"; // "Second line barrel";
 
-    timeAnalog.m_name = "Time";
+    timeAnalog.m_name = "Время";
 
     QVector<double> indexData;
     for(int i = 0; i < 512; ++i) { //m_sectionLength
@@ -196,10 +196,10 @@ void Grams::initStorageQuartile(){
     prSC2.m_name = "prSC2";
     prSC3.m_name = "prSC3";
     QVector<DataCollection*> cVolumeSensorsList = {&prSC1, &prSC2, &prSC3};
-    prSQ.m_name = "Storage Pressure";
+    prSQ.m_name = "Эталонный давл.";
     prSQ.m_type = DataType::Pressure;
     m_storageQuartile.setQuartileDataPressure(&prSQ);
-    tmSQ.m_name = "Storage Temperature";
+    tmSQ.m_name = "Эталонный темп.";
     tmSQ.m_type = DataType::Temperature;
     m_storageQuartile.setQuartileDataTemperature(&tmSQ);
     m_storageQuartile.setCVolumePtr(cVolumeSensorsList);
@@ -240,10 +240,10 @@ void Grams::initReactionQuartile(){
     m_reactionQuartile.addTemperaturePtrs(temperatureSensorsList);
     m_reactionQuartile.setIndexPressureHighLow(0, 1, 2); // prRH, prRA
     m_reactionQuartile.setIndexTemperatureMain(0); // tmSK
-    prRQ.m_name = "Reaction Pressure";
+    prRQ.m_name = "Реакционный давл.";
     prRQ.m_type = DataType::Pressure;
     m_reactionQuartile.setQuartileDataPressure(&prRQ);
-    tmRQ.m_name = "Reaction Temperature";
+    tmRQ.m_name = "Реакционный темп.";
     tmRQ.m_type = DataType::Temperature;
     m_reactionQuartile.setQuartileDataTemperature(&tmRQ);
     m_reactionQuartile.setED2VolumePtr(&prRE, &prRD2Atm, &prRD2Low);
@@ -298,6 +298,7 @@ void Grams::initCharts(){
     m_mainPlot->setPlotColor();
     m_mainPlot->initPlot();
     m_mainPlot->placeLegend();
+    m_mainPlot->update();
     m_mainPlot->dataUpdated();
     m_mainPlot->m_chartName = "Главный график";
     // additional charts
@@ -308,6 +309,7 @@ void Grams::initCharts(){
     vacuumChart->initPlot();
     vacuumChart->placeLegend();
     vacuumChart->setLogValueAxis();
+    vacuumChart->update();
     vacuumChart->dataUpdated();
     vacuumChart->m_chartName = "Вакуум";
     m_graphs << vacuumChart;
@@ -342,7 +344,7 @@ void Grams::initGUI(){
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     // m_engine.rootContext()->setContextProperty("_valveModel", &valveModel);
     // m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
-    m_engine.rootContext()->setContextProperty("safeModule", &m_safeModule);
+    // m_engine.rootContext()->setContextProperty("safeModule", &m_safeModule);
     qmlRegisterSingletonInstance("Grams.backendSourceSingleton", 1, 0, "Grams", this);
     qmlRegisterSingletonInstance("Grams.chamberChooserSingleton", 1, 0, "ChamberChooser", &m_chamber);
     qmlRegisterSingletonInstance("Grams.timeStampSingleton", 1, 0, "TimeStamp", &m_timeStamp);

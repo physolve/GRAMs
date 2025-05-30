@@ -109,10 +109,11 @@ void BasePlot::initPlot(){
         axisSide = sensor->m_type == leftAxis ? QCPAxis::atLeft : QCPAxis::atRight; // 2, 3
         auto curGraph = m_CustomPlot->addGraph(m_CustomPlot->xAxis, m_CustomPlot->axisRect()->axis(axisSide, 0));
         auto pen = QPen(lineColor, 1.5);
-        m_CustomPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, pen, QBrush(Qt::white), 9));
-        m_CustomPlot->graph()->setPen(QPen(QColor(120, 120, 120), 2));
-        m_CustomPlot->graph()->setAdaptiveSampling(true);
-        m_CustomPlot->graph()->setName(sensor->m_name);
+        curGraph->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, pen, QBrush(Qt::white), 9));
+        curGraph->setPen(QPen(QColor(120, 120, 120), 2));
+        curGraph->setAdaptiveSampling(true);
+        curGraph->setName(sensor->m_name);
+        curGraph->setLineStyle(QCPGraph::lsLine);
     }
 }
 

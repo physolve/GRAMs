@@ -22,7 +22,7 @@ public:
     double m_chamberInitialPressure;
     double m_storagePressureTarget;
     double m_nAccum;
-    int     m_supplyCount;
+    int m_supplyCount;
     double m_c1PressureTarget;
     double m_c2PressureTarget;
     double m_c3PressureTarget;

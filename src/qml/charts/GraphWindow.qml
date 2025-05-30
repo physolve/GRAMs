@@ -10,6 +10,7 @@ Item{
         id: mainChart
         x: 5
         y: 5
+        topPadding: 0
         topInset: -2
         leftInset: -2
         rightInset: -6
@@ -18,13 +19,14 @@ Item{
         height: 350
         contentItem: Grams.mainPlot
         background: Rectangle {
-            color:"transparent"; border.color: "#464646";
+            color:"transparent"; border.color: "#257D97"; border.width: 2; radius: 5
         }
     }
 
     TabBar {
         id: barCharts
         width: parent.width
+        anchors.topMargin: 5
         anchors.top: mainChart.bottom
         anchors.left: parent.left
         //anchors.right: parent.right
@@ -41,6 +43,7 @@ Item{
     }
     StackLayout {
         id: layoutMain
+        anchors.topMargin: 5
         anchors.top: barCharts.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -54,12 +57,13 @@ Item{
                 required property int index
                 required property Item modelData
                 property bool attached: true
+                z: 0
                 // signal detach(name: int)
                 window: Window {
                     id: childWindow
                     color:"#2B2B2B"
-                    flags: Qt.FramelessWindowHint
-                    
+                    flags: Qt.Dialog
+                    transientParent: null                
                     Control{
                         id: chartView
                         x: 5
@@ -72,7 +76,7 @@ Item{
                         height: myChartWindow.attached ? 350 : parent.height - 10
                         contentItem: modelData
                         background: Rectangle {
-                            color:"transparent"; border.color: "#464646";
+                            color:"transparent"; border.color: "#257D97"; border.width: 2; radius: 5
                         }
                     }
                     Button{

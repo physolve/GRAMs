@@ -17,7 +17,6 @@ public:
     
     void setDataPointers(DataCollection* x, DataCollection* ptr);
     void setDataPointers(DataCollection* x, const QVector<DataCollection*>& ptr);
-
     
     virtual void setPlotColor();
     virtual void initPlot();

@@ -7,6 +7,7 @@
         <file alias="vacuumSVG.svg">icons/vacuumPump.svg</file>
         <file alias="chartsSVG.svg">icons/charts.svg</file>
         <file alias="shareSVG.svg">icons/share.svg</file>
+        <file alias="plusSVG.svg">icons/plus.svg</file>
     </qresource>
     <qresource prefix="/GRAMs">
         <file>../fonts/LoveLetter.TTF</file>
@@ -25,6 +26,8 @@
         <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/TempWidget.qml</file>
         <file>qml/mnemo/GRAM50_mnemo/GRAM50_mnemoContent/ShortComboBox.qml</file>
 
+        
+        <file>qml/lumber/PlayTable.qml</file>
         <file>qml/lumber/Lumber.qml</file>
         <file>qml/lumber/LStorage.qml</file>
         <file>qml/lumber/LReaction.qml</file>
