@@ -1,6 +1,7 @@
 #pragma once
-#include <QDebug>
-#include <Eigen/Dense>
+
+#include <QList>
+// #include <Eigen/Dense>
 #include "../lib/kalman.hpp"
 
 struct FilterMatrix{
@@ -10,7 +11,6 @@ struct FilterMatrix{
     double mR;
     QList<double> mP;
 };
-
 
 class VoltageFilter{
 public:

@@ -1,20 +1,31 @@
 #include "InletAction.h"
 
-static const double Rgas = 8.31446;
-static const double abscTemp = 273.15;
+#include <QDebug>
+#include <QThread>
 
-InletAction::InletAction(QObject *parent) : QObject(parent), m_timer()
+
+InletAction::InletAction(QObject *parent) : QObject(parent)
 {
-    connect(&m_timer, &QTimer::timeout, this, &InletAction::actionEvent);
 
     // configure state of the AddRemove and Storage quartile in a time spread
 }
 
 InletAction::~InletAction(){
-   if(m_timer.isActive()) m_timer.stop();
 }
 
-
-
-
-
+void InletAction::runInletAction(QPromise<double> &promise){
+    qDebug() << "Opened valve 0";
+    promise.start();
+    promise.setProgressRange(0, 2000);
+    QElapsedTimer runInletTime;
+    runInletTime.start();
+    while(runInletTime.elapsed() < 1000){
+        promise.setProgressValue(static_cast<int>(runInletTime.elapsed()));
+        promise.suspendIfRequested();   // support suspension
+        if (promise.isCanceled())       // support cancellation
+            break;
+        QThread::msleep(10);
+    }
+    promise.addResult(runInletTime.elapsed());
+    qDebug() << "Closed valve 0";
+}

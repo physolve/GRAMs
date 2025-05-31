@@ -38,6 +38,7 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     initTestField();
     initDatabase();
     initPlayPressure();
+    initActionHandler();
 
     initCharts();
 
@@ -542,6 +543,15 @@ void Grams::initPlayPressure(){
     m_playPressure.setARQ(&m_addRemoveQuartile);
     m_playPressure.setSQ(&m_storageQuartile);
     m_playPressure.setRQ(&m_reactionQuartile);
+}
+
+void Grams::initActionHandler(){
+    //
+    //pointers to valve control and security
+}
+
+void Grams::testActionHandler(){
+    m_actionHandler.runInletAction();
 }
 
 void Grams::guiValsUpdate(){

@@ -1,5 +1,5 @@
 #pragma once
-#include <QDebug>
+
 #include <QVariant>
 #include <QDateTime>
 

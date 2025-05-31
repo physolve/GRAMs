@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-// import Grams.dataSourceSingleton 1.0
+import Grams.backendSourceSingleton 1.0
 
 Item {
     id: root
@@ -54,5 +54,11 @@ Item {
             horizontalAlignment: TextInput.AlignHCenter
             selectByMouse: true
         }
+    }
+    Button{
+        x: 25
+        y: 60
+        text: "Запустить ESupply"
+        onClicked: Grams.testActionHandler()
     }
 }

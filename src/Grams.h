@@ -26,6 +26,7 @@
 #include "TimeStamp.h"
 #include "addon/TestField.h"
 #include "playpath/PlayPressure.h"
+#include "actions/ActionHandler.h"
 
 struct guiValsPres{ // sample
     Q_GADGET
@@ -111,6 +112,8 @@ public:
 
     Q_INVOKABLE void chamberSetUp();
     Q_INVOKABLE void refreshTestField();
+
+    Q_INVOKABLE void testActionHandler();
 signals:
     void valveChanged();
     void guiValsPresChanged();
@@ -141,6 +144,7 @@ private:
     void saveTimeStamp();
 
     void initPlayPressure();
+    void initActionHandler();
     
     void guiValsUpdate();
     void valveChangeUpdater(const QString& valveName);
@@ -290,6 +294,7 @@ private:
     TestField m_testField;
     PlayPressure m_playPressure;
 
+    ActionHandler m_actionHandler;
 
     QElapsedTimer m_benchmarkTime;
 };

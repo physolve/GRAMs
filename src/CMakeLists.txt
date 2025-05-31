@@ -117,6 +117,7 @@ if (WIN32)
                 Qt6::SerialPort
                 Qt6::OpenGL
                 Qt6::Sql
+                Qt6::Concurrent
                 # biodaq
                 opengl32
         Eigen3::Eigen
@@ -131,6 +132,7 @@ else()
             Qt6::SerialPort
             Qt6::OpenGL
             Qt6::Sql
+            Qt6::Concurrent
             biodaq
     )
 endif()

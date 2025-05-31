@@ -1,5 +1,7 @@
 #include "VoltageFilter.h"
 
+#include <Eigen/Dense>
+#include <QDebug>
     // int n = 3; // Number of states
     // int m = 1; // Number of measurements
 

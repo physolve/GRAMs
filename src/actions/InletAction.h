@@ -1,6 +1,8 @@
-#include <QTimer>
-#include <QDebug>
+#pragma once
+
+#include <QObject>
 #include <QElapsedTimer>
+#include <QPromise>
 
 struct guiInletAction{
     Q_GADGET
@@ -18,22 +20,21 @@ public:
 };
 
 
-class InletAction : public QObject // Action class?
+class InletAction : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY (guiInletAction guiInletAction READ getGuiInletAction WRITE setGuiInletAction NOTIFY guiInletActionChanged)
+    // Q_PROPERTY (guiInletAction guiInletAction READ getGuiInletAction WRITE setGuiInletAction NOTIFY guiInletActionChanged)
 public:
     InletAction(QObject *parent = 0);
     ~InletAction();
 
-private slots:
-    void actionEvent();
+    void runInletAction(QPromise<double> &promise);
 
 private:
-    QTimer m_timer;
     QElapsedTimer m_time;
     // pointers to valves
-    // pointers to dataSource?
+    // pointers to dataSource? interface
+    // concurrent run
 };
 
 

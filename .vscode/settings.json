@@ -88,7 +88,9 @@
         "variant": "cpp",
         "qqmlapplicationengine": "cpp",
         "qsqlerror": "cpp",
-        "qstring": "cpp"
+        "qstring": "cpp",
+        "qlist": "cpp",
+        "qpromise": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

@@ -7,10 +7,9 @@
 * @author: Hayk Martirosyan
 * @date: 2014.11.15
 */
+#pragma once
 
 #include <Eigen/Dense>
-
-#pragma once
 
 class KalmanFilter {
 

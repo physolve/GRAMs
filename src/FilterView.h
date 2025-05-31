@@ -1,7 +1,5 @@
 #pragma once
-#include <QDebug>
 #include <QVariant>
-// #include "Sensor.h"
 #include "controllers/VoltageFilter.h"
 #include "DataCollection.h"
 
