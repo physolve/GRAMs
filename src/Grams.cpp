@@ -116,16 +116,24 @@ void Grams::initAnalogData(){
 }
 
 void Grams::advDoController(){
-    if(!initSource.isInitializeOk())
-        return;
     // pointers to valves
     QVector<Valve*> valveList = {&vAR1, &vAR2, &vAR3, &vAR4, &vAR5, &vSL2, &vAR6, &vSL1, &vS4, &vS1, &vS2, &vS3, &vR1, &vR2, &vR3, &vR4};
-    dataSource.setValvePointers(valveList);
+    m_valveControl.setValvePointers(valveList);
+    m_valveControl.setChamberValvePointer(&vR5);
+    m_valveControl.setAddRemoveQuartile(&m_addRemoveQuartile);
+    m_valveControl.setReactionQuartile(&m_reactionQuartile);
+    m_valveControl.setDatabase(&m_gramStateDB);
+    m_valveControl.setSafeModule(&m_safeModule);
+    m_valveControl.setSafeModuleInitialValveState();
+    m_valveControl.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
+    m_valveControl.setGasStoreValves(initSource.m_storageQuar.m_gasStoreValves);
+
+    if(!initSource.isInitializeOk())
+        return;
     daqParameters parametersDO;
     initSource.getParametersDO(parametersDO);    
     // dataSource. set Required
-    dataSource.initDaqDO(parametersDO);
-    emit valveChanged();
+    m_valveControl.initDaqDO(parametersDO);
 }
 
 void Grams::advAiController(){
@@ -265,29 +273,6 @@ void Grams::initReactionQuartile(){
     m_reactionQuartile.updateQuartileData();
 }
 
-void Grams::setValveState(bool state, int index){
-    // signal from GUI to change state of object
-    Valve *valveList[16] = {&vAR1, &vAR2, &vAR3, &vAR4, &vAR5, &vSL2, &vAR6, &vSL1, &vS4, &vS1, &vS2, &vS3, &vR1, &vR2, &vR3, &vR4};
-    Valve *valve = valveList[index];
-    const bool originalState = valveList[index]->getState();
-    bool safe_state = m_safeModule.checkValveAction(valve->m_name, state);
-    valve->setState(safe_state);
-        if(!dataSource.setValveStates())
-            valve->setState(originalState);
-    emit valveChanged();
-    valveChangeUpdater(valve->m_name); // supply
-}
-
-void Grams::valveChangeUpdater(const QString& valveName){
-    // from profile supply
-    if(initSource.m_addRemoveQuar.m_gasSupplyValves.contains(valveName)){
-        m_addRemoveQuartile.updatePortState();
-    }
-    if(initSource.m_storageQuar.m_gasStoreValves.contains(valveName)){
-        saveTimeStamp();
-    }
-}
-
 void Grams::initCharts(){
     m_mainPlot = new TwoAxisPlot(); // two axis plot Child
     QVector<DataCollection*> chartPtrs;
@@ -337,7 +322,7 @@ void Grams::initGUI(){
     qmlRegisterType<BasePlot>("BasePlot", 1, 0, "BasePlotItem");
 
     qmlRegisterSingletonInstance("Grams.dataSourceSingleton", 1, 0, "DataSource", &dataSource);
-
+    qmlRegisterSingletonInstance("Grams.valveControlSingleton", 1, 0, "ValveControl", &m_valveControl);
     qmlRegisterSingletonInstance("Grams.addRemoveQuartileSingleton", 1, 0, "AddRemoveQuar", &m_addRemoveQuartile);
     qmlRegisterSingletonInstance("Grams.reactionQuartileSingleton", 1, 0, "ReactionQuar", &m_reactionQuartile);
     
@@ -435,10 +420,6 @@ Q_INVOKABLE void Grams::removeGraph(const QString &key)
 
 void Grams::initSafeModule(){
     m_safeModule.constructValveMap(initSource.m_hardware.m_valves);
-    Valve *valveList[16] = {&vAR1, &vAR2, &vAR3, &vAR4, &vAR5, &vSL2, &vAR6, &vSL1, &vS4, &vS1, &vS2, &vS3, &vR1, &vR2, &vR3, &vR4};
-    for(int i = 0; i < 16; i++){
-        m_safeModule.setInitialState(valveList[i]->m_name, valveList[i]->getState());
-    }
     m_safeModule.setContradictionValves(initSource.m_security.m_contradictionValves);
     m_safeModule.setRuleOfThreeValves(initSource.m_security.m_twoOfThree);
     
@@ -467,7 +448,6 @@ void Grams::initTimeStamp(){
     // unpredictable behavior
     int id = initialTimeStamp[0].toInt();
     QDateTime timeStamp = initialTimeStamp[1].toDateTime();
-
     guiValsPresVirtual pressureVals;
     pressureVals.g_prSQ = initialTimeStamp[2].toDouble();
     pressureVals.g_prRQ = initialTimeStamp[3].toDouble();
@@ -492,7 +472,6 @@ void Grams::initTimeStamp(){
     prRE.addPoint(initialTimeStamp[9].toDouble());
     prRD2Atm.addPoint(initialTimeStamp[10].toDouble());
     prRF.addPoint(initialTimeStamp[11].toDouble());
-
     guiValsUpdate();
     // check to real
 }
@@ -513,30 +492,14 @@ void Grams::initDatabase(){
     // user info
     if(m_gramStateDB.initDatabase()){
         // do something else
-        
+        //)
+        QVector<DataCollection*> timeStampDataPointers = {&prSQ, &prRQ, &prSC1, &prSC2, &prSC3, &prSB, &prSD1, &prRE, &prRD2Atm, &prRF};
+        m_gramStateDB.setTimeStampDataPointers(timeStampDataPointers);
         // if(m_gramStateDB.queryTimeStamp())
         //     qDebug() << "Query reserved"; // ok?
         // else
         //     qDebug() << "Query not reserved";
     }
-}
-
-void Grams::saveTimeStamp(){
-    QList<double> timeStampValues;
-    timeStampValues << prSQ.getCurValue();
-    timeStampValues << prRQ.getCurValue();
-    timeStampValues << prSC1.getCurValue();
-    timeStampValues << prSC2.getCurValue();
-    timeStampValues << prSC3.getCurValue();
-    timeStampValues << prSB.getCurValue();
-    timeStampValues << prSD1.getCurValue();
-    timeStampValues << prRE.getCurValue();
-    timeStampValues << prRD2Atm.getCurValue();
-    timeStampValues << prRF.getCurValue();
-    if(m_gramStateDB.writeTimeStamp(timeStampValues))
-        qDebug() << "Time Stamp has been written";
-    else 
-        qDebug() << "Time Stamp has not been written";
 }
 
 void Grams::initPlayPressure(){
@@ -613,18 +576,8 @@ void Grams::chamberSetUp(){
     chamber.volume = 25.405;
     m_chamber.setChamberVolume(chamber); // rewrite Volume object for chamber to use in quartile with other
     m_chamber.setCraneToChamber(26.1327 - 25.7941);
-
-    setManualChamberValve(true); // might do it in quartile later
     m_reactionQuartile.setChamber(chamber.name);
-    // m_reactionQuartile.setChamberPointer(&m_chamber) done it in the initReactionQuartile
-    m_reactionQuartile.updateChamberToQuartile();
-}
-
-void Grams::setManualChamberValve(bool state){
-    vR5.setState(state);
-    // chamber updater to bd and safestate
-    m_chamber.setStatusOpen(state);
-    emit valveChanged();
+    m_valveControl.setManualChamberValve(true);
 }
 
 guiValsPres Grams::getGuiValsPres() const{
@@ -639,62 +592,13 @@ guiValsPresVirtual Grams::getGuiPresVirtual() const{
     return m_guiPresVirtual;
 }
 
-bool Grams::getVAR1State() const{
-    return vAR1.getState();
-}
-bool Grams::getVAR2State() const{
-    return vAR2.getState();
-}
-bool Grams::getVAR3State() const{
-    return vAR3.getState();
-}
-bool Grams::getVAR4State() const{
-    return vAR4.getState();
-}
-bool Grams::getVAR5State() const{
-    return vAR5.getState();
-}
-bool Grams::getVAR6State() const{
-    return vAR6.getState();
-}
-bool Grams::getVS1State() const{
-    return vS1.getState();
-}
-bool Grams::getVS2State() const{
-    return vS2.getState();
-}
-bool Grams::getVS3State() const{
-    return vS3.getState();
-}
-bool Grams::getVS4State() const{
-    return vS4.getState();
-}
-bool Grams::getVR1State() const{
-    return vR1.getState();
-}
-bool Grams::getVR2State() const{
-    return vR2.getState();
-}
-bool Grams::getVR3State() const{
-    return vR3.getState();
-}
-bool Grams::getVR4State() const{
-    return vR4.getState();
-}
-bool Grams::getVR5State() const{
-    return vR5.getState();
-}
-bool Grams::getVSL1State() const{
-    return vSL1.getState();
-}
-bool Grams::getVSL2State() const{
-    return vSL2.getState();
-}
-
 void Grams::beforeQuitting(){
     // quitting
     bool autoSave = false;
     if(autoSave){
-        saveTimeStamp();
+        if(m_gramStateDB.writeTimeStamp())
+            qDebug() << "Time Stamp has been written";
+        else 
+            qDebug() << "Time Stamp has not been written";
     }
 }

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Grams.backendSourceSingleton 1.0
 import Grams.testFieldSingleton 1.0
+import Grams.valveControlSingleton 1.0
 import "content"
 Item {
     id: lumber
@@ -46,7 +47,7 @@ Item {
                 // y: parent.height/2 - 20
                 rotation: 45
                 anchors.verticalCenter: parent.bottom
-                state: Grams.vAR4State
+                state: ValveControl.guiValve["AR4"]
             }
         }
         Rectangle{
@@ -64,7 +65,7 @@ Item {
             }
             ValveIndicator{
                 x: parent.width - 10
-                state: Grams.vS3State
+                state: ValveControl.guiValve["S3"]
             }
         }
         Rectangle{
@@ -82,7 +83,7 @@ Item {
             }
             ValveIndicator{
                 x: parent.width - 10
-                state: Grams.vS2State
+                state: ValveControl.guiValve["S2"]
             }
         }
         Rectangle{
@@ -100,7 +101,7 @@ Item {
             }
             ValveIndicator{
                 x: parent.width - 10
-                state: Grams.vS1State
+                state: ValveControl.guiValve["S1"]
             }
         }
     }
@@ -138,17 +139,17 @@ Item {
             ValveIndicator{
                 x: 0
                 anchors.verticalCenter: parent.bottom
-                state: Grams.vR1State || Grams.vR2State || Grams.vR3State
+                state: ValveControl.guiValve["R1"] || ValveControl.guiValve["R2"] || ValveControl.guiValve["R3"]
             }
             ValveIndicator{
                 x: parent.width/2-15
                 anchors.verticalCenter: parent.bottom
-                state: Grams.vR1State || Grams.vR3State                
+                state: ValveControl.guiValve["R1"] || ValveControl.guiValve["R3"]                
             }
             ValveIndicator{
                 x: parent.width - 30
                 anchors.verticalCenter: parent.bottom
-                state: Grams.vR3State
+                state: ValveControl.guiValve["R3"]
             }
         }
         Rectangle{
@@ -176,7 +177,7 @@ Item {
                     value: Grams.guiPresVirtual.prRF
                 }
                 ValveIndicator{
-                    state: Grams.vR5State
+                    state: ValveControl.guiValve["R5"]
                 }
             }
         }
@@ -226,7 +227,7 @@ Item {
             }
             ValveIndicator{
                 x: parent.width - 10
-                state: Grams.vAR1State
+                state: ValveControl.guiValve["AR1"]
             }
         }
         Rectangle{
@@ -243,7 +244,7 @@ Item {
             }
             ValveIndicator{
                 x: parent.width - 10
-                state: Grams.vAR2State
+                state: ValveControl.guiValve["AR2"]
             }
         }
         Rectangle{
@@ -260,7 +261,7 @@ Item {
             }
             ValveIndicator{
                 x: parent.width - 10
-                state: Grams.vAR3State
+                state: ValveControl.guiValve["AR3"]
             }
         }
     }
@@ -284,13 +285,13 @@ Item {
                     x: parent.width/2 - 15
                     rotation: 90
                     anchors.verticalCenter: parent.top
-                    state: Grams.vAR5State
+                    state: ValveControl.guiValve["AR5"]
                 }
                 ValveIndicator{
                     x: parent.width/2 - 15
                     rotation: 90
                     anchors.verticalCenter: parent.bottom
-                    state: Grams.vAR6State
+                    state: ValveControl.guiValve["AR6"]
                 }
             }
         }
@@ -307,7 +308,7 @@ Item {
             }
             ValveIndicator{
                 x: -15
-                state: Grams.vSL2State
+                state: ValveControl.guiValve["SL2"]
             }
         }
         Rectangle{

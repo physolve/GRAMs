@@ -27,8 +27,7 @@ class InletAction : public QObject
 public:
     InletAction(QObject *parent = 0);
     ~InletAction();
-
-    void runInletAction(QPromise<double> &promise);
+    void runInletAction(QPromise<int> &promise);
 
 private:
     QElapsedTimer m_time;

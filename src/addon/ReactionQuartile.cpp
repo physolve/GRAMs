@@ -36,9 +36,7 @@ void ReactionQuartile::setChamberStatus(bool statusOpen){
 void ReactionQuartile::updateChamberToQuartile(){
     m_volumeObjects["F"] = m_chamber->getVolumeObject();
     m_volumeObjects["EF"] = m_chamber->getCraneObject();
-
     // m_pressureNodes; updating the nodes
-
 }
 
 void ReactionQuartile::removeChamber(){

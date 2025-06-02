@@ -81,8 +81,12 @@ public:
 private:
     // current states (valves)
     QMap<QString, bool> m_valveMap;
+    // pointers 
+    
     // current pressure
     QMap<QString, double> m_pressureQuarMap;
+    // pointers
+    
     // incoming states (valves)
     // incoming pressure
     // pressureNodes
@@ -94,5 +98,8 @@ private:
 
     QMap<QString, ReactionToSupply> m_supplyValves;
     QMap<QString, ReactionToLeakage> m_leakageValves;
+
+    // QMap<QString, ControllerConnection> GRAMsIntegrity;
+    
 };
 

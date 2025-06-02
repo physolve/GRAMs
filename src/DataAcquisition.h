@@ -10,11 +10,11 @@
 #include "ValveModel.h"
 #include "addon/Quartile.h"
 
-enum ControllerConnection{
-    Offline,
-    Online,
-    Pending
-};
+// enum ControllerConnection{
+//     Offline,
+//     Online,
+//     Pending
+// };
 
 class DataAcquisition : public QObject
 {
@@ -22,7 +22,7 @@ class DataAcquisition : public QObject
 public:
     explicit DataAcquisition(QObject *parent = 0);
     virtual ~DataAcquisition();
-    void initDaqDO(const daqParameters &parameterDO); 
+    // void initDaqDO(const daqParameters &parameterDO); 
     void initDaqAIpres(const daqParameters &parameterAIpres);
     void initDaqAItemp(const daqParameters &parameterAItemp);
     void initSerialVacuum(const vacuumParameters &parameterVacuum);
@@ -32,8 +32,8 @@ public:
 
     bool getGRAMsIntegrity();
 
-    void setValvePointers(const QVector<Valve*>& ptr);
-    bool setValveStates();
+    // void setValvePointers(const QVector<Valve*>& ptr);
+    // bool setValveStates();
     void setTimePointer(ControllerData* ptr);
     void setPressurePointers(const QVector<ControllerData*>& ptr);
     void setTempPointers(const QVector<ControllerData*>& ptr);
@@ -52,15 +52,20 @@ private slots:
 private:
     void fillSupplyARQ();
     void fillLeakageRQ();
-    QMap<QString, ControllerConnection> GRAMsIntegrity;
+
+    // QMap<QString, ControllerConnection> GRAMsIntegrity;
+
+    bool pressureController;
+    bool temperatureController;
+
     QElapsedTimer m_elapsedTimer;
     
     ControllerData* m_time;
     QTimer* m_acquisitionTimer;
     
-    AdvantechDO reqValveDO;
+    // AdvantechDO reqValveDO;
     // valve pointers
-    QVector<Valve*> m_valves;
+    // QVector<Valve*> m_valves;
     
     AdvantechBuff reqSensorAI;
     // AI pointers

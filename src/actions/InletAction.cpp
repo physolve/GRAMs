@@ -13,14 +13,15 @@ InletAction::InletAction(QObject *parent) : QObject(parent)
 InletAction::~InletAction(){
 }
 
-void InletAction::runInletAction(QPromise<double> &promise){
+void InletAction::runInletAction(QPromise<int> &promise){
     qDebug() << "Opened valve 0";
-    promise.start();
-    promise.setProgressRange(0, 2000);
     QElapsedTimer runInletTime;
     runInletTime.start();
-    while(runInletTime.elapsed() < 1000){
-        promise.setProgressValue(static_cast<int>(runInletTime.elapsed()));
+    promise.setProgressRange(0, 2000);
+    promise.start();
+    promise.addResult(0);
+    while(runInletTime.elapsed() < 2000){
+        promise.setProgressValue(runInletTime.elapsed());
         promise.suspendIfRequested();   // support suspension
         if (promise.isCanceled())       // support cancellation
             break;

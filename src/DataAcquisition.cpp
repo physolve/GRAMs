@@ -3,9 +3,11 @@
 DataAcquisition::DataAcquisition(QObject *parent) :
     QObject(parent), m_acquisitionTimer(new QTimer), m_supplyMeasure(false), m_leakageMeasure(false)
 {
-    GRAMsIntegrity["pressure"] = ControllerConnection::Offline;
-    GRAMsIntegrity["temperature"] = ControllerConnection::Offline;
-    GRAMsIntegrity["valves"] = ControllerConnection::Offline;
+    // GRAMsIntegrity["pressure"] = ControllerConnection::Offline;
+    pressureController = false;
+    // GRAMsIntegrity["temperature"] = ControllerConnection::Offline;
+    temperatureController = false;
+    // GRAMsIntegrity["valves"] = ControllerConnection::Offline;
     connect(m_acquisitionTimer, &QTimer::timeout, this, &DataAcquisition::processEvents);
     
     // add thread for acquisition
@@ -25,15 +27,17 @@ DataAcquisition::~DataAcquisition(){
 
 bool DataAcquisition::getGRAMsIntegrity(){
     //auto l_integrity = [](const QList<ControllerConnection> a) { 
-    for(const auto& b:GRAMsIntegrity.values())
-            if(b!=ControllerConnection::Online)
-                return false;
+    // for(const auto& b:GRAMsIntegrity.values())
+    //         if(b!=ControllerConnection::Online)
+    //             return false;
+    if(!pressureController || !temperatureController)
+        return false;
     return true;
 }
 
-void DataAcquisition::setValvePointers(const QVector<Valve*>& ptr){
-    m_valves = ptr;
-}
+// void DataAcquisition::setValvePointers(const QVector<Valve*>& ptr){
+//     m_valves = ptr;
+// }
 
 void DataAcquisition::setTimePointer(ControllerData* timeAnalog){
     m_time = timeAnalog;
@@ -55,21 +59,21 @@ void DataAcquisition::setVacuumPointer(DataCollection* ptr){
     m_vacuumSensor = ptr;
 }
 
-void DataAcquisition::initDaqDO(const daqParameters &parameter){
-    // pass real info from Initialize
-    AdvDOType a(parameter.fullName);
-    a.setProfilePath(parameter.m_profile);
-    reqValveDO.setInfo(a);
-    reqValveDO.ConfigureDeviceDO();
-    reqValveDO.readData();
-    // valve objects
-    const auto &readData = reqValveDO.getData();
-    // if ok
-    for(int i = 0; i < m_valves.count(); ++i){
-        m_valves[i]->setState(readData[i]);
-    }
-    GRAMsIntegrity["valves"] = ControllerConnection::Online;
-}
+// void DataAcquisition::initDaqDO(const daqParameters &parameter){
+//     // pass real info from Initialize
+//     AdvDOType a(parameter.fullName);
+//     a.setProfilePath(parameter.m_profile);
+//     reqValveDO.setInfo(a);
+//     reqValveDO.ConfigureDeviceDO();
+//     reqValveDO.readData();
+//     // valve objects
+//     const auto &readData = reqValveDO.getData();
+//     // if ok
+//     for(int i = 0; i < m_valves.count(); ++i){
+//         m_valves[i]->setState(readData[i]);
+//     }
+//     GRAMsIntegrity["valves"] = ControllerConnection::Online;
+// }
 
 void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
     AdvAIType a(parameter.fullName);
@@ -93,7 +97,7 @@ void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
         m_pressureSensors[i]->addValue(readData[i], 0);
         m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
     }
-    GRAMsIntegrity["pressure"] = ControllerConnection::Online;
+    pressureController = true;
 }
 
 void DataAcquisition::updateFilter(int chartIndex){
@@ -124,8 +128,8 @@ void DataAcquisition::initDaqAItemp(const daqParameters &parameter){
     for(int i = 0; i < m_tempSensors.count(); ++i){
         m_tempSensors[i]->addValue(readData[i]);
     }
-
-    GRAMsIntegrity["temperature"] = ControllerConnection::Online;
+    // GRAMsIntegrity["temperature"] = ControllerConnection::Online;
+    temperatureController = true;
 }
 
 void DataAcquisition::initSerialVacuum(const vacuumParameters &parameterVacuum){
@@ -147,17 +151,17 @@ void DataAcquisition::testVacuumQuery(){
     reqVacuum.requestRepetitive();
 }
 
-bool DataAcquisition::setValveStates(){
-    if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
-        return false;
-    QVector<bool> changedState;
-    // if changedState > 8*portCount!
-    for(int i = 0; i < m_valves.count(); ++i){
-        changedState << m_valves[i]->getState();
-    }
-    // handler to unsuccessful set (true / false)
-    return reqValveDO.setData(changedState);
-}
+// bool DataAcquisition::setValveStates(){
+//     if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
+//         return false;
+//     QVector<bool> changedState;
+//     // if changedState > 8*portCount!
+//     for(int i = 0; i < m_valves.count(); ++i){
+//         changedState << m_valves[i]->getState();
+//     }
+//     // handler to unsuccessful set (true / false)
+//     return reqValveDO.setData(changedState);
+// }
 
 void DataAcquisition::startAcquisition(){
     if(!getGRAMsIntegrity()){

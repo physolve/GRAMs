@@ -60,6 +60,10 @@ GramStateDB::~GramStateDB(){
     }
 }
 
+void GramStateDB::setTimeStampDataPointers(const QVector<DataCollection*>& ptr){
+    m_timeStampDataPointers = ptr;
+}
+
 bool GramStateDB::initDatabase(){
     m_gramState = QSqlDatabase::database();
     m_gramState.setHostName("localhost"); // ?
@@ -84,16 +88,35 @@ bool GramStateDB::initDatabase(){
 //                     //"VALUES (:ts, :prSQ, :prRQ, :prSC1, :prSC2, :prSC3, :prSB, :prSD1, :prRE, :prRD2, :prRF)");
 // }
 
-bool GramStateDB::writeTimeStamp(const QVector<double> &values){
+// bool GramStateDB::writeTimeStamp(const QVector<double> &values){
+//     if(!m_gramState.isOpen()){
+//         return false;
+//     }
+//     QSqlQuery query;
+//     query.prepare("INSERT INTO gramstate (ts, prSQ, prRQ, prSC1, prSC2, prSC3, prSB, prSD1, prRE, prRD2, prRF) "
+//                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+//     // qDebug() << QDateTime::currentDateTime();
+//     query.addBindValue(QDateTime::currentDateTime().toString()); // utc?
+//     for(const double& value: values){
+//         query.addBindValue(value);
+//     }
+//     return query.exec();
+// }
+
+bool GramStateDB::writeTimeStamp(){
     if(!m_gramState.isOpen()){
         return false;
+    }
+    QList<double> timeStampValues;
+    for(auto sensor : m_timeStampDataPointers){
+        timeStampValues << sensor->getCurValue();
     }
     QSqlQuery query;
     query.prepare("INSERT INTO gramstate (ts, prSQ, prRQ, prSC1, prSC2, prSC3, prSB, prSD1, prRE, prRD2, prRF) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     // qDebug() << QDateTime::currentDateTime();
     query.addBindValue(QDateTime::currentDateTime().toString()); // utc?
-    for(const double& value: values){
+    for(const double& value: timeStampValues){
         query.addBindValue(value);
     }
     return query.exec();

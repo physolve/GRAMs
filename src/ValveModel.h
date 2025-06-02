@@ -16,7 +16,7 @@ private:
     bool m_state = false;
 };
 
-
+// unused 
 class ValveModel : public QAbstractListModel
 {
     Q_OBJECT

@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QElapsedTimer>
 #include <QPromise>
+#include <QFutureWatcher>
 
 #include "InletAction.h"
 
@@ -14,7 +15,7 @@ public:
     ActionHandler(QObject *parent = 0);
     ~ActionHandler();
     void runInletAction();
-
+private:
+    QFutureWatcher<int> watcher;
+    // Valve Control pointer
 };
-
-

@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Grams.chamberChooserSingleton 1.0
-import Grams.backendSourceSingleton 1.0
+import Grams.valveControlSingleton 1.0
 
 Item {
     id: root
@@ -75,7 +75,7 @@ Item {
             checkable: true
             checked: ChamberChooser.chamberParams.status
             text: checked ? "Закрыть камеру" : "Открыть камеру"
-            onClicked: Grams.setManualChamberValve(checked)
+            onClicked: ValveControl.setManualChamberValve(checked)
         }
     }
 }
