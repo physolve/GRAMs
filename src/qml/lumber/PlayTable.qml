@@ -9,7 +9,7 @@ TableView {
     columnSpacing: 1
     rowSpacing: 1
     boundsBehavior: Flickable.StopAtBounds
-    property var columnWidths: [40, 210, 170, 50, 100, 100, 100]
+    property var columnWidths: [40, 210, 170, 50, 100, 100]
     columnWidthProvider: function (column) { return columnWidths[column] }
     model: TableModel {
         TableModelColumn { display: "runCnt" }
@@ -31,7 +31,7 @@ TableView {
             chargeFrom: 4,
             to: 5
         })
-        }
+    }
 
     delegate: DelegateChooser {
         DelegateChoice {

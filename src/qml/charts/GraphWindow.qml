@@ -16,7 +16,7 @@ Item{
         rightInset: -6
         bottomInset: -6
         width: parent.width - 10
-        height: 350
+        height: 360
         contentItem: Grams.mainPlot
         background: Rectangle {
             color:"transparent"; border.color: "#257D97"; border.width: 2; radius: 5
@@ -44,6 +44,8 @@ Item{
     StackLayout {
         id: layoutMain
         anchors.topMargin: 5
+        anchors.rightMargin: 5
+        anchors.bottomMargin: 80
         anchors.top: barCharts.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -52,81 +54,111 @@ Item{
         Repeater{
             id: chartsRepeater
             model: Grams.graphs
-            delegate: WindowContainer {
-                id: myChartWindow
-                required property int index
-                required property Item modelData
-                property bool attached: true
-                z: 0
-                // signal detach(name: int)
-                window: Window {
-                    id: childWindow
-                    color:"#2B2B2B"
-                    flags: Qt.Dialog
-                    transientParent: null                
-                    Control{
-                        id: chartView
-                        x: 5
-                        y: 5
-                        topInset: -6
-                        leftInset: -6
-                        rightInset: -6
-                        bottomInset: -6
-                        width: parent.width - 10
-                        height: myChartWindow.attached ? 350 : parent.height - 10
-                        contentItem: modelData
-                        background: Rectangle {
-                            color:"transparent"; border.color: "#257D97"; border.width: 2; radius: 5
-                        }
-                    }
-                    Button{
-                        x: 5
-                        y: chartView.height+5
-                        height: 40
-                        width: 100
-                        icon.source: "qrc:/shareSVG.svg"
-                        visible: myChartWindow.attached
-                        onClicked: {
-                            var myChart = chartWindow.createObject(root,{win: myChartWindow.window, index})
-                            myChartWindow.window = placeholder.createObject(root)
-                            myChart.flags = Qt.Dialog
-                            myChart.show()
-                            myChart.width = 525
-                            myChart.height = 425
-                            myChartWindow.attached = false
-                        }
-                    }
+            delegate: Control{
+                id: chartView
+                x: 5
+                y: 5
+                topInset: -6
+                leftInset: -6
+                rightInset: -6
+                bottomInset: -6
+                width: parent.width - 15
+                height: 320
+                contentItem: modelData
+                background: Rectangle {
+                    color:"transparent"; border.color: "#257D97"; border.width: 2; radius: 5
                 }
             }
         }
     }
-    Component{
-        id: chartWindow
-        Window{
-            required property var win
-            required property int index
-            height: 600
-            width: 600
-            visible: false
-            color: "#2B2B2B"
-            WindowContainer {
-                id: tempWin
-                anchors.fill: parent
-                window: win
-            }
-            onClosing:{
-                tempWin.window = chartsRepeater.itemAt(index).window
-                chartsRepeater.itemAt(index).window = win
-                chartsRepeater.itemAt(index).attached = true
-            }
-        }
-    }
-    Component{
-        id: placeholder
-        Window {
-            color: "#2B2B2B"
-        }
-    }
+}
+    // WindowContainer {
+    //             id: myChartWindow
+    //             required property int index
+    //             required property Item modelData
+    //             property bool attached: true
+    //             z: 0
+    //             // signal detach(name: int)
+    //             window: Window {
+    //                 id: childWindow
+    //                 color:"#2B2B2B"
+    //                 flags: Qt.Dialog
+    //                 transientParent: null
+    //                 Control{
+    //                     id: chartView
+    //                     x: 5
+    //                     y: 5
+    //                     topInset: -6
+    //                     leftInset: -6
+    //                     rightInset: -6
+    //                     bottomInset: -6
+    //                     width: parent.width - 10
+    //                     height: myChartWindow.attached ? 350 : parent.height - 10
+    //                     contentItem: modelData
+    //                     background: Rectangle {
+    //                         color:"transparent"; border.color: "#257D97"; border.width: 2; radius: 5
+    //                     }
+    //                 }
+    //                 Button{
+    //                     x: 5
+    //                     y: chartView.height+5
+    //                     height: 40
+    //                     width: 100
+    //                     icon.source: "qrc:/shareSVG.svg"
+    //                     visible: myChartWindow.attached
+    //                     onClicked: {
+    //                         var myChart = chartWindow.createObject(root, {win: myChartWindow.window, index})
+    //                         myChartWindow.window = placeholder.createObject(root)
+    //                         myChart.flags = Qt.Dialog
+    //                         myChart.show()
+    //                         myChart.width = 525
+    //                         myChart.height = 425
+    //                         myChartWindow.attached = false
+    //                     }
+    //                 }
+    //             }
+
+    //         }
+    //     }
+
+
+    // Component{
+    //     id: chartWindow
+    //     Window{
+    //         required property var win
+    //         required property int index
+    //         height: 600
+    //         width: 600
+    //         visible: false
+    //         color: "#2B2B2B" 
+    //         WindowContainer {
+    //             id: tempWin
+    //             anchors.fill: parent
+    //             window: win
+    //         }
+    //         onClosing:{
+    //             tempWin.window = chartsRepeater.itemAt(index).window
+    //             chartsRepeater.itemAt(index).window = win
+    //             chartsRepeater.itemAt(index).attached = true
+    //         }
+    //     }
+    //     onDestroying: {
+    //         tempWin.window = chartsRepeater.itemAt(index).window
+    //         chartsRepeater.itemAt(index).window = win
+    //         chartsRepeater.itemAt(index).attached = true
+    //     }
+    
+    // }
+    // Component{
+    //     id: placeholder
+    //     Window {
+    //         color: "#2B2B2B"
+    //         // transientParent: null
+    //     }
+    // }
+
+
+
 
         // GridView {
     //     id: view
@@ -340,4 +372,3 @@ Item{
     //         }
     //     }
     // }
-}

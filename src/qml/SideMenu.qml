@@ -33,6 +33,10 @@ Item{
         barMainRepeater.model = ["Графики"]
         layoutMain.currentIndex = 6
     }
+    function setUserExperimentMenu(){
+        barMainRepeater.model = ["Создание эксперимента"]
+        layoutMain.currentIndex = 7
+    }
     TabBar {
         id: barMain
         width: parent.width
@@ -103,6 +107,11 @@ Item{
         }
         GraphWindow{
             id: graphWindow
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+        UserExperiment{
+            id: userExperiment
             Layout.fillWidth: true
             Layout.fillHeight: true
         }

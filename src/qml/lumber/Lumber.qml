@@ -12,6 +12,7 @@ Item {
     signal playVacuum()
     signal playInlet()
     signal expSupply()
+    signal userExperiment()
     Rectangle{
         id: mS
         x: 5
@@ -339,7 +340,7 @@ Item {
             color:"transparent"; border.color: "#464646";
             LTools{
                 anchors.centerIn: parent
-                onOpenESupply: lumber.expSupply()
+                onOpenUserExperiment: lumber.userExperiment()
             }   
         }
     }

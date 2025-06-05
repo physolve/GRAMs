@@ -7,6 +7,8 @@ Rectangle {
     color: "#464646"
     border.color: "#F2C029"
     anchors.fill: parent
+    // signal openESupply()
+    signal openUserExperiment()
     // reminder to change for other systems
     HorizontalHeaderView {
         id: horizontalHeader
@@ -56,8 +58,7 @@ Rectangle {
         // width: 50
         icon.source: "qrc:/plusSVG.svg"
         icon.color: "#F2C029"
-        onClicked: lTools.openESupply()
+        onClicked: lTools.openUserExperiment()
     }
     
-    signal openESupply()
 }

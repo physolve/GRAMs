@@ -61,5 +61,6 @@
         <file>qml/measure/PInlet.qml</file>
         <file>qml/measure/ESupply.qml</file>
         <file>qml/SideMenu.qml</file>
+        <file>qml/UserExperiment.qml</file>
     </qresource>
 </RCC>
