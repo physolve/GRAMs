@@ -1,7 +1,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Material 2.12
+import QtQuick.Controls.Material
+// import QtQuick.Controls.FluentWinUI3
+
 import Grams.backendSourceSingleton 1.0
 
 //import "mnemo/GRAM300_mnemo/GRAM300_mnemoContent"

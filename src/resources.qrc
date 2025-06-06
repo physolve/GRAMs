@@ -40,6 +40,8 @@
         <file>qml/lumber/content/VirtualPressure.qml</file>
         <file>qml/lumber/content/VirtualFlow.qml</file>
         <file>qml/lumber/content/ValveIndicator.qml</file>
+        <file>qml/lumber/content/ScrollArrow.qml</file>
+        <file>qml/lumber/content/CuteProgressBar.qml</file>
 
         <file>qml/Main.qml</file>
         <file>qml/SettingsWindow.qml</file>

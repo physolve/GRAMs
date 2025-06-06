@@ -130,7 +130,7 @@ Rectangle {
         x: 25
         y: 225
         // implicitHeight: 36
-        model: ["№", "Режим", "Условие", "Повтор", "Статус", "Время"]
+        model: ["Режим", "Условие", "Повтор", "Макс. время"]
         clip: true
         // delegate: Rectangle {
         //     color: "white"
@@ -149,8 +149,11 @@ Rectangle {
             id: playTable
             // topMargin: horizontalHeader.implicitHeight+5
             leftMargin: 5
-            columnWidths: [40, 150, 100, 55, 0, 100, 100]
+            columnWidths: [80, 230, 55, 80, 0]
             // onClicked: function(row, rowData) { print('onClicked', row, JSON.stringify(rowData)); }
+        }
+        SelectionRectangle {
+            target: playTable
         }
         // contentWidth: children.implicitWidth
         // contentHeight: children.implicitHeight
@@ -172,19 +175,68 @@ Rectangle {
     //     visible: false
     //     model: ["Вакуум", "SOAK...", "PCI...", "Проницаемость", "ТДС", "Наблюдение", "Калибровка...", "Проверка системы", "Цел. в камере"]
     // }
+    function addRegime(regime){
+        playTable.model.appendRow({
+                name: regime,
+                passed: 0,
+                from: 3,
+                time: "00:00:00",
+                setting: 0.0
+            })
+        tableScrollExp.scrollToBottom()
+    }
     MenuBar {
         id: addRegime
         x: 50
         y: 630
-        Menu {
+
+        Menu{
             title: "Добавить"
+            MenuItem {
+                text: "Вакуум"
+                onTriggered: userExperiment.addRegime(text)
+            }
             Menu {
                 cascade: true  // Nested menu
-                title: qsTr("&Bar")
-                Action { text: qsTr("A1") }
-                Action { text: qsTr("A2") }
-                Action { text: qsTr("A3") }
+                title: "SOAK"
+                MenuItem { text: "Спадающий"; onTriggered: userExperiment.addRegime(`SOAK ${text}` ) }
+                MenuItem { text: "Постоянный"; onTriggered: userExperiment.addRegime(text) }
+                MenuItem { text: "Десорбция"; onTriggered: userExperiment.addRegime(text) }
             }
+            Menu {
+                cascade: true  // Nested menu
+                title: "PCI"
+                MenuItem { text: "Сорбция"; onTriggered: userExperiment.addRegime(text) }
+                MenuItem { text: "Десорбция"; onTriggered: userExperiment.addRegime(text) }
+            }
+            MenuItem {
+                text: "Проницаемость"
+            }
+            MenuItem {
+                text: "ТДС"
+            }
+            MenuItem {
+                text: "Наблюдение"
+                onTriggered: userExperiment.addRegime(text)
+            }
+            MenuItem {
+                text: "Калибровка"
+            }
+            MenuItem {
+                text: "Проверка системы"
+            }
+            MenuItem {
+                text: "Цел. в камере"
+            }
+        }
+    }
+    MenuBar {
+        id: deleteRegime
+        x: 150
+        y: 630
+
+        Menu{
+            title: "Удалить"
         }
     }
     // Button{

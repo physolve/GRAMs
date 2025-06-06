@@ -16,7 +16,7 @@ Rectangle {
         x: 5
         y: 10
         // implicitHeight: 36
-        model: ["№", "Режим", "Начать при условии", "Повтор", "Статус","Время"]
+        model: ["Режим", "Начать при условии", "Повтор", "Время", "Прогресс"]
         clip: true
         // delegate: Rectangle {
         //     color: "white"
