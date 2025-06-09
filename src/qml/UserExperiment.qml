@@ -7,6 +7,7 @@ Rectangle {
     id: userExperiment
     color: "#464646"
     border.color: "#F2C029"
+    signal openESupply()
     Row{
         x: 25
         y: 25
@@ -151,6 +152,7 @@ Rectangle {
             leftMargin: 5
             columnWidths: [80, 230, 55, 80, 0]
             // onClicked: function(row, rowData) { print('onClicked', row, JSON.stringify(rowData)); }
+            onOpenESupply: userExperiment.openESupply()
         }
         SelectionRectangle {
             target: playTable
@@ -226,7 +228,7 @@ Rectangle {
                 text: "Проверка системы"
             }
             MenuItem {
-                text: "Цел. в камере"
+                text: "Цел. в камере"; onTriggered: userExperiment.addRegime(text)
             }
         }
     }

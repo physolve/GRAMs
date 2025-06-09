@@ -8,7 +8,7 @@ ActionHandler::ActionHandler(QObject *parent) : QObject(parent)
     connect(&watcher, &QFutureWatcher<int>::progressValueChanged,
         [](int progress) { qDebug() << "Progress:" << progress; });
     connect(&watcher, &QFutureWatcher<int>::resultReadyAt,
-        [](double result) { qDebug() << "Intermediate Result:" << result; });
+        [](int result) { qDebug() << "Intermediate Result index:" << result; });
     connect(&watcher, &QFutureWatcher<int>::finished, this,
         []() { qDebug() << "Finished: watcher"; });
 

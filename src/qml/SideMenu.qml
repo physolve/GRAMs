@@ -114,6 +114,7 @@ Item{
             id: userExperiment
             Layout.fillWidth: true
             Layout.fillHeight: true
+            onOpenESupply: setExpSupplyMenu()
         }
     } 
 }

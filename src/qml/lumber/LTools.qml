@@ -7,7 +7,6 @@ Rectangle {
     color: "#464646"
     border.color: "#F2C029"
     anchors.fill: parent
-    // signal openESupply()
     signal openUserExperiment()
     // reminder to change for other systems
     HorizontalHeaderView {

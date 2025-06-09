@@ -131,9 +131,9 @@ double StorageQuartile::getTargetFromMolesChange(const double& molesChange, addC
     return CalcMoles::getPressureFromMoles(molesChange,storageVolumes);
 }
 
-changeToTarget StorageQuartile::getChangeToIntermediateTarget(const double& targetPressureR, addCVolume cVolume){
+changeToTarget StorageQuartile::getChangeToIntermediateTarget(const double& targetPressureS, addCVolume cVolume){
     changeToTarget a;
-    a.targetPressure = targetPressureR;
+    a.targetPressure = targetPressureS;
     a.currentPressure = pressureStorageQuartile->getCurValue();
 
     QList<VolumeObject> storageVolumes;
@@ -156,10 +156,39 @@ changeToTarget StorageQuartile::getChangeToIntermediateTarget(const double& targ
     return a;
 }
 
-changeToTarget StorageQuartile::getChangeToTarget(const double& targetPressureS, const double& fromTargetPressureR, addCVolume cVolume){
+changeToTarget StorageQuartile::getChangeToIntermediateTarget(const double& targetPressureS, const QVector<addCVolume> &cVolumes){
     changeToTarget a;
     a.targetPressure = targetPressureS;
-    a.currentPressure = fromTargetPressureR;
+    a.currentPressure = pressureStorageQuartile->getCurValue();
+
+    QList<VolumeObject> storageVolumes;
+    storageVolumes << getVolumeByName(m_mainVolume);
+    if(!cVolumes.isEmpty()){
+        auto vol_A = VirtualVolume(&storageVolumes[0]);
+        NodePressure b;
+        for(const auto& cVolume : cVolumes){
+            b.setVolumeA(vol_A);
+            switch(cVolume){
+                case addCVolume::Small: storageVolumes << getVolumeByName("C1");  break;
+                case addCVolume::Medium: storageVolumes << getVolumeByName("C2");  break;
+                case addCVolume::Large: storageVolumes << getVolumeByName("C3");  break;
+                default: break;
+            }
+            VirtualVolume vol_B(&storageVolumes.last());
+            b.setVolumeB(vol_B);
+            vol_A = b.collapse().first;
+        }
+        a.currentPressure = b.getEquilibrium();
+    }
+    const double& pressureChange = a.targetPressure - a.currentPressure; 
+    a.molesChange = CalcMoles::getMolesFromPressureChange(pressureChange, storageVolumes);
+    return a;
+}
+
+changeToTarget StorageQuartile::getChangeToTarget(const double& targetPressureS, const double& fromTargetPressureS, addCVolume cVolume){
+    changeToTarget a;
+    a.targetPressure = targetPressureS;
+    a.currentPressure = fromTargetPressureS;
 
     QList<VolumeObject> storageVolumes;
     storageVolumes << getVolumeByName(m_mainVolume);

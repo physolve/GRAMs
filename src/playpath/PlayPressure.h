@@ -2,6 +2,7 @@
 #include "../addon/AddRemoveQuartile.h"
 #include "../addon/StorageQuartile.h"
 #include "../addon/ReactionQuartile.h"
+#include "../TimeStamp.h" // virtual pressure gadget
 #include <QObject>
 #include <QFile>
 #include <QElapsedTimer>
@@ -32,6 +33,8 @@ class PlayPressure : public QObject
 {
     Q_OBJECT // ?
     Q_PROPERTY (guiPressureTarget guiPresTarget READ getGuiPresTarget WRITE setGuiPresTarget NOTIFY guiPresTargetChanged)
+    Q_PROPERTY (guiValsPresVirtual guiPresChange READ getGuiPresChange NOTIFY guiPresChangeChanged)
+    Q_PROPERTY (guiValsPresVirtual guiPresTotal READ getGuiPresTotal NOTIFY guiPresTotalChanged)
 public:
     PlayPressure(QObject *parent = nullptr);
     ~PlayPressure();
@@ -42,12 +45,18 @@ public:
     void playWithAccuum();
     guiPressureTarget getGuiPresTarget();
     void setGuiPresTarget(guiPressureTarget guiPresTarget);
+    guiValsPresVirtual getGuiPresChange();
+    guiValsPresVirtual getGuiPresTotal();
     Q_INVOKABLE void testPlayPressure();
 signals:
     void guiPresTargetChanged();
+    void guiPresChangeChanged();
+    void guiPresTotalChanged();
 private:
     AddRemoveQuartile* m_arQ;
     StorageQuartile* m_sQ;
     ReactionQuartile* m_rQ;
     guiPressureTarget m_guiPresTarget;
+    guiValsPresVirtual m_guiPresChange;
+    guiValsPresVirtual m_guiPresTotal;
 };

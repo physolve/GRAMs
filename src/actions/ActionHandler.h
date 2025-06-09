@@ -6,6 +6,8 @@
 #include <QFutureWatcher>
 
 #include "InletAction.h"
+#include "../ValveControl.h"
+
 
 
 class ActionHandler : public QObject
@@ -14,8 +16,10 @@ class ActionHandler : public QObject
 public:
     ActionHandler(QObject *parent = 0);
     ~ActionHandler();
+    void setValveControl(ValveControl* valveControl);
     void runInletAction();
 private:
     QFutureWatcher<int> watcher;
     // Valve Control pointer
+    ValveControl* m_valveControl;
 };

@@ -3,7 +3,7 @@
 #include <QDebug>
 
 PlayPressure::PlayPressure(QObject *parent) :
-    QObject(parent), m_guiPresTarget{5,1,0,1.0,0,0,0,0}
+    QObject(parent), m_guiPresTarget{5,1,0,1.0,0,0,0,0}, m_guiPresChange{0,0,0,0,0,0,0,0,0,0}
 {
     qDebug() << "PlayPressure class is created";
 }
@@ -26,13 +26,14 @@ void PlayPressure::setRQ(ReactionQuartile* rQ){
 
 void PlayPressure::testPlayPressure(){
     // play();
+    // calculate
     playWithAccuum();
 }
 
 void PlayPressure::play(){
     const double& chamberPressureTarget = 5;
     const double& chamberInitialPressure = 1;
-    const auto& intermediateChangeReaction = m_rQ->getChangeToIntermediateTarget(chamberInitialPressure);
+    const auto& intermediateChangeReaction = m_rQ->getChangeToIntermediateTarget(chamberInitialPressure, true);
     qDebug() << "Current EF " << intermediateChangeReaction.currentPressure; // EF?
     qDebug() << "Target intermediate EF " << intermediateChangeReaction.targetPressure; // EF?
     qDebug() << "Moles change intermediate EF " << intermediateChangeReaction.molesChange; // EF?
@@ -88,7 +89,6 @@ void PlayPressure::playWithAccuum(){
     const double& chamberPressureTarget = m_guiPresTarget.m_chamberPressureTarget;
     
     const double& chamberInitialPressure = m_guiPresTarget.m_chamberInitialPressure; // will be
-    const auto& intermediateChangeReaction = m_rQ->getChangeToIntermediateTarget(chamberInitialPressure);
 
     const auto& targetReaction = m_rQ->getChangeToTarget(chamberPressureTarget, chamberInitialPressure);
     // Случай получения только n запасов до chamberPressureTarget
@@ -216,29 +216,59 @@ void PlayPressure::playWithAccuum(){
         m_guiPresTarget.m_supplyCount = 1;
     }
     emit guiPresTargetChanged();
-    // if(m_guiPresTarget.m_nAccum > 1.1){
-    // }
-    // else{
-    //     if(storagePressureTarget <= supplyMax){
-    //         m_guiPresTarget.m_storagePressureTarget = storagePressureTarget;
-    //     }
-    //     else if(storagePressureTargetWithC1 <= supplyMax){
-    //         m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithC1;
-    //         m_guiPresTarget.m_c1PressureTarget = storagePressureTargetWithC1;
-    //     }
-    //     else if(storagePressureTargetWithC2 <= supplyMax){
-    //         m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithC2;
-    //         m_guiPresTarget.m_c2PressureTarget = storagePressureTargetWithC2;
-    //     }
-    //     else if(storagePressureTargetWithC3 <= supplyMax){
-    //         m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithC3;
-    //         m_guiPresTarget.m_c3PressureTarget = storagePressureTargetWithC3;
-    //     }
-    //     else{
-    //         m_guiPresTarget.m_storagePressureTarget = supplyMax;
-    //         m_guiPresTarget.m_c3PressureTarget = supplyMax;
-    //     }
-    // }
+
+    QVector<addCVolume> cVolumes;
+    if(nAccumC1!=0){
+        cVolumes << addCVolume::Small;
+    }
+    if(nAccumC2!=0){
+        cVolumes << addCVolume::Medium;
+    }
+    if(nAccumC3!=0){
+        cVolumes << addCVolume::Large;
+    }
+    const auto& intermediateChange = m_sQ->getChangeToIntermediateTarget(chamberPressureTarget, cVolumes);
+
+    // const auto& intermediateChangeOnlyStorage = m_sQ->getChangeToIntermediateTarget(chamberPressureTarget);
+    m_guiPresChange = {0,0,0,0,0,0,0,0,0,0};
+    // m_guiPresChange.g_prSQ = intermediateChangeOnlyStorage.molesChange;
+    m_guiPresChange.g_prSQ = intermediateChange.molesChange;
+    if(nAccumC1 != 0){
+        // const auto& intermediateChangeStorageWithSmall = m_sQ->getChangeToIntermediateTarget(chamberPressureTarget, addCVolume::Small);
+        // m_guiPresChange.g_prSC1 = intermediateChangeStorageWithSmall.molesChange;
+        m_guiPresChange.g_prSC1 = intermediateChange.molesChange;
+    }
+    if(nAccumC2 != 0){
+        // const auto& intermediateChangeStorageWithMedium = m_sQ->getChangeToIntermediateTarget(chamberPressureTarget, addCVolume::Medium);
+        // m_guiPresChange.g_prSC2 = intermediateChangeStorageWithMedium.molesChange;
+        m_guiPresChange.g_prSC2 = intermediateChange.molesChange;
+    }
+    if(nAccumC3 != 0){
+        // const auto& intermediateChangeStorageWithLarge = m_sQ->getChangeToIntermediateTarget(chamberPressureTarget, addCVolume::Large);
+        // m_guiPresChange.g_prSC3 = intermediateChangeStorageWithLarge.molesChange;
+        m_guiPresChange.g_prSC3 = intermediateChange.molesChange;
+    }
+    const auto& intermediateChangeReaction = m_rQ->getChangeToIntermediateTarget(chamberInitialPressure, true);
+    m_guiPresChange.g_prRQ = intermediateChangeReaction.molesChange;
+    emit guiPresChangeChanged();
+
+    m_guiPresTotal = {0,0,0,0,0,0,0,0,0,0};
+    const auto& totalOnlyStorage = m_sQ->getChangeToTarget(m_guiPresTarget.m_storagePressureTarget, chamberPressureTarget);
+    m_guiPresTotal.g_prSQ = totalOnlyStorage.molesChange;
+    if(nAccumC1 != 0){
+        const auto& totalStorageWithSmall = m_sQ->getChangeToTarget(m_guiPresTarget.m_c1PressureTarget, chamberPressureTarget, addCVolume::Small);
+        m_guiPresTotal.g_prSC1 = totalStorageWithSmall.molesChange;
+    }
+    if(nAccumC2 != 0){
+        const auto& totalStorageWithMedium = m_sQ->getChangeToTarget(m_guiPresTarget.m_c2PressureTarget, chamberPressureTarget, addCVolume::Medium);
+        m_guiPresTotal.g_prSC2 = totalStorageWithMedium.molesChange;
+    }
+    if(nAccumC3 != 0){
+        const auto& totalStorageWithLarge = m_sQ->getChangeToTarget(m_guiPresTarget.m_c3PressureTarget, chamberPressureTarget, addCVolume::Large);
+        m_guiPresTotal.g_prSC3 = totalStorageWithLarge.molesChange;
+    }
+    m_guiPresTotal.g_prRQ = targetReaction.molesChange*m_guiPresTarget.m_nAccum;
+    emit guiPresTotalChanged();
 }
 
 void PlayPressure::setGuiPresTarget(guiPressureTarget guiPresTarget){
@@ -247,4 +277,12 @@ void PlayPressure::setGuiPresTarget(guiPressureTarget guiPresTarget){
 
 guiPressureTarget PlayPressure::getGuiPresTarget(){
     return m_guiPresTarget;
+}
+
+guiValsPresVirtual PlayPressure::getGuiPresChange(){
+    return m_guiPresChange;
+}
+
+guiValsPresVirtual PlayPressure::getGuiPresTotal(){
+    return m_guiPresTotal;
 }

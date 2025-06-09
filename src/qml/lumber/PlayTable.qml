@@ -27,14 +27,20 @@ TableView {
     }
     selectionModel: ItemSelectionModel {
     }
-    Component.onCompleted: {
-        model.appendRow({
-            name: "Вакуум",
-            passed: 0,
-            from: 3,
-            time: "00:00:00",
-            setting: 0.5
-        })
+    // Component.onCompleted: {
+    //     model.appendRow({
+    //         name: "Вакуум",
+    //         passed: 0,
+    //         from: 3,
+    //         time: "00:00:00",
+    //         setting: 0.5
+    //     })
+    // }
+    signal openESupply()
+    function openParameters(regime, row){
+        console.log(regime, row)
+        if(regime == "Цел. в камере")
+            tableView.openESupply()
     }
     delegate: DelegateChooser {
         DelegateChoice {
@@ -53,6 +59,7 @@ TableView {
                     onReleased:{
                         tableView.selectionModel.clearSelection()
                     }
+                    onClicked: openParameters(text, row)
                 }
             }
         }

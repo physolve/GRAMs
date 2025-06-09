@@ -330,15 +330,18 @@ void ReactionQuartile::fillGasLeakageData(){
     m_gasLeakage[m_currentGasLeakage].addMeasure(storage_pressure, reaction_pressure, reaction_temp);
 }
 
-changeToTarget ReactionQuartile::getChangeToIntermediateTarget(const double& targetPressure){
+changeToTarget ReactionQuartile::getChangeToIntermediateTarget(const double& targetPressureR, bool addChamber){
     changeToTarget a;
-    a.targetPressure = targetPressure;
+    a.targetPressure = targetPressureR;
     a.currentPressure = pressureReactionQuartile->getCurValue();
     const double& pressureChange = a.targetPressure - a.currentPressure; 
     QList<VolumeObject> reactionVolumes;
-    // not currently used, but will be used
-    for(const QString& name : getUsedVolumes()){
-        reactionVolumes << getVolumeByName(name);
+    reactionVolumes << getVolumeByName(m_mainVolume);
+    if(m_chamber_connected){
+        reactionVolumes << getVolumeByName("EF");
+    }
+    if(addChamber){
+        reactionVolumes << getVolumeByName("F");
     }
     a.molesChange = CalcMoles::getMolesFromPressureChange(pressureChange, reactionVolumes);
     return a;

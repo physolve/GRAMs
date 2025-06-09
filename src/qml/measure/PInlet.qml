@@ -55,10 +55,4 @@ Item {
             selectByMouse: true
         }
     }
-    Button{
-        x: 25
-        y: 90
-        text: "Запустить ESupply"
-        onClicked: Grams.testActionHandler()
-    }
 }
