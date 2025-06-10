@@ -4,6 +4,7 @@ ValveControl::ValveControl(QObject *parent) :
     QObject(parent)
 {
     valveController = false;
+    actionInterrupted = true;
 }
 
 ValveControl::~ValveControl(){
@@ -60,6 +61,7 @@ void ValveControl::initDaqDO(const daqParameters &parameter){
     // if ok
     for(int i = 0; i < m_valves.count(); ++i){
         m_valves[i]->setState(readData[i]);
+        valveNameList << m_valves[i]->m_name;
     }
     valveController = true;
     emit guiValsValveChanged();
@@ -69,10 +71,15 @@ void ValveControl::setValveState(bool state, int index){ // excluding chamber
     // signal from GUI to change state of object
     Valve *valve = m_valves[index];
     const bool originalState = valve->getState();
+    // check pressure!!!
     bool safe_state = m_safeModule->checkValveAction(valve->m_name, state);
     valve->setState(safe_state);
-        if(!sendValveStates())
-            valve->setState(originalState);
+    if(!sendValveStates()){
+        valve->setState(originalState);
+    }
+    else if(!actionInterrupted){
+        actionInterrupted = true;
+    }
     emit guiValsValveChanged();
 }
 
@@ -124,4 +131,37 @@ void ValveControl::valveChangeUpdater(const QString& valveName){
         else 
             qDebug() << "Time Stamp has not been written";
     }
+}
+
+bool ValveControl::isControlRunning(){
+    return valveController;
+}
+
+void ValveControl::beginAction(){
+    actionInterrupted = false;
+}
+
+void ValveControl::endAction(){
+    actionInterrupted = true;
+}
+
+bool ValveControl::setValveFromAction(bool state, const QString& name){
+    // signal from GUI to change state of object
+    if(actionInterrupted)
+        return false;
+    Valve *valve = nullptr;
+    int index = valveNameList.indexOf(name);
+    if(index == -1){
+        return false;
+    }
+    valve = m_valves[index];
+    const bool originalState = valve->getState();
+    // check pressure!!!
+    bool safe_state = m_safeModule->checkValveAction(valve->m_name, state);
+    valve->setState(safe_state);
+    if(!sendValveStates()){
+        valve->setState(originalState);
+    }
+    emit guiValsValveChanged();
+    return valve->getState() == state;
 }

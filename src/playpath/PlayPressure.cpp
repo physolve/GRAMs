@@ -269,6 +269,7 @@ void PlayPressure::playWithAccuum(){
     }
     m_guiPresTotal.g_prRQ = targetReaction.molesChange*m_guiPresTarget.m_nAccum;
     emit guiPresTotalChanged();
+    // construct inlet actions
 }
 
 void PlayPressure::setGuiPresTarget(guiPressureTarget guiPresTarget){

@@ -43,12 +43,16 @@ public:
     
     void setSupplyPressurePtr(FilterData* high, FilterData* low);
     void setLeakagePressurePtr(FilterData* high, FilterData* low);
-    Q_INVOKABLE bool setSupplyMeasure(bool supplyMeasure);
+
     Q_INVOKABLE bool setLeakageMeasure(bool leakageMeasure);
     Q_INVOKABLE void testVacuumQuery();
+
+    void setFastBufferRead(bool state);
+    void runSupplyAction();
+    
 private slots:
     void processEvents();
-    
+    void fastBufferRead();
 private:
     void fillSupplyARQ();
     void fillLeakageRQ();
@@ -62,6 +66,7 @@ private:
     
     ControllerData* m_time;
     QTimer* m_acquisitionTimer;
+    QTimer* m_fastBufferAcquisition;
     
     // AdvantechDO reqValveDO;
     // valve pointers
@@ -83,7 +88,6 @@ private:
     FilterView filterView;
     QVector<FilterData*> m_filtersData;
 
-    bool m_supplyMeasure;
     FilterData* m_supplyPressureHigh;
     FilterData* m_supplyPressureLow;
     bool m_leakageMeasure;

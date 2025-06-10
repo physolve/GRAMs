@@ -298,7 +298,6 @@ void AdvantechBuff::CheckError(ErrorCode errorCode)
 
 void AdvantechBuff::readData(){
 	ErrorCode errorCode = Success;
-	//qDebug() << "controller Data count = " << m_vector.count();
 	errorCode = m_waveformAiCtrl->Start();
 	// stop
 	CheckError(errorCode);
@@ -341,7 +340,7 @@ void AdvantechBuff::setVoltageToFilter(const QVector<double> &voltageBuffer){
 
 void AdvantechBuff::doFilter(){
 	for(int i = 0; i < m_voltageFilters.count(); i++){ // m_info.channelCount()
-		const auto &allVoltage = m_voltageFilters[i].getFilteredVoltage(false);
+		const auto &allVoltage = m_voltageFilters[i].getFilteredVoltage();
 		m_vector[i] = allVoltage.last();
 	}
 }

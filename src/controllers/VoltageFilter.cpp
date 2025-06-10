@@ -64,7 +64,7 @@ void VoltageFilter::appendToBuffer(const double &value){ // change to replace Ve
     m_voltageBuffer << value;
 }
 
-QVector<double> VoltageFilter::getFilteredVoltage(bool debug) {
+QVector<double> VoltageFilter::getFilteredVoltage() {
     // Best guess of initial states
     // Eigen::VectorXd x0(n);
     // double t = 0;
@@ -75,7 +75,7 @@ QVector<double> VoltageFilter::getFilteredVoltage(bool debug) {
     QVector<double> debugXhatS;
     QVector<double> debugXhatT;
     Eigen::VectorXd y(m);
-    if(debug) qDebug() << m_voltageBuffer;
+    
     for(int i = 0; i < m_voltageBuffer.size(); i++) {
         //QVector<double> buffVector;
         // t += dt;

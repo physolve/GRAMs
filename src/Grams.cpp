@@ -321,16 +321,20 @@ void Grams::initGUI(){
     */
     qmlRegisterType<BasePlot>("BasePlot", 1, 0, "BasePlotItem");
 
+    
+    qmlRegisterSingletonInstance("Grams.initSourceSingleton", 1, 0, "InitSource", &initSource);
+    
     qmlRegisterSingletonInstance("Grams.dataSourceSingleton", 1, 0, "DataSource", &dataSource);
     qmlRegisterSingletonInstance("Grams.valveControlSingleton", 1, 0, "ValveControl", &m_valveControl);
     qmlRegisterSingletonInstance("Grams.addRemoveQuartileSingleton", 1, 0, "AddRemoveQuar", &m_addRemoveQuartile);
     qmlRegisterSingletonInstance("Grams.reactionQuartileSingleton", 1, 0, "ReactionQuar", &m_reactionQuartile);
-    
-    m_engine.rootContext()->setContextProperty("initSource", &initSource); // make singleton later
+
+    qmlRegisterSingletonInstance("Grams.actionHandlerSingleton", 1, 0, "ActionHandler", &m_actionHandler);
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     // m_engine.rootContext()->setContextProperty("_valveModel", &valveModel);
     // m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
     // m_engine.rootContext()->setContextProperty("safeModule", &m_safeModule);
+    
     qmlRegisterSingletonInstance("Grams.backendSourceSingleton", 1, 0, "Grams", this);
     qmlRegisterSingletonInstance("Grams.chamberChooserSingleton", 1, 0, "ChamberChooser", &m_chamber);
     qmlRegisterSingletonInstance("Grams.timeStampSingleton", 1, 0, "TimeStamp", &m_timeStamp);
@@ -509,8 +513,11 @@ void Grams::initPlayPressure(){
 }
 
 void Grams::initActionHandler(){
-    //
     //pointers to valve control and security
+    m_actionHandler.setValveControl(&m_valveControl);
+    m_actionHandler.setDataAcquisition(&dataSource);
+    m_actionHandler.setSecurity(&m_safeModule);
+    m_actionHandler.setAddRemoveQuartile(&m_addRemoveQuartile);
 }
 
 void Grams::testActionHandler(){

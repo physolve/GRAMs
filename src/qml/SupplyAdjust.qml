@@ -56,11 +56,6 @@ Window {
                         turn: controlTurn.value,
                         portPressure: portPressureCtrl.text
                     }
-                    if(checked){
-                        AddRemoveQuar.setSupplyAdjustParameters(parameters)
-                    }
-                    if(DataSource.setSupplyMeasure(checked))
-                        AddRemoveQuar.startSupplyMeasure(checked)
                 }
             }
             ComboBox{

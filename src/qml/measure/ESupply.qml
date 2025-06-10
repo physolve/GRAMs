@@ -10,7 +10,7 @@ Rectangle {
     border.color: "#F2C029"
     // anchors.fill: parent
     // reminder to change for other systems
-    property double topPressure: 50 
+    property double topPressure: 50 // from profile
     Button{
         x: 25
         y: 5
@@ -40,8 +40,8 @@ Rectangle {
             // width: parent.width - 80
             width: 75
             height: 35
-            validator: DoubleValidator { bottom: 0; top: eSupply.topPressure}
             text: PlayPressure.guiPresTarget.chPresTg.toFixed(3)
+            validator: DoubleValidator { bottom: 0; top: eSupply.topPressure}
             placeholderText: "бар"
             font { family: 'Courier'; pointSize: 10; }
             horizontalAlignment: TextInput.AlignHCenter
@@ -68,8 +68,8 @@ Rectangle {
             // width: parent.width - 80
             width: 75
             height: 35
-            validator: DoubleValidator { bottom: 0; top: eSupply.topPressure}
             text: PlayPressure.guiPresTarget.chPresInit.toFixed(3)
+            validator: DoubleValidator { bottom: 0; top: eSupply.topPressure}
             placeholderText: "бар"
             font { family: 'Courier'; pointSize: 10; }
             horizontalAlignment: TextInput.AlignHCenter

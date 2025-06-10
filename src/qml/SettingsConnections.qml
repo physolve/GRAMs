@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Grams.initSourceSingleton 1.0
 ColumnLayout{
     GroupBox {
         title: qsTr("Hardware")
@@ -35,7 +36,7 @@ ColumnLayout{
             anchors.topMargin:10
             anchors.leftMargin: 5
             cellWidth: 70; cellHeight: 20
-            model: initSource.hardware.valves
+            model: InitSource.hardware.valves
             clip: true
             interactive: false
             delegate: Rectangle { 
@@ -71,7 +72,7 @@ ColumnLayout{
             clip: true
             interactive: false
             orientation: Qt.Vertical
-            model: initSource.hardware.pressureSensors // rewrite as property
+            model: InitSource.hardware.pressureSensors // rewrite as property
             delegate: Rectangle { 
                 width: 300
                 height: 20
@@ -105,7 +106,7 @@ ColumnLayout{
             anchors.topMargin:10
             anchors.leftMargin: 5
             cellWidth: 70; cellHeight: 20
-            model: initSource.hardware.tempSensors
+            model: InitSource.hardware.tempSensors
             delegate: Rectangle { 
                 width: 68
                 height: 20
@@ -139,7 +140,7 @@ ColumnLayout{
                 anchors.centerIn: parent
             }
             Component.onCompleted: {
-                const daqArray = initSource.daqGui
+                const daqArray = InitSource.daqGui
                 console.log(daqArray.map((daq) => daq.device));
             }
         }
@@ -156,7 +157,7 @@ ColumnLayout{
             clip: true
             interactive: false
             orientation: Qt.Vertical
-            model: initSource.daqGui
+            model: InitSource.daqGui
             delegate: Rectangle { 
                 width: 300
                 height: 20
@@ -193,49 +194,49 @@ ColumnLayout{
                 Layout.preferredWidth: 300
                 Layout.preferredHeight: 20
                 color: "transparent"; border.color: "#464646";
-                Text { text: `Port Name: ${initSource.vacuum.portName}`; color: "white"; font.family: "Verdana";
+                Text { text: `Port Name: ${InitSource.vacuum.portName}`; color: "white"; font.family: "Verdana";
                 font.pointSize: 9; anchors.centerIn: parent }
             }
             Rectangle { 
                 Layout.preferredWidth: 300
                 Layout.preferredHeight: 20
                 color: "transparent"; border.color: "#464646";
-                Text { text: `Description: ${initSource.vacuum.description}`; color: "white"; font.family: "Verdana"; 
+                Text { text: `Description: ${InitSource.vacuum.description}`; color: "white"; font.family: "Verdana"; 
                 font.pointSize: 9; anchors.centerIn: parent }
             }
             Rectangle {
                 Layout.preferredWidth: 300
                 Layout.preferredHeight: 20
                 color: "transparent"; border.color: "#464646";
-                Text { text: `Baud Rate: ${initSource.vacuum.baudRate}`; color: "white"; font.family: "Verdana"; 
+                Text { text: `Baud Rate: ${InitSource.vacuum.baudRate}`; color: "white"; font.family: "Verdana"; 
                 font.pointSize: 9; anchors.centerIn: parent }
             }
             Rectangle { 
                 Layout.preferredWidth: 300
                 Layout.preferredHeight: 20
                 color: "transparent"; border.color: "#464646";
-                Text { text: `Data Bits: ${initSource.vacuum.dataBits}`; color: "white"; font.family: "Verdana"; 
+                Text { text: `Data Bits: ${InitSource.vacuum.dataBits}`; color: "white"; font.family: "Verdana"; 
                 font.pointSize: 9; anchors.centerIn: parent }
             }
             Rectangle { 
                 Layout.preferredWidth: 300
                 Layout.preferredHeight: 20
                 color: "transparent"; border.color: "#464646";
-                Text { text: `Stop Bits: ${initSource.vacuum.stopBits}`; color: "white"; font.family: "Verdana"; 
+                Text { text: `Stop Bits: ${InitSource.vacuum.stopBits}`; color: "white"; font.family: "Verdana"; 
                 font.pointSize: 9; anchors.centerIn: parent }
             }
             Rectangle { 
                 Layout.preferredWidth: 300
                 Layout.preferredHeight: 20
                 color: "transparent"; border.color: "#464646";
-                Text { text: `Parity: ${initSource.vacuum.parity}`; color: "white"; font.family: "Verdana"; 
+                Text { text: `Parity: ${InitSource.vacuum.parity}`; color: "white"; font.family: "Verdana"; 
                 font.pointSize: 9; anchors.centerIn: parent }
             }
             Rectangle { 
                 Layout.preferredWidth: 300
                 Layout.preferredHeight: 20
                 color: "transparent"; border.color: "#464646";
-                Text { text: `Time out: ${initSource.vacuum.timeout}`; color: "white"; font.family: "Verdana"; 
+                Text { text: `Time out: ${InitSource.vacuum.timeout}`; color: "white"; font.family: "Verdana"; 
                 font.pointSize: 9; anchors.centerIn: parent }
             }
         }

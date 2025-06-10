@@ -27,10 +27,13 @@ public:
     void setGasSupplyValves(const QStringList& gasSupplyValves);
     void setGasStoreValves(const QStringList& gasStoreValves);
     void initDaqDO(const daqParameters &parameterDO); 
+    void beginAction();
+    void endAction();
+    bool setValveFromAction(bool state, const QString& name);
     Q_INVOKABLE void setManualChamberValve(bool state);
     Q_INVOKABLE void setValveState(bool state, int valveId);
     bool sendValveStates();
-    
+    bool isControlRunning();
     void valveChangeUpdater(const QString& valveName);
 
 signals:
@@ -39,13 +42,14 @@ signals:
 private:
     AdvantechDO reqValveDO;
     bool valveController;
+    bool actionInterrupted;
     // valve pointers
     QVector<Valve*> m_valves;
     Valve* m_chamberValve;
     Security* m_safeModule;
 
     QVariantMap getGuiValsValve() const;
-
+    QStringList valveNameList;
     QStringList m_gasSupplyValves;
     QStringList m_gasStoreValves;
     // add remove pointer

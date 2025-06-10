@@ -90,7 +90,8 @@
         "qsqlerror": "cpp",
         "qstring": "cpp",
         "qlist": "cpp",
-        "qpromise": "cpp"
+        "qpromise": "cpp",
+        "qthread": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

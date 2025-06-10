@@ -17,7 +17,7 @@ public:
     VoltageFilter();
     VoltageFilter(const FilterMatrix &parameters);
     void appendToBuffer(const double &value);
-    QVector<double> getFilteredVoltage(bool debug); // const?
+    QVector<double> getFilteredVoltage(); // const?
     QVector<double> lastFiltered();
     QVector<double> lastXhatS();
     QVector<double> lastXhatT();
