@@ -56,9 +56,11 @@ void TestField::updateTestField(const QMap<QString, NodePressure>& storageNodes,
 
 void TestField::runCollapse(const QString& nodeName){
     previousState << StateCopy{m_storageNodes, m_guiNodes, map_guiCollapsed};
-    const auto& vol_pair = m_storageNodes.take(nodeName).collapse();
-    const auto& vol1 = vol_pair.first;
-    map_guiCollapsed.insert(vol_pair.second.name, vol_pair.second);
+    
+    auto node = m_storageNodes.take(nodeName);
+    const auto& vol2 = node.getB();
+    const auto& vol1 = node.collapse();
+    map_guiCollapsed.insert(vol2.name, vol2);
     if(m_storageNodes.count() == 0){
         NodePressure newNode;
         newNode.setVolumeA(vol1);

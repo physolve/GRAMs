@@ -12,7 +12,7 @@ void DataControlAction::runDataControlAction(QPromise<int> &promise, DataAcquisi
         // promise.finish();
         return;
     }
-    dataAcquisition->setFastBufferRead(true);
+    dataAcquisition->beginAction();
     while(true){ // !forceStopFlag
         promise.suspendIfRequested();   // support suspension
         if (promise.isCanceled())       // support cancellation
@@ -20,6 +20,6 @@ void DataControlAction::runDataControlAction(QPromise<int> &promise, DataAcquisi
         dataAcquisition->runSupplyAction();
         QThread::msleep(250);
     }
-    dataAcquisition->setFastBufferRead(false);
+    dataAcquisition->endAction();
     promise.finish();
 }

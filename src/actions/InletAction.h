@@ -2,12 +2,16 @@
 
 #include <QPromise>
 
+#include "../DataAcquisition.h"
 #include "../ValveControl.h"
 #include "../addon/AddRemoveQuartile.h"
 
 struct InletAction
 {
-   static void runInletAction(QPromise<int> &promise, ValveControl* valveControl, AddRemoveQuartile* addRemoveQuartile);
+   ValveControl* valveControl = nullptr;
+   DataAcquisition* dataAcquisition = nullptr;
+   AddRemoveQuartile* addRemoveQuartile = nullptr;
+   void runInletAction(QPromise<int> &promise);
 };
 
 

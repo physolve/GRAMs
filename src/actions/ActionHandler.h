@@ -25,7 +25,7 @@ public:
     void runInletAction();
     void finishInletAction();
 private:
-    // QFutureWatcher<int> watcher;
+    QFutureWatcher<int> watcher;
     // QFutureWatcher<int> dataControlWatcher;
     // Valve Control pointer
     ValveControl* m_valveControl;

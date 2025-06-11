@@ -145,10 +145,12 @@ void ValveControl::endAction(){
     actionInterrupted = true;
 }
 
+bool ValveControl::isActionInterrupted() const{
+    return actionInterrupted;
+}
+
 bool ValveControl::setValveFromAction(bool state, const QString& name){
     // signal from GUI to change state of object
-    if(actionInterrupted)
-        return false;
     Valve *valve = nullptr;
     int index = valveNameList.indexOf(name);
     if(index == -1){

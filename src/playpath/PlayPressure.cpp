@@ -3,7 +3,7 @@
 #include <QDebug>
 
 PlayPressure::PlayPressure(QObject *parent) :
-    QObject(parent), m_guiPresTarget{5,1,0,1.0,0,0,0,0}, m_guiPresChange{0,0,0,0,0,0,0,0,0,0}
+    QObject(parent), m_guiPresTarget{5,1,0,1.0,0,0,0,0}, m_guiPresChange{0,0,0,0,0,0,0,0,0,0}, m_guiPresTotal{0,0,0,0,0,0,0,0,0,0}
 {
     qDebug() << "PlayPressure class is created";
 }
@@ -80,7 +80,7 @@ void PlayPressure::play(){
     qDebug() << "Target with C3 after intermediate " << c3PressureTarget;
 }
 
-void PlayPressure::playWithAccuum(){
+void PlayPressure::playWithAccuum(){ // can be covered in test
     m_guiPresTarget.m_storagePressureTarget = 0;
     m_guiPresTarget.m_c1PressureTarget = 0;
     m_guiPresTarget.m_c2PressureTarget = 0;
@@ -100,8 +100,8 @@ void PlayPressure::playWithAccuum(){
     const double& storagePressureTargetWithC2 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Medium);
     const double& storagePressureTargetWithC3 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Large);
 
-    const double& supplyMaxMain = 52; // from profile 
-    const double& supplyMax = 50; // from profile 
+    const double& supplyMaxMain = 52; // from profile  
+    const double& supplyMax = 50; // reducer from profile or gui (inletStrategy)
     // Если целевое давление больше, чем supplyMax, то сначала распространяй по банкам
     // Если с максимальной банкой больше, чем supplyMax пробуй несколько банок
     // Иначе, определить как в n подач  

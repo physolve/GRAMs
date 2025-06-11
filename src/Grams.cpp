@@ -305,7 +305,7 @@ void Grams::initCharts(){
 void Grams::initGUI(){
     QQuickStyle::setStyle("Material");
     QString applicationName = "GRAMs"; // curInitProfile also?
-    
+    QLocale::setDefault(QLocale::c()); 
     m_engine.addImportPath(":/");
     const QUrl url(QString("qrc:/%1/qml/Main.qml").arg(applicationName));
     QObject::connect(

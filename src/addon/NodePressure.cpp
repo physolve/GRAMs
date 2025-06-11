@@ -8,11 +8,19 @@ double VolumeObject::getMoles() const{
 }
 
 VirtualVolume::VirtualVolume(VolumeObject* prior) : VolumeObject(), prior_volume{prior}{
-    name = "null";
     if(prior!=nullptr){
         qDebug() << "Created " << prior->name << " virtual volume";
         name = prior->name;
         volume = prior->volume;
+        updateToPrior(); // ?
+    }
+}
+
+VirtualVolume::VirtualVolume(const QString& newName, const double& newVolume, VolumeObject* prior) : VolumeObject(), prior_volume{prior}{
+    if(prior!=nullptr){
+        qDebug() << "Created " << newName << " virtual volume";
+        name = newName;
+        volume = newVolume;
         updateToPrior(); // ?
     }
 }
@@ -22,16 +30,16 @@ VirtualVolume::~VirtualVolume(){
 }
 
 VirtualVolume VirtualVolume::operator+(VirtualVolume const& obj){
-    VirtualVolume res_C(prior_volume);
-    res_C.name = name+obj.name;
-    res_C.volume = volume + obj.volume;
-    return res_C;
+    const QString& cName = name+obj.name;
+    const double& cVolume = volume + obj.volume;
+    //  res_C(prior_volume);
+    return VirtualVolume(cName, cVolume, prior_volume);
 }
 VirtualVolume VirtualVolume::operator-(VirtualVolume const& obj){
-    VirtualVolume res_C(prior_volume);
-    res_C.name = name.remove(obj.name);
-    res_C.volume = volume - obj.volume;
-    return res_C;
+    const QString& cName = name.remove(obj.name);
+    const double& cVolume = volume - obj.volume; 
+    // res_C(prior_volume);
+    return VirtualVolume(cName, cVolume, prior_volume);
 }
 
 void VirtualVolume::updateToPrior(){
@@ -59,6 +67,10 @@ void NodePressure::setVolumeA(const VirtualVolume& A){
 
 void NodePressure::setVolumeB(const VirtualVolume& B){
     m_B = B;
+}
+
+VirtualVolume NodePressure::getB() const{
+    return m_B;
 }
 
 void NodePressure::update(){
@@ -89,14 +101,14 @@ QString NodePressure::getNameB() const{
     return m_B.name;
 }
 
-QPair<VirtualVolume,VirtualVolume> NodePressure::collapse(){
-    auto m_C = VirtualVolume(m_A)+VirtualVolume(m_B);
+VirtualVolume NodePressure::collapse() {
+    auto m_C = m_A+m_B;
     m_C.pressure = m_B.pressure = getEquilibrium();
-    return {m_C, m_B};
+    return m_C;
 }
 
 VirtualVolume NodePressure::split(const VirtualVolume& foldedVolume){
-    auto m_C = VirtualVolume(m_A)-VirtualVolume(foldedVolume);
+    auto m_C = m_A-foldedVolume;
     m_C.pressure = m_A.pressure;
     return m_C;
 }

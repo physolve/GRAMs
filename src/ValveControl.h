@@ -29,6 +29,7 @@ public:
     void initDaqDO(const daqParameters &parameterDO); 
     void beginAction();
     void endAction();
+    bool isActionInterrupted() const;
     bool setValveFromAction(bool state, const QString& name);
     Q_INVOKABLE void setManualChamberValve(bool state);
     Q_INVOKABLE void setValveState(bool state, int valveId);

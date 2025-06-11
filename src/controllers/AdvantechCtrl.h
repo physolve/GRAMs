@@ -74,7 +74,8 @@ public:
     const QVector<double> getXhatS(uint8_t channelN);
     const QVector<double> getXhatT(uint8_t channelN);
     const QVector<double> getOriginalData(uint8_t channelN);
-    static void BDAQCALL OnStoppedEvent(void *sender, Automation::BDaq::BfdAiEventArgs *args, void *userParam);
+    // static void BDAQCALL OnStoppedEvent(void *sender, Automation::BDaq::BfdAiEventArgs *args, void *userParam);
+    static void BDAQCALL OnDataReadyEvent(void *sender, Automation::BDaq::BfdAiEventArgs *args, void *userParam);
 
     void setVolageFilter(uint8_t channelN, const FilterMatrix &parameters);
     
@@ -87,10 +88,11 @@ public slots:
 private:
     void resizeDataVector(uint8_t size);
     void resizeVoltageFilterList(uint8_t size);
-    void setVoltageToFilter(const QVector<double> &voltageBuffer);
+    void setVoltageToFilter();
     void doFilter();
     
     AdvAIType m_info;
+    QVector<double> kalmanBuffer;
     const int m_sectionLength = 512; // move to namespace
     Automation::BDaq::ValueRange m_valueRange;
     Automation::BDaq::WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class

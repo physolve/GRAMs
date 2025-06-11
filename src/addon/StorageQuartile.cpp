@@ -162,21 +162,24 @@ changeToTarget StorageQuartile::getChangeToIntermediateTarget(const double& targ
     a.currentPressure = pressureStorageQuartile->getCurValue();
 
     QList<VolumeObject> storageVolumes;
+    // VolumeObject real_a = getVolumeByName(m_mainVolume);
     storageVolumes << getVolumeByName(m_mainVolume);
     if(!cVolumes.isEmpty()){
         auto vol_A = VirtualVolume(&storageVolumes[0]);
         NodePressure b;
         for(const auto& cVolume : cVolumes){
             b.setVolumeA(vol_A);
+            VolumeObject real_b;
             switch(cVolume){
-                case addCVolume::Small: storageVolumes << getVolumeByName("C1");  break;
-                case addCVolume::Medium: storageVolumes << getVolumeByName("C2");  break;
-                case addCVolume::Large: storageVolumes << getVolumeByName("C3");  break;
+                case addCVolume::Small: real_b = getVolumeByName("C1"); break;
+                case addCVolume::Medium: real_b = getVolumeByName("C2"); break;
+                case addCVolume::Large: real_b = getVolumeByName("C3"); break;
                 default: break;
             }
-            VirtualVolume vol_B(&storageVolumes.last());
+            storageVolumes << real_b; 
+            VirtualVolume vol_B(&real_b);
             b.setVolumeB(vol_B);
-            vol_A = b.collapse().first;
+            vol_A = b.collapse();
         }
         a.currentPressure = b.getEquilibrium();
     }

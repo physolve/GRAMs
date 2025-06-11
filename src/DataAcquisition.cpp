@@ -1,8 +1,7 @@
 #include "DataAcquisition.h"
 
 DataAcquisition::DataAcquisition(QObject *parent) :
-    QObject(parent), m_acquisitionTimer(new QTimer), m_leakageMeasure(false),
-    m_fastBufferAcquisition(new QTimer)
+    QObject(parent), m_acquisitionTimer(new QTimer), m_leakageMeasure(false), canReadFast(false), canReadSlow(true) 
 {
     // GRAMsIntegrity["pressure"] = ControllerConnection::Offline;
     pressureController = false;
@@ -10,7 +9,6 @@ DataAcquisition::DataAcquisition(QObject *parent) :
     temperatureController = false;
     // GRAMsIntegrity["valves"] = ControllerConnection::Offline;
     connect(m_acquisitionTimer, &QTimer::timeout, this, &DataAcquisition::processEvents);
-    connect(m_fastBufferAcquisition, &QTimer::timeout, this, &DataAcquisition::fastBufferRead);
     // add thread for acquisition
     // m_acquisitionTimer->moveToThread(new QThread());
 
@@ -23,10 +21,7 @@ DataAcquisition::DataAcquisition(QObject *parent) :
 DataAcquisition::~DataAcquisition(){
     if(m_acquisitionTimer->isActive())
         m_acquisitionTimer->stop();
-    if(m_fastBufferAcquisition->isActive())
-        m_fastBufferAcquisition->stop();
     delete m_acquisitionTimer;
-    delete m_fastBufferAcquisition;
 }
 
 bool DataAcquisition::getGRAMsIntegrity(){
@@ -172,26 +167,14 @@ void DataAcquisition::startAcquisition(){
         qDebug() << "Reading disabled";
         return;
     }
-    m_acquisitionTimer->setInterval(1000); // make default value
+    m_acquisitionTimer->setTimerType(Qt::PreciseTimer);
+    m_acquisitionTimer->setInterval(500); // make default value
     m_acquisitionTimer->start();
-    m_fastBufferAcquisition->setTimerType(Qt::PreciseTimer);
-    m_fastBufferAcquisition->setInterval(1000);
-    m_fastBufferAcquisition->start();
 }
 
 void DataAcquisition::stopAcquisition(){
     m_acquisitionTimer->stop();
     // clear additionally
-    m_fastBufferAcquisition->stop();
-}
-
-void DataAcquisition::setFastBufferRead(bool state){
-    if(state){
-        m_fastBufferAcquisition->setInterval(250);
-    }
-    else{
-        m_fastBufferAcquisition->setInterval(1000);
-    }
 }
 
 void DataAcquisition::processEvents(){
@@ -211,7 +194,14 @@ void DataAcquisition::processEvents(){
     for(int i = 0; i < m_tempSensors.count(); ++i){
         m_tempSensors[i]->addValue(readDataTemp[i]);
     }
-    //reqSensorAI.readData();
+    if(canReadSlow){
+        reqSensorAI.readData();
+    }
+    else if(!canReadFast){
+        qDebug() << "Set Reading Fast";
+        canReadFast = true;
+    }
+    
     const auto &readDataVacuum = reqVacuum.getData();
     m_vacuumSensor->addPoint(readDataVacuum);
     reqVacuum.requestRepetitive();
@@ -221,7 +211,23 @@ void DataAcquisition::processEvents(){
     }
 }
 
+void DataAcquisition::beginAction(){
+    canReadSlow = false;
+}
+
+void DataAcquisition::endAction(){
+    canReadSlow = true;
+    canReadFast = false;
+}
+
+void DataAcquisition::fillSupplyARQ(){
+}
+
+
 void DataAcquisition::fastBufferRead(){
+    if(!canReadFast)
+        return;
+    // qDebug() << "Reading Fast";
     reqSensorAI.readData();
 }
 // msecs

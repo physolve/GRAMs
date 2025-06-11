@@ -47,12 +47,13 @@ public:
     Q_INVOKABLE bool setLeakageMeasure(bool leakageMeasure);
     Q_INVOKABLE void testVacuumQuery();
 
-    void setFastBufferRead(bool state);
+    void beginAction();
+    void endAction();
+    void fastBufferRead();
     void runSupplyAction();
     
 private slots:
     void processEvents();
-    void fastBufferRead();
 private:
     void fillSupplyARQ();
     void fillLeakageRQ();
@@ -66,8 +67,9 @@ private:
     
     ControllerData* m_time;
     QTimer* m_acquisitionTimer;
-    QTimer* m_fastBufferAcquisition;
-    
+    // QTimer* m_fastBufferAcquisition;
+    bool canReadSlow;
+    bool canReadFast;
     // AdvantechDO reqValveDO;
     // valve pointers
     // QVector<Valve*> m_valves;
