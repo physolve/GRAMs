@@ -7,7 +7,7 @@ import Grams.addRemoveQuartileSingleton 1.0
 Window {
     id: root
     color: "#2B2B2B"
-    flags: Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint
+    flags: Qt.Dialog
     Item {
         id: chartItem
         anchors.fill: parent

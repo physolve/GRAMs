@@ -2,6 +2,7 @@
 
 #include <QtCore/QObject>
 #include "../lib/bdaqctrl.h"
+#include "../Constants.h"
 #include "ControllerInfo.h"
 
 #include "VoltageFilter.h"
@@ -93,7 +94,7 @@ private:
     
     AdvAIType m_info;
     QVector<double> kalmanBuffer;
-    const int m_sectionLength = 512; // move to namespace
+    const int m_sectionLength = Constants::filterPointCount; // move to namespace
     Automation::BDaq::ValueRange m_valueRange;
     Automation::BDaq::WaveformAiCtrl* m_waveformAiCtrl; // change to smart pointer or initialize inside class
     QVector<double> m_vector; // should be list of values 

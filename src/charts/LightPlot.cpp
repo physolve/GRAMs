@@ -1,6 +1,6 @@
 #include "LightPlot.h"
 #include "../lib/qcustomplot.h"
-LightPlot::LightPlot(QQuickItem *parent): BasePlot(parent){
+LightPlot::LightPlot(QQuickItem *parent): BasePlot(parent), fastResultCount(0){
 
 };
 
@@ -37,10 +37,10 @@ void LightPlot::dataUpdated(){
         m_CustomPlot->graph(i)->addData(time_value, data_value);
         ++i;
         filter_ptr->clearCumulative();
-        timePoint = data_value.count();
+        lastPointKey = lastPointKey + data_value.count();
     }  
-    if(lastPointKey < timePoint)
-        lastPointKey = timePoint;
+    // if(lastPointKey < timePoint)
+    //     lastPointKey = timePoint;
     if(rescalingON){
         m_CustomPlot->rescaleAxes();
         m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);

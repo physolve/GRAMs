@@ -1,5 +1,5 @@
 #include "VoltageFilter.h"
-
+#include "../Constants.h"
 #include <Eigen/Dense>
 #include <QDebug>
     // int n = 3; // Number of states
@@ -9,7 +9,7 @@
 
     //let's try 500 Hz time step (1.0/500)
 
-VoltageFilter::VoltageFilter(): n(3), m(1), dt(1.0/512) {
+VoltageFilter::VoltageFilter(): n(3), m(1), dt(1.0/Constants::filterPointCount) {
 
     Eigen::MatrixXd A(n, n); // System dynamics matrix
     Eigen::MatrixXd C(m, n); // Output matrix
@@ -29,13 +29,13 @@ VoltageFilter::VoltageFilter(): n(3), m(1), dt(1.0/512) {
     // Construct the filter
     kf = KalmanFilter(dt, A, C, Q, R, P);
     qDebug() << "Kalman created";
-    m_filteredVoltage.resize(512, 0.0);
-    m_XhatS.resize(512, 0.0);
-    m_XhatT.resize(512, 0.0);
+    m_filteredVoltage.resize(Constants::filterPointCount, 0.0);
+    m_XhatS.resize(Constants::filterPointCount, 0.0);
+    m_XhatT.resize(Constants::filterPointCount, 0.0);
 }
 
 
-VoltageFilter::VoltageFilter(const FilterMatrix &parameters):n(3), m(1), dt(1.0/512) {
+VoltageFilter::VoltageFilter(const FilterMatrix &parameters):n(3), m(1), dt(1.0/Constants::filterPointCount) {
     Eigen::MatrixXd R(m, m); // Measurement noise covariance
 
     std::vector<double> a(parameters.mA.constBegin(), parameters.mA.constEnd());
@@ -49,9 +49,9 @@ VoltageFilter::VoltageFilter(const FilterMatrix &parameters):n(3), m(1), dt(1.0/
     Eigen::MatrixXd P = Eigen::Map<Eigen::MatrixXd>(p.data(), n, n);
     kf = KalmanFilter (dt, A, C, Q, R, P);
     qDebug() << "Custom Kalman created";
-    m_filteredVoltage.resize(512, 0.0);
-    m_XhatS.resize(512, 0.0);
-    m_XhatT.resize(512, 0.0);
+    m_filteredVoltage.resize(Constants::filterPointCount, 0.0);
+    m_XhatS.resize(Constants::filterPointCount, 0.0);
+    m_XhatT.resize(Constants::filterPointCount, 0.0);
 
     // Best guess of initial states
     Eigen::VectorXd x0(n);

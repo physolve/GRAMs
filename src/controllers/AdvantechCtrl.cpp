@@ -168,14 +168,14 @@ const QVector<double> AdvantechAI::getData(){ // const & ?
 /* Advantech Buffered Analog Input (pressure and temperature readings) */
 
 AdvantechBuff::AdvantechBuff(QObject *parent) :
-	AdvantechCtrl(), m_waveformAiCtrl(nullptr), m_vector(8,0.0) // 8?
+	AdvantechCtrl(), m_waveformAiCtrl(nullptr), m_vector(8,0.0) // from profile
 {
 	m_waveformAiCtrl = WaveformAiCtrl::Create(); // should it be later?
 	// in case of disconnect may be recreated
 	m_waveformAiCtrl->addDataReadyHandler(OnDataReadyEvent, this);
 	// stopped handler can be used to put points in vector
 	// m_waveformAiCtrl->addStoppedHandler(OnStoppedEvent, this);
-	resizeVoltageFilterList(8);
+	resizeVoltageFilterList(8); // from profile
 }
 
 AdvantechBuff::~AdvantechBuff(){
@@ -310,7 +310,6 @@ void AdvantechBuff::OnDataReadyEvent(void * sender, BfdAiEventArgs * args, void 
     int32 getDataCount = 0, returnedCount = 0;
     int32 bufSize = uParam->m_sectionLength * uParam->m_info.channelCount();
 	// QVector<double> kalmanBuffer;
-	
     do{
         getDataCount = qMin(bufSize,  remainingCount);
         ErrorCode ret = ((WaveformAiCtrl*)sender)->GetData(getDataCount, uParam->kalmanBuffer.data(), 0, &returnedCount, NULL, NULL, NULL);
@@ -361,10 +360,6 @@ void AdvantechBuff::doFilter(){
 	QVector<double> vector = m_vector;
 	for(int i = 0; i < m_voltageFilters.count(); i++){ // m_info.channelCount()
 		const auto &allVoltage = m_voltageFilters[i].getFilteredVoltage();
-		if(allVoltage.last() < 0.5){
-        qDebug() << "Got zero! in doFilter " << i;
-
-		}
 		vector[i] = allVoltage.last();
 	}
 	m_vector = vector;

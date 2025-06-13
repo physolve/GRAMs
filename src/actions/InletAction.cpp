@@ -21,11 +21,16 @@ void InletAction::runInletAction(QPromise<int> &promise){
     dataAcquisition->beginAction();
     addRemoveQuartile->fillSupplyActionData();
     QThread::msleep(1000);
+    dataAcquisition->fastBufferRead();
+    QThread::msleep(100);
     bool setOK = valveControl->setValveFromAction(true, inletStrategy.m_usePort);
     if(!setOK){
+        valveControl->endAction();
+        dataAcquisition->endAction();
         qDebug() << "Canceling Inlet Action due unable to setValveFromAction";
         return;
     }
+
     QElapsedTimer runInletTime;
     runInletTime.start();
     qDebug() << "Opened valve " + inletStrategy.m_usePort;

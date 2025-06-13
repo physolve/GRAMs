@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <QQmlApplicationEngine>
+#include "Constants.h"
 
 #include "DataAcquisition.h"
 #include "ValveControl.h"

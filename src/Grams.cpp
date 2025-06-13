@@ -84,12 +84,12 @@ void Grams::initDigitalData(){
     timeAnalog.m_name = "Время";
 
     QVector<double> indexData;
-    for(int i = 0; i < 512; ++i) { //m_sectionLength
+    for(int i = 0; i < Constants::filterPointCount; ++i) { //m_sectionLength
         indexData << i;
     }
     timeFilter.setData(indexData);
     for(auto filtersData : getFilterPointers()){ // ?
-        filtersData->setData(QVector<double>(512,0.0));
+        filtersData->setData(QVector<double>(Constants::filterPointCount,0.0));
     }
 }
 

@@ -90,7 +90,7 @@ void AddRemoveQuartile::fillSupplyActionData(){
     
     m_supplyPort[indexPort].setInitialParametersSupply(indexPort, 1, m_inletStrategy.m_reducerLimit);
     preCalculateSupplyTime(indexPort, 1, m_inletStrategy.m_reducerLimit);
-
+    
     qDebug() << "Current supply port state: " << m_valves[indexPort]->getState();
     m_supplyPort[indexPort].initResultFile();
     

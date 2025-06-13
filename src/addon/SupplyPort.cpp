@@ -74,7 +74,7 @@ void SupplyPort::addMeasure(double pressure_quartile){
 double SupplyPort::getFlowCoefficient(double turn){
     switch(m_portId){
         case 0: return 0.00137; break;
-        case 1: return 0.00137; break;
+        case 1: return 0.00050; break;
         case 2: return 0.0037; break;
         default: return 0; break;
     }
