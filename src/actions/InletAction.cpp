@@ -19,6 +19,7 @@ void InletAction::runInletAction(QPromise<int> &promise){
     promise.addResult(0);
     valveControl->beginAction();
     dataAcquisition->beginAction();
+    addRemoveQuartile->fillSupplyActionData();
     QThread::msleep(1000);
     bool setOK = valveControl->setValveFromAction(true, inletStrategy.m_usePort);
     if(!setOK){
@@ -34,7 +35,8 @@ void InletAction::runInletAction(QPromise<int> &promise){
         if (promise.isCanceled())       // support cancellation
             break;
         dataAcquisition->fastBufferRead();
-        // dataAcquisition->runSupplyAction();
+        dataAcquisition->runSupplyAction();
+        addRemoveQuartile->fillSupplyPortData();
         if(valveControl->isActionInterrupted()){
             // suspend?
             qDebug() << "Other valve were clicked";
@@ -45,6 +47,7 @@ void InletAction::runInletAction(QPromise<int> &promise){
     setOK = valveControl->setValveFromAction(false, inletStrategy.m_usePort);
     valveControl->endAction();
     dataAcquisition->endAction();
+    addRemoveQuartile->saveSupplyActionData();
     promise.addResult(runInletTime.elapsed());
     promise.finish();
     qDebug() << "Closed valve " + inletStrategy.m_usePort;

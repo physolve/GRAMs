@@ -17,12 +17,6 @@ Rectangle {
         text: "Проверка расчета целевого"
         onClicked: PlayPressure.testPlayPressure() //?
     }
-    Button{
-        x: 225
-        y: 5
-        text: "Проверка ActionHandler"
-        onClicked: Grams.testActionHandler()
-    }
     Column{
         x: 25
         y: 130

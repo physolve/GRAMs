@@ -121,30 +121,25 @@ void LightPlotItem::wheelEvent(QWheelEvent *event) {
 }
 
 void LightPlotItem::dataUpdated(){
-    const auto& time = pseudo_time.getCurValue();
-    const auto& bufferCount = m_sensors[0]->getCumulativeCount();
-    QVector<double> indexTime;
-    for(int i = 1; i <= 512*bufferCount; i++){
-        indexTime << time + i; 
-    }
-
-    // check lenght using getCumulativeData() maybe
-
-    pseudo_time.setData(indexTime);
-    const auto &timePoint = pseudo_time.getCurValue();
+    // check length using getCumulativeData() maybe
+    int timePoint = 0;
     // USE ITERATORS! 
     for(unsigned short i = 0; auto* ptr : m_sensors){
         // FREQUENLY CHECK - REMOVE
-        if(!ptr->isCumulativeReady()){
+        if(!ptr->isCumulativeDataReady()){
             ++i;
             qDebug() << "Cumulative data not READY";
             continue;
         }
-        const auto& time_value = pseudo_time.getValue();
         const auto& data_value = ptr->getCumulativeData();
+        QList<double> time_value;
+        for(int j = 0; j < data_value.count(); ++j){
+            time_value << lastPointKey + j;
+        }
         m_CustomPlot->graph(i)->addData(time_value, data_value);
         ++i;
         ptr->clearCumulative();
+        timePoint = data_value.count();
     }  
     if(lastPointKey < timePoint)
         lastPointKey = timePoint;
@@ -235,7 +230,7 @@ void LightPlotItem::clearPlotData(){
     for(auto i{0}; i<m_CustomPlot->graphCount(); ++i){
         m_CustomPlot->graph(i)->data()->clear();
     }
-    pseudo_time.clearPoints();
+    // pseudo_time.clearPoints();
     for(auto* ptr : m_sensors){
         ptr->clearCumulative();
     }

@@ -42,7 +42,7 @@ public slots:
 
 private:
   QCustomPlot *m_CustomPlot;
-  FilterData pseudo_time;
+  // FilterData pseudo_time;
   QVector<FilterData*> m_sensors;
   bool rescalingON;
   double lastPointKey;

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Quartile.h"
-
 #include "StorageQuartile.h"
+#include "../charts/LightPlot.h"
 
 struct InletStrategy{
     Q_GADGET
@@ -16,7 +16,6 @@ public:
     double  m_pressureLimit; // bar in storage
     int     m_openTime; // ms
 };
-
 
 // struct guiInletAction{
 //     Q_GADGET
@@ -33,11 +32,13 @@ public:
 //     double m_timeOpenGasPort;
 // };
 
-
 class AddRemoveQuartile : public Quartile
 {
     Q_OBJECT
     Q_PROPERTY(InletStrategy inletStrategy READ getInletStrategy WRITE setInletStrategy NOTIFY inletStrategyChanged)
+    Q_PROPERTY(QList<LightPlot*> addRemoveGraphs READ getAddRemoveGraphs NOTIFY addRemoveGraphsChanged)
+    Q_PROPERTY(QStringList addRemoveChartNames READ getAddRemoveChartNames NOTIFY addRemoveGraphsChanged)
+
 public:
     explicit AddRemoveQuartile(QObject *parent = nullptr);
     virtual ~AddRemoveQuartile();
@@ -45,26 +46,36 @@ public:
     
     void setStorageQuartilePressure(QuartileData* storageQuartilePressure);
     void setStorageQuartilePtr(StorageQuartile* storageQuartile);
-    void updatePortState();
 
+    Q_INVOKABLE void initAddRemoveCharts();
+    Q_INVOKABLE void clearAddRemoveCharts();
+
+    void updatePortState();
     void setInletStrategy(const InletStrategy& inletStrategy);
     InletStrategy getInletStrategy() const;
+    
     bool checkSupplyAction();
+    void fillSupplyActionData();
+    void fillSupplyPortData();
+    void saveSupplyActionData();
 signals:
     void inletStrategyChanged();
-private slots:
-    void expEvent();
+    void addRemoveGraphsChanged();
 private:
-    void fillSupplyPortData();
     void preCalculateSupplyTime(int portId, double turn, double portPressure);
     double m_supplySpeed; // current
     double m_drainSpeed;
-    int m_currentSupplyPort;
+    // int m_currentSupplyPort;
     SupplyPort m_supplyPort[3]; // settings different but process only one!
     // custom plot graph local
+    
     FilterData* m_supplyPressureHigh;
     FilterData* m_supplyPressureLow;
+    
     // QList<LightPlotItem*> m_supplyPressurePlots;
+    QList<LightPlot*> m_addRemoveGraphs;
+    QList<LightPlot*> getAddRemoveGraphs() const;
+    QStringList getAddRemoveChartNames() const;
     // quartile pressure from StorageQuartile
 
     // QTimer* m_expUpdate;

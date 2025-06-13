@@ -91,31 +91,20 @@ void FilterData::setData(const QVector<double> &y){
 }
 
 void FilterData::addData(const QVector<double> &y){
-    // FREQUENLY CHECK - REMOVE
-    if(y.isEmpty()){
-        qDebug() << "EMPTY FILTER DATA";
-        return;
-    }
     setData(y);
     cumulativeData << m_y;
-    cumulativeCount++;
 }
 
-bool FilterData::isCumulativeReady() const{
-    return cumulativeCount>0;
+bool FilterData::isCumulativeDataReady() const{
+    return !cumulativeData.isEmpty();
 }
 
 QVector<double> FilterData::getCumulativeData() const{
     return cumulativeData;
 }
 
-int FilterData::getCumulativeCount(){
-    return cumulativeCount;
-}
-
 void FilterData::clearCumulative(){
     cumulativeData.clear();
-    cumulativeCount = 0;
 }
 
 QuartileData::QuartileData(const QString &name) : DataCollection(name)

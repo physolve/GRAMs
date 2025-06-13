@@ -175,7 +175,10 @@ void Grams::vacuumController(){
 
 void Grams::initAddRemoveQuartile(){
     m_supplyPressureHigh.m_name = "Supply high";
+    m_supplyPressureHigh.m_type = DataType::Pressure;
     m_supplyPressureLow.m_name = "Supply low";
+    m_supplyPressureLow.m_type = DataType::Pressure;
+
     m_addRemoveQuartile.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
     m_addRemoveQuartile.setStorageQuartilePtr(&m_storageQuartile);
     
@@ -382,7 +385,7 @@ int Grams::getFilterPlotPtr(CustomPlotItem* filterPlotPointer){
 }
 */
 
-QStringList Grams::getChartsNames() const{
+QStringList Grams::getChartNames() const{
     QStringList chartNames;
     for(auto graph : m_graphs){
         chartNames << graph->m_chartName;

@@ -101,7 +101,17 @@ void PlayPressure::playWithAccuum(){ // can be covered in test
     const double& storagePressureTargetWithC3 = chamberPressureTarget + m_sQ->getTargetFromMolesChange(targetReaction.molesChange, addCVolume::Large);
 
     const double& supplyMaxMain = 52; // from profile  
-    const double& supplyMax = 50; // reducer from profile or gui (inletStrategy)
+
+    InletStrategy inletLimit = m_arQ->getInletStrategy();
+
+    const double& supplyMax = inletLimit.m_reducerLimit; // reducer from profile or gui (inletStrategy)
+    // check to supplyMax < supplyMaxMain
+
+    if(chamberPressureTarget >= supplyMax){
+        qDebug() << "Make target less";
+        return;
+    }
+
     // Если целевое давление больше, чем supplyMax, то сначала распространяй по банкам
     // Если с максимальной банкой больше, чем supplyMax пробуй несколько банок
     // Иначе, определить как в n подач  
@@ -131,7 +141,7 @@ void PlayPressure::playWithAccuum(){ // can be covered in test
             change = nAccumLeft;
         }
         storagePressureTargetWithAccum = chamberPressureTarget + m_sQ->getTargetFromMolesChange((nAccumB+change)*targetReaction.molesChange);
-        if(storagePressureTargetWithAccum <= supplyMaxMain){
+        if(storagePressureTargetWithAccum <= supplyMax){
             nAccumB+=change;
             nAccumLeft-=change;
             m_guiPresTarget.m_storagePressureTarget = storagePressureTargetWithAccum;
@@ -193,7 +203,11 @@ void PlayPressure::playWithAccuum(){ // can be covered in test
             break;
         } 
     }
-    if(nAccumB==0 && nAccumC1==0 && nAccumC2==0){
+    if(nAccumB==0 && nAccumC1==0 && nAccumC2==0 && nAccumC3==0){
+        qDebug() << "Can't reach target from reference volume";
+        return;
+    }
+    else if(nAccumB==0 && nAccumC1==0 && nAccumC2==0){
         m_guiPresTarget.m_storagePressureTarget = m_guiPresTarget.m_c3PressureTarget;
     }
     else if(nAccumB==0 && nAccumC1==0){

@@ -6,8 +6,6 @@ m_inletStrategy{50, "AR2", 45, 10000} // middle default port
     for(int i{2}; i >= 0; --i){
         m_supplyPort[i].setInitialParametersSupply(i,0,1);
     }
-    // connect(m_expUpdate, &QTimer::timeout, this, &AddRemoveQuartile::expEvent);
-    // m_expUpdate->setInterval(500);
 }
 AddRemoveQuartile::~AddRemoveQuartile(){
     m_supplyPressureHigh = nullptr;
@@ -27,65 +25,39 @@ void AddRemoveQuartile::setStorageQuartilePressure(QuartileData* storageQuartile
     m_storageQuartilePressure = storageQuartilePressure;
 }
 
-// QVector<FilterData*> chartPtrs;
-// switch(m_supplyPressurePlots.count()){
-//     // i don't have quartile filter data
-//     case 0:
-//     {
-//         chartPtrs.append(m_supplyPressureHigh);
-//         lightPlotPointer->setDataPointers(chartPtrs);
-//         break;
-//     }
-//     case 1:
-//     {
-//         chartPtrs.append(m_supplyPressureLow);
-//         lightPlotPointer->setDataPointers(chartPtrs);
-//         break;
-//     }
-//     default:
-//         qDebug() << "default\n"; // no error
-//         break;
-// }
-// lightPlotPointer->initCustomPlot();
-// lightPlotPointer->placeGraph();
-// m_supplyPressurePlots << lightPlotPointer;
-// return m_supplyPressurePlots.count() - 1;
+void AddRemoveQuartile::initAddRemoveCharts(){
+    auto supplyChart = new LightPlot();
+    supplyChart->setDataPointers(m_supplyPressureHigh);
+    supplyChart->setPlotColor();
+    supplyChart->initPlot();
+    supplyChart->placeLegend();
+    supplyChart->update();
+    supplyChart->dataUpdated();
+    supplyChart->m_chartName = "Подача газа";
+    m_addRemoveGraphs << supplyChart;
+    emit addRemoveGraphsChanged();
+}
 
+void AddRemoveQuartile::clearAddRemoveCharts(){
+    for(auto* graph : m_addRemoveGraphs){
+        delete graph;
+    }
+    m_addRemoveGraphs.clear();
+    // emit addRemoveGraphsChanged();
+}
 
-// m_currentSupplyPort = parameters["supplyPort"].toInt();
-// const auto& turn = parameters["turn"].toDouble();
-// const auto& portPressure = parameters["portPressure"].toDouble();
-// m_supplyPort[m_currentSupplyPort].setInitialParametersSupply(m_currentSupplyPort, turn, portPressure);
-// preCalculateSupplyTime(m_currentSupplyPort, turn, portPressure);
+QStringList AddRemoveQuartile::getAddRemoveChartNames() const{
+    QStringList chartNames;
+    for(auto graph : m_addRemoveGraphs){
+        chartNames << graph->m_chartName;
+    }
+    return chartNames;
+}
 
-// if(measure){
-//         qDebug() << "Current supply port state: " << m_valves[m_currentSupplyPort]->getState();
-//         m_supplyPort[m_currentSupplyPort].initResultFile();
-        
-//         // case of supply to all volumes including reaction?
-//         QList<VolumeObject> storageVolumes;
-//         for(const QString& name : m_storageQuartile->getUsedVolumes()){
-//             storageVolumes << m_storageQuartile->getVolumeByName(name);
-//             // allVolumeNames << name;
-//         }
-//         // initial_flow = quartile_storage->moles to std cm3
-//         const auto& initial_flow = CalcMoles::getMolesSum(storageVolumes);  // maybe change to 
-        
-//         m_supplyPort[m_currentSupplyPort].startCalc(m_storageQuartilePressure->getCurValue(), initial_flow);
-//         m_supplyPressurePlots[0]->initPlotData(); // only high pressure
-//         m_expUpdate->start();
-//     }
-// else{
-//     m_expUpdate->stop();
-//     //saves
-//     m_supplyPort[m_currentSupplyPort].saveResultsToFile();
-//     //clear
-//     m_supplyPort[m_currentSupplyPort].endCalc();
-//     m_supplyPressurePlots[0]->savePlotData();  // only high pressure
-//     m_supplyPressurePlots[0]->clearPlotData();  // only high pressure
-//     m_currentSupplyPort = -1;
-// }
-
+QList<LightPlot*> AddRemoveQuartile::getAddRemoveGraphs() const
+{
+    return m_addRemoveGraphs;
+}
 
 
 void AddRemoveQuartile::setInletStrategy(const InletStrategy& inletStrategy){ // from gui
@@ -95,24 +67,44 @@ InletStrategy AddRemoveQuartile::getInletStrategy() const{
     return m_inletStrategy;
 }
 
-void AddRemoveQuartile::expEvent(){
-    fillSupplyPortData();
-}
 void AddRemoveQuartile::updatePortState(){
     // update all ports
     for(int i = 0; i < m_valves.count(); ++i){ // if drain ptr! exceed count to 4
         m_supplyPort[i].setPortOpen(m_valves[i]->getState());
     }
 }
-void AddRemoveQuartile::fillSupplyPortData(){
-    // but graph update values from m_supplyPressureLow
-    // m_supplyPressurePlots[1]->dataUpdated();
-    // but this graph update values from m_supplyPressureHigh
 
-    // m_supplyPressurePlots[0]->dataUpdated();
+bool AddRemoveQuartile::checkSupplyAction(){
+    // speed on m_supplyPressureHigh
+    // speed on m_supplyPressureLow
+    // fast value check with m_supplyPressureHigh
+    if(m_storageQuartilePressure->getCurValue() > m_inletStrategy.m_pressureLimit){
+        return false;
+    }
+    return true;
+}
 
-    m_supplyPort[m_currentSupplyPort].setPortOpen(m_valves[m_currentSupplyPort]->getState());
-    m_supplyPort[m_currentSupplyPort].addMeasure(m_storageQuartilePressure->getCurValue());
+void AddRemoveQuartile::fillSupplyActionData(){
+    QStringList supplyPortNames = {"AR1", "AR2", "AR3"}; // from profile
+    const int& indexPort = supplyPortNames.indexOf(m_inletStrategy.m_usePort);
+    
+    m_supplyPort[indexPort].setInitialParametersSupply(indexPort, 1, m_inletStrategy.m_reducerLimit);
+    preCalculateSupplyTime(indexPort, 1, m_inletStrategy.m_reducerLimit);
+
+    qDebug() << "Current supply port state: " << m_valves[indexPort]->getState();
+    m_supplyPort[indexPort].initResultFile();
+    
+    // case of supply to all volumes including reaction?
+    QList<VolumeObject> storageVolumes;
+    for(const QString& name : m_storageQuartile->getUsedVolumes()){
+        storageVolumes << m_storageQuartile->getVolumeByName(name);
+        // allVolumeNames << name;
+    }
+    // initial_flow = quartile_storage->moles to std cm3
+    const auto& initial_flow = CalcMoles::getMolesSum(storageVolumes);  // maybe change to 
+    
+    m_supplyPort[indexPort].startCalc(m_storageQuartilePressure->getCurValue(), initial_flow); // begin
+    m_addRemoveGraphs[0]->initPlotData(); // only high pressure
 }
 
 void AddRemoveQuartile::preCalculateSupplyTime(int portId, double turn, double portPressure){
@@ -146,13 +138,24 @@ void AddRemoveQuartile::preCalculateSupplyTime(int portId, double turn, double p
     model_port.saveResultsToFile();
 }
 
+void AddRemoveQuartile::fillSupplyPortData(){
+    // but graph update values from m_supplyPressureLow
+    // m_supplyPressurePlots[1]->dataUpdated();
+    // but this graph update values from m_supplyPressureHigh
+    QStringList supplyPortNames = {"AR1", "AR2", "AR3"}; // from profile
+    const int& indexPort = supplyPortNames.indexOf(m_inletStrategy.m_usePort);
+    m_supplyPort[indexPort].setPortOpen(m_valves[indexPort]->getState());
+    m_supplyPort[indexPort].addMeasure(m_storageQuartilePressure->getCurValue());
+    m_addRemoveGraphs[0]->dataUpdated();
+}
 
-bool AddRemoveQuartile::checkSupplyAction(){
-    // speed on m_supplyPressureHigh
-    // speed on m_supplyPressureLow
-    // fast value check with m_supplyPressureHigh
-    if(m_storageQuartilePressure->getCurValue() > m_inletStrategy.m_pressureLimit){
-        return false;
-    }
-    return true;
+void AddRemoveQuartile::saveSupplyActionData(){
+    QStringList supplyPortNames = {"AR1", "AR2", "AR3"}; // from profile
+    const int& indexPort = supplyPortNames.indexOf(m_inletStrategy.m_usePort);
+    //saves
+    m_supplyPort[indexPort].saveResultsToFile();
+    //clear
+    m_supplyPort[indexPort].endCalc();
+    m_addRemoveGraphs[0]->savePlotData();  // only high pressure
+    m_addRemoveGraphs[0]->clearPlotData();  // only high pressure
 }

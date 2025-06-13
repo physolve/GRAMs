@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Qt.labs.qmlmodels
 import QtQuick.Controls.Material 
 import "content"
+import "regime"
 
 TableView {
     id: tableView
@@ -39,8 +40,11 @@ TableView {
     signal openESupply()
     function openParameters(regime, row){
         console.log(regime, row)
-        if(regime == "Цел. в камере")
-            tableView.openESupply()
+        if(regime == "Цел. в камере"){
+            // list of regime var ->
+            supplyAdjustWindow.createObject(parent)
+        }
+            // tableView.openESupply()
     }
     delegate: DelegateChooser {
         DelegateChoice {
@@ -156,5 +160,9 @@ TableView {
             }
         }
     }
+    Component{
+        id: supplyAdjustWindow
+        SupplyRegime{
+        }
+    }
 }
-

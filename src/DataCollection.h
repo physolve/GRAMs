@@ -55,13 +55,11 @@ public:
     virtual ~FilterData();
     void setData(const QVector<double> &y);
     void addData(const QVector<double> &y);
-    bool isCumulativeReady() const;
+    bool isCumulativeDataReady() const;
     QVector<double> getCumulativeData() const;
-    int getCumulativeCount();
     void clearCumulative();
 private:
     QVector<double> cumulativeData;
-    int cumulativeCount{0};
 };
 
 class QuartileData : public DataCollection{
