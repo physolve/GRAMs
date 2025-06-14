@@ -21,6 +21,7 @@ public:
     void setAddRemoveQuartile(AddRemoveQuartile* addRemoveQuartile);
     void setDataAcquisition(DataAcquisition* dataAcquisition);
     void setSecurity(Security* security);
+    // set database pointer
     void prepareInletAction();
     void runInletAction();
     void finishInletAction();

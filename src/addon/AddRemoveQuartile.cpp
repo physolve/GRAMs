@@ -77,7 +77,13 @@ void AddRemoveQuartile::updatePortState(){
 bool AddRemoveQuartile::checkSupplyAction(){
     // speed on m_supplyPressureHigh
     // speed on m_supplyPressureLow
+
+    // fast value check with m_supplyPressureLow (if opened)
+
     // fast value check with m_supplyPressureHigh
+    if(m_supplyPressureHigh->getCurValue() > m_inletStrategy.m_pressureLimit){
+        return false;
+    }
     if(m_storageQuartilePressure->getCurValue() > m_inletStrategy.m_pressureLimit){
         return false;
     }

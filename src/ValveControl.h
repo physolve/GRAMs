@@ -35,7 +35,7 @@ public:
     Q_INVOKABLE void setValveState(bool state, int valveId);
     bool sendValveStates();
     bool isControlRunning();
-    void valveChangeUpdater(const QString& valveName);
+    void valveChangeUpdater(const QString& valveName, bool newState);
 
 signals:
     void guiValsValveChanged();

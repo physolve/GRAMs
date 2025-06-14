@@ -64,6 +64,7 @@ void ValveControl::initDaqDO(const daqParameters &parameter){
         valveNameList << m_valves[i]->m_name;
     }
     valveController = true;
+    // compare to data base timestamp
     emit guiValsValveChanged();
 }
 
@@ -80,6 +81,7 @@ void ValveControl::setValveState(bool state, int index){ // excluding chamber
     else if(!actionInterrupted){
         actionInterrupted = true;
     }
+    valveChangeUpdater(valveNameList.at(index), state);
     emit guiValsValveChanged();
 }
 
@@ -120,12 +122,12 @@ bool ValveControl::checkOpenChamber(bool state){
     return true;
 }
 
-void ValveControl::valveChangeUpdater(const QString& valveName){
+void ValveControl::valveChangeUpdater(const QString& valveName, bool newState){
     // from profile supply
-    if(m_gasSupplyValves.contains(valveName)){
-        m_addRemoveQuartile->updatePortState();
-    }
-    if(m_gasStoreValves.contains(valveName)){
+    // if(m_gasSupplyValves.contains(valveName)){
+    //     m_addRemoveQuartile->updatePortState();
+    // }
+    if(m_gasStoreValves.contains(valveName) && newState == false){
         if(m_gramStateDB->writeTimeStamp())
             qDebug() << "Time Stamp has been written";
         else 
@@ -165,5 +167,6 @@ bool ValveControl::setValveFromAction(bool state, const QString& name){
         valve->setState(originalState);
     }
     emit guiValsValveChanged();
+    valveChangeUpdater(name, state);
     return valve->getState() == state;
 }

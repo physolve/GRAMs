@@ -36,7 +36,9 @@ void SupplyPort::initResultFile(bool debug){
 void SupplyPort::startCalc(double pressure_quartile, double initial_flow){
     const auto& flow_factor = getFlowCoefficient(m_turn);
     const auto& diff_pres = m_portPressure - pressure_quartile; // initial
+    
     calculateRate(flow_factor, diff_pres);
+    
     m_flowPass = initial_flow;
     // addPreValveFlow(); // prepare preValveFlow for different supply ports
     last_time_pass = 0;
@@ -57,6 +59,7 @@ void SupplyPort::setPortOpen(bool state){
 
 void SupplyPort::addMeasure(double pressure_quartile){
     const auto& flow_factor = getFlowCoefficient(m_turn);
+    
     calculateRate(flow_factor, pressure_quartile);
     if(m_portOpen){
         auto time_pass = 0.0;
@@ -101,6 +104,7 @@ void SupplyPort::calculateRate(double flow_factor, double pressure){
     // N2 = 6950 std L/min (bar, K)
     // G_g = 0.07 (H2)
     // rewrite using moles 
+    // should be more linear
     const auto& flow_gap = getFlowGap();
     const auto& diff_pres = (m_portPressure-pressure>flow_gap)?m_portPressure-pressure:0;
     if(pressure < 0.5*m_portPressure){
@@ -117,7 +121,9 @@ double SupplyPort::calcualteModelPass(double time_pass){
 
 bool SupplyPort::addModelMeasure(double pressure_model, double time_model){
     const auto& flow_factor = getFlowCoefficient(m_turn);
+    
     calculateRate(flow_factor, pressure_model);
+    
     if(m_portOpen){
         auto time_pass = time_model;
         m_timePoints << time_pass;

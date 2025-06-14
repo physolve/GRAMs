@@ -604,7 +604,8 @@ guiValsPresVirtual Grams::getGuiPresVirtual() const{
 
 void Grams::beforeQuitting(){
     // quitting
-    bool autoSave = false;
+    // get this value from db settings table
+    bool autoSave = true;
     if(autoSave){
         if(m_gramStateDB.writeTimeStamp())
             qDebug() << "Time Stamp has been written";
