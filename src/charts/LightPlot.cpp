@@ -92,4 +92,5 @@ void LightPlot::clearPlotData(){
         auto filter_ptr = static_cast<FilterData*>(ptr);
         filter_ptr->clearCumulative();
     }
+    lastPointKey = 0;
 }

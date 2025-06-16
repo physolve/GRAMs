@@ -114,6 +114,12 @@ void TwoAxisPlot::initPlot(){
         mTag->setPen(pen);
         m_tags << mTag;
         curGraph->setName(sensor->m_name);
+        if(axisIndex == 0){
+            m_leftGraphs << curGraph;
+        }
+        else{
+            m_rightGraphs << curGraph;
+        }
     }
 }
 
@@ -127,21 +133,45 @@ void TwoAxisPlot::dataUpdated(){
         // m_CustomPlot->graph(i)->rescaleValueAxis(false, true);
         ++i;
     }
-    auto yAxis2a = m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 0);
-    yAxis2a->rescale(true);
-    yAxis2a->setRangeUpper(yAxis2a->range().upper*1.1);
-
-    auto yAxis2b = m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 1);
-    yAxis2b->rescale(true);
-    yAxis2b->setRangeUpper(yAxis2b->range().upper*1.1);
-    yAxis2b->setRangeLower(yAxis2b->range().lower*0.9);
-
-    // m_CustomPlot->yAxis2->rescale(true);
-    // m_CustomPlot->yAxis2->setRangeUpper(m_CustomPlot->yAxis2->range().upper*1.1);
-    
-    m_CustomPlot->xAxis->setRange(m_CustomPlot->xAxis->range().upper, 10, Qt::AlignRight); // 10 and larger by memory scaling?
+    // m_CustomPlot->xAxis->setRange(m_CustomPlot->xAxis->range().upper, 10, Qt::AlignRight); // 10 and larger by memory scaling?
     m_CustomPlot->xAxis->rescale();
     m_CustomPlot->xAxis->setRange(m_CustomPlot->xAxis->range().upper, 10, Qt::AlignRight);
     // if m_CustomPlot points more than x delete first y points
     m_CustomPlot->replot();
+}
+
+
+void TwoAxisPlot::customBeforeReplot() {
+    if(!m_leftGraphs.isEmpty()) {
+        double dHigh = std::numeric_limits<double>::min();
+        double dLow = std::numeric_limits<double>::max();
+        for (auto leftGraph : m_leftGraphs) {
+            leftGraph->rescaleValueAxis(false,true);
+            auto localLow = leftGraph->valueAxis()->range().lower;
+            auto localHigh = leftGraph->valueAxis()->range().upper;
+            if(localLow < dLow){
+                dLow = localLow;
+            }
+            if(localHigh > dHigh){
+                dHigh = localHigh;
+            }
+        }
+        m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 0)->setRange(dLow*0.99, dHigh*1.01);
+    }
+    if(!m_rightGraphs.isEmpty()){
+        double dHigh = std::numeric_limits<double>::min();
+        double dLow = std::numeric_limits<double>::max();
+        for (auto rightGraph : m_rightGraphs) {
+            rightGraph->rescaleValueAxis(false,true);
+            auto localLow = rightGraph->valueAxis()->range().lower;
+            auto localHigh = rightGraph->valueAxis()->range().upper;
+            if(localLow < dLow){
+                dLow = localLow;
+            }
+            if(localHigh > dHigh){
+                dHigh = localHigh;
+            }
+        }
+        m_CustomPlot->axisRect()->axis(QCPAxis::atRight, 1)->setRange(dLow*0.99, dHigh*1.01);
+    }
 }

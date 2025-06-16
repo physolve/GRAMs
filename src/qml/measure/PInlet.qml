@@ -9,7 +9,7 @@ Item {
     id: root
     // color: "#2B2B2B"
     // reminder to change for other systems
-    property double topPressure: 50 // from profile
+    property double topPressure: 55 // from profile
     Row{
         x: 25
         y: 25

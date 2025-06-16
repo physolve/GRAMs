@@ -4,6 +4,7 @@
 #include "../DataCollection.h"
 
 class QCustomPlot;
+class QCPGraph;
 // class QCPAbstractPlottable;
 
 // might be types: a vaulue, pressure, temperature, two-axis, weight%
@@ -27,6 +28,8 @@ public:
     Q_INVOKABLE void rescaleAxes(bool onlyVisiblePlottables=false);
     void paint(QPainter *painter) override;
     virtual void dataUpdated();
+public slots:
+    virtual void customBeforeReplot();
 protected:
     virtual void onChartViewReplot() { update(); }
     virtual void onChartViewSizeChanged();
@@ -46,5 +49,6 @@ protected:
 
     bool rescalingON;
     double lastPointKey;
-    double rangeLow;
+    QVector<QCPGraph*> m_leftGraphs;
+    QVector<QCPGraph*> m_rightGraphs;
 };

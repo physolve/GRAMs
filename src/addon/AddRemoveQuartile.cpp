@@ -111,6 +111,7 @@ void AddRemoveQuartile::fillSupplyActionData(){
     
     m_supplyPort[indexPort].startCalc(m_storageQuartilePressure->getCurValue(), initial_flow); // begin
     m_addRemoveGraphs[0]->initPlotData(); // only high pressure
+    m_addRemoveGraphs[0]->initPlotData("supplyData", m_supplyPort[indexPort].getResultFileSuffix());
 }
 
 void AddRemoveQuartile::preCalculateSupplyTime(int portId, double turn, double portPressure){

@@ -4,20 +4,24 @@
 
 BasePlot::BasePlot(QQuickItem *parent)
     : QQuickPaintedItem(parent), m_CustomPlot(new QCustomPlot()),
-    rescalingON(true), lastPointKey(0), rangeLow(0)
+    rescalingON(true), lastPointKey(0)
 {
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
     setAcceptHoverEvents(true);  
     connect(this, &QQuickPaintedItem::widthChanged, this, &BasePlot::onChartViewSizeChanged);
-    connect(this, &QQuickPaintedItem::heightChanged, this, &BasePlot::onChartViewSizeChanged);   
+    connect(this, &QQuickPaintedItem::heightChanged, this, &BasePlot::onChartViewSizeChanged);
+    connect(m_CustomPlot, &QCustomPlot::beforeReplot, this, &BasePlot::customBeforeReplot);
     connect(m_CustomPlot, &QCustomPlot::afterReplot, this, &BasePlot::onChartViewReplot, Qt::UniqueConnection); // custom replot
     update();
 }
 
 BasePlot::~BasePlot()
 {
-    m_CustomPlot = nullptr;
+    m_leftGraphs.clear();
+    m_rightGraphs.clear();
+    delete m_CustomPlot;
+    // m_CustomPlot = nullptr;
 }
 
 
@@ -114,6 +118,12 @@ void BasePlot::initPlot(){
         curGraph->setAdaptiveSampling(true);
         curGraph->setName(sensor->m_name);
         curGraph->setLineStyle(QCPGraph::lsLine);
+        if(axisSide == QCPAxis::atLeft){
+            m_leftGraphs << curGraph;
+        }
+        else{
+            m_rightGraphs << curGraph;
+        }
     }
 }
 
@@ -145,7 +155,7 @@ void BasePlot::setLogValueAxis(){
     QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
     m_CustomPlot->yAxis->setTicker(logTicker);
     m_CustomPlot->yAxis2->setTicker(logTicker);
-    m_CustomPlot->yAxis->setNumberFormat("eb"); // e = exponential, b = beautiful decimal powers
+    m_CustomPlot->yAxis->setNumberFormat("e"); // e = exponential, b = beautiful decimal powers
     m_CustomPlot->yAxis->setNumberPrecision(0); // makes sure "1*10^4" is displayed only as "10^4"
     m_CustomPlot->xAxis->setRange(0, 10.0);
     m_CustomPlot->yAxis->setRange(1e-6, 1);
@@ -162,8 +172,8 @@ void BasePlot::dataUpdated(){
     
     if(rescalingON){
         m_CustomPlot->xAxis->setRange(lastPointKey, 10, Qt::AlignRight); // means there a 10 sec
-        m_CustomPlot->yAxis->rescale(true);
-        m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
+        // m_CustomPlot->yAxis->rescale(true);
+        // m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
     }
     // if m_CustomPlot points more than x delete first y points
     m_CustomPlot->replot();
@@ -209,10 +219,37 @@ void BasePlot::routeWheelEvents(QWheelEvent *event)
     QCoreApplication::postEvent(m_CustomPlot, newEvent);
 }
 
-// QVariantMap BasePlot::graphs(){
-//     QVariantMap map;
-//     for(auto it = m_graphs.begin(); it != m_graphs.end(); ++it) {
-//         map.insert(it.key(), QVariant::fromValue(it.value()));
-//     }
-// }
-
+void BasePlot::customBeforeReplot() {
+    if(!m_leftGraphs.isEmpty()) {
+        double dHigh = std::numeric_limits<double>::min();
+        double dLow = std::numeric_limits<double>::max();
+        for (auto leftGraph : m_leftGraphs) {
+            leftGraph->rescaleValueAxis(false,true);
+            auto localLow = leftGraph->valueAxis()->range().lower;
+            auto localHigh = leftGraph->valueAxis()->range().upper;
+            if(localLow < dLow){
+                dLow = localLow;
+            }
+            if(localHigh > dHigh){
+                dHigh = localHigh;
+            }
+        }
+        m_CustomPlot->yAxis->setRange(dLow*0.99, dHigh*1.01);
+    }
+    if(!m_rightGraphs.isEmpty()){
+        double dHigh = std::numeric_limits<double>::min();
+        double dLow = std::numeric_limits<double>::max();
+        for (auto rightGraph : m_rightGraphs) {
+            rightGraph->rescaleValueAxis(false,true);
+            auto localLow = rightGraph->valueAxis()->range().lower;
+            auto localHigh = rightGraph->valueAxis()->range().upper;
+            if(localLow < dLow){
+                dLow = localLow;
+            }
+            if(localHigh > dHigh){
+                dHigh = localHigh;
+            }
+        }
+        m_CustomPlot->yAxis2->setRange(dLow*0.99, dHigh*1.01);
+    }
+}

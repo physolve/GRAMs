@@ -91,7 +91,9 @@
         "qstring": "cpp",
         "qlist": "cpp",
         "qpromise": "cpp",
-        "qthread": "cpp"
+        "qthread": "cpp",
+        "xlocale": "cpp",
+        "xstring": "cpp"
     },
     "cmake.options.statusBarVisibility": "visible",
     "cSpell.words": [

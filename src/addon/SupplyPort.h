@@ -23,7 +23,10 @@ public:
     void saveResultsToFile();
     double getFlowPass() const;
     bool addModelMeasure(double pressure_model, double time_model);
+    QString getResultFileSuffix() const;
 private:
+    int todayRuns;
+    int todayRunCount();
     double calcualteModelPass(double time_differ);
     double getFlowCoefficient(double turn);
     double getFlowGap() const;
@@ -38,6 +41,7 @@ private:
     // assume volume pre valve
     void addPreValveFlow();
     QFile supplyResultFile;
+    QString resultFileSuffix;
     // to save
     QElapsedTimer progressTime;
     // Quartile pressure

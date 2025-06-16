@@ -12,6 +12,8 @@ public:
     void setPlotColor() override;
     void initPlot() override;
     void dataUpdated() override;
+public slots:
+    void customBeforeReplot() override;
 private:
     QVector<AxisTag*> m_tags;
 

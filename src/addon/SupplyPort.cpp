@@ -1,12 +1,12 @@
 #include "SupplyPort.h"
-
+#include <QDir>
 #include <QDebug>
 
 SupplyPort::SupplyPort(QObject *parent) :
     QObject(parent)
 {
     qDebug() << "SupplyPort class is created";
-    supplyResultCount = 0;
+    todayRuns = 0;
     m_portOpen = false;
 }
 
@@ -21,16 +21,39 @@ void SupplyPort::setInitialParametersSupply(int portId, double turn, double port
     m_portPressure = portPressure;
 }
 
+int SupplyPort::todayRunCount(){
+    QDir dir("data/supplyData");
+    // let's find out today run count
+    const auto& directoryRunNames = dir.entryList(QStringList() << "*.txt",QDir::Files);
+    QString compareToDate = QDate::currentDate().toString("yyyy-MM-dd");
+    QString compareToPort = QString("AR%1").arg(m_portId);
+    auto runs = 0;
+    for(const auto& str : directoryRunNames){
+        const auto& prepend = str.split('_');
+        if(prepend.isEmpty()) continue;
+        if(prepend.at(0) == compareToDate && prepend.at(1) == compareToPort && prepend.last() != "model.txt")
+            runs++;
+    }
+    return runs;
+}
+
 void SupplyPort::initResultFile(bool debug){
-    supplyResultFile.setFileName(QString("data/SupplyPort_%1_%2.txt").arg(m_portId+3*debug).arg(supplyResultCount));
-    if (!supplyResultFile.open(QIODevice::WriteOnly | QIODevice::Text)){
+    QDir dir("data");
+    dir.cd("supplyData");
+    if (!dir.exists())
+        dir.mkpath("supplyData"); // doesnt add folder for some reason
+    QString model_str = debug ? "_model" : "";
+    const auto& baseFileName = QDate::currentDate().toString("yyyy-MM-dd")+QString("_AR%1_").arg(m_portId)+QString::number(todayRuns=todayRunCount())+model_str+".txt";
+    resultFileSuffix = QString("_AR%1_").arg(m_portId)+QString::number(todayRuns=todayRunCount());
+    supplyResultFile.setFileName(dir.filePath(baseFileName));
+    if (!supplyResultFile.open(QIODevice::ReadWrite)){
         qDebug() << "File don't exist";
         return;
     }
     QTextStream out(&supplyResultFile);
     out << "SupplyPort " << m_portId << "\tCurrent turn " << m_turn << "\tPort pressure " << m_portPressure << "\n";
     out << "Elapsed\t" << "Pressure\t" << "Flow rate\t" << "Modelled cm3 H2\t"<< "\n";
-    supplyResultCount++;
+    todayRuns++;
 }
 
 void SupplyPort::startCalc(double pressure_quartile, double initial_flow){
@@ -91,6 +114,10 @@ double SupplyPort::getFlowGap() const{
         case 2: return 0.06; break;
         default: return 0; break;
     }
+}
+
+QString SupplyPort::getResultFileSuffix() const{
+    return resultFileSuffix;
 }
 
 void SupplyPort::calculateRate(double flow_factor, double pressure){
