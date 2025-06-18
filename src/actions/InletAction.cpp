@@ -1,6 +1,7 @@
 #include "InletAction.h"
 
 #include <QDebug>
+#include <QFuture>
 #include <QElapsedTimer>
 #include <QThread>
 
@@ -19,7 +20,7 @@ void InletAction::runInletAction(QPromise<int> &promise){
     promise.addResult(0);
     valveControl->beginAction();
     dataAcquisition->beginAction();
-    addRemoveQuartile->fillSupplyActionData();
+    addRemoveQuartile->fillSupplyActionData(0);
     QThread::msleep(1000);
     dataAcquisition->fastBufferRead();
     QThread::msleep(100);
@@ -41,7 +42,10 @@ void InletAction::runInletAction(QPromise<int> &promise){
             break;
         dataAcquisition->fastBufferRead();
         dataAcquisition->runSupplyAction();
-        addRemoveQuartile->fillSupplyPortData();
+        bool futureCheck = addRemoveQuartile->appendSupplyActionData(runInletTime.elapsed());
+        if(!futureCheck){
+            qDebug() << "future check pull";
+        }
         if(valveControl->isActionInterrupted()){
             // suspend?
             qDebug() << "Other valve were clicked";

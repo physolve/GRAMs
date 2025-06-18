@@ -1,10 +1,11 @@
 #include "AddRemoveQuartile.h"
-
+#include "StorageQuartile.h"
+#include "../charts/LightPlot.h"
 AddRemoveQuartile::AddRemoveQuartile(QObject *parent) : Quartile(parent),
 m_inletStrategy{50, "AR2", 45, 10000} // middle default port
 { 
     for(int i{2}; i >= 0; --i){
-        m_supplyPort[i].setInitialParametersSupply(i,0,1);
+        m_supplyPort[i].setInitialParametersSupply(i, 50, 25, 0);
     }
 }
 AddRemoveQuartile::~AddRemoveQuartile(){
@@ -23,6 +24,10 @@ void AddRemoveQuartile::setStorageQuartilePtr(StorageQuartile* storageQuartile){
 
 void AddRemoveQuartile::setStorageQuartilePressure(QuartileData* storageQuartilePressure){
     m_storageQuartilePressure = storageQuartilePressure;
+}
+
+void AddRemoveQuartile::setStorageQuartileTemperature(QuartileData* storageQuartileTemperature){
+    m_storageQuartileTemperature = storageQuartileTemperature;
 }
 
 void AddRemoveQuartile::initAddRemoveCharts(){
@@ -67,13 +72,6 @@ InletStrategy AddRemoveQuartile::getInletStrategy() const{
     return m_inletStrategy;
 }
 
-void AddRemoveQuartile::updatePortState(){
-    // update all ports
-    for(int i = 0; i < m_valves.count(); ++i){ // if drain ptr! exceed count to 4
-        m_supplyPort[i].setPortOpen(m_valves[i]->getState());
-    }
-}
-
 bool AddRemoveQuartile::checkSupplyAction(){
     // speed on m_supplyPressureHigh
     // speed on m_supplyPressureLow
@@ -90,70 +88,70 @@ bool AddRemoveQuartile::checkSupplyAction(){
     return true;
 }
 
-void AddRemoveQuartile::fillSupplyActionData(){
+void AddRemoveQuartile::fillSupplyActionData(unsigned int nowTime){
     QStringList supplyPortNames = {"AR1", "AR2", "AR3"}; // from profile
     const int& indexPort = supplyPortNames.indexOf(m_inletStrategy.m_usePort);
+    const double& start_pressure = m_storageQuartilePressure->getCurValue();
+    const double& quartile_temperature = m_storageQuartileTemperature->getCurValue();
+    const double& timeSeconds = nowTime/1000.0;
+    m_supplyPort[indexPort].setInitialParametersSupply(indexPort, m_inletStrategy.m_reducerLimit, quartile_temperature, timeSeconds);
     
-    m_supplyPort[indexPort].setInitialParametersSupply(indexPort, 1, m_inletStrategy.m_reducerLimit);
-    preCalculateSupplyTime(indexPort, 1, m_inletStrategy.m_reducerLimit);
+    preCalculateSupplyTime(nowTime, indexPort, start_pressure);
     
-    qDebug() << "Current supply port state: " << m_valves[indexPort]->getState();
     m_supplyPort[indexPort].initResultFile();
     
-    // case of supply to all volumes including reaction?
-    QList<VolumeObject> storageVolumes;
-    for(const QString& name : m_storageQuartile->getUsedVolumes()){
-        storageVolumes << m_storageQuartile->getVolumeByName(name);
-        // allVolumeNames << name;
-    }
-    // initial_flow = quartile_storage->moles to std cm3
-    const auto& initial_flow = CalcMoles::getMolesSum(storageVolumes);  // maybe change to 
-    
-    m_supplyPort[indexPort].startCalc(m_storageQuartilePressure->getCurValue(), initial_flow); // begin
+    m_supplyPort[indexPort].setInitialParametersSupply(indexPort, m_inletStrategy.m_reducerLimit, quartile_temperature, timeSeconds);
+
     m_addRemoveGraphs[0]->initPlotData(); // only high pressure
     m_addRemoveGraphs[0]->initPlotData("supplyData", m_supplyPort[indexPort].getResultFileSuffix());
 }
 
-void AddRemoveQuartile::preCalculateSupplyTime(int portId, double turn, double portPressure){
+void AddRemoveQuartile::preCalculateSupplyTime(double nowTimeS, int portId, double start_pressure){
     // initial_flow = quartile_storage->moles to std cm3
-    SupplyPort model_port;
-    model_port.setInitialParametersSupply(portId, turn, portPressure);
-    model_port.initResultFile(true);
-
-    QList<VolumeObject> storageVolumes;
+    // QList<VolumeObject> storageVolumes;
+    double storageVolume = 0;
     for(const QString& name : m_storageQuartile->getUsedVolumes()){
-        storageVolumes << m_storageQuartile->getVolumeByName(name);
-        // allVolumeNames << name;
+        storageVolume += m_storageQuartile->getVolumeByName(name).volume;
+        // variations from strategy in storage quartile
     }
-
-    const auto& initial_flow = CalcMoles::getMolesSum(storageVolumes);
-    model_port.startCalc(m_storageQuartilePressure->getCurValue(), initial_flow);
-    model_port.setPortOpen(true);
-    double model_pressure = m_storageQuartilePressure->getCurValue();
-    double model_time;
-    for(model_time = 0; model_time < 10; model_time += 0.01){
-        if(model_port.addModelMeasure(model_pressure, model_time)) break;
-        const double& flow_pass = model_port.getFlowPass(); // moles pass
-        const double& moles_pass = 10e-4;
-        model_pressure = CalcMoles::getPressureFromMoles(moles_pass, storageVolumes);
+    m_supplyPort[portId].initResultFile(true);
+    double model_pressure = start_pressure;
+    double model_time = nowTimeS;
+    for(; model_time < 30; model_time += 0.01){
+        const double& pressure_income = m_supplyPort[portId].getPressureIncome(model_pressure, storageVolume, model_time);
+        model_pressure += pressure_income;
         // target check
+        if(model_pressure > m_inletStrategy.m_pressureLimit){
+            break;
+        }
+        if(model_time > m_inletStrategy.m_openTime){
+            break;
+        }
         // total time
     }
-    model_port.setPortOpen(false);
-    qDebug() << "Total model_time = " << model_time;
-    // this total time can be used to stop supply
-    model_port.saveResultsToFile();
+    qDebug() << "Supply model pressure " << model_pressure << " at time " << model_time;
+    m_supplyPort[portId].saveResultsToFile();
 }
 
-void AddRemoveQuartile::fillSupplyPortData(){
+bool AddRemoveQuartile::appendSupplyActionData(unsigned int nowTime){
     // but graph update values from m_supplyPressureLow
     // m_supplyPressurePlots[1]->dataUpdated();
     // but this graph update values from m_supplyPressureHigh
     QStringList supplyPortNames = {"AR1", "AR2", "AR3"}; // from profile
     const int& indexPort = supplyPortNames.indexOf(m_inletStrategy.m_usePort);
-    m_supplyPort[indexPort].setPortOpen(m_valves[indexPort]->getState());
-    m_supplyPort[indexPort].addMeasure(m_storageQuartilePressure->getCurValue());
-    m_addRemoveGraphs[0]->dataUpdated();
+    const double& s_pressure = m_supplyPressureHigh->getCurValue(); // or low
+    double storageVolume = 0;
+    for(const QString& name : m_storageQuartile->getUsedVolumes()){
+        storageVolume += m_storageQuartile->getVolumeByName(name).volume;
+        // variations from strategy in storage quartile
+    }
+    const double& timeSeconds = nowTime/1000.0;
+    const double& pressure_income = m_supplyPort[indexPort].getPressureIncome(s_pressure, storageVolume, timeSeconds);
+    // check supply action future
+    if(s_pressure + pressure_income > m_inletStrategy.m_pressureLimit){
+        return false;
+    }
+    return true;
 }
 
 void AddRemoveQuartile::saveSupplyActionData(){
@@ -162,7 +160,6 @@ void AddRemoveQuartile::saveSupplyActionData(){
     //saves
     m_supplyPort[indexPort].saveResultsToFile();
     //clear
-    m_supplyPort[indexPort].endCalc();
     m_addRemoveGraphs[0]->savePlotData();  // only high pressure
     m_addRemoveGraphs[0]->clearPlotData();  // only high pressure
 }

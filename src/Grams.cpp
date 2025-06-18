@@ -292,7 +292,7 @@ void Grams::initCharts(){
     m_mainPlot->m_chartName = "Главный график";
     // additional charts
     // addGraph("vaccumChart");
-    auto vacuumChart = new BasePlot();
+    auto vacuumChart = new BasePlot(); // use Alt unit
     vacuumChart->setDataPointers(&timeAnalog, &m_vacuumSensor);
     vacuumChart->setPlotColor();
     vacuumChart->initPlot();
@@ -318,10 +318,6 @@ void Grams::initGUI(){
     },
     Qt::QueuedConnection);
     
-    /*
-    qmlRegisterType<CustomPlotItem>("CustomPlot", 1, 0, "CustomPlotItem");
-    qmlRegisterType<LightPlotItem>("LightPlot", 1, 0, "LightPlotItem");
-    */
     qmlRegisterType<BasePlot>("BasePlot", 1, 0, "BasePlotItem");
 
     

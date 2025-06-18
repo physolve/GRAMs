@@ -1,5 +1,6 @@
 #include "DataControlAction.h"
 
+#include <QFuture>
 #include <QDebug>
 #include <QThread>
 

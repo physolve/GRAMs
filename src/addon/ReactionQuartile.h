@@ -1,7 +1,10 @@
 #pragma once
 
+#include <QTimer>
 #include "Quartile.h"
-#include "StorageQuartile.h"
+//
+class StorageQuartile;
+class LightPlot;
 
 class ReactionQuartile : public Quartile
 {
@@ -41,7 +44,7 @@ public:
     void setStorageQuartilePtr(StorageQuartile* storageQuartile);
 
     void updateLeakageState();
-    Q_INVOKABLE int getLightPlotPtr(LightPlotItem* customPlotPointer);
+
     Q_INVOKABLE void setReactionAdjustParameters(QVariantMap parameters);
     Q_INVOKABLE void startLeakageMeasure(bool measure);
 
@@ -69,12 +72,14 @@ private:
     // valve flow object
     int m_currentGasLeakage;
     GasLeakage m_gasLeakage[3];
-    //
+    
+    QList<LightPlot*> m_reactionGraphs;
+
     FilterData* m_reactionPressureHigh;
     FilterData* m_reactionPressureLow;
     QuartileData* m_storageQuartilePressure;
     StorageQuartile* m_storageQuartile;
-    QList<LightPlotItem*> m_reactionPressurePlots;
+    
     // index of pressure range valve
     int v_pressure_range;
     int s_pressure_high;

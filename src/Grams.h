@@ -18,8 +18,6 @@
 #include "addon/SecondLineQuartile.h"
 
 #include "addon/QuartileManager.h"
-// #include "CustomPlotItem.h"
-// #include "addon/LightPlotItem.h"
 #include "charts/BasePlot.h"
 #include "charts/TwoAxisPlot.h"
 #include "measure/Chamber.h"

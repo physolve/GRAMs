@@ -6,7 +6,6 @@
 #include "NodePressure.h"
 #include "SupplyPort.h"
 #include "GasLeakage.h"
-#include "LightPlotItem.h"
 #include "../measure/Chamber.h"
 // Quartile object is used to store parameters from one of four volumes
 

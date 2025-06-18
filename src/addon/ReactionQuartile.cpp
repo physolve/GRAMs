@@ -1,4 +1,6 @@
 #include "ReactionQuartile.h"
+#include "StorageQuartile.h"
+#include "../charts/LightPlot.h"
 
 ReactionQuartile::ReactionQuartile(QObject *parent) : Quartile(parent), m_expUpdate(new QTimer),
 m_chamber_connected(false){
@@ -174,31 +176,6 @@ void ReactionQuartile::setStorageQuartilePressure(QuartileData* storageQuartileP
 void ReactionQuartile::setStorageQuartilePtr(StorageQuartile* storageQuartile){
     m_storageQuartile = storageQuartile;
 }
-int ReactionQuartile::getLightPlotPtr(LightPlotItem* lightPlotPointer){
-    QVector<FilterData*> chartPtrs;
-    switch(m_reactionPressurePlots.count()){
-        // i don't have quartile filter data
-        case 0:
-        {
-            chartPtrs.append(m_reactionPressureHigh);
-            lightPlotPointer->setDataPointers(chartPtrs);
-            break;
-        }
-        case 1:
-        {
-            chartPtrs.append(m_reactionPressureLow);
-            lightPlotPointer->setDataPointers(chartPtrs);
-            break;
-        }
-        default:
-            qDebug() << "default\n"; // no error
-            break;
-    }
-    lightPlotPointer->initCustomPlot();
-    lightPlotPointer->placeGraph();
-    m_reactionPressurePlots << lightPlotPointer;
-    return m_reactionPressurePlots.count() - 1;
-}
 
 void ReactionQuartile::setReactionAdjustParameters(QVariantMap parameters){
     m_currentGasLeakage = parameters["leakageValve"].toInt();
@@ -284,9 +261,8 @@ void ReactionQuartile::startLeakageMeasure(bool measure){
         const auto& initial_flow = CalcMoles::getMolesSum(reactionVolumes);
         const auto& initial_temp = temperatureReactionQuartile->getCurValue()+Constants::temperature_std_K;
         m_gasLeakage[m_currentGasLeakage].startCalc(initial_storage_pressure, initial_reaction_pressure, initial_temp, initial_flow);
-        
-        m_reactionPressurePlots[0]->initPlotData("leakageData", m_gasLeakage[m_currentGasLeakage].getResultFileSuffix()); // only high pressure
-        
+
+        m_reactionGraphs[0]->initPlotData("leakageData", m_gasLeakage[m_currentGasLeakage].getResultFileSuffix());
         m_expUpdate->start();
     }
     else{
@@ -295,8 +271,8 @@ void ReactionQuartile::startLeakageMeasure(bool measure){
         m_gasLeakage[m_currentGasLeakage].saveResultsToFile();
         //clear
         m_gasLeakage[m_currentGasLeakage].endCalc();
-        m_reactionPressurePlots[0]->savePlotData();  // only high pressure
-        m_reactionPressurePlots[0]->clearPlotData();  // only high pressure
+        m_reactionGraphs[0]->savePlotData();  // only high pressure
+        m_reactionGraphs[0]->clearPlotData();  // only high pressure
         m_currentGasLeakage = -1;
     }
 }
@@ -320,7 +296,7 @@ void ReactionQuartile::fillGasLeakageData(){
     
     // ASSERT ERROR
     // qDebug() << "Before Assersion";
-    m_reactionPressurePlots[0]->dataUpdated();
+    m_reactionGraphs[0]->dataUpdated();
     // qDebug() << "After Assersion";
     const bool& currentLeakageValve = m_valves[m_currentGasLeakage]->getState();
     const double& storage_pressure = m_storageQuartilePressure->getCurValue();

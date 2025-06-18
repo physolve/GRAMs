@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Quartile.h"
-#include "StorageQuartile.h"
-#include "../charts/LightPlot.h"
+
+
+class StorageQuartile;
+class LightPlot;
 
 struct InletStrategy{
     Q_GADGET
@@ -45,6 +47,7 @@ public:
     void setSupplyPressurePtr(FilterData* high, FilterData* low);
     
     void setStorageQuartilePressure(QuartileData* storageQuartilePressure);
+    void setStorageQuartileTemperature(QuartileData* storageQuartileTemperature);
     void setStorageQuartilePtr(StorageQuartile* storageQuartile);
 
     Q_INVOKABLE void initAddRemoveCharts();
@@ -55,14 +58,14 @@ public:
     InletStrategy getInletStrategy() const;
     
     bool checkSupplyAction();
-    void fillSupplyActionData();
-    void fillSupplyPortData();
+    void fillSupplyActionData(unsigned int nowTime);
+    bool appendSupplyActionData(unsigned int nowTime);
     void saveSupplyActionData();
 signals:
     void inletStrategyChanged();
     void addRemoveGraphsChanged();
 private:
-    void preCalculateSupplyTime(int portId, double turn, double portPressure);
+    void preCalculateSupplyTime(double nowTimeS, int portId, double start_pressure);
     double m_supplySpeed; // current
     double m_drainSpeed;
     // int m_currentSupplyPort;
@@ -72,7 +75,6 @@ private:
     FilterData* m_supplyPressureHigh;
     FilterData* m_supplyPressureLow;
     
-    // QList<LightPlotItem*> m_supplyPressurePlots;
     QList<LightPlot*> m_addRemoveGraphs;
     QList<LightPlot*> getAddRemoveGraphs() const;
     QStringList getAddRemoveChartNames() const;
@@ -81,6 +83,7 @@ private:
     // QTimer* m_expUpdate;
     
     QuartileData* m_storageQuartilePressure;
+    QuartileData* m_storageQuartileTemperature;
     StorageQuartile* m_storageQuartile; // try more header files and just ask another
 
     InletStrategy m_inletStrategy;
