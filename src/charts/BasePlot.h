@@ -23,6 +23,7 @@ public:
     virtual void initPlot();
     void placeLegend();
     void setLogValueAxis();
+    void setPrefferedAltUnit(bool alt);
     // QVariantMap graphs() const;
 
     Q_INVOKABLE void rescaleAxes(bool onlyVisiblePlottables=false);
@@ -51,4 +52,6 @@ protected:
     double lastPointKey;
     QVector<QCPGraph*> m_leftGraphs;
     QVector<QCPGraph*> m_rightGraphs;
+private:
+    bool m_alt;
 };

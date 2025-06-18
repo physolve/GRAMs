@@ -75,13 +75,17 @@ double SupplyPort::getPressureIncome(double pressure, double v_S, double time_pa
 double SupplyPort::calcRate(double pressure){
     double rate = 0;
     if(pressure > 0.528*m_portPressure) { // hydrogen only
-        const double& presPart = Cv*m_portPressure*1.01*10e5;
+        const double& presPart = Cv*m_portPressure*1.01*1e5;
         const double& gammaPart = sqrt(2*Constants::gamma_H/(Constants::gas_constant/Constants::M_H*(Constants::gamma_H-1)*m_T));
-        const double& relPresPart = sqrt(pow(pressure/m_portPressure,2/Constants::gamma_H)-pow(pressure/m_portPressure,(Constants::gamma_H+1)/Constants::gamma_H));
+        const double& underRoot = pow(pressure/m_portPressure,2/Constants::gamma_H)-pow(pressure/m_portPressure,(Constants::gamma_H+1)/Constants::gamma_H);
+        const double& relPresPart = underRoot > 0 ? sqrt(underRoot) : 0;
         rate = presPart*gammaPart*relPresPart;
     }
     else{
-        rate = Cv*m_portPressure*1.01*10e5*sqrt(Constants::gamma_H/(Constants::gas_constant/Constants::M_H*m_T));
+        const double& presPart = Cv*m_portPressure*1.01*1e5;
+        const double& rootPart = sqrt(Constants::gamma_H/(Constants::gas_constant/Constants::M_H*m_T));
+        const double& powerPart = pow(2/(Constants::gamma_H+1),(Constants::gamma_H+1)/(2*(Constants::gamma_H-1)));
+        rate = presPart*rootPart*powerPart;
     }
     return rate/ Constants::M_H; // кг/c / кг/моль -> моль/c
 }
@@ -89,7 +93,6 @@ double SupplyPort::calcRate(double pressure){
 QString SupplyPort::getResultFileSuffix() const{
     return resultFileSuffix;
 }
-
 
 void SupplyPort::saveResultsToFile(){
     QTextStream out(&supplyResultFile);

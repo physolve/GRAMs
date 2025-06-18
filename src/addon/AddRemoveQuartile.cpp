@@ -1,6 +1,5 @@
 #include "AddRemoveQuartile.h"
 #include "StorageQuartile.h"
-#include "../charts/LightPlot.h"
 AddRemoveQuartile::AddRemoveQuartile(QObject *parent) : Quartile(parent),
 m_inletStrategy{50, "AR2", 45, 10000} // middle default port
 { 
@@ -92,17 +91,14 @@ void AddRemoveQuartile::fillSupplyActionData(unsigned int nowTime){
     QStringList supplyPortNames = {"AR1", "AR2", "AR3"}; // from profile
     const int& indexPort = supplyPortNames.indexOf(m_inletStrategy.m_usePort);
     const double& start_pressure = m_storageQuartilePressure->getCurValue();
-    const double& quartile_temperature = m_storageQuartileTemperature->getCurValue();
+    const double& quartile_temperature = m_storageQuartileTemperature->getCurValue() + Constants::temperature_std_K;
     const double& timeSeconds = nowTime/1000.0;
+
     m_supplyPort[indexPort].setInitialParametersSupply(indexPort, m_inletStrategy.m_reducerLimit, quartile_temperature, timeSeconds);
-    
     preCalculateSupplyTime(nowTime, indexPort, start_pressure);
     
     m_supplyPort[indexPort].initResultFile();
-    
     m_supplyPort[indexPort].setInitialParametersSupply(indexPort, m_inletStrategy.m_reducerLimit, quartile_temperature, timeSeconds);
-
-    m_addRemoveGraphs[0]->initPlotData(); // only high pressure
     m_addRemoveGraphs[0]->initPlotData("supplyData", m_supplyPort[indexPort].getResultFileSuffix());
 }
 
@@ -117,16 +113,18 @@ void AddRemoveQuartile::preCalculateSupplyTime(double nowTimeS, int portId, doub
     m_supplyPort[portId].initResultFile(true);
     double model_pressure = start_pressure;
     double model_time = nowTimeS;
-    for(; model_time < 30; model_time += 0.01){
+    for(; model_time < 30; model_time += 0.01){ // is 30 seconds enough always?
         const double& pressure_income = m_supplyPort[portId].getPressureIncome(model_pressure, storageVolume, model_time);
         model_pressure += pressure_income;
         // target check
         if(model_pressure > m_inletStrategy.m_pressureLimit){
+            qDebug() << "Model stopped by pressure limit ";
             break;
         }
-        if(model_time > m_inletStrategy.m_openTime){
-            break;
-        }
+        // if(model_time > m_inletStrategy.m_openTime/1000){ //ms
+        //     qDebug() << "Model stopped by time limit ";
+        //     break;
+        // }
         // total time
     }
     qDebug() << "Supply model pressure " << model_pressure << " at time " << model_time;
@@ -135,7 +133,7 @@ void AddRemoveQuartile::preCalculateSupplyTime(double nowTimeS, int portId, doub
 
 bool AddRemoveQuartile::appendSupplyActionData(unsigned int nowTime){
     // but graph update values from m_supplyPressureLow
-    // m_supplyPressurePlots[1]->dataUpdated();
+    m_addRemoveGraphs[0]->dataWithTime(nowTime);
     // but this graph update values from m_supplyPressureHigh
     QStringList supplyPortNames = {"AR1", "AR2", "AR3"}; // from profile
     const int& indexPort = supplyPortNames.indexOf(m_inletStrategy.m_usePort);

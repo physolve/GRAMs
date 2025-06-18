@@ -24,6 +24,7 @@ Item {
         radius: 60
         color: "lightgray"
         anchors.centerIn: parent
+        property double storagePressure: Grams.guiPresVirtual.prSQ > 0 ? Grams.guiPresVirtual.prSQ : 1e-5
         CircularSlider {
             anchors.centerIn: parent
             id: slider1 // pressure
@@ -34,7 +35,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: Grams.guiPresVirtual.prSQ
+            value: parent.storagePressure
             maxValue: 50
             endAngle: 320
         }
@@ -48,7 +49,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: Grams.guiPresVirtual.prSQ
+            value: parent.storagePressure
             maxValue: 2
             endAngle: 320
         }
@@ -57,7 +58,11 @@ Item {
             // height: 20
             color: "black"
             font.family: "Verdana"
-            text: `<p></p><p>${slider1.value.toFixed(3)} <i>бар</i></p><p>25 <i>°C</i></p>` // changing to exp function
+            property string pressureStr: parent.storagePressure > 0 ? 
+                                            parent.storagePressure < 1e-2 ? parent.storagePressure.toExponential(1).toString() 
+                                                : parent.storagePressure.toFixed(2).toString()
+                                            : "< 1e-5"
+            text: `<p></p><p>${pressureStr} <i>бар</i></p><p>25 <i>°C</i></p>` // changing to exp function
             anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: 15

@@ -12,7 +12,7 @@ public:
     void setDataPointers(DataCollection* ptr);
     void setDataPointers(const QVector<DataCollection*>& ptr);
     void dataUpdated() override;
-
+    void dataWithTime(unsigned int nowTime);
     void initPlotData();
     void initPlotData(const QString& dirName, const QString& suffix);
     void savePlotData();

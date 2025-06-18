@@ -81,7 +81,9 @@ double GasLeakage::calculateRate(double sPressure, double rPressure, double rTem
     const double& Cv = m_flow_coef * 1.7e-5; // (m³/s·Pa^0.5)
     const double& T = rTempAbs;
     if(Pdown / Pup < critical_p){
-        const double& m_dot = Cv * m_choked_curr * Pup * sqrt((gamma * M) / (R * T) * pow((2 / (gamma + 1)),((gamma + 1) / (gamma - 1))));        
+        const double& m_dot = Cv * m_choked_curr * Pup * sqrt((gamma * M) / (R * T) * pow((2 / (gamma + 1)),((gamma + 1) / (gamma - 1))));  
+        // CHECK equation      
+        // const double& m_dot = Cv * m_choked_curr * Pup * sqrt((gamma * M) / (R * T)) * pow((2 / (gamma + 1)),((gamma + 1) /(2*(gamma - 1))));        
         return m_dot / M; // кг/c / кг/моль -> моль/c
     }
     else{

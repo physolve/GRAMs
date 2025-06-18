@@ -25,6 +25,7 @@ Item {
         radius: 60
         color: "lightgray"
         anchors.centerIn: parent
+        property double reactionPressure: Grams.guiPresVirtual.prRQ > 0 ? Grams.guiPresVirtual.prRQ : 1e-5 
         CircularSlider {
             anchors.centerIn: parent
             id: slider1 // pressure
@@ -35,8 +36,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            // value: testVal
-            value: Grams.guiPresVirtual.prRQ
+            value: parent.reactionPressure
             maxValue: 50
             endAngle: 320
         }
@@ -50,7 +50,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: Grams.guiPresVirtual.prRQ
+            value: parent.reactionPressure
             maxValue: 2
             endAngle: 320
         }
@@ -64,7 +64,7 @@ Item {
             progressWidth: 8
             startAngle: 40
             trackWidth: 13
-            value: (Math.log10(Grams.guiPresVirtual.prRQ)+7)/7
+            value: (Math.log10(parent.reactionPressure)+7)/7
             maxValue: 1
             endAngle: 320
             tickCount: 9
@@ -74,9 +74,11 @@ Item {
             // height: 20
             color: "black"
             font.family: "Verdana"
-            property var myValue: (slider1.value < 1e-2) ? 
-                    slider1.value.toExponential(2) : slider1.value.toFixed(3)
-            text: `<p></p><p>${myValue} <i>бар</i></p><p>25 <i>°C</i></p>` // changing to exp function
+            property string pressureStr: parent.reactionPressure > 0 ? 
+                                            parent.reactionPressure < 1e-2 ? parent.reactionPressure.toExponential(1).toString() 
+                                                : parent.reactionPressure.toFixed(2).toString()
+                                            : "< 1e-5"
+            text: `<p></p><p>${pressureStr} <i>бар</i></p><p>25 <i>°C</i></p>` // changing to exp function
             // anchors.centerIn: parent
             anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter

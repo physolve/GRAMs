@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Quartile.h"
-
+#include "../charts/LightPlot.h"
 
 class StorageQuartile;
-class LightPlot;
+// class LightPlot;
 
 struct InletStrategy{
     Q_GADGET

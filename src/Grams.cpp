@@ -183,6 +183,7 @@ void Grams::initAddRemoveQuartile(){
     m_addRemoveQuartile.setStorageQuartilePtr(&m_storageQuartile);
     
     m_addRemoveQuartile.setStorageQuartilePressure(&prSQ);
+    m_addRemoveQuartile.setStorageQuartileTemperature(&tmSQ);
     dataSource.setSupplyPressurePtr(&m_supplyPressureHigh, &m_supplyPressureLow);
 
     QVector<Valve*> valveList = {&vAR1, &vAR2, &vAR3}; // drain ptr?
@@ -298,6 +299,7 @@ void Grams::initCharts(){
     vacuumChart->initPlot();
     vacuumChart->placeLegend();
     vacuumChart->setLogValueAxis();
+    vacuumChart->setPrefferedAltUnit(true);
     vacuumChart->update();
     vacuumChart->dataUpdated();
     vacuumChart->m_chartName = "Вакуум";

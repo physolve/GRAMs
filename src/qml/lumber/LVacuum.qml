@@ -56,11 +56,11 @@ Rectangle {
             color: "black"
             font.family: "Verdana"
             property var myValue: (Grams.guiPres.prARV < 1e-2) ? 
-                    Grams.guiPres.prARV.toExponential(2) : Grams.guiPres.prARV.toFixed(3)
+                    Grams.guiPres.prARV.toExponential(2) : Grams.guiPres.prARV.toFixed(2)
             text: `<p></p><p>${myValue} <i>бар</i></p>` // changing to exp function
             anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter
-            font.pointSize: 15
+            font.pointSize: 14
         }
     }
 }

@@ -17,9 +17,6 @@ void LightPlot::setDataPointers(const QVector<DataCollection*>& ptr){
 }
 
 void LightPlot::dataUpdated(){
-    // check length using getCumulativeData() maybe
-    int timePoint = 0;
-    // USE ITERATORS! 
     for(unsigned short i = 0; auto* ptr : m_sensors){
 
         auto filter_ptr = static_cast<FilterData*>(ptr);
@@ -39,8 +36,34 @@ void LightPlot::dataUpdated(){
         filter_ptr->clearCumulative();
         lastPointKey = lastPointKey + data_value.count();
     }  
-    // if(lastPointKey < timePoint)
-    //     lastPointKey = timePoint;
+    if(rescalingON){
+        m_CustomPlot->rescaleAxes();
+        m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);
+    }
+    m_CustomPlot->replot(QCustomPlot::rpQueuedReplot);
+}
+
+void LightPlot::dataWithTime(unsigned int nowTime){
+    for(unsigned short i = 0; auto* ptr : m_sensors){
+
+        auto filter_ptr = static_cast<FilterData*>(ptr);
+        // FREQUENLY CHECK - REMOVE
+        if(!filter_ptr->isCumulativeDataReady()){
+            ++i;
+            qDebug() << "Cumulative data not READY";
+            continue;
+        }
+        const auto& data_value = filter_ptr->getCumulativeData();
+        QList<double> time_value;
+        const double& increment = (nowTime/1000.0 - lastPointKey)/data_value.count();
+        for(int j = 0; j < data_value.count(); ++j){
+            time_value << lastPointKey + j*increment;
+        }
+        m_CustomPlot->graph(i)->addData(time_value, data_value);
+        ++i;
+        filter_ptr->clearCumulative();
+        lastPointKey = nowTime/1000.0;
+    }  
     if(rescalingON){
         m_CustomPlot->rescaleAxes();
         m_CustomPlot->yAxis->setRangeUpper(m_CustomPlot->yAxis->range().upper*1.1);

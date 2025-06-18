@@ -4,7 +4,7 @@
 
 BasePlot::BasePlot(QQuickItem *parent)
     : QQuickPaintedItem(parent), m_CustomPlot(new QCustomPlot()),
-    rescalingON(true), lastPointKey(0)
+    rescalingON(true), lastPointKey(0), m_alt(false)
 {
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
@@ -161,10 +161,15 @@ void BasePlot::setLogValueAxis(){
     m_CustomPlot->yAxis->setRange(1e-6, 1);
 }
 
+void BasePlot::setPrefferedAltUnit(bool alt){
+    m_alt = alt;
+}
+
 void BasePlot::dataUpdated(){
     const auto &timePoint = m_time->getCurValue(); 
     for(unsigned short i = 0; auto* ptr : m_sensors){
-        m_CustomPlot->graph(i)->addData(timePoint, ptr->getCurValue());
+        const double& value = m_alt ? ptr->getAltUnit() : ptr->getCurValue();
+        m_CustomPlot->graph(i)->addData(timePoint, value);
         ++i;
     }
     if(lastPointKey < m_time->getCurValue())
