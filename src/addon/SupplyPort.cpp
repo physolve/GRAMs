@@ -14,16 +14,18 @@ SupplyPort::~SupplyPort()
     qDebug() << "SupplyPort class is destroyed";
 }
 
-void SupplyPort::setInitialParametersSupply(int portId, double portPressure, double temperature, double actionTime){
+void SupplyPort::setInitialParametersSupply(int portId, double portPressure, double temperature, double startPressure, double actionTime){
     m_portId = portId;
     switch(portId){
         case 0: Cv = 0.0005; break;
-        case 1: Cv = 0.0005 * 1.7e-5; break; // # Convert Cv to SI units (m³/s·Pa^0.5)
+        case 1: Cv = 0.0005 * 2 * 1.7e-5; break; // # Convert Cv to SI units (m³/s·Pa^0.5)
         case 2: Cv = 0.0005; break;
     }
     m_portPressure = portPressure;
     m_T = temperature;
     last_time_pass = actionTime;
+    last_pressure_pass = startPressure;
+    initResultFile();
 }
 
 int SupplyPort::todayRunCount(){
@@ -42,13 +44,12 @@ int SupplyPort::todayRunCount(){
     return runs;
 }
 
-void SupplyPort::initResultFile(bool debug){
+void SupplyPort::initResultFile(){
     QDir dir("data");
     dir.cd("supplyData");
     if (!dir.exists())
         dir.mkpath("supplyData"); // doesnt add folder for some reason
-    QString model_str = debug ? "_model" : "";
-    const auto& baseFileName = QDate::currentDate().toString("yyyy-MM-dd")+QString("_AR%1_").arg(m_portId)+QString::number(todayRuns=todayRunCount())+model_str+".txt";
+    const auto& baseFileName = QDate::currentDate().toString("yyyy-MM-dd")+QString("_AR%1_").arg(m_portId)+QString::number(todayRuns=todayRunCount())+".txt";
     resultFileSuffix = QString("_AR%1_").arg(m_portId)+QString::number(todayRuns=todayRunCount());
     supplyResultFile.setFileName(dir.filePath(baseFileName));
     if (!supplyResultFile.open(QIODevice::ReadWrite)){
@@ -61,34 +62,22 @@ void SupplyPort::initResultFile(bool debug){
     todayRuns++;
 }
 
-double SupplyPort::getPressureIncome(double pressure, double v_S, double time_pass){
-    const double& rate = calcRate(pressure);
-    const double& v_Q = v_S;
-    const double& pressure_income = rate*(time_pass-last_time_pass)*Constants::gas_constant*m_T/v_Q *10;
-    last_time_pass = time_pass;
-    m_ratePoints << rate;
+double SupplyPort::supply(double pressure, double actionTime, double v_S){
+    const double& dP = pressure - last_pressure_pass;
+    const double& dt = actionTime - last_time_pass;
+    const double& rate = calcRealRate(dP, dt, v_S);
+    m_timePoints << actionTime;
     m_pressurePoints << pressure;
-    m_timePoints << time_pass;
-    return pressure_income;
+    m_ratePoints << rate;
+    last_pressure_pass = pressure;
+    last_time_pass = actionTime;
+    return dP;
 }
 
-double SupplyPort::calcRate(double pressure){
-    double rate = 0;
-    if(pressure > 0.528*m_portPressure) { // hydrogen only
-        const double& presPart = Cv*m_portPressure*1.01*1e5;
-        const double& gammaPart = sqrt(2*Constants::gamma_H/(Constants::gas_constant/Constants::M_H*(Constants::gamma_H-1)*m_T));
-        const double& underRoot = pow(pressure/m_portPressure,2/Constants::gamma_H)-pow(pressure/m_portPressure,(Constants::gamma_H+1)/Constants::gamma_H);
-        const double& relPresPart = underRoot > 0 ? sqrt(underRoot) : 0;
-        rate = presPart*gammaPart*relPresPart;
-    }
-    else{
-        const double& presPart = Cv*m_portPressure*1.01*1e5;
-        const double& rootPart = sqrt(Constants::gamma_H/(Constants::gas_constant/Constants::M_H*m_T));
-        const double& powerPart = pow(2/(Constants::gamma_H+1),(Constants::gamma_H+1)/(2*(Constants::gamma_H-1)));
-        rate = presPart*rootPart*powerPart;
-    }
-    return rate/ Constants::M_H; // кг/c / кг/моль -> моль/c
+double SupplyPort::calcRealRate(double dP, double dt, double v_S){
+    return dP*v_S/(Constants::gas_constant*m_T*10)/dt; // моль/с
 }
+
 
 QString SupplyPort::getResultFileSuffix() const{
     return resultFileSuffix;
@@ -104,4 +93,82 @@ void SupplyPort::saveResultsToFile(){
     m_ratePoints.clear();
     m_pressurePoints.clear();
     m_timePoints.clear();
+}
+
+void SupplyPort::modelSupply(double pressureLimit, double v_S){
+    double model_pressure = last_pressure_pass;
+    double model_time = last_time_pass;
+    QList<double> timePoints;
+    QList<double> pressurePoints;
+    QList<double> ratePoints;
+    const double& dt = 0.01;
+    // v_S -> strategy Storage
+    for(; model_time < 30; model_time += dt){ // is 30 seconds enough always?
+        const double& rate = calcRate(model_pressure);
+        const double& pressure_income = getPressureIncome(rate, v_S, dt);
+        model_pressure += pressure_income;
+        timePoints << model_time;
+        pressurePoints << model_pressure;
+        ratePoints << rate;
+        // target check
+        if(model_pressure > pressureLimit){
+            qDebug() << "Model stopped by pressure limit ";
+            break;
+        }
+        // if(model_time > m_inletStrategy.m_openTime/1000){ //ms
+        //     qDebug() << "Model stopped by time limit ";
+        //     break;
+        // }
+        // total time
+    }
+    qDebug() << "Supply model pressure " << model_pressure << " at time " << model_time;
+    saveModelFile(timePoints, pressurePoints, ratePoints);
+}
+
+
+double SupplyPort::getPressureIncome(double rate, double v_S, double dt){
+    return rate*dt*Constants::gas_constant*m_T/v_S *10;;
+}
+
+double SupplyPort::calcRate(double pressure){
+    double rate = 0;
+    if(pressure > 0.528*m_portPressure) { // hydrogen only
+        const double& presPart = Cv*m_portPressure*1.01*1e5;
+        const double& gammaPart = sqrt(2*Constants::gamma_H/(Constants::gas_constant/Constants::M_H*(Constants::gamma_H-1)*m_T));
+        const double& underRoot = pow(pressure/m_portPressure,2/Constants::gamma_H)-pow(pressure/m_portPressure,(Constants::gamma_H+1)/Constants::gamma_H);
+        const double& relPresPart = underRoot > 0 ? sqrt(underRoot) : 0;
+        const double& convergePart = pressure < m_portPressure ? 0.3*sqrt(m_portPressure - pressure) : 0;
+        rate = convergePart*presPart*gammaPart*relPresPart;
+    }
+    else{
+        const double& presPart = Cv*m_portPressure*1.01*1e5;
+        const double& rootPart = sqrt(Constants::gamma_H/(Constants::gas_constant/Constants::M_H*m_T));
+        const double& powerPart = pow(2/(Constants::gamma_H+1),(Constants::gamma_H+1)/(2*(Constants::gamma_H-1)));
+        rate = presPart*rootPart*powerPart;
+    }
+    return rate/ Constants::M_H; // кг/c / кг/моль -> моль/c
+}
+
+void SupplyPort::saveModelFile(const QList<double>& timePoints, const QList<double>& pressurePoints, const QList<double>& ratePoints){
+    QDir dir("data");
+    dir.cd("supplyData");
+    if (!dir.exists())
+        dir.mkpath("supplyData"); // doesnt add folder for some reason
+    QString model_str = "_model";
+    const auto& baseFileName = QDate::currentDate().toString("yyyy-MM-dd")+QString("_AR%1_").arg(m_portId)+QString::number(todayRuns=todayRunCount())+model_str+".txt";
+    resultFileSuffix = QString("_AR%1_").arg(m_portId)+QString::number(todayRuns=todayRunCount());
+    QFile modelResultFile;
+    modelResultFile.setFileName(dir.filePath(baseFileName));
+    if (!supplyResultFile.open(QIODevice::ReadWrite)){
+        qDebug() << "File don't exist";
+        return;
+    }
+    QTextStream out(&modelResultFile);
+    out << "SupplyPort " << m_portId << "\tPort pressure " << m_portPressure << "\n";
+    out << "Elapsed" << "\tPressure" << "\tRate"<< "\n";
+    for (int i = 0; i < m_timePoints.size(); i++){
+        out << m_timePoints[i] << "\t" << m_pressurePoints[i] << "\t" 
+        << m_ratePoints[i] << "\n";
+    }
+    modelResultFile.close();
 }

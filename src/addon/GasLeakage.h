@@ -35,7 +35,6 @@ private:
 
     bool m_leakageOpen;
     QStringList m_volumeNames;
-    // double m_currentRate; 
     int todayRuns;
     int todayRunCount();
     double getFlowCoefficient(double turn); // replace to const

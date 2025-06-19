@@ -11,22 +11,28 @@ class SupplyPort : public QObject
 public:
     SupplyPort(QObject *parent = nullptr);
     ~SupplyPort();
-    void setInitialParametersSupply(int portId, double portPressure, double temperature, double actionTime);
-    void initResultFile(bool debug = false);
-    double getPressureIncome(double pressure, double v_S, double actionTime);
+    void setInitialParametersSupply(int portId, double portPressure, double temperature, double startPressure, double actionTime);
+    void initResultFile();
+    double supply(double pressure, double actionTime, double v_S);
+    double calcRealRate(double dP, double dt, double v_S);
+    
+    void modelSupply(double pressureLimit, double v_S); // Storage strategy for model
+    
     QString getResultFileSuffix() const;
     void saveResultsToFile();
 private:
     int todayRuns;
     int todayRunCount();
     double calcRate(double pressure);
+    double getPressureIncome(double rate, double v_S, double dt);
+    void saveModelFile(const QList<double>& timePoints, const QList<double>& pressurePoints, const QList<double>& ratePoints);
     // double calcualteModelPass(double time_differ);
     int m_portId;
     double Cv;
     double m_T;
 
-    double m_currentRate;
     double m_portPressure;
+    double last_pressure_pass;
     double last_time_pass;
 
     QFile supplyResultFile;

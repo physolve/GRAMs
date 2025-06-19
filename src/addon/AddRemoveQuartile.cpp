@@ -4,7 +4,7 @@ AddRemoveQuartile::AddRemoveQuartile(QObject *parent) : Quartile(parent),
 m_inletStrategy{50, "AR2", 45, 10000} // middle default port
 { 
     for(int i{2}; i >= 0; --i){
-        m_supplyPort[i].setInitialParametersSupply(i, 50, 25, 0);
+        m_supplyPort[i].setInitialParametersSupply(i, 50, 25, 1, 0);
     }
 }
 AddRemoveQuartile::~AddRemoveQuartile(){
@@ -94,11 +94,8 @@ void AddRemoveQuartile::fillSupplyActionData(unsigned int nowTime){
     const double& quartile_temperature = m_storageQuartileTemperature->getCurValue() + Constants::temperature_std_K;
     const double& timeSeconds = nowTime/1000.0;
 
-    m_supplyPort[indexPort].setInitialParametersSupply(indexPort, m_inletStrategy.m_reducerLimit, quartile_temperature, timeSeconds);
+    m_supplyPort[indexPort].setInitialParametersSupply(indexPort, m_inletStrategy.m_reducerLimit, quartile_temperature, start_pressure, timeSeconds);
     preCalculateSupplyTime(nowTime, indexPort, start_pressure);
-    
-    m_supplyPort[indexPort].initResultFile();
-    m_supplyPort[indexPort].setInitialParametersSupply(indexPort, m_inletStrategy.m_reducerLimit, quartile_temperature, timeSeconds);
     m_addRemoveGraphs[0]->initPlotData("supplyData", m_supplyPort[indexPort].getResultFileSuffix());
 }
 
@@ -110,25 +107,8 @@ void AddRemoveQuartile::preCalculateSupplyTime(double nowTimeS, int portId, doub
         storageVolume += m_storageQuartile->getVolumeByName(name).volume;
         // variations from strategy in storage quartile
     }
-    m_supplyPort[portId].initResultFile(true);
-    double model_pressure = start_pressure;
-    double model_time = nowTimeS;
-    for(; model_time < 30; model_time += 0.01){ // is 30 seconds enough always?
-        const double& pressure_income = m_supplyPort[portId].getPressureIncome(model_pressure, storageVolume, model_time);
-        model_pressure += pressure_income;
-        // target check
-        if(model_pressure > m_inletStrategy.m_pressureLimit){
-            qDebug() << "Model stopped by pressure limit ";
-            break;
-        }
-        // if(model_time > m_inletStrategy.m_openTime/1000){ //ms
-        //     qDebug() << "Model stopped by time limit ";
-        //     break;
-        // }
-        // total time
-    }
-    qDebug() << "Supply model pressure " << model_pressure << " at time " << model_time;
-    m_supplyPort[portId].saveResultsToFile();
+    // strategy storage
+    m_supplyPort[portId].modelSupply(m_inletStrategy.m_pressureLimit, storageVolume);
 }
 
 bool AddRemoveQuartile::appendSupplyActionData(unsigned int nowTime){
@@ -144,7 +124,7 @@ bool AddRemoveQuartile::appendSupplyActionData(unsigned int nowTime){
         // variations from strategy in storage quartile
     }
     const double& timeSeconds = nowTime/1000.0;
-    const double& pressure_income = m_supplyPort[indexPort].getPressureIncome(s_pressure, storageVolume, timeSeconds);
+    const double& pressure_income = m_supplyPort[indexPort].supply(s_pressure, storageVolume, timeSeconds);;
     // check supply action future
     if(s_pressure + pressure_income > m_inletStrategy.m_pressureLimit){
         return false;
