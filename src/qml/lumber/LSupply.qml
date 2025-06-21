@@ -23,7 +23,7 @@ Rectangle {
         spacing: 10
         Text{
             // width: parent.width
-            text: "Целевое (индикатор)"
+            text: "Целевое "
             font.family: "Verdana"
             horizontalAlignment: Text.AlignHCenter
             anchors.verticalCenter: parent.verticalCenter

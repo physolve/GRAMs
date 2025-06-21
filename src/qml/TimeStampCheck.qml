@@ -14,7 +14,6 @@ Item {
         title: TimeStamp.checkStampTime.toISOString()//toUTCString()
         height: parent.height
         width: parent.width
-        
         ListView {
             id: viewPressureTimeStamp
             height: parent.height
@@ -25,43 +24,43 @@ Item {
             property var timeStampMap: [
                 {
                     "name": "SQ",
-                    "value": TimeStamp.guiPresTimestamp.prSQ
+                    "value": TimeStamp.guiPresTimestamp.prSQ.toFixed(3)
                 },
                 {   
                     "name": "RQ",
-                    "value": TimeStamp.guiPresTimestamp.prRQ
+                    "value": TimeStamp.guiPresTimestamp.prRQ.toFixed(3)
                 },
                 {
                     "name": "SC1",
-                    "value": TimeStamp.guiPresTimestamp.prSC1
+                    "value": TimeStamp.guiPresTimestamp.prSC1.toFixed(3)
                 },
                 {
                     "name": "SC2",
-                    "value": TimeStamp.guiPresTimestamp.prSC2
+                    "value": TimeStamp.guiPresTimestamp.prSC2.toFixed(3)
                 },
                 {
                     "name": "SC3",
-                    "value": TimeStamp.guiPresTimestamp.prSC3
+                    "value": TimeStamp.guiPresTimestamp.prSC3.toFixed(3)
                 },
                 {
                     "name": "SB",
-                    "value": TimeStamp.guiPresTimestamp.prSB
+                    "value": TimeStamp.guiPresTimestamp.prSB.toFixed(3)
                 },
                 {
                     "name": "SD1",
-                    "value": TimeStamp.guiPresTimestamp.prSD1
+                    "value": TimeStamp.guiPresTimestamp.prSD1.toFixed(3)
                 },
                 {
                     "name": "RE",
-                    "value": TimeStamp.guiPresTimestamp.prRE
+                    "value": TimeStamp.guiPresTimestamp.prRE.toFixed(3)
                 },
                 {
                     "name": "RD2",
-                    "value": TimeStamp.guiPresTimestamp.prRD2
+                    "value": TimeStamp.guiPresTimestamp.prRD2.toFixed(3)
                 },
                 {
                     "name": "RF",
-                    "value": TimeStamp.guiPresTimestamp.prRF
+                    "value": TimeStamp.guiPresTimestamp.prRF.toFixed(3)
                 }
             ]
             model: timeStampMap // rewrite as property

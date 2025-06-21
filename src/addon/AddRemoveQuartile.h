@@ -40,7 +40,7 @@ class AddRemoveQuartile : public Quartile
     Q_PROPERTY(InletStrategy inletStrategy READ getInletStrategy WRITE setInletStrategy NOTIFY inletStrategyChanged)
     Q_PROPERTY(QList<LightPlot*> addRemoveGraphs READ getAddRemoveGraphs NOTIFY addRemoveGraphsChanged)
     Q_PROPERTY(QStringList addRemoveChartNames READ getAddRemoveChartNames NOTIFY addRemoveGraphsChanged)
-
+    Q_PROPERTY(QList<double> rateSupply READ getRateSupply NOTIFY rateSupplyChanged)
 public:
     explicit AddRemoveQuartile(QObject *parent = nullptr);
     virtual ~AddRemoveQuartile();
@@ -64,8 +64,9 @@ public:
 signals:
     void inletStrategyChanged();
     void addRemoveGraphsChanged();
+    void rateSupplyChanged();
 private:
-    void preCalculateSupplyTime(double nowTimeS, int portId, double start_pressure);
+    void preCalculateSupplyTime(int portId, double start_pressure);
     double m_supplySpeed; // current
     double m_drainSpeed;
     // int m_currentSupplyPort;
@@ -78,9 +79,9 @@ private:
     QList<LightPlot*> m_addRemoveGraphs;
     QList<LightPlot*> getAddRemoveGraphs() const;
     QStringList getAddRemoveChartNames() const;
-    // quartile pressure from StorageQuartile
+    // quartile pressure from StorageQuartil
 
-    // QTimer* m_expUpdate;
+    QList<double> getRateSupply();
     
     QuartileData* m_storageQuartilePressure;
     QuartileData* m_storageQuartileTemperature;

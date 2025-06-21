@@ -3,9 +3,7 @@
 AddRemoveQuartile::AddRemoveQuartile(QObject *parent) : Quartile(parent),
 m_inletStrategy{50, "AR2", 45, 10000} // middle default port
 { 
-    for(int i{2}; i >= 0; --i){
-        m_supplyPort[i].setInitialParametersSupply(i, 50, 25, 1, 0);
-    }
+
 }
 AddRemoveQuartile::~AddRemoveQuartile(){
     m_supplyPressureHigh = nullptr;
@@ -63,7 +61,6 @@ QList<LightPlot*> AddRemoveQuartile::getAddRemoveGraphs() const
     return m_addRemoveGraphs;
 }
 
-
 void AddRemoveQuartile::setInletStrategy(const InletStrategy& inletStrategy){ // from gui
     m_inletStrategy = inletStrategy;
 }
@@ -95,11 +92,11 @@ void AddRemoveQuartile::fillSupplyActionData(unsigned int nowTime){
     const double& timeSeconds = nowTime/1000.0;
 
     m_supplyPort[indexPort].setInitialParametersSupply(indexPort, m_inletStrategy.m_reducerLimit, quartile_temperature, start_pressure, timeSeconds);
-    preCalculateSupplyTime(nowTime, indexPort, start_pressure);
-    m_addRemoveGraphs[0]->initPlotData("supplyData", m_supplyPort[indexPort].getResultFileSuffix());
+    preCalculateSupplyTime(indexPort, start_pressure);
+    m_addRemoveGraphs[0]->initPlotData("supplyData", QString("_AR%1_%2").arg(indexPort).arg(m_supplyPort[indexPort].getTodayRuns()));
 }
 
-void AddRemoveQuartile::preCalculateSupplyTime(double nowTimeS, int portId, double start_pressure){
+void AddRemoveQuartile::preCalculateSupplyTime(int portId, double start_pressure){
     // initial_flow = quartile_storage->moles to std cm3
     // QList<VolumeObject> storageVolumes;
     double storageVolume = 0;
@@ -124,9 +121,11 @@ bool AddRemoveQuartile::appendSupplyActionData(unsigned int nowTime){
         // variations from strategy in storage quartile
     }
     const double& timeSeconds = nowTime/1000.0;
-    const double& pressure_income = m_supplyPort[indexPort].supply(s_pressure, storageVolume, timeSeconds);;
+    const double& pressure_income = m_supplyPort[indexPort].supply(s_pressure, timeSeconds, storageVolume);
+    emit rateSupplyChanged();
     // check supply action future
     if(s_pressure + pressure_income > m_inletStrategy.m_pressureLimit){
+        qDebug() << "Predict to stop";
         return false;
     }
     return true;
@@ -140,4 +139,10 @@ void AddRemoveQuartile::saveSupplyActionData(){
     //clear
     m_addRemoveGraphs[0]->savePlotData();  // only high pressure
     m_addRemoveGraphs[0]->clearPlotData();  // only high pressure
+}
+
+QList<double> AddRemoveQuartile::getRateSupply(){
+    QList<double> rateSupply; // mmol/s
+    rateSupply << m_supplyPort[0].getLastRate()*1000 << m_supplyPort[1].getLastRate()*1000 << m_supplyPort[2].getLastRate()*1000;
+    return rateSupply; 
 }

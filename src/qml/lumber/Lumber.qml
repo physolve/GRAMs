@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Grams.backendSourceSingleton 1.0
+import Grams.addRemoveQuartileSingleton 1.0
 import Grams.testFieldSingleton 1.0
 import Grams.valveControlSingleton 1.0
 import "content"
@@ -224,7 +225,7 @@ Item {
             color:"transparent"; border.color: "#464646";
             VirtualFlow{
                 name: "Газ 1"
-                value: Infinity
+                value: AddRemoveQuar.rateSupply[0]
             }
             ValveIndicator{
                 x: parent.width - 10
@@ -241,7 +242,7 @@ Item {
             color:"transparent"; border.color: "#464646";
             VirtualFlow{
                 name: "Газ 2"
-                value: Infinity
+                value: AddRemoveQuar.rateSupply[1]
             }
             ValveIndicator{
                 x: parent.width - 10
@@ -258,7 +259,7 @@ Item {
             color:"transparent"; border.color: "#464646";
             VirtualFlow{
                 name: "Газ 3"
-                value: Infinity
+                value: AddRemoveQuar.rateSupply[2]
             }
             ValveIndicator{
                 x: parent.width - 10

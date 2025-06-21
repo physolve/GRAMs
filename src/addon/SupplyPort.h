@@ -18,29 +18,31 @@ public:
     
     void modelSupply(double pressureLimit, double v_S); // Storage strategy for model
     
-    QString getResultFileSuffix() const;
+    double getLastRate();
+    int getTodayRuns();
     void saveResultsToFile();
 private:
-    int todayRuns;
+    int m_todayRuns;
     int todayRunCount();
     double calcRate(double pressure);
-    double getPressureIncome(double rate, double v_S, double dt);
-    void saveModelFile(const QList<double>& timePoints, const QList<double>& pressurePoints, const QList<double>& ratePoints);
+    double getPressureIncome(double rate, double dt, double v_S);
+    void saveModelFile(const QList<double>& timePoints, const QList<double>& pressurePoints, const QList<double>& ratePoints, const QList<double>& volumePoints);
     // double calcualteModelPass(double time_differ);
     int m_portId;
     double Cv;
     double m_T;
 
     double m_portPressure;
+
     double last_pressure_pass;
     double last_time_pass;
 
-    QFile supplyResultFile;
-    QString resultFileSuffix;
+    double last_rate;
     // to save
     // QElapsedTimer progressTime;
     // Quartile pressure
     QList<double> m_timePoints;
     QList<double> m_pressurePoints;
     QList<double> m_ratePoints;
+    QList<double> m_volumePoints;
 };
