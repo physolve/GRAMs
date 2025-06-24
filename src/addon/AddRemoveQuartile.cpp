@@ -136,6 +136,7 @@ void AddRemoveQuartile::saveSupplyActionData(){
     const int& indexPort = supplyPortNames.indexOf(m_inletStrategy.m_usePort);
     //saves
     m_supplyPort[indexPort].saveResultsToFile();
+    emit rateSupplyChanged();
     //clear
     m_addRemoveGraphs[0]->savePlotData();  // only high pressure
     m_addRemoveGraphs[0]->clearPlotData();  // only high pressure

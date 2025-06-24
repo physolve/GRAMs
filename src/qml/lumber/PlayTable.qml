@@ -42,6 +42,7 @@ TableView {
         console.log(regime, row)
         if(regime == "Цел. в камере"){
             // list of regime var ->
+            // just show if closed
             supplyAdjustWindow.createObject(parent)
         }
             // tableView.openESupply()

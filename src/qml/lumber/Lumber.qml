@@ -225,7 +225,7 @@ Item {
             color:"transparent"; border.color: "#464646";
             VirtualFlow{
                 name: "Газ 1"
-                value: AddRemoveQuar.rateSupply[0]
+                value: AddRemoveQuar.rateSupply[0].toFixed(2)
             }
             ValveIndicator{
                 x: parent.width - 10
@@ -242,7 +242,7 @@ Item {
             color:"transparent"; border.color: "#464646";
             VirtualFlow{
                 name: "Газ 2"
-                value: AddRemoveQuar.rateSupply[1]
+                value: AddRemoveQuar.rateSupply[1].toFixed(2)
             }
             ValveIndicator{
                 x: parent.width - 10
@@ -259,7 +259,7 @@ Item {
             color:"transparent"; border.color: "#464646";
             VirtualFlow{
                 name: "Газ 3"
-                value: AddRemoveQuar.rateSupply[2]
+                value: AddRemoveQuar.rateSupply[2].toFixed(2)
             }
             ValveIndicator{
                 x: parent.width - 10

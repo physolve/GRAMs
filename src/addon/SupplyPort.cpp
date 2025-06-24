@@ -103,6 +103,7 @@ void SupplyPort::saveResultsToFile(){
     m_pressurePoints.clear();
     m_timePoints.clear();
     m_volumePoints.clear();
+    last_rate = 0;
 }
 
 void SupplyPort::modelSupply(double pressureLimit, double v_S){

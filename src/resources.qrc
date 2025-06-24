@@ -43,6 +43,7 @@
         <file>qml/lumber/content/ScrollArrow.qml</file>
         <file>qml/lumber/content/CuteProgressBar.qml</file>
         <file>qml/lumber/regime/SupplyRegime.qml</file>
+        <file>qml/lumber/regime/CalibrationRegime.qml</file>
 
         <file>qml/Main.qml</file>
         <file>qml/SettingsWindow.qml</file>
