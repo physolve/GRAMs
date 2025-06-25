@@ -58,22 +58,6 @@ void DataAcquisition::setVacuumPointer(DataCollection* ptr){
     m_vacuumSensor = ptr;
 }
 
-// void DataAcquisition::initDaqDO(const daqParameters &parameter){
-//     // pass real info from Initialize
-//     AdvDOType a(parameter.fullName);
-//     a.setProfilePath(parameter.m_profile);
-//     reqValveDO.setInfo(a);
-//     reqValveDO.ConfigureDeviceDO();
-//     reqValveDO.readData();
-//     // valve objects
-//     const auto &readData = reqValveDO.getData();
-//     // if ok
-//     for(int i = 0; i < m_valves.count(); ++i){
-//         m_valves[i]->setState(readData[i]);
-//     }
-//     GRAMsIntegrity["valves"] = ControllerConnection::Online;
-// }
-
 void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
     AdvAIType a(parameter.fullName);
     a.setProfilePath(parameter.m_profile);
@@ -104,9 +88,6 @@ void DataAcquisition::updateFilter(int chartIndex){
     filterView.parseKalman();
     // other filters to update 
     reqSensorAI.setVolageFilter(0, filterView.getJsonMatrix());
-    // if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
-    //     return;
-    // auto controller = m_controllerList["pressure"].staticCast<AdvantechBuff>();
 
     // auto parameters = filterView.getNewFilterParameters();
     // controller->setVolageFilter(0, parameters);
@@ -150,17 +131,6 @@ void DataAcquisition::testVacuumQuery(){
     reqVacuum.requestRepetitive();
 }
 
-// bool DataAcquisition::setValveStates(){
-//     if(GRAMsIntegrity["valves"]!=ControllerConnection::Online)
-//         return false;
-//     QVector<bool> changedState;
-//     // if changedState > 8*portCount!
-//     for(int i = 0; i < m_valves.count(); ++i){
-//         changedState << m_valves[i]->getState();
-//     }
-//     // handler to unsuccessful set (true / false)
-//     return reqValveDO.setData(changedState);
-// }
 
 void DataAcquisition::startAcquisition(){
     if(!getGRAMsIntegrity()){

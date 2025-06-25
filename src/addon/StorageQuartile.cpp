@@ -1,7 +1,7 @@
 #include "StorageQuartile.h"
 
 StorageQuartile::StorageQuartile(QObject *parent) :
-    Quartile(parent){
+    Quartile(parent), m_storageStrategy{1,1,1,1,1000,1000,1000} {
         
 }
 StorageQuartile::~StorageQuartile(){

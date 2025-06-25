@@ -2,12 +2,23 @@
 
 #include "Quartile.h"
 
+struct StorageStrategy{  
+    const double  m_storagePressureTarget;
+    const double  m_c1PressureTarget;
+    const double  m_c2PressureTarget;
+    const double  m_c3PressureTarget;
+    const int     m_c1OpenTime; // ms
+    const int     m_c2OpenTime; // ms
+    const int     m_c3OpenTime; // ms};
+};
+
 enum addCVolume{
     None,
     Small,
     Medium,
     Large
 };
+
 
 class StorageQuartile : public Quartile
 {
@@ -28,6 +39,7 @@ public:
     void updateVolumeObjects();
     void updateMoles();
     QStringList getUsedVolumes() const;
+    
     double getTargetFromMolesChange(const double& molesChange, addCVolume cVolume = addCVolume::None);
     changeToTarget getChangeToIntermediateTarget(const double& targetPressureS, addCVolume cVolume = addCVolume::None);
     changeToTarget getChangeToIntermediateTarget(const double& targetPressureS, const QVector<addCVolume> &cVolumes);
@@ -48,4 +60,6 @@ private:
     int s_pressure_high;
     int s_pressure_low;
     int s_temperature_main;
+
+    StorageStrategy m_storageStrategy;
 };

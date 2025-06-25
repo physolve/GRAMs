@@ -8,31 +8,17 @@ class StorageQuartile;
 
 struct InletStrategy{
     Q_GADGET
-    Q_PROPERTY (double  reducerLimit    MEMBER m_reducerLimit)
-    Q_PROPERTY (QString usePort         MEMBER m_usePort)
-    Q_PROPERTY (double  pressureLimit   MEMBER m_pressureLimit)
-    Q_PROPERTY (int     openTime        MEMBER m_openTime)
+    Q_PROPERTY (double  reducerLimit    MEMBER m_reducerLimit) // mutable
+    Q_PROPERTY (QString usePort         MEMBER m_usePort) // mutable
+    Q_PROPERTY (double  pressureLimit   MEMBER m_pressureLimit) // mutable
+    Q_PROPERTY (int     openTime        MEMBER m_openTime) // mutable
 public:
-    double  m_reducerLimit; // bar
-    QString m_usePort; // [0-2]
-    double  m_pressureLimit; // bar in storage
-    int     m_openTime; // ms
+    double  m_reducerLimit;     // bar
+    QString m_usePort;          // [0-2]
+    double  m_pressureLimit;    // bar in storage
+    int     m_openTime;         // ms
 };
 
-// struct guiInletAction{
-//     Q_GADGET
-//     Q_PROPERTY (double stPresTg         MEMBER m_storagePressureTarget)
-//     Q_PROPERTY (double c1PresTg         MEMBER m_c1PressureTarget)
-//     Q_PROPERTY (double c2PresTg         MEMBER m_c2PressureTarget)
-//     Q_PROPERTY (double c3PresTg         MEMBER m_c3PressureTarget)
-//     Q_PROPERTY (double timeOpenGasPort  MEMBER m_timeOpenGasPort)
-// public:
-//     double m_storagePressureTarget;
-//     double m_c1PressureTarget;
-//     double m_c2PressureTarget;
-//     double m_c3PressureTarget;
-//     double m_timeOpenGasPort;
-// };
 
 class AddRemoveQuartile : public Quartile
 {
@@ -53,7 +39,7 @@ public:
     Q_INVOKABLE void initAddRemoveCharts();
     Q_INVOKABLE void clearAddRemoveCharts();
 
-    void updatePortState();
+    // void updatePortState();
     void setInletStrategy(const InletStrategy& inletStrategy);
     InletStrategy getInletStrategy() const;
     
