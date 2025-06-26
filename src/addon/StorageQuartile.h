@@ -39,6 +39,9 @@ public:
     void updateVolumeObjects();
     void updateMoles();
     QStringList getUsedVolumes() const;
+
+    void setStorageStrategy(const StorageStrategy& storageStrategy);
+    StorageStrategy getStorageStrategy() const;
     
     double getTargetFromMolesChange(const double& molesChange, addCVolume cVolume = addCVolume::None);
     changeToTarget getChangeToIntermediateTarget(const double& targetPressureS, addCVolume cVolume = addCVolume::None);

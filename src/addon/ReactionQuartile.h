@@ -6,6 +6,19 @@
 class StorageQuartile;
 class LightPlot;
 
+struct ReactionStrategy{
+    Q_GADGET
+    Q_PROPERTY (double  reducerLimit    MEMBER m_reducerLimit) // mutable
+    Q_PROPERTY (QString usePort         MEMBER m_usePort) // mutable
+    Q_PROPERTY (double  pressureLimit   MEMBER m_pressureLimit) // mutable
+    Q_PROPERTY (int     openTime        MEMBER m_openTime) // mutable
+public:
+    double  m_reducerLimit;     // bar
+    QString m_usePort;          // [0-2]
+    double  m_pressureLimit;    // bar in storage
+    int     m_openTime;         // ms
+};
+
 class ReactionQuartile : public Quartile
 {
     Q_OBJECT
