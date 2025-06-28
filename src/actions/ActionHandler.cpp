@@ -50,7 +50,7 @@ void ActionHandler::runInletAction(){
     //     qDebug() << "dataControlWatcher was canceled";
     // });
 
-    QFutureWatcher<int>* inletActionWatcher = new QFutureWatcher<int>;;
+    QFutureWatcher<int>* inletActionWatcher = new QFutureWatcher<int>;
     InletAction* inletAction = new InletAction();
     inletAction->valveControl = m_valveControl;
     inletAction->dataAcquisition = m_dataAcquisition;
