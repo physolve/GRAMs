@@ -321,8 +321,10 @@ void Grams::initGUI(){
     Qt::QueuedConnection);
     
     qmlRegisterType<BasePlot>("BasePlot", 1, 0, "BasePlotItem");
-
+    qRegisterMetaType<Condition>();
+    qmlRegisterUncreatableMetaObject(RegimeEnums::staticMetaObject, "com.grams.prototable", 1, 0, "RegimeState", "Error: only enums");
     
+    qmlRegisterSingletonInstance("com.grams.prototable", 1, 0, "RegimeManager", &m_regimeManager);
     qmlRegisterSingletonInstance("Grams.initSourceSingleton", 1, 0, "InitSource", &initSource);
     
     qmlRegisterSingletonInstance("Grams.dataSourceSingleton", 1, 0, "DataSource", &dataSource);

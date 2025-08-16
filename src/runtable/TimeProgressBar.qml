@@ -1,0 +1,461 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+
+Rectangle {
+    id: root
+    // border.color: "#ff8c00"
+    border.width: 2
+    border.color: "#464646"
+    color: "#2B2B2B"
+    property var model: null
+    property int visibleStartTime: 0
+    property int visibleEndTime: RegimeManager.getTotalEstimatedTime()
+    property real timelineScale: 1.0  // Scale factor for timeline width
+    
+    Component.onCompleted: {
+        updateTimeRange()
+        RegimeManager.updateVisibleRegimes(root.visibleStartTime, root.visibleEndTime)
+    }
+
+    Connections {
+        target: RegimeManager.visibleRegimeModel
+        function onTimelineUpdateRequired() {
+            updateTimeRange()
+            var totalTime = RegimeManager.getTotalEstimatedTime()
+            if (totalTime > 0) {
+                root.visibleStartTime = 0
+                root.visibleEndTime = totalTime
+                startTimeField.text = formatTime(0)
+                endTimeField.text = formatTime(totalTime)
+                updateVisibleRange()
+            }
+        }
+    }
+    
+    Connections {
+        target: RegimeManager
+        function onRegimeDataUpdated() {
+            // Force immediate refresh of timeline when regime data changes
+            updateTimeRange()
+        }
+    }
+    
+    function updateTimeRange() {
+        var totalTime = RegimeManager.getTotalEstimatedTime()
+        if (totalTime > 0) {
+            // Reset scale to 1.0 (perfect fit) on any update
+            timelineScale = 1.0
+            scaleSpinBox.value = 1
+            
+            // Update end time if it's currently at max or unset
+            if (root.visibleEndTime >= totalTime || root.visibleEndTime === 0) {
+                root.visibleEndTime = totalTime
+                endTimeField.text = formatTime(totalTime)
+            }
+            // Update start time field
+            startTimeField.text = formatTime(root.visibleStartTime)
+            
+            // Update time label
+            timeLabel.text = formatTime(RegimeManager.getTotalElapsedTime()) + " / " + formatTime(totalTime)
+            
+            // Update visible regimes
+            RegimeManager.updateVisibleRegimes(root.visibleStartTime, root.visibleEndTime)
+        }
+    }
+
+    function formatTime(seconds) {
+        var hours = Math.floor(seconds / 3600)
+        var minutes = Math.floor((seconds % 3600) / 60)
+        var secs = seconds % 60
+        return Qt.formatTime(new Date(0, 0, 0, hours, minutes, secs), "hh:mm:ss")
+    }
+    
+    function timeToSeconds(timeString) {
+        var parts = timeString.split(':')
+        if (parts.length !== 3) {
+            return 0
+        }
+        var hours = parseInt(parts[0], 10)
+        var minutes = parseInt(parts[1], 10)
+        var seconds = parseInt(parts[2], 10)
+        if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+            return 0
+        }
+        return hours * 3600 + minutes * 60 + seconds
+    }
+    
+    function updateVisibleRange() {
+        // Reset scale to 1.0 when time range changes
+        timelineScale = 1.0
+        scaleSpinBox.value = 1
+        RegimeManager.updateVisibleRegimes(root.visibleStartTime, root.visibleEndTime)
+    }
+
+    // ScrollView containing the timeline
+    ScrollView {
+        id: scrollView
+        implicitWidth: parent.width
+        // width: parent.width
+        height: 50
+        clip: true
+        
+        // Calculate content width: at scale 1.0, all visible regimes fit in available width
+        contentWidth: {
+            var availableWidth = root.width  // Account for margins
+            return Math.max(availableWidth, availableWidth * timelineScale)
+        }
+        
+        ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+        
+        // Timeline content
+        Row {
+            y: 5
+            id: progressBar
+            width: scrollView.contentWidth
+            height: 30
+            spacing: 1
+            
+            Repeater {
+                id: repeater
+                model: RegimeManager.visibleRegimeModel
+
+                delegate: Rectangle {
+                    width: {
+                        var visibleDuration = root.visibleEndTime - root.visibleStartTime
+                        if (visibleDuration <= 0) return 0
+                        var baseWidth = root.width  // Same as available width calculation
+                        // Each entry now represents a single repeat, so use maxTime directly
+                        return model.maxTime / visibleDuration * baseWidth * timelineScale
+                    }
+                    height: progressBar.height
+                    
+                    color: {
+                        switch (model.state) {
+                            case 2: return "lightblue"   // Running
+                            case 5: return "lightgreen"  // Done
+                            case 4: return "lightgray"   // Skipped
+                            case 6: return "lightcoral"  // Error
+                            default: return "white"      // Waiting
+                        }
+                    }
+                    
+                    border.color: model.isCycle ? "#9FC9CA" : "#464646"  // Gray border for cycles
+                    border.width: model.isCycle ? 1 : 2                   // Thicker border for cycles
+
+                    // Each rectangle now represents a single repeat
+                    // Condition progress indicator (if condition time exists)
+                    Rectangle {
+                        id: conditionProgress
+                        width: {
+                            if (model.conditionTime > 0 && model.state === 2) { // Running
+                                var conditionTimePassed = model.conditionTimePassed || 0
+                                var conditionProgressRatio = conditionTimePassed / model.conditionTime
+                                var conditionWidthRatio = model.conditionTime / model.maxTime
+                                return Math.min(conditionProgressRatio, 1.0) * conditionWidthRatio * parent.width
+                            }
+                            return 0
+                        }
+                        height: parent.height
+                        color: "#ff9500"  // Orange color for condition progress
+                        opacity: 0.8
+                        visible: model.conditionTime > 0 && model.state === 2 // Only show when running and has condition
+                    }
+                    
+                    // Regime execution progress indicator (starts after condition)
+                    Rectangle {
+                        id: regimeProgress
+                        x: {
+                            if (model.conditionTime > 0) {
+                                var conditionWidthRatio = model.conditionTime / model.maxTime
+                                return conditionWidthRatio * parent.width
+                            }
+                            return 0
+                        }
+                        width: {
+                            if (model.maxTime > 0 && model.state === 2) { // Running
+                                var regimeTimePassed = model.regimeTimePassed || 0
+                                var regimeExecutionTime = model.regimeExecutionTime
+                                
+                                if (regimeExecutionTime > 0) {
+                                    var regimeProgressRatio = regimeTimePassed / regimeExecutionTime
+                                    var regimeWidthRatio = regimeExecutionTime / model.maxTime
+                                    return Math.min(regimeProgressRatio, 1.0) * regimeWidthRatio * parent.width
+                                }
+                            }
+                            return 0
+                        }
+                        height: parent.height
+                        color: "#3399ff"  // Blue color for regime execution progress
+                        opacity: 0.7
+                        visible: model.state === 2 // Running
+                    }
+                    
+                    // Separator line between condition and regime execution (if condition exists)
+                    Rectangle {
+                        x: {
+                            if (model.conditionTime > 0) {
+                                var conditionWidthRatio = model.conditionTime / model.maxTime
+                                return conditionWidthRatio * parent.width - 1
+                            }
+                            return 0
+                        }
+                        width: 2
+                        height: parent.height
+                        color: "#333333"  // Dark separator line
+                        opacity: 0.6
+                        visible: model.conditionTime > 0
+                    }
+
+                    // Regime name text with repeat info
+                    Text {
+                        text: {
+                            let baseName = model.name
+                            let repeatInfo = ""
+                            if (!model.isCycleEntry) {
+                                repeatInfo += "Повтор " + (model.repeatIndex + 1)
+                            }
+                            else{
+                                repeatInfo += "Цикл " + (model.cycleRepeatIndex + 1)
+                            }
+                            return baseName + "\n" + repeatInfo
+                        }
+                        anchors.centerIn: parent
+                        color: "black"
+                        font.pixelSize: Math.max(6, Math.min(10, parent.width / 12))
+                        elide: Text.ElideRight
+                        width: parent.width - 4
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.WordWrap
+                    }
+                    
+                    // Tooltip on hover
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        
+                        ToolTip {
+                            contentWidth: 200
+                            visible: parent.containsMouse
+                            text: {
+                                var tooltip = `${model.name}\nПовтор: ${model.repeatIndex + 1}`
+                                
+                                if (model.isCycleEntry) {
+                                    tooltip += ` (Цикл ${model.cycleRepeatIndex + 1})`
+                                }
+                                
+                                tooltip += `\nДлительность: ${formatTime(model.maxTime)}\nСостояние: ${getStateName(model.state)}`
+                                
+                                // Add progress information
+                                if (model.conditionTime > 0) {
+                                    if (model.conditionCompleted) {
+                                        tooltip += `\nУсловие: ✓ Выполнено`
+                                        tooltip += `\nПрогресс выполнения: ${formatTime(model.regimeTimePassed || 0)} / ${formatTime(model.regimeExecutionTime)}`
+                                    } else {
+                                        tooltip += `\nПрогресс условия: ${formatTime(model.conditionTimePassed || 0)} / ${formatTime(model.conditionTime)}`
+                                    }
+                                } else {
+                                    tooltip += `\nПрогресс выполнения: ${formatTime(model.regimeTimePassed || 0)} / ${formatTime(model.regimeExecutionTime)}`
+                                }
+                                
+                                // Add condition information if available
+                                var regime = RegimeManager.model.getRegime(index)
+                                if (regime && regime.condition) {
+                                    if (regime.condition.type === "time") {
+                                        tooltip += `\nУсловие: Ожидание ${regime.condition.time} мин`
+                                    } else if (regime.condition.type === "temp") {
+                                        tooltip += `\nУсловие: ${regime.condition.temp}°C + ${regime.condition.time} мин`
+                                    } else {
+                                        tooltip += `\nУсловие: Отсутствует`
+                                    }
+                                }
+                                
+                                // Add execution time breakdown
+                                if (model.conditionTime > 0) {
+                                    tooltip += `\nВремя условия: ${formatTime(model.conditionTime)}`
+                                    tooltip += `\nВремя выполнения: ${formatTime(model.regimeExecutionTime)}`
+                                }
+                                
+                                // Add repeat statistics if any completed
+                                if (regime && (regime.repeatsDone > 0 || regime.repeatsSkipped > 0 || regime.repeatsError > 0)) {
+                                    tooltip += `\nВыполнено: ${regime.repeatsDone}, Пропущено: ${regime.repeatsSkipped}, Ошибок: ${regime.repeatsError}`
+                                }
+                                
+                                if (model.isCycle) {
+                                    tooltip += `\nID цикла: ${model.cycleId}\nТип: Цикл`
+                                } else {
+                                    tooltip += `\nТип: Отдельный режим`
+                                }
+                                return tooltip
+                            }
+                            delay: 500
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Time label below the timeline
+    Label {
+        id: timeLabel
+        y: 55
+        width: parent.width
+        // color: "white"
+        text: formatTime(RegimeManager.getTotalElapsedTime()) + " / " + formatTime(RegimeManager.getTotalEstimatedTime())
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+    }
+
+    // Time range controls
+    RowLayout {
+        id: timeControls
+        x: 10
+        y: 80
+        width: parent.width - 20
+        spacing: 10
+        
+        Label {
+            text: "Начало:"
+            // color: "black"
+        }
+        
+        TextField {
+            id: startTimeField
+            Layout.preferredHeight: 35
+            Layout.preferredWidth: 80
+            text: formatTime(root.visibleStartTime)
+            inputMask: "99:99:99"
+            inputMethodHints: Qt.ImhTime
+            horizontalAlignment: TextInput.AlignHCenter
+            
+            validator: RegularExpressionValidator {
+                regularExpression: /^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/
+            }
+            
+            onEditingFinished: {
+                if (acceptableInput) {
+                    var newStartTime = timeToSeconds(text)
+                    var totalTime = RegimeManager.getTotalEstimatedTime()
+                    
+                    // Validate range: start must be >= 0 and < end time
+                    if (newStartTime >= 0 && newStartTime < root.visibleEndTime && newStartTime <= totalTime) {
+                        root.visibleStartTime = newStartTime
+                        updateVisibleRange()
+                    } else {
+                        // Reset to previous valid value
+                        text = formatTime(root.visibleStartTime)
+                    }
+                } else {
+                    // Reset to previous valid value
+                    text = formatTime(root.visibleStartTime)
+                }
+            }
+        }
+        
+        Label {
+            text: "Конец:"
+            // color: "black"
+        }
+        
+        TextField {
+            id: endTimeField
+            Layout.preferredHeight: 35
+            Layout.preferredWidth: 80
+            text: formatTime(root.visibleEndTime)
+            inputMask: "99:99:99"
+            inputMethodHints: Qt.ImhTime
+            horizontalAlignment: TextInput.AlignHCenter
+            
+            validator: RegularExpressionValidator {
+                regularExpression: /^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/
+            }
+            
+            onEditingFinished: {
+                if (acceptableInput) {
+                    var newEndTime = timeToSeconds(text)
+                    var totalTime = RegimeManager.getTotalEstimatedTime()
+                    
+                    // Validate range: end must be > start time and <= total time
+                    if (newEndTime > root.visibleStartTime && newEndTime <= totalTime) {
+                        root.visibleEndTime = newEndTime
+                        updateVisibleRange()
+                    } else {
+                        // Reset to previous valid value
+                        text = formatTime(root.visibleEndTime)
+                    }
+                } else {
+                    // Reset to previous valid value
+                    text = formatTime(root.visibleEndTime)
+                }
+            }
+        }
+        
+        // Scale control for timeline zoom
+        Label {
+            text: "Масштаб:"
+            // color: "black"
+        }
+        
+        SpinBox {
+            id: scaleSpinBox
+            Layout.preferredHeight: 35
+            Layout.preferredWidth: 80
+            from: 1
+            to: 100
+            value: Math.round(timelineScale)
+            wheelEnabled: true
+            onValueModified: {
+                timelineScale = value
+            }
+            up.indicator:  ScrollArrow {
+                arrowColor: "white"
+                transform: Translate {x: 54 ; y: 2}
+            }
+            down.indicator: ScrollArrow {
+                arrowColor: "white"
+                rotation: 180
+                transform: Translate {x: 54; y: 12}
+            }
+        }
+        
+        // Quick action buttons
+        Button {
+            text: "Показать все"
+            onClicked: {
+                var totalTime = RegimeManager.getTotalEstimatedTime()
+                if (totalTime > 0) {
+                    root.visibleStartTime = 0
+                    root.visibleEndTime = totalTime
+                    startTimeField.text = formatTime(0)
+                    endTimeField.text = formatTime(totalTime)
+                    updateVisibleRange()
+                }
+            }
+        }
+        
+        Button {
+            text: "Reset Scale"
+            visible: false
+            onClicked: {
+                timelineScale = 1.0
+                scaleSpinBox.value = 1
+            }
+        }
+    }
+    
+    // Helper function to get state name for tooltip
+    function getStateName(state) {
+        switch (state) {
+            case 0: return "Ожидаение"
+            case 1: return "Остановлен"
+            case 2: return "Работает"
+            case 3: return "Пауза"
+            case 4: return "Пропущен"
+            case 5: return "Закончен"
+            case 6: return "Ошибка"
+            default: return "Unknown"
+        }
+    }
+}

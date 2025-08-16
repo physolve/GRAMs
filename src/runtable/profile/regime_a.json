@@ -1,0 +1,56 @@
+ [
+    {
+        "name": "Вакуум",
+        "condition": {
+            "temp": 100,
+            "time": 10,
+            "type": "temp"
+        },
+        "max_time": 60,
+        "note": "",
+        "repeat": 1,
+        "cycle": null
+    },
+    {
+        "name": "Режим а",
+        "condition": {
+            "temp": 0,
+            "time": 0,
+            "type": "none"
+        },
+        "max_time": 10,
+        "note": "",
+        "repeat": 1,
+        "cycle": {
+            "id": 1,
+            "cycleRepeat": 2
+        }
+    },
+    {
+        "condition": {
+            "temp": 0,
+            "time": 0,
+            "type": "none"
+        },
+        "max_time": 10,
+        "name": "Режим б",
+        "note": "",
+        "repeat": 1,
+        "cycle": {
+            "id": 1,
+            "cycleRepeat": 2
+        }
+    },
+    {
+        "name": "Вакуум",
+        "condition": {
+            "temp": 0,
+            "time": 0,
+            "type": "none"
+        },
+        "max_time": 120,
+        "note": "",
+        "repeat": 1,
+        "cycle": null
+    }
+]

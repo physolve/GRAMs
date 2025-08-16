@@ -24,7 +24,7 @@ FilterView::FilterView(QObject *parent) : QObject(parent), safeCheck(false), app
 FilterView::~FilterView(){
 }
 
-void FilterView::readKalman(){
+void FilterView::readKalman(){ // combine with parse in new module
     QDir dir("profile");
     if(!dir.exists()) return;
     QFile file;

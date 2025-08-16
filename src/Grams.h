@@ -27,6 +27,8 @@
 #include "addon/TestField.h"
 #include "playpath/PlayPressure.h"
 #include "actions/ActionHandler.h"
+#include "runtable/regime.h"
+#include "runtable/regimemanager.h"
 
 struct guiValsPres{ // sample
     Q_GADGET
@@ -258,6 +260,7 @@ private:
     PlayPressure m_playPressure;
 
     ActionHandler m_actionHandler;
+    RegimeManager m_regimeManager;
 
     QElapsedTimer m_benchmarkTime;
 };

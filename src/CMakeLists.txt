@@ -85,7 +85,7 @@ if(NOT DEFINED CPP_CHARTS)
     file(GLOB CPP_CHARTS ${CMAKE_CURRENT_SOURCE_DIR}/charts/*.cpp)
 endif()
 
-if (LINUX)            
+if (LINUX)
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libDAQ)
 endif (LINUX)
 
@@ -98,9 +98,11 @@ source_group("Libs Source" FILES ${CPP_LIBS})
 
 add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
 
-qt6_add_executable(${EXECUTABLE_NAME} ${SOURCES} 
+add_subdirectory(runtable)
+
+qt6_add_executable(${EXECUTABLE_NAME} ${SOURCES}
 ${CPP_CONTROLLERS}
-${CPP_LIBS} 
+${CPP_LIBS}
 ${CPP_ADDON}
 ${CPP_MEASURE}
 ${CPP_DB}
@@ -108,6 +110,11 @@ ${CPP_PLAYPATH}
 ${CPP_ACTIONS}
 ${CPP_CHARTS}
 ${QML_RESOURCES})
+
+#include modlues
+target_include_directories(${EXECUTABLE_NAME} PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtable
+)
 
 if (WIN32)
     target_link_libraries(${EXECUTABLE_NAME}
@@ -123,6 +130,7 @@ if (WIN32)
                 # biodaq
                 opengl32
         Eigen3::Eigen
+        prototablemodel
     )
 else()
     target_link_libraries(${EXECUTABLE_NAME}
@@ -136,5 +144,6 @@ else()
             Qt6::Sql
             Qt6::Concurrent
             biodaq
+            prototablemodel
     )
 endif()
