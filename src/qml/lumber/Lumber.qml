@@ -5,6 +5,7 @@ import Grams.backendSourceSingleton 1.0
 import Grams.addRemoveQuartileSingleton 1.0
 import Grams.testFieldSingleton 1.0
 import Grams.valveControlSingleton 1.0
+import com.grams.prototable
 import "content"
 Item {
     id: lumber
@@ -111,14 +112,14 @@ Item {
         id: mR
         x: 3*parent.width/8 + parent.width/16 + 20
         y: lumber.width/32+5
-        height: 460
+        height: 420
         width: parent.width/2
         color:"transparent"; border.color: "#464646";
         Rectangle{ // Storage quartile metrics
             id: mSED2
             x: 5
-            y: 5 
-            height: 450
+            y: 5
+            height: 410
             width: lumber.width/4 + lumber.width/8 - 15
             color:"transparent"; border.color: "#464646";
             LReaction{
@@ -158,7 +159,7 @@ Item {
             id: mRF
             x: 3*lumber.width/8 - 5 
             y: 5
-            height: 225
+            height: 215
             width: parent.width/4
             color:"transparent"; border.color: "#464646";
             LChamber{
@@ -186,8 +187,8 @@ Item {
         Rectangle{
             id: furnace
             x: 3*lumber.width/8 - 5 
-            y: height + 15
-            height: 220
+            y: 225
+            height: 190
             width: parent.width/4
             color:"transparent"; border.color: "#464646";
             LFurnace{
@@ -328,21 +329,24 @@ Item {
     Rectangle{
         id: tools
         x: 3*parent.width/8 + parent.width/16 + 20
-        y: lumber.width/32 + 470
-        height: 330
+        y: lumber.width/32 + 430
+        height: 400
         width: parent.width/2
         color:"transparent"; border.color: "#464646";
-        Rectangle{
-            id: expTool
-            x: 5
-            y: 5
-            width: parent.width - 10
-            height: parent.height - 10 
-            color:"transparent"; border.color: "#464646";
-            LTools{
-                anchors.centerIn: parent
-                onOpenUserExperiment: lumber.userExperiment()
-            }   
+        RunTable {
+            x: 20
         }
+        // Rectangle{
+        //     id: expTool
+        //     x: 5
+        //     y: 5
+        //     width: parent.width - 10
+        //     height: parent.height - 10 
+        //     color:"transparent"; border.color: "#464646";
+        //     LTools{
+        //         anchors.centerIn: parent
+        //         onOpenUserExperiment: lumber.userExperiment()
+        //     }   
+        // }
     }
 }

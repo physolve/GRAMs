@@ -111,11 +111,6 @@ ${CPP_ACTIONS}
 ${CPP_CHARTS}
 ${QML_RESOURCES})
 
-#include modlues
-target_include_directories(${EXECUTABLE_NAME} PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/runtable
-)
-
 if (WIN32)
     target_link_libraries(${EXECUTABLE_NAME}
         PRIVATE Qt6::Core
@@ -129,8 +124,8 @@ if (WIN32)
                 Qt6::Concurrent
                 # biodaq
                 opengl32
+                RuntableLibplugin
         Eigen3::Eigen
-        prototablemodel
     )
 else()
     target_link_libraries(${EXECUTABLE_NAME}
@@ -144,6 +139,6 @@ else()
             Qt6::Sql
             Qt6::Concurrent
             biodaq
-            prototablemodel
+            RuntableLibplugin
     )
 endif()

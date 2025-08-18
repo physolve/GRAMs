@@ -30,7 +30,7 @@ target_link_libraries(ProtoTableTests
     Qt6::Core
     Qt6::Qml
     gtest_main
-    prototablemodel
+    RuntableLib
 )
 
 include(GoogleTest)
