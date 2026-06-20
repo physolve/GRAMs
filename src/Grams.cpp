@@ -334,6 +334,7 @@ void Grams::initGUI(){
     qmlRegisterSingletonInstance("Grams.reactionQuartileSingleton", 1, 0, "ReactionQuar", &m_reactionQuartile);
 
     qmlRegisterSingletonInstance("Grams.actionHandlerSingleton", 1, 0, "ActionHandler", &m_actionHandler);
+    qmlRegisterSingletonInstance("Grams.regimeTaskTreeSingleton", 1, 0, "RegimeTaskTree", &m_regimeTaskTree);
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     // m_engine.rootContext()->setContextProperty("_valveModel", &valveModel);
     // m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
@@ -517,11 +518,16 @@ void Grams::initPlayPressure(){
 }
 
 void Grams::initActionHandler(){
-    //pointers to valve control and security
     m_actionHandler.setValveControl(&m_valveControl);
     m_actionHandler.setDataAcquisition(&dataSource);
     m_actionHandler.setSecurity(&m_safeModule);
     m_actionHandler.setAddRemoveQuartile(&m_addRemoveQuartile);
+
+    // RegimeTaskTree — TaskTree-based regime orchestrator
+    m_regimeTaskTree.setRegimeManager(&m_regimeManager);
+    m_regimeTaskTree.setValveControl(&m_valveControl);
+    m_regimeTaskTree.setDataAcquisition(&dataSource);
+    m_regimeTaskTree.setSecurity(&m_safeModule);
 }
 
 void Grams::testActionHandler(){

@@ -24,7 +24,7 @@ public:
     // void appendDataToXhatS(int viewN, const QVector<qreal> &time, const QVector<double> &data);
     // void appendDataToXhatT(int viewN, const QVector<qreal> &time, const QVector<double> &data);
 
-    void safeCheckOn();
+    void safeCheckOn() ;
     bool getSafeCheck();
     void saveToFile(const QVector<double> &data);
     bool getAppendCheck();

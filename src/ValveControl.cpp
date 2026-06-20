@@ -113,6 +113,7 @@ void ValveControl::setManualChamberValve(bool state){
     m_reactionQuartile->setChamberStatus(state);
     m_reactionQuartile->updateChamberToQuartile();
     // data base update
+    // m_gramStateDB->writeTimeStamp();
     emit guiValsValveChanged();
 }
 
@@ -127,7 +128,7 @@ void ValveControl::valveChangeUpdater(const QString& valveName, bool newState){
     // if(m_gasSupplyValves.contains(valveName)){
     //     m_addRemoveQuartile->updatePortState();
     // }
-    if(m_gasStoreValves.contains(valveName) && newState == false){
+    if(false) { // m_gasStoreValves.contains(valveName) && newState == false
         if(m_gramStateDB->writeTimeStamp())
             qDebug() << "Time Stamp has been written";
         else 

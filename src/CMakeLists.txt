@@ -122,6 +122,7 @@ if (WIN32)
                 Qt6::OpenGL
                 Qt6::Sql
                 Qt6::Concurrent
+                Qt6::TaskTree
                 # biodaq
                 opengl32
                 RuntableLibplugin
@@ -138,6 +139,7 @@ else()
             Qt6::OpenGL
             Qt6::Sql
             Qt6::Concurrent
+            Qt6::TaskTree
             biodaq
             RuntableLibplugin
     )

@@ -27,6 +27,7 @@
 #include "addon/TestField.h"
 #include "playpath/PlayPressure.h"
 #include "actions/ActionHandler.h"
+#include "actions/RegimeTaskTree.h"
 #include "runtable/regime.h"
 #include "runtable/regimemanager.h"
 
@@ -259,8 +260,9 @@ private:
     TestField m_testField;
     PlayPressure m_playPressure;
 
-    ActionHandler m_actionHandler;
-    RegimeManager m_regimeManager;
+    ActionHandler    m_actionHandler;
+    RegimeManager    m_regimeManager;
+    RegimeTaskTree   m_regimeTaskTree;
 
     QElapsedTimer m_benchmarkTime;
 };
