@@ -12,24 +12,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build Commands
 
-> **Требование:** все команды выполнять в **x64 Native Tools Command Prompt for VS 2022** (или Developer PowerShell), иначе Ninja не найдёт `cl.exe`.
+> **Требование:** `cl.exe` требует MSVC-окружения. Есть два способа.
+
+### Способ А — интерактивный (обычный терминал)
+
+Открой **x64 Native Tools Command Prompt for VS 2022** и выполняй команды там.
+
+### Способ Б — агентный запуск из обычного PowerShell / `claude -p`
+
+Всегда инициализируй окружение перед cmake через `cmd /c`:
 
 ```powershell
+# ── Переменная окружения MSVC ──────────────────────────────────────────────────
+$vcvars = "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+
 # ── Первичная конфигурация (чистая папка build/) ──────────────────────────────
-cmake -B build -S . -G Ninja `
-  -DCMAKE_BUILD_TYPE=Debug `
-  -DCMAKE_PREFIX_PATH="C:/Qt/6.11.1/msvc2022_64" `
-  -DEigen3_DIR="F:/testFilterLib/eigen/build"
+cmd /c "`"$vcvars`" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=C:/Qt/6.11.1/msvc2022_64 -DEigen3_DIR=F:/testFilterLib/eigen/build"
 
 # ── Debug сборка ───────────────────────────────────────────────────────────────
-cmake --build build --parallel
+cmd /c "`"$vcvars`" && cmake --build build --parallel"
 
-# ── Release сборка (пересконфигурировать с новым типом) ───────────────────────
-cmake -B build -S . -G Ninja `
-  -DCMAKE_BUILD_TYPE=Release `
-  -DCMAKE_PREFIX_PATH="C:/Qt/6.11.1/msvc2022_64" `
-  -DEigen3_DIR="F:/testFilterLib/eigen/build"
-cmake --build build --parallel
+# ── Release сборка ─────────────────────────────────────────────────────────────
+cmd /c "`"$vcvars`" && cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=C:/Qt/6.11.1/msvc2022_64 -DEigen3_DIR=F:/testFilterLib/eigen/build"
+cmd /c "`"$vcvars`" && cmake --build build --parallel"
 
 # ── Запуск приложения ──────────────────────────────────────────────────────────
 .\build\src\GRAMs.exe
@@ -40,6 +45,8 @@ Push-Location build; ctest --output-on-failure; Pop-Location
 # ── Запуск одного теста по маске ──────────────────────────────────────────────
 .\build\src\runtable\tests\ProtoTableTests.exe --gtest_filter=*RegimeManager*
 ```
+
+> Паттерн `cmd /c "\"vcvars64.bat\" && <команда>"` передаёт инициализированное MSVC-окружение в дочерний процесс cmd, а затем выполняет cmake. Переменные среды не просачиваются обратно в PowerShell — это нормально, каждый вызов самодостаточен.
 
 **Зависимости, найденные в текущей сборке:**
 
@@ -104,21 +111,27 @@ ptr[]   — массивы указателей        — всегда пров
 
 Очерёдность режимов:
 
-| Режим | Статус |
-|---|---|
-| **Вакуум** | В работе (первый в очереди) |
-| **Напуск** | Ожидает |
-| **Натекание** | Ожидает |
-| **Калибровка** | Ожидает |
-| **SOAK** | Ожидает |
-| **PCI** | Ожидает |
-| **SYSTEST** | Ожидает |
+Статусы: **Готов** = работает на железе; **Структура** = класс есть, ключевая логика — TODO; **Заглушка** = методы переопределены, тело пустое; **Ожидает** = воркер не создан.
 
-**Алгоритм переноса каждого режима:**
+| Режим | Статус | Что осталось |
+|---|---|---|
+| **Вакуум** | **Структура** (`VacuumRegimeWorker`) | `kVacuumValveName = ""` (RegimeWorkers.cpp:232), pressure-completion закомментирован (строки 257–260), защита D1 не подключена |
+| **Режим в** | **Заглушка** (`RegimeBWorker`) | Все 4 метода = `// TODO`; клапанная последовательность не определена |
+| **Режим г** | **Заглушка** (`RegimeGWorker`) | Идентично Режиму в |
+| **Тест клапанов** | **Готов** (`ValveTestWorker`) | Полная state machine, security check, pause/resume |
+| **Напуск** | Ожидает | — |
+| **Натекание** | Ожидает | — |
+| **Калибровка** | Ожидает | Узкое место для SYSTEST |
+| **SOAK** | Ожидает | — |
+| **PCI** | Ожидает | — |
+| **SYSTEST** | Ожидает | — |
+
+**Алгоритм добавления нового режима:**
 1. Изучить реализацию в GramQt
-2. Адаптировать под архитектуру GRAMs (Quartile-граф, ActionHandler, Strategy)
-3. Реализовать соответствующую Strategy-стратегию
-4. Отладка → верификация на LaNi₅ (плато сорбции ~2 бар при 25°C)
+2. Создать воркер: наследовать `RegimeWorkerBase` (или `ValveTestWorker` для клапанных сценариев) и переопределить `onExecutionPhaseStart`, `onExecutionTick`, `isExecutionComplete`, `onExecutionPhaseEnd`
+3. Зарегистрировать имя режима → воркер в `RegimeTaskTree::buildRegimeGroup()`
+4. Добавить режим в `RunTable.qml` меню «Добавить»
+5. Отладка → верификация на LaNi₅ (плато сорбции ~2 бар при 25°C)
 
 ## Important Notes
 
@@ -174,17 +187,32 @@ DataCollection      — именованный кольцевой буфер, к
 
 `StrategyBuilder` (`src/addon/StrategyBuilder.h`) — строит объекты `SupplyPort` / `GasLeakage` из состояния quartile. Strategy-классы содержат логику режима, отделены от GUI.
 
-### Async actions: `ActionHandler`
+### Async actions: `RegimeTaskTree` (основной путь)
 
-`src/actions/ActionHandler.h` — точка входа для всех автоматических режимов. Использует `QtConcurrent::run` + `QFutureWatcher<int>`. Режим = последовательность Action-шагов, каждый со своей стратегией.
+`src/actions/RegimeTaskTree.h` — оркестратор автоматических режимов на базе Qt TaskTree (`Tasking::` namespace). Зарегистрирован как QML singleton `RegimeTaskTree`. Управляет последовательным запуском всех `Waiting`-режимов из `RegimeManager`.
 
-- `InletAction` — одно событие напуска (открыть клапан на время); worker через `QPromise<int>` + `QThread::msleep`
-- `DataControlAction` — управление DAQ во время action (сейчас закомментирован)
-- Получает указатели на `ValveControl`, `DataAcquisition`, `Security` через injection в `Grams`
+**Worker-паттерн** (`src/actions/RegimeWorkers.h`):
+- `RegimeWorkerBase` — базовый класс; работает в главном event loop через `QTimer` (1-секундные тики); поддерживает `pause`/`resume` через сигналы `RegimeTaskTree::pauseRequested/resumeRequested`
+- Двухфазный цикл на повтор: **Condition phase** (ожидание условия: время или температура) → **Execution phase** (логика режима)
+- Чтобы добавить режим — переопределить 4 виртуальных метода: `onExecutionPhaseStart`, `onExecutionTick`, `isExecutionComplete`, `onExecutionPhaseEnd`
+- Конкретные воркеры: `VacuumRegimeWorker`, `RegimeBWorker`, `RegimeGWorker`
+- `ValveTestWorker` (`src/actions/ValveTestWorker.h`) — отдельный воркер с конфигурируемой последовательностью шагов клапанов; конфигурируется из QML через `RegimeTaskTree.setValveTestSteps()`
+
+**Логирование** (`src/actions/RegimeLogger.h`): отдельная SQLite-база `data/regime_log.db` (схема: `regime_runs` + `regime_events`). Не путать с `GramStateDB` (состояния физических объёмов).
+
+**Устаревший путь** (`src/actions/ActionHandler.h`): использует `QtConcurrent::run` + `QFutureWatcher<int>`. Содержит `InletAction` (одно событие напуска) и закомментированный `DataControlAction`. Оставлен для совместимости, но новые режимы пишутся через `RegimeTaskTree`.
 
 ### Experiment scheduler: `RegimeManager` + `RuntableLib`
 
-`src/runtable/` — отдельный QML-модуль (`com.grams.prototable`). Состояния режима: `Idle → Running (condition) → Running (execution) → Done / Skipped / Error`.
+`src/runtable/` — отдельный статический QML-модуль (`com.grams.prototable`). Состояния режима: `Idle → Running (condition) → Running (execution) → Done / Skipped / Error`. `RegimeManager` предоставляет External Module API (методы `startRegimeExecution`, `updateConditionProgress`, `confirmConditionCompletion`, `updateRegimeProgress`, `completeCurrentRepeat` и т.д.) — воркеры обязаны вызывать именно эти методы для отражения прогресса в UI.
+
+### Pressure simulation: `PlayPressure`
+
+`src/playpath/PlayPressure.h` — симулятор перераспределения давления по газовому тракту без реального оборудования. Получает указатели на `AddRemoveQuartile`, `StorageQuartile`, `ReactionQuartile` и вычисляет виртуальные давления методами `play()` / `playWithAccuum()`. Результат доступен из QML через `app.guiPresChange` / `app.guiPresTotal`. Использует `guiPressureTarget` Q_GADGET для целевых параметров, задаваемых из QML.
+
+### Reaction chamber: `Chamber`
+
+`src/measure/Chamber.h` — модель реакционной камеры. Хранит `VolumeObject` и параметры `ChamberParameters` (объём, максимальное давление, статус открытия). Используется `ReactionQuartile` для описания физической геометрии реактора.
 
 ### Persistence
 
