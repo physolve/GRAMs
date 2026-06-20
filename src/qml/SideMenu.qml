@@ -37,6 +37,33 @@ Item{
         barMainRepeater.model = ["Создание эксперимента"]
         layoutMain.currentIndex = 7
     }
+    function setValveTestMenu(){
+        barMainRepeater.model = ["Тест клапанов"]
+        layoutMain.currentIndex = 8
+    }
+
+    // Called from Main.qml when a regime button is clicked in RunTable.
+    // Opens the settings page that matches the regime name.
+    function openRegimePage(name, regimeIndex) {
+        switch (name) {
+        case "Вакуум":
+            setPlayVacuumMenu()
+            break
+        case "Тест клапанов":
+            setValveTestMenu()
+            break
+        case "Напуск газа":
+            setPlayInletMenu()
+            break
+        case "Автоматическая подача газа":
+            setExpSupplyMenu()
+            break
+        default:
+            // Режим в / Режим г / unknown — open valve test as a fallback editor
+            setValveTestMenu()
+            break
+        }
+    }
     TabBar {
         id: barMain
         width: parent.width
@@ -116,5 +143,10 @@ Item{
             Layout.fillHeight: true
             onOpenESupply: setExpSupplyMenu()
         }
-    } 
+        ValveTestSetup {
+            id: valveTestSetup
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+    }
 }

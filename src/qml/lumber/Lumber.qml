@@ -15,6 +15,8 @@ Item {
     signal playInlet()
     signal expSupply()
     signal userExperiment()
+    // Forwarded from RunTable when user clicks a regime name button.
+    signal regimeSettingsRequested(string regimeName, int regimeIndex)
     Rectangle{
         id: mS
         x: 5
@@ -334,7 +336,9 @@ Item {
         width: parent.width/2
         color:"transparent"; border.color: "#464646";
         RunTable {
+            id: runTable
             x: 20
+            onRegimeSettingsRequested: (name, idx) => lumber.regimeSettingsRequested(name, idx)
         }
         // Rectangle{
         //     id: expTool

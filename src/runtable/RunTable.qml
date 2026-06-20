@@ -11,6 +11,10 @@ Item {
     width: 680
     height: 420
     visible: true
+
+    // Emitted when user clicks a regime name button in column 0.
+    // regimeIndex is the row index in RegimeManager.model.
+    signal regimeSettingsRequested(string regimeName, int regimeIndex)
     // title: qsTr("ProtoTable App") + (RegimeManager.dirty ? " *" : "")
 
     // onClosing: function(close) {
@@ -100,8 +104,10 @@ Item {
             DelegateChoice {
                 column: 0
                 delegate: RegimeDelegate {
+                    // TableView provides 'row' to each delegate automatically.
+                    required property int row
                     onRegimeClicked: (regime) => {
-                        console.log("Regime clicked:", regime.name)
+                        runTable.regimeSettingsRequested(regime.name, row)
                     }
                 }
             }
@@ -267,6 +273,10 @@ Item {
             MenuItem {
                 text: qsTr("Режим г")
                 onTriggered: RegimeManager.model.addRow("Режим г")
+            }
+            MenuItem {
+                text: qsTr("Тест клапанов")
+                onTriggered: RegimeManager.model.addRow("Тест клапанов")
             }
         }
         Menu {
