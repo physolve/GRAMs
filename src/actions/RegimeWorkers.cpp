@@ -1,5 +1,6 @@
 #include "RegimeWorkers.h"
 #include <QDebug>
+#include <algorithm>
 
 // ═════════════════════════════════════════════════════════════════════════════
 // RegimeWorkerBase
@@ -19,21 +20,41 @@ void RegimeWorkerBase::setConfig(const RegimeWorkerConfig& cfg)
 void RegimeWorkerBase::start()
 {
     m_currentRepeat = 0;
+    m_repeatsDone   = 0;
+    m_repeatsError  = 0;
+    m_paused        = false;
+
+    // Open a DB run record
+    if (m_cfg.logger)
+        m_runId = m_cfg.logger->openRun(m_cfg.regimeId, m_cfg.regimeName, m_cfg.totalRepeats);
+
     startNextRepeat();
 }
+
+// ─── Repeat lifecycle ─────────────────────────────────────────────────────────
 
 void RegimeWorkerBase::startNextRepeat()
 {
     if (m_currentRepeat >= m_cfg.totalRepeats) {
-        emit done(true);
+        // All repeats done
+        bool ok = (m_repeatsError == 0);
+        if (m_cfg.logger) {
+            m_cfg.logger->logEvent(m_runId,
+                                   ok ? RegimeLogger::kRegimeDone : RegimeLogger::kRegimeError,
+                                   -1, -1,
+                                   QString("done=%1 error=%2").arg(m_repeatsDone).arg(m_repeatsError));
+            m_cfg.logger->closeRun(m_runId, ok ? "success" : "error",
+                                   m_repeatsDone, m_repeatsError);
+        }
+        emit done(ok);
         return;
     }
 
     m_phaseElapsedSec = 0;
 
     if (m_cfg.conditionType == "none" || m_cfg.conditionTimeSec <= 0) {
-        // No condition — go straight to execution
-        m_cfg.manager->confirmConditionCompletion(m_cfg.regimeId, m_currentRepeat);
+        if (m_cfg.manager)
+            m_cfg.manager->confirmConditionCompletion(m_cfg.regimeId, m_currentRepeat);
         enterExecutionPhase();
     } else {
         enterConditionPhase();
@@ -44,59 +65,75 @@ void RegimeWorkerBase::enterConditionPhase()
 {
     m_phase = Phase::Condition;
     m_phaseElapsedSec = 0;
-    qDebug() << "[Regime" << m_cfg.regimeId << "] Condition phase started, repeat" << m_currentRepeat;
-    m_timer.start(1000);
+
+    qDebug() << "[Regime" << m_cfg.regimeId << "] Condition phase, repeat" << m_currentRepeat;
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kConditionStart, m_currentRepeat, 0);
+
+    m_timer.start(m_cfg.tickIntervalMs);
 }
 
 void RegimeWorkerBase::enterExecutionPhase()
 {
     m_phase = Phase::Execution;
     m_phaseElapsedSec = 0;
-    qDebug() << "[Regime" << m_cfg.regimeId << "] Execution phase started, repeat" << m_currentRepeat;
+
+    qDebug() << "[Regime" << m_cfg.regimeId << "] Execution phase, repeat" << m_currentRepeat;
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kExecutionStart, m_currentRepeat, 0);
+
     onExecutionPhaseStart();
-    m_timer.start(1000);
+    m_timer.start(m_cfg.tickIntervalMs);
 }
+
+// ─── QTimer tick ─────────────────────────────────────────────────────────────
 
 void RegimeWorkerBase::tick()
 {
+    if (m_paused) return;  // safety guard — timer should be stopped while paused
+
     ++m_phaseElapsedSec;
 
     if (m_phase == Phase::Condition) {
-        // Report condition progress
-        m_cfg.manager->updateConditionProgress(
-            m_cfg.regimeId, m_phaseElapsedSec, m_currentRepeat);
+
+        if (m_cfg.manager)
+            m_cfg.manager->updateConditionProgress(
+                m_cfg.regimeId, m_phaseElapsedSec, m_currentRepeat);
 
         bool conditionMet = false;
-
         if (m_cfg.conditionType == "time") {
             conditionMet = (m_phaseElapsedSec >= m_cfg.conditionTimeSec);
-
         } else if (m_cfg.conditionType == "temp") {
-            // Read temperature sensor if connected
-            if (m_cfg.conditionTempSensor) {
-                double curTemp = m_cfg.conditionTempSensor->getCurValue();
-                conditionMet = (curTemp <= m_cfg.conditionTargetTemp);
-            }
-            // Timeout fallback — always finish when time runs out
+            if (m_cfg.conditionTempSensor)
+                conditionMet = (m_cfg.conditionTempSensor->getCurValue()
+                                <= m_cfg.conditionTargetTemp);
             if (m_phaseElapsedSec >= m_cfg.conditionTimeSec)
-                conditionMet = true;
+                conditionMet = true;  // timeout fallback
         }
 
         if (conditionMet) {
             m_timer.stop();
-            m_cfg.manager->confirmConditionCompletion(m_cfg.regimeId, m_currentRepeat);
+            if (m_cfg.manager)
+                m_cfg.manager->confirmConditionCompletion(m_cfg.regimeId, m_currentRepeat);
+            if (m_cfg.logger)
+                m_cfg.logger->logEvent(m_runId, RegimeLogger::kConditionDone,
+                                       m_currentRepeat, m_phaseElapsedSec);
             enterExecutionPhase();
         }
 
-    } else { // Phase::Execution
-        // Security check — use checkValvePressure() to get failed valves.
-        // If any valve is in a forbidden pressure state, abort.
+    } else { // Execution
+
+        // ── Security check ────────────────────────────────────────────────────
         if (m_cfg.security) {
-            QMap<QString, bool> unsafe = m_cfg.security->checkValvePressure();
-            bool violation = std::any_of(unsafe.begin(), unsafe.end(),
+            QMap<QString, bool> pressureState = m_cfg.security->checkValvePressure();
+            bool violation = std::any_of(pressureState.cbegin(), pressureState.cend(),
                                          [](bool ok) { return !ok; });
             if (violation) {
-                qWarning() << "[Regime" << m_cfg.regimeId << "] Security pressure violation — aborting";
+                qWarning() << "[Regime" << m_cfg.regimeId
+                           << "] Security pressure violation — aborting execution";
+                if (m_cfg.logger)
+                    m_cfg.logger->logEvent(m_runId, RegimeLogger::kSecurityViolation,
+                                           m_currentRepeat, m_phaseElapsedSec);
                 m_timer.stop();
                 onExecutionPhaseEnd(false);
                 finishRepeat(false);
@@ -104,9 +141,9 @@ void RegimeWorkerBase::tick()
             }
         }
 
-        // Report execution progress
-        m_cfg.manager->updateRegimeProgress(
-            m_cfg.regimeId, m_phaseElapsedSec, m_currentRepeat);
+        if (m_cfg.manager)
+            m_cfg.manager->updateRegimeProgress(
+                m_cfg.regimeId, m_phaseElapsedSec, m_currentRepeat);
 
         onExecutionTick(m_phaseElapsedSec);
 
@@ -120,126 +157,158 @@ void RegimeWorkerBase::tick()
 
 void RegimeWorkerBase::finishRepeat(bool success)
 {
-    if (!success) {
-        m_cfg.manager->markRepeatAsError(m_cfg.regimeId, m_currentRepeat);
-        emit done(false);
-        return;
+    if (success) {
+        ++m_repeatsDone;
+        if (m_cfg.manager)
+            m_cfg.manager->completeCurrentRepeat(m_cfg.regimeId, m_currentRepeat);
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kRepeatDone,
+                                   m_currentRepeat, m_phaseElapsedSec);
+    } else {
+        ++m_repeatsError;
+        if (m_cfg.manager)
+            m_cfg.manager->markRepeatAsError(m_cfg.regimeId, m_currentRepeat);
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kRepeatError,
+                                   m_currentRepeat, m_phaseElapsedSec);
     }
 
-    m_cfg.manager->completeCurrentRepeat(m_cfg.regimeId, m_currentRepeat);
     ++m_currentRepeat;
     startNextRepeat();
 }
 
-// Default virtuals — time-based, no hardware interaction
+// ─── Pause / Resume ───────────────────────────────────────────────────────────
+
+void RegimeWorkerBase::onPauseRequested()
+{
+    if (m_paused || !m_timer.isActive()) return;
+    m_paused = true;
+    m_timer.stop();
+
+    if (m_cfg.manager)
+        m_cfg.manager->setRegimeState(m_cfg.regimeId, RegimeEnums::State::Paused);
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kPaused,
+                               m_currentRepeat, m_phaseElapsedSec);
+
+    qDebug() << "[Regime" << m_cfg.regimeId << "] Paused";
+}
+
+void RegimeWorkerBase::onResumeRequested()
+{
+    if (!m_paused) return;
+    m_paused = false;
+
+    if (m_cfg.manager)
+        m_cfg.manager->setRegimeState(m_cfg.regimeId, RegimeEnums::State::Running);
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kResumed,
+                               m_currentRepeat, m_phaseElapsedSec);
+
+    m_timer.start(m_cfg.tickIntervalMs);
+    qDebug() << "[Regime" << m_cfg.regimeId << "] Resumed";
+}
+
+// ─── Default virtuals ─────────────────────────────────────────────────────────
 
 void RegimeWorkerBase::onExecutionPhaseStart() {}
-
 void RegimeWorkerBase::onExecutionTick(int /*elapsedSec*/) {}
-
 bool RegimeWorkerBase::isExecutionComplete(int elapsedSec) const
 {
     return elapsedSec >= m_cfg.maxTimeSec;
 }
-
 void RegimeWorkerBase::onExecutionPhaseEnd(bool /*success*/) {}
 
 
 // ═════════════════════════════════════════════════════════════════════════════
-// VacuumRegimeWorker  ("Вакуум")
+// VacuumRegimeWorker ("Вакуум")
 // ═════════════════════════════════════════════════════════════════════════════
 //
-// Execution phase:
-//   1. Open the vacuum pump valve via ValveControl
-//   2. Poll vacuum sensor every second
-//   3. When pressure < target OR time expired — close valve and finish
-//
-// TODO: wire vacuumValveName and targetPressure from the hardware profile
+// TODO: fill kVacuumValveName from Initialize profile (vacuumParameters.portName
+// is the serial port for the gauge, not the valve — check hardware profile for
+// the actual DO channel that controls the vacuum pump valve).
 
-static constexpr double kVacuumTargetPressure = 0.01; // bar — replace from profile
-static const QString    kVacuumValveName       = "";   // TODO: set from Initialize profile
+static constexpr double kVacuumTargetPressureMbar = 10.0; // mbar target
+static const QString    kVacuumValveName           = "";   // TODO: set from profile
 
 void VacuumRegimeWorker::onExecutionPhaseStart()
 {
-    qDebug() << "[Вакуум] Starting vacuum pump";
+    qDebug() << "[Вакуум] Opening vacuum valve";
     if (m_cfg.valveControl && !kVacuumValveName.isEmpty()) {
         m_cfg.valveControl->beginAction();
-        m_cfg.valveControl->setValveFromAction(true, kVacuumValveName);
+        bool ok = m_cfg.valveControl->setValveFromAction(true, kVacuumValveName);
+        if (!ok)
+            qWarning() << "[Вакуум] Failed to open vacuum valve" << kVacuumValveName;
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, ok ? RegimeLogger::kValveOpen
+                                               : RegimeLogger::kValveBlocked,
+                                   m_currentRepeat, 0, kVacuumValveName);
     }
 }
 
 void VacuumRegimeWorker::onExecutionTick(int /*elapsedSec*/)
 {
-    if (!m_cfg.dataAcquisition)
-        return;
-
-    // Trigger a fast buffer read so vacuum sensor stays current
-    m_cfg.dataAcquisition->fastBufferRead();
+    if (m_cfg.dataAcquisition)
+        m_cfg.dataAcquisition->fastBufferRead();
 }
 
 bool VacuumRegimeWorker::isExecutionComplete(int elapsedSec) const
 {
-    // Pressure target
-    if (m_cfg.dataAcquisition) {
-        // TODO: expose vacuum DataCollection via getter in DataAcquisition
-        // double pressure = m_cfg.dataAcquisition->vacuumPressure();
-        // if (pressure <= kVacuumTargetPressure) return true;
-    }
-    // Timeout
+    // TODO: read vacuum pressure from DataAcquisition once getter is available
+    // double pressure = m_cfg.dataAcquisition->vacuumPressureMbar();
+    // if (pressure <= kVacuumTargetPressureMbar) return true;
     return elapsedSec >= m_cfg.maxTimeSec;
 }
 
 void VacuumRegimeWorker::onExecutionPhaseEnd(bool success)
 {
-    qDebug() << "[Вакуум] Stopping vacuum pump," << (success ? "success" : "error");
+    qDebug() << "[Вакуум] Closing vacuum valve, success=" << success;
     if (m_cfg.valveControl && !kVacuumValveName.isEmpty()) {
         m_cfg.valveControl->setValveFromAction(false, kVacuumValveName);
         m_cfg.valveControl->endAction();
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kValveClose,
+                                   m_currentRepeat, m_phaseElapsedSec, kVacuumValveName);
     }
 }
 
 
 // ═════════════════════════════════════════════════════════════════════════════
-// RegimeBWorker  ("Режим в")
+// RegimeBWorker ("Режим в")
 // ═════════════════════════════════════════════════════════════════════════════
-//
-// TODO: implement when the physics of "Режим в" is defined.
-// Placeholder: time-based execution only.
 
 void RegimeBWorker::onExecutionPhaseStart()
 {
     qDebug() << "[Режим в] Execution start";
-    // TODO: valve sequence, DAQ start, etc.
+    // TODO: define valve sequence from hardware profile
 }
 
 void RegimeBWorker::onExecutionTick(int /*elapsedSec*/)
 {
-    // TODO: sensor polling, flow calculations
+    // TODO: sensor polling, flow / pressure calculations
 }
 
 bool RegimeBWorker::isExecutionComplete(int elapsedSec) const
 {
-    // TODO: add pressure / flow condition
+    // TODO: add pressure / flow completion condition
     return elapsedSec >= m_cfg.maxTimeSec;
 }
 
 void RegimeBWorker::onExecutionPhaseEnd(bool success)
 {
-    qDebug() << "[Режим в] Execution end," << (success ? "success" : "error");
-    // TODO: valve close sequence
+    qDebug() << "[Режим в] Execution end, success=" << success;
+    // TODO: close valve sequence
 }
 
 
 // ═════════════════════════════════════════════════════════════════════════════
-// RegimeGWorker  ("Режим г")
+// RegimeGWorker ("Режим г")
 // ═════════════════════════════════════════════════════════════════════════════
-//
-// TODO: implement when the physics of "Режим г" is defined.
 
 void RegimeGWorker::onExecutionPhaseStart()
 {
     qDebug() << "[Режим г] Execution start";
-    // TODO: valve sequence
+    // TODO: define valve sequence from hardware profile
 }
 
 void RegimeGWorker::onExecutionTick(int /*elapsedSec*/)
@@ -254,6 +323,6 @@ bool RegimeGWorker::isExecutionComplete(int elapsedSec) const
 
 void RegimeGWorker::onExecutionPhaseEnd(bool success)
 {
-    qDebug() << "[Режим г] Execution end," << (success ? "success" : "error");
-    // TODO: valve close sequence
+    qDebug() << "[Режим г] Execution end, success=" << success;
+    // TODO: close valve sequence
 }

@@ -6,21 +6,22 @@
 using namespace QtTaskTree;
 
 // ── Custom task type aliases ──────────────────────────────────────────────────
-//
-// QCustomTask<T> requires T: QObject, T::start(), T::done(bool) signal.
-// Workers satisfy all three conditions via RegimeWorkerBase.
+// QCustomTask<T> adapts any QObject with start() + done(bool) to TaskTree.
 
-using VacuumTask  = QCustomTask<VacuumRegimeWorker>;
-using RegimeBTask = QCustomTask<RegimeBWorker>;
-using RegimeGTask = QCustomTask<RegimeGWorker>;
+using VacuumTask    = QCustomTask<VacuumRegimeWorker>;
+using RegimeBTask   = QCustomTask<RegimeBWorker>;
+using RegimeGTask   = QCustomTask<RegimeGWorker>;
+using ValveTestTask = QCustomTask<ValveTestWorker>;
 
 // ═════════════════════════════════════════════════════════════════════════════
-// RegimeTaskTree
+// Construction / destruction
 // ═════════════════════════════════════════════════════════════════════════════
 
 RegimeTaskTree::RegimeTaskTree(QObject* parent)
     : QObject(parent)
-{}
+{
+    m_logger.init("data/regime_log.db");
+}
 
 RegimeTaskTree::~RegimeTaskTree()
 {
@@ -30,23 +31,57 @@ RegimeTaskTree::~RegimeTaskTree()
 // ── Dependency injection ──────────────────────────────────────────────────────
 
 void RegimeTaskTree::setRegimeManager(RegimeManager* manager)
-{
-    m_manager = manager;
-}
+    { m_manager = manager; }
 
 void RegimeTaskTree::setValveControl(ValveControl* valveControl)
-{
-    m_valveControl = valveControl;
-}
+    { m_valveControl = valveControl; }
 
 void RegimeTaskTree::setDataAcquisition(DataAcquisition* dataAcquisition)
-{
-    m_dataAcquisition = dataAcquisition;
-}
+    { m_dataAcquisition = dataAcquisition; }
 
 void RegimeTaskTree::setSecurity(Security* security)
+    { m_security = security; }
+
+void RegimeTaskTree::setValveNamesForTest(const QStringList& names)
 {
-    m_security = security;
+    m_valveNamesForTest = names;
+
+    // Bootstrap default steps: one valve per step, 2 s dwell, no pauses.
+    m_valveTestSteps.clear();
+    for (const QString& name : names) {
+        ValveStepConfig step;
+        step.valveNames    = { name };
+        step.pauseBeforeSec = 0;
+        step.dwellSec       = 2;
+        step.pauseAfterSec  = 0;
+        m_valveTestSteps.append(step);
+    }
+}
+
+void RegimeTaskTree::setValveTestSteps(const QVariantList& steps,
+                                        int repeats,
+                                        int globalPauseBefore,
+                                        int globalPauseAfter)
+{
+    m_valveTestSteps.clear();
+
+    for (const QVariant& v : steps) {
+        QVariantMap m = v.toMap();
+        ValveStepConfig step;
+        step.valveNames     = m.value("valves").toStringList();
+        step.pauseBeforeSec = m.value("pauseBefore", 0).toInt();
+        step.dwellSec       = m.value("dwell",       2).toInt();
+        step.pauseAfterSec  = m.value("pauseAfter",  0).toInt();
+        if (!step.valveNames.isEmpty())
+            m_valveTestSteps.append(step);
+    }
+
+    m_valveTestRepeats           = qMax(1, repeats);
+    m_valveTestGlobalPauseBefore = qMax(0, globalPauseBefore);
+    m_valveTestGlobalPauseAfter  = qMax(0, globalPauseAfter);
+
+    qDebug() << "RegimeTaskTree: setValveTestSteps" << m_valveTestSteps.size()
+             << "steps, repeats=" << m_valveTestRepeats;
 }
 
 // ── Control ───────────────────────────────────────────────────────────────────
@@ -74,33 +109,56 @@ void RegimeTaskTree::startFrom(int startRegimeId)
 
     connect(m_tree, &QTaskTree::done, this, [this](DoneWith result) {
         bool success = (result == DoneWith::Success);
-        qDebug() << "RegimeTaskTree: execution finished, success=" << success;
+
+        qDebug() << "RegimeTaskTree: sequence finished,"
+                 << (result == DoneWith::Success ? "success"
+                   : result == DoneWith::Error   ? "error"
+                                                 : "cancelled");
+
         emit executionFinished(success);
         setRunning(false);
+        setPaused(false);
+
         // docs: do not delete from done() handler — use deleteLater()
-        m_tree->deleteLater();
-        m_tree = nullptr;
+        if (m_tree) {
+            m_tree->deleteLater();
+            m_tree = nullptr;
+        }
     });
 
     setRunning(true, startRegimeId);
     m_tree->start();
 }
 
-void RegimeTaskTree::stop()
+void RegimeTaskTree::pause()
 {
-    if (!m_running || !m_tree)
-        return;
-
-    qDebug() << "RegimeTaskTree: stop requested";
-    // cancel() is synchronous — all handlers finish before this returns
-    m_tree->cancel();
-    // The done() signal is NOT emitted after cancel from destructor path,
-    // but QTaskTree::cancel() DOES invoke done handlers for cleanup.
-    // Reset state manually here:
-    setRunning(false);
+    if (!m_running || m_paused) return;
+    setPaused(true);
+    emit pauseRequested();
+    qDebug() << "RegimeTaskTree: pause requested";
 }
 
-// ── Recipe builders ───────────────────────────────────────────────────────────
+void RegimeTaskTree::resume()
+{
+    if (!m_running || !m_paused) return;
+    setPaused(false);
+    emit resumeRequested();
+    qDebug() << "RegimeTaskTree: resume requested";
+}
+
+void RegimeTaskTree::stop()
+{
+    if (!m_running || !m_tree) return;
+    qDebug() << "RegimeTaskTree: stop requested";
+    // cancel() is synchronous — done handlers fire with DoneWith::Cancel.
+    m_tree->cancel();
+    setRunning(false);
+    setPaused(false);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Recipe builders
+// ═════════════════════════════════════════════════════════════════════════════
 
 Group RegimeTaskTree::buildSequence(int startFromId)
 {
@@ -112,12 +170,11 @@ Group RegimeTaskTree::buildSequence(int startFromId)
         const Regime& regime = regimes.at(i);
         if (regime.m_state != RegimeEnums::State::Waiting)
             continue;
-
         items << buildRegimeGroup(i, regime);
     }
 
     if (items.size() == 1) {
-        // No waiting regimes — produce an immediately-successful empty group
+        // Nothing to run — produce an immediately-successful group
         items << onGroupSetup([]() -> SetupResult {
             qDebug() << "RegimeTaskTree: no waiting regimes";
             return SetupResult::StopWithSuccess;
@@ -128,85 +185,143 @@ Group RegimeTaskTree::buildSequence(int startFromId)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// buildRegimeGroup
+// buildRegimeGroup  — single regime wrapper
 //
-// Each regime gets a Group that:
-//   1. onGroupSetup  → calls startRegimeExecution() on RegimeManager
-//   2. XxxTask       → worker runs condition + execution phases (all repeats)
-//   3. onGroupDone   → calls completeRegimeExecution() or Error state
+// TaskTree lifecycle per regime:
+//   1. setup handler  → startRegimeExecution() in RegimeManager
+//                       + connect pause/resume signals to worker
+//   2. worker.start() → condition + execution phases (all repeats)
+//   3. done handler   → completeRegimeExecution() or Error/Stopped
 //
-// The setup handler returns SetupResult, allowing the group to be skipped when
-// startRegimeExecution() fails (e.g. hardware not connected).
+// DoneWith values from QCustomTask:
+//   Success  → worker emitted done(true)
+//   Error    → worker emitted done(false)
+//   Cancel   → QTaskTree::cancel() was called (stop() or destructor)
 // ─────────────────────────────────────────────────────────────────────────────
 
 Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
 {
-    RegimeWorkerConfig cfg = makeConfig(regimeId, regime);
     const QString name = regime.m_name;
 
-    // ── Common setup & done lambdas ──────────────────────────────────────────
-
-    // Called by TaskTree before worker.start(). Returns SetupResult.
-    auto setupFn = [cfg, name, this](auto& worker) -> SetupResult {
-        if (!cfg.manager->startRegimeExecution(cfg.regimeId)) {
-            qWarning() << "RegimeTaskTree: startRegimeExecution failed for" << name;
-            return SetupResult::StopWithError;
+    // ── Done handler — shared across all regime types ─────────────────────────
+    auto doneFn = [regimeId, name, this](DoneWith result) {
+        if (result == DoneWith::Success) {
+            m_manager->completeRegimeExecution(regimeId);
+        } else if (result == DoneWith::Cancel) {
+            m_manager->setRegimeState(regimeId, RegimeEnums::State::Stopped);
+            if (m_logger.isOpen())
+                m_logger.logEvent(-1, RegimeLogger::kCancelled, -1, -1, name);
+        } else { // Error
+            m_manager->setRegimeState(regimeId, RegimeEnums::State::Error);
         }
-        worker.setConfig(cfg);
-        m_activeRegimeId = cfg.regimeId;
-        emit activeRegimeChanged();
-        emit regimeStarted(cfg.regimeId, name);
-        qDebug() << "RegimeTaskTree: starting regime" << name << "id=" << cfg.regimeId;
-        return SetupResult::Continue;
+        emit regimeFinished(regimeId, result == DoneWith::Success);
     };
 
-    // Called by TaskTree after worker.done() — result already written by worker.
-    auto doneFn = [cfg, name, this](const auto& /*worker*/, DoneWith result) {
-        bool ok = (result == DoneWith::Success);
-        qDebug() << "RegimeTaskTree: regime" << name << (ok ? "OK" : "FAILED");
-
-        if (!ok) {
-            // Worker already called markRepeatAsError; set final Error state.
-            cfg.manager->setRegimeState(cfg.regimeId, RegimeEnums::State::Error);
-        } else {
-            cfg.manager->completeRegimeExecution(cfg.regimeId);
-        }
-        emit regimeFinished(cfg.regimeId, ok);
-    };
-
-    // ── Dispatch to the correct worker type ──────────────────────────────────
+    // ── Dispatch on regime name ───────────────────────────────────────────────
 
     if (name == "Вакуум") {
+        RegimeWorkerConfig cfg = makeConfig(regimeId, regime);
+
         return Group {
             sequential,
             VacuumTask(
-                [setupFn](VacuumRegimeWorker& w) -> SetupResult { return setupFn(w); },
-                [doneFn] (const VacuumRegimeWorker& w, DoneWith r) { doneFn(w, r); }
+                [cfg, regimeId, name, this](VacuumRegimeWorker& w) -> SetupResult {
+                    if (!m_manager->startRegimeExecution(regimeId)) {
+                        qWarning() << "RegimeTaskTree: startRegimeExecution failed for" << name;
+                        return SetupResult::StopWithError;
+                    }
+                    w.setConfig(cfg);
+                    connect(this, &RegimeTaskTree::pauseRequested,
+                            &w,   &VacuumRegimeWorker::onPauseRequested);
+                    connect(this, &RegimeTaskTree::resumeRequested,
+                            &w,   &VacuumRegimeWorker::onResumeRequested);
+                    m_activeRegimeId = regimeId;
+                    emit activeRegimeChanged();
+                    emit regimeStarted(regimeId, name);
+                    return SetupResult::Continue;
+                },
+                [doneFn](const VacuumRegimeWorker&, DoneWith r) { doneFn(r); }
             )
         };
     }
 
     if (name == "Режим в") {
+        RegimeWorkerConfig cfg = makeConfig(regimeId, regime);
+
         return Group {
             sequential,
             RegimeBTask(
-                [setupFn](RegimeBWorker& w) -> SetupResult { return setupFn(w); },
-                [doneFn] (const RegimeBWorker& w, DoneWith r) { doneFn(w, r); }
+                [cfg, regimeId, name, this](RegimeBWorker& w) -> SetupResult {
+                    if (!m_manager->startRegimeExecution(regimeId))
+                        return SetupResult::StopWithError;
+                    w.setConfig(cfg);
+                    connect(this, &RegimeTaskTree::pauseRequested,
+                            &w,   &RegimeBWorker::onPauseRequested);
+                    connect(this, &RegimeTaskTree::resumeRequested,
+                            &w,   &RegimeBWorker::onResumeRequested);
+                    m_activeRegimeId = regimeId;
+                    emit activeRegimeChanged();
+                    emit regimeStarted(regimeId, name);
+                    return SetupResult::Continue;
+                },
+                [doneFn](const RegimeBWorker&, DoneWith r) { doneFn(r); }
             )
         };
     }
 
     if (name == "Режим г") {
+        RegimeWorkerConfig cfg = makeConfig(regimeId, regime);
+
         return Group {
             sequential,
             RegimeGTask(
-                [setupFn](RegimeGWorker& w) -> SetupResult { return setupFn(w); },
-                [doneFn] (const RegimeGWorker& w, DoneWith r) { doneFn(w, r); }
+                [cfg, regimeId, name, this](RegimeGWorker& w) -> SetupResult {
+                    if (!m_manager->startRegimeExecution(regimeId))
+                        return SetupResult::StopWithError;
+                    w.setConfig(cfg);
+                    connect(this, &RegimeTaskTree::pauseRequested,
+                            &w,   &RegimeGWorker::onPauseRequested);
+                    connect(this, &RegimeTaskTree::resumeRequested,
+                            &w,   &RegimeGWorker::onResumeRequested);
+                    m_activeRegimeId = regimeId;
+                    emit activeRegimeChanged();
+                    emit regimeStarted(regimeId, name);
+                    return SetupResult::Continue;
+                },
+                [doneFn](const RegimeGWorker&, DoneWith r) { doneFn(r); }
             )
         };
     }
 
-    // Unknown regime name — skip silently
+    if (name == "Тест клапанов") {
+        ValveTestConfig cfg = makeValveTestConfig(regimeId, regime);
+
+        return Group {
+            sequential,
+            ValveTestTask(
+                [cfg, regimeId, name, this](ValveTestWorker& w) -> SetupResult {
+                    if (cfg.steps.isEmpty()) {
+                        qWarning() << "RegimeTaskTree: no steps for 'Тест клапанов'";
+                        return SetupResult::StopWithError;
+                    }
+                    if (!m_manager->startRegimeExecution(regimeId))
+                        return SetupResult::StopWithError;
+                    w.setConfig(cfg);
+                    connect(this, &RegimeTaskTree::pauseRequested,
+                            &w,   &ValveTestWorker::onPauseRequested);
+                    connect(this, &RegimeTaskTree::resumeRequested,
+                            &w,   &ValveTestWorker::onResumeRequested);
+                    m_activeRegimeId = regimeId;
+                    emit activeRegimeChanged();
+                    emit regimeStarted(regimeId, name);
+                    return SetupResult::Continue;
+                },
+                [doneFn](const ValveTestWorker&, DoneWith r) { doneFn(r); }
+            )
+        };
+    }
+
+    // ── Unknown regime name — skip silently ───────────────────────────────────
     qWarning() << "RegimeTaskTree: unknown regime name" << name << "— skipping";
     return Group {
         onGroupSetup([name]() -> SetupResult {
@@ -216,24 +331,49 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
     };
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Config factories ──────────────────────────────────────────────────────────
 
 RegimeWorkerConfig RegimeTaskTree::makeConfig(int regimeId, const Regime& regime) const
 {
     RegimeWorkerConfig cfg;
+    cfg.regimeId            = regimeId;
+    cfg.regimeName          = regime.m_name;
+    cfg.totalRepeats        = regime.m_repeatCount;
+    cfg.maxTimeSec          = regime.m_maxTime;
+    cfg.tickIntervalMs      = 1000;
+    cfg.conditionType       = regime.m_condition.type;
+    cfg.conditionTimeSec    = regime.m_condition.time * 60;
+    cfg.conditionTargetTemp = regime.m_condition.temp;
+    cfg.manager             = m_manager;
+    cfg.valveControl        = m_valveControl;
+    cfg.dataAcquisition     = m_dataAcquisition;
+    cfg.security            = m_security;
+    cfg.logger              = m_logger.isOpen()
+                                  ? const_cast<RegimeLogger*>(&m_logger)
+                                  : nullptr;
+    return cfg;
+}
+
+ValveTestConfig RegimeTaskTree::makeValveTestConfig(int regimeId, const Regime& regime) const
+{
+    ValveTestConfig cfg;
     cfg.regimeId              = regimeId;
-    cfg.totalRepeats          = regime.m_repeatCount;
-    cfg.maxTimeSec            = regime.m_maxTime;
-    cfg.conditionType         = regime.m_condition.type;
-    cfg.conditionTimeSec      = regime.m_condition.time * 60;
-    cfg.conditionTargetTemp   = regime.m_condition.temp;
+    cfg.regimeName            = regime.m_name;
+    cfg.totalRepeats          = m_valveTestRepeats;
+    cfg.globalPauseBeforeSec  = m_valveTestGlobalPauseBefore;
+    cfg.globalPauseAfterSec   = m_valveTestGlobalPauseAfter;
+    cfg.steps                 = m_valveTestSteps;
     cfg.manager               = m_manager;
     cfg.valveControl          = m_valveControl;
     cfg.dataAcquisition       = m_dataAcquisition;
     cfg.security              = m_security;
-    cfg.conditionTempSensor   = nullptr; // wire per-regime when needed
+    cfg.logger                = m_logger.isOpen()
+                                    ? const_cast<RegimeLogger*>(&m_logger)
+                                    : nullptr;
     return cfg;
 }
+
+// ── State helpers ─────────────────────────────────────────────────────────────
 
 void RegimeTaskTree::setRunning(bool running, int activeRegimeId)
 {
@@ -244,19 +384,24 @@ void RegimeTaskTree::setRunning(bool running, int activeRegimeId)
     if (!running) {
         m_activeRegimeId = -1;
         emit activeRegimeChanged();
-    } else {
+    } else if (activeRegimeId >= 0) {
         m_activeRegimeId = activeRegimeId;
+    }
+}
+
+void RegimeTaskTree::setPaused(bool paused)
+{
+    if (m_paused != paused) {
+        m_paused = paused;
+        emit pausedChanged();
     }
 }
 
 void RegimeTaskTree::cleanupTree()
 {
-    if (!m_tree)
-        return;
-
-    // Destructor of QTaskTree safely cancels any running tree.
-    // Called from our destructor or before re-start.
-    delete m_tree;
+    if (!m_tree) return;
+    delete m_tree;   // QTaskTree destructor safely cancels any running tree
     m_tree = nullptr;
     m_running = false;
+    m_paused  = false;
 }
