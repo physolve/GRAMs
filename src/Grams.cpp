@@ -528,6 +528,8 @@ void Grams::initActionHandler(){
     m_regimeTaskTree.setValveControl(&m_valveControl);
     m_regimeTaskTree.setDataAcquisition(&dataSource);
     m_regimeTaskTree.setSecurity(&m_safeModule);
+    // Виртуальный объём B для стража ДВ_СБР режима «Вакуум» (аналог m_vir_B в GramQt)
+    m_regimeTaskTree.setVacuumPressureSensor(&prSB);
     // Pass valve names for the "Тест клапанов" regime.
     // initSource.m_hardware.m_valves contains the ordered list from the JSON profile.
     m_regimeTaskTree.setValveNamesForTest(initSource.m_hardware.m_valves);

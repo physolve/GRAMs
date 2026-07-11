@@ -39,12 +39,24 @@ cmd /c "`"$vcvars`" && cmake --build build --parallel"
 # ── Запуск приложения ──────────────────────────────────────────────────────────
 .\build\src\GRAMs.exe
 
-# ── Запуск всех тестов ─────────────────────────────────────────────────────────
+# ── Запуск всех тестов (обе gtest-сюиты через ctest) ──────────────────────────
 Push-Location build; ctest --output-on-failure; Pop-Location
+
+# ── Сборка/запуск конкретной сюиты ────────────────────────────────────────────
+cmd /c "`"$vcvars`" && cmake --build build --target ProtoTableTests --parallel"
+cmd /c "`"$vcvars`" && cmake --build build --target VacuumTreeTests --parallel"
 
 # ── Запуск одного теста по маске ──────────────────────────────────────────────
 .\build\src\runtable\tests\ProtoTableTests.exe --gtest_filter=*RegimeManager*
+.\build\src\actions\tests\VacuumTreeTests.exe  --gtest_filter=*Pumpdown*
 ```
+
+**Тестовые сюиты (GoogleTest, оба через `gtest_discover_tests` → `ctest`):**
+
+| Сюита | Расположение | Покрытие | Особенность сборки |
+|---|---|---|---|
+| `ProtoTableTests` | `src/runtable/tests/` | `RegimeManager` (state machine, External Module API), `ProtoTableModel`, расчёты времени | линкует `RuntableLib` + `Qt6::Test/Core/Qml` |
+| `VacuumTreeTests` | `src/actions/tests/` | рецепт «Вакуума» на TaskTree | компилирует `VacuumTaskTree.cpp` напрямую; все швы к железу — через `VacuumTreeContext`, поэтому **не зависит от `ValveControl`/biodaq** (`Qt6::Core` + `Qt6::TaskTree` + `gtest`) |
 
 > Паттерн `cmd /c "\"vcvars64.bat\" && <команда>"` передаёт инициализированное MSVC-окружение в дочерний процесс cmd, а затем выполняет cmake. Переменные среды не просачиваются обратно в PowerShell — это нормально, каждый вызов самодостаточен.
 
@@ -82,7 +94,8 @@ Push-Location build; ctest --output-on-failure; Pop-Location
 | `Qt::Sql` | SQLite — GramStateDB |
 | `Qt::PrintSupport` | Печать |
 | `Qt::Qml` | RuntableLib QML-модуль |
-| `Qt::Test` | GoogleTest-интеграция (тесты runtable) |
+| `Qt::Test` | GoogleTest-интеграция (`ProtoTableTests` в `src/runtable/tests/`) |
+| `Qt::TaskTree` | Оркестрация режимов (`RegimeTaskTree`, рецепт «Вакуума`); также `VacuumTreeTests` |
 
 **Сторонние библиотеки:**
 - **Eigen3** — матричная алгебра (Kalman filter), системная зависимость
@@ -98,7 +111,7 @@ v_      — виртуальные объекты       (v_pressureRange, v_safe
 ptr[]   — массивы указателей        — всегда проверять на nullptr перед использованием
 ```
 
-- Конфигурация железа читается из JSON-профиля (`profile/`) через `Initialize` и передаётся в подсистемы через typed `Q_GADGET`-структуры
+- Конфигурация железа читается из JSON-профилей (`profile/`) через `Initialize` и передаётся в подсистемы через typed `Q_GADGET`-структуры. Файлы профиля: `GRAMsPfp.json` (главный), `chambers.json`, `addons.json`, `kalman.json`, `regime_a.json`
 - GUI-структуры намеренно живут в `Quartile` — это архитектурное решение, не менять
 - `split` / `collapse` в `NodePressure` — физически верифицированная логика, не рефакторить без понимания физики
 - `ControlDO` передаётся в `ActionHandler` явно — паттерн не менять
@@ -107,38 +120,45 @@ ptr[]   — массивы указателей        — всегда пров
 
 > Этот раздел обновляется вручную по мере продвижения.
 
-**Текущий приоритет (лето 2025):** перенос автоматических режимов из GramQt в GRAMs.
+**Текущий приоритет (в работе):** перенос автоматических режимов из GramQt в GRAMs. Готовы «в коде»: **Вакуум** (Ф1–Ф3) и **Тест клапанов**; остальные — заглушки или ожидают.
 
 Очерёдность режимов:
 
-Статусы: **Готов** = работает на железе; **Структура** = класс есть, ключевая логика — TODO; **Заглушка** = методы переопределены, тело пустое; **Ожидает** = воркер не создан.
+Статусы (4 уровня, каждый обязан иметь доказательство `файл:метод:строка`):
 
-| Режим | Статус | Что осталось |
+| Статус | Значение |
+|---|---|
+| **Заглушка** | Только `qDebug` + `// TODO` в 4 методах |
+| **Структура (TODO)** | Каркас есть, но клапан `= ""` / completion закомментирован / сенсор не подключён |
+| **Реализован (код)** | Все 4 метода рабочие; не проверено на железе |
+| **Проверено на железе** | Реальный прогон на Linux + biodaq |
+
+| Режим | Статус | Доказательство / что осталось |
 |---|---|---|
-| **Вакуум** | **Структура** (`VacuumRegimeWorker`) | `kVacuumValveName = ""` (RegimeWorkers.cpp:232), pressure-completion закомментирован (строки 257–260), защита D1 не подключена |
-| **Режим в** | **Заглушка** (`RegimeBWorker`) | Все 4 метода = `// TODO`; клапанная последовательность не определена |
-| **Режим г** | **Заглушка** (`RegimeGWorker`) | Идентично Режиму в |
-| **Тест клапанов** | **Готов** (`ValveTestWorker`) | Полная state machine, security check, pause/resume |
-| **Напуск** | Ожидает | — |
-| **Натекание** | Ожидает | — |
-| **Калибровка** | Ожидает | Узкое место для SYSTEST |
-| **SOAK** | Ожидает | — |
-| **PCI** | Ожидает | — |
-| **SYSTEST** | Ожидает | — |
+| **Вакуум** | **Реализован (код)** Ф1–Ф3 (s1–s24); **Заглушка** Ф4–Ф8 — `docs/regimes/vacuum.md` | `VacuumTaskTree.cpp:buildVacuumRecipe:339` рецепт на TaskTree; `buildPumpdown:304` Ф4+ заглушка; 17 тестов `VacuumTreeTests` проходят; не проверено на железе |
+| **Режим в** | **Заглушка** — `docs/regimes/regime-b.md` | `RegimeWorkers.cpp:417–441` все 4 метода = `qDebug` + `// TODO` |
+| **Режим г** | **Заглушка** — `docs/regimes/regime-g.md` | `RegimeWorkers.cpp:445–465` аналогично Режиму в |
+| **Тест клапанов** | **Реализован (код)** — `docs/regimes/valve-test.md` | `ValveTestWorker.cpp` полная state machine; не верифицирован на железе (Windows) |
+| **Напуск** | Ожидает | Воркер не создан |
+| **Натекание** | Ожидает | Воркер не создан |
+| **Калибровка** | Ожидает | Воркер не создан; узкое место для SYSTEST |
+| **SOAK** | Ожидает | Воркер не создан |
+| **PCI** | Ожидает | Воркер не создан |
+| **SYSTEST** | Ожидает | Воркер не создан |
 
 **Алгоритм добавления нового режима:**
 1. Изучить реализацию в GramQt
-2. Создать воркер: наследовать `RegimeWorkerBase` (или `ValveTestWorker` для клапанных сценариев) и переопределить `onExecutionPhaseStart`, `onExecutionTick`, `isExecutionComplete`, `onExecutionPhaseEnd`
+2. Создать воркер: наследовать `RegimeWorkerBase` (или `ValveTestWorker` для клапанных сценариев) и переопределить `onExecutionPhaseStart`, `onExecutionTick`, `isExecutionComplete`, `onExecutionPhaseEnd`. Для сложных последовательностей с ветвлениями/cleanup-гарантиями — паттерн `VacuumRegimeWorker`: standalone-воркер + чистый TaskTree-рецепт с швами `std::function` (см. `src/actions/VacuumTaskTree.h`), тестируемый без biodaq
 3. Зарегистрировать имя режима → воркер в `RegimeTaskTree::buildRegimeGroup()`
 4. Добавить режим в `RunTable.qml` меню «Добавить»
 5. Отладка → верификация на LaNi₅ (плато сорбции ~2 бар при 25°C)
 
 ## Important Notes
 
-- **Qt TaskTree** (Qt 6.11) — используется в namespace `Tasking::`. В Qt 6.11 это **Technology Preview**, API может меняться между минорными версиями.
+- **Qt TaskTree** (Qt 6.11) — используется в namespace `QtTaskTree::` (заголовок `<qtasktree.h>`). В Qt 6.11 это **Technology Preview**, API может меняться между минорными версиями.
 - `Qt::Concurrent` уже подключён в обоих блоках `target_link_libraries` (`WIN32` / `else`) в `src/CMakeLists.txt` — дополнительных правок CMake для TaskTree не требуется.
 - Главный CMake-таргет: **`GRAMs`** — именно к нему добавлять новые `target_link_libraries`.
-- Лог пишется в `data/GRAMs-log.txt` относительно рабочей директории запуска; папка `data/` создаётся автоматически.
+- Лог пишется в `data/GRAMs-log.txt` относительно рабочей директории запуска; папка `data/` создаётся автоматически. Данные режимов: `data/leakageData/` (натекание), `data/supplyData/` (напуск), `data/regime_log.db` (SQLite лог регимов).
 - На Windows `biodaq` исключён, добавляется `opengl32`; на Linux линкуется `biodaq` из `src/libDAQ/`.
 
 ## Architecture
@@ -204,7 +224,7 @@ DataCollection      — именованный кольцевой буфер, к
 
 ### Experiment scheduler: `RegimeManager` + `RuntableLib`
 
-`src/runtable/` — отдельный статический QML-модуль (`com.grams.prototable`). Состояния режима: `Idle → Running (condition) → Running (execution) → Done / Skipped / Error`. `RegimeManager` предоставляет External Module API (методы `startRegimeExecution`, `updateConditionProgress`, `confirmConditionCompletion`, `updateRegimeProgress`, `completeCurrentRepeat` и т.д.) — воркеры обязаны вызывать именно эти методы для отражения прогресса в UI.
+`src/runtable/` — отдельный статический QML-модуль (`com.grams.prototable`; QML import: `import com.grams.prototable 1.0`). Состояния режима (`RegimeEnums::State`): `Waiting → Running → Paused → Done / Stopped / Skipped / Error` (двухфазный: condition + execution внутри Running). `RegimeManager` предоставляет External Module API (методы `startRegimeExecution`, `updateConditionProgress`, `confirmConditionCompletion`, `updateRegimeProgress`, `completeCurrentRepeat` и т.д.) — воркеры обязаны вызывать именно эти методы для отражения прогресса в UI.
 
 ### Pressure simulation: `PlayPressure`
 
@@ -222,3 +242,9 @@ DataCollection      — именованный кольцевой буфер, к
 ### QML UI (`src/qml/`)
 
 Точка входа: `src/qml/Main.qml`. Навигация через `SideMenu.qml`. `Grams` зарегистрирован как context property `app`; QML получает данные через `app.guiPres`, `app.guiTemp`, `app.guiPresVirtual`, `app.guiValve`.
+
+Мнемосхемы: `src/qml/mnemo/GRAM50_mnemo/` и `src/qml/mnemo/GRAM300_mnemo/` — для двух вариантов установки. Точка входа каждой: `*Content/App.qml`.
+
+`ValveTestSetup.qml` (`src/qml/`) — страница конфигурации «Теста клапанов»: собирает последовательность шагов и передаёт её в `RegimeTaskTree.setValveTestSteps()` (док: `src/qml/doc/ValveTestSetup.md`).
+
+> **Важно:** QML экспериментального планировщика (в т.ч. `RunTable.qml` с меню «Добавить») лежит **не** в `src/qml/`, а в модуле `RuntableLib` — `src/runtable/RunTable.qml` (плюс делегаты `RegimeDelegate.qml`, `StateDelegate.qml`, `ConditionCell.qml`, `TimeProgressBar.qml`). Импорт: `import com.grams.prototable 1.0`.

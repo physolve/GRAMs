@@ -8,6 +8,7 @@
 #include "../DataAcquisition.h"
 #include "../Security.h"
 #include "RegimeLogger.h"
+#include "VacuumTaskTree.h"
 
 // ─── Configuration injected by TaskTree setup handler ─────────────────────────
 
@@ -95,19 +96,59 @@ private:
 };
 
 // ─── Вакуум ───────────────────────────────────────────────────────────────────
+//
+// Настройки режима «Вакуум», задаваемые снаружи (RegimeTaskTree::setVacuumOptions
+// / setVacuumPressureSensor). Флаги — инверсия легаси flagIncludeRK*: по
+// умолчанию весь блок C откачивается, второй тракт выключен.
 
-class VacuumRegimeWorker : public RegimeWorkerBase
+struct VacuumOptions {
+    bool   skipRK10    = false;
+    bool   skipRK50    = false;
+    bool   skipRK300   = false;
+    bool   secondTract = false;
+    double dbSbrLim    = 1.65;   // порог сброса объёма B (GramQt Definer.h:334)
+    DataCollection* pressureSensorB = nullptr;  // виртуальный объём B (prSB)
+};
+
+// Standalone-воркер (контракт QCustomTask, как ValveTestWorker): start() строит
+// внутренний QTaskTree по рецепту buildVacuumRecipe (VacuumTaskTree.h) и
+// эмитит done(bool) по его завершении. Всё пер-ранное состояние живёт в
+// Tasking::Storage внутри рецепта — у воркера только конфигурация и
+// инфраструктура (дерево, шина паузы, хендл записи лога).
+//
+// Отмена: внешний done-хендлер (RegimeTaskTree::buildRegimeGroup) обязан при
+// DoneWith::Cancel синхронно вызвать cancelTree() — иначе deleteLater отложит
+// отмену внутреннего дерева и cleanup-закрытия клапанов. Деструктор дублирует
+// отмену как страховку.
+
+class VacuumRegimeWorker : public QObject
 {
     Q_OBJECT
 public:
-    explicit VacuumRegimeWorker(QObject* parent = nullptr)
-        : RegimeWorkerBase(parent) {}
+    explicit VacuumRegimeWorker(QObject* parent = nullptr);
+    ~VacuumRegimeWorker() override;
 
-protected:
-    void onExecutionPhaseStart() override;
-    void onExecutionTick(int elapsedSec) override;
-    bool isExecutionComplete(int elapsedSec) const override;
-    void onExecutionPhaseEnd(bool success) override;
+    void setConfig(const RegimeWorkerConfig& cfg);
+    void setVacuumOptions(const VacuumOptions& opts);
+
+    void start();        // контракт QCustomTask
+    void cancelTree();   // синхронная отмена внутреннего дерева
+
+signals:
+    void done(bool success);
+
+public slots:
+    void onPauseRequested();
+    void onResumeRequested();
+
+private:
+    VacuumTreeContext makeContext();
+
+    RegimeWorkerConfig m_cfg;
+    VacuumOptions      m_opts;
+    PauseBus           m_pauseBus;
+    QtTaskTree::QTaskTree* m_tree  = nullptr;  // внутреннее дерево (child)
+    qint64                 m_runId = -1;       // хендл записи в regime_log.db
 };
 
 // ─── Режим в ─────────────────────────────────────────────────────────────────

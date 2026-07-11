@@ -42,6 +42,23 @@ void RegimeTaskTree::setDataAcquisition(DataAcquisition* dataAcquisition)
 void RegimeTaskTree::setSecurity(Security* security)
     { m_security = security; }
 
+void RegimeTaskTree::setVacuumPressureSensor(DataCollection* sensor)
+{
+    m_vacuumOptions.pressureSensorB = sensor;
+}
+
+void RegimeTaskTree::setVacuumOptions(bool skipRK10, bool skipRK50,
+                                      bool skipRK300, bool secondTract)
+{
+    m_vacuumOptions.skipRK10    = skipRK10;
+    m_vacuumOptions.skipRK50    = skipRK50;
+    m_vacuumOptions.skipRK300   = skipRK300;
+    m_vacuumOptions.secondTract = secondTract;
+    qDebug() << "RegimeTaskTree: setVacuumOptions skipRK10=" << skipRK10
+             << "skipRK50=" << skipRK50 << "skipRK300=" << skipRK300
+             << "secondTract=" << secondTract;
+}
+
 void RegimeTaskTree::setValveNamesForTest(const QStringList& names)
 {
     m_valveNamesForTest = names;
@@ -220,17 +237,19 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
     // ── Dispatch on regime name ───────────────────────────────────────────────
 
     if (name == "Вакуум") {
-        RegimeWorkerConfig cfg = makeConfig(regimeId, regime);
+        RegimeWorkerConfig cfg  = makeConfig(regimeId, regime);
+        VacuumOptions      opts = m_vacuumOptions;
 
         return Group {
             sequential,
             VacuumTask(
-                [cfg, regimeId, name, this](VacuumRegimeWorker& w) -> SetupResult {
+                [cfg, opts, regimeId, name, this](VacuumRegimeWorker& w) -> SetupResult {
                     if (!m_manager->startRegimeExecution(regimeId)) {
                         qWarning() << "RegimeTaskTree: startRegimeExecution failed for" << name;
                         return SetupResult::StopWithError;
                     }
                     w.setConfig(cfg);
+                    w.setVacuumOptions(opts);
                     connect(this, &RegimeTaskTree::pauseRequested,
                             &w,   &VacuumRegimeWorker::onPauseRequested);
                     connect(this, &RegimeTaskTree::resumeRequested,
@@ -240,7 +259,14 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
                     emit regimeStarted(regimeId, name);
                     return SetupResult::Continue;
                 },
-                [doneFn](const VacuumRegimeWorker&, DoneWith r) { doneFn(r); }
+                [doneFn](const VacuumRegimeWorker& w, DoneWith r) {
+                    // При отмене внешнего дерева воркер уничтожается отложенно
+                    // (deleteLater) — внутреннее дерево отменяем синхронно,
+                    // чтобы cleanup-хендлеры рецепта закрыли клапаны немедленно.
+                    if (r == DoneWith::Cancel)
+                        const_cast<VacuumRegimeWorker&>(w).cancelTree();
+                    doneFn(r);
+                }
             )
         };
     }

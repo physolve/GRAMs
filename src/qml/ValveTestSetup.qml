@@ -1,8 +1,9 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Basic
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 import Grams.regimeTaskTreeSingleton 1.0
+import "lumber/content"
 
 Item {
     id: root
@@ -31,7 +32,7 @@ Item {
     Component.onCompleted: {
         let av = RegimeTaskTree.availableValves
         for (let i = 0; i < av.length; ++i)
-            stepsModel.append({ valves: av[i], pauseBefore: 0, dwell: 2, pauseAfter: 0 })
+            stepsModel.append({ valves: av[i], pauseBefore: 0, dwell: 5, pauseAfter: 0 })
     }
 
     // ── JS helpers ────────────────────────────────────────────────────────────
@@ -103,7 +104,7 @@ Item {
         // ── Global params block ───────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: 72
+            implicitHeight: 82
             color: cCard
             border.color: cAccent
             border.width: 1
@@ -125,9 +126,12 @@ Item {
 
                     Text { text: qsTr("Повторений:"); color: cSub; font { family: "Verdana"; pointSize: 8 } }
                     SpinBox {
-                        from: 1; to: 100; value: globalRepeats
-                        implicitWidth: 70; implicitHeight: 26
-                        onValueChanged: globalRepeats = value
+                        from: 1; to: 99; value: globalRepeats
+                        Layout.preferredWidth: 70; Layout.preferredHeight: 35
+                        wheelEnabled: false
+                        onValueModified: globalRepeats = value
+                        up.indicator:   ScrollArrow { arrowColor: "white"; transform: Translate { x: 48; y: 2  } }
+                        down.indicator: ScrollArrow { arrowColor: "white"; rotation: 180; transform: Translate { x: 48; y: 12 } }
                     }
 
                     Item { Layout.preferredWidth: 8 }
@@ -135,8 +139,11 @@ Item {
                     Text { text: qsTr("Пауза до (с):"); color: cSub; font { family: "Verdana"; pointSize: 8 } }
                     SpinBox {
                         from: 0; to: 600; value: globalPauseBefore
-                        implicitWidth: 70; implicitHeight: 26
-                        onValueChanged: globalPauseBefore = value
+                        Layout.preferredWidth: 70; Layout.preferredHeight: 35
+                        wheelEnabled: false
+                        onValueModified: globalPauseBefore = value
+                        up.indicator:   ScrollArrow { arrowColor: "white"; transform: Translate { x: 48; y: 2  } }
+                        down.indicator: ScrollArrow { arrowColor: "white"; rotation: 180; transform: Translate { x: 48; y: 12 } }
                     }
 
                     Item { Layout.preferredWidth: 8 }
@@ -144,8 +151,11 @@ Item {
                     Text { text: qsTr("Пауза после (с):"); color: cSub; font { family: "Verdana"; pointSize: 8 } }
                     SpinBox {
                         from: 0; to: 600; value: globalPauseAfter
-                        implicitWidth: 70; implicitHeight: 26
-                        onValueChanged: globalPauseAfter = value
+                        Layout.preferredWidth: 70; Layout.preferredHeight: 35
+                        wheelEnabled: false
+                        onValueModified: globalPauseAfter = value
+                        up.indicator:   ScrollArrow { arrowColor: "white"; transform: Translate { x: 48; y: 2  } }
+                        down.indicator: ScrollArrow { arrowColor: "white"; rotation: 180; transform: Translate { x: 48; y: 12 } }
                     }
                 }
             }
@@ -234,10 +244,10 @@ Item {
 
                                                 Button {
                                                     Layout.alignment: Qt.AlignHCenter
-                                                    text: "×"
-                                                    implicitWidth: 22; implicitHeight: 18
-                                                    font { pointSize: 9; bold: true }
-                                                    palette { button: cDanger }
+                                                    text: "🗑️"
+                                                    implicitWidth: 28; implicitHeight: 28
+                                                    font.pointSize: 10
+                                                    background: Rectangle { color: "transparent" }
                                                     onClicked: removeValveFromStep(stepDelegate.index, modelData)
                                                 }
                                             }
@@ -252,15 +262,15 @@ Item {
                                         ComboBox {
                                             id: valvePicker
                                             Layout.preferredWidth: 88
-                                            Layout.preferredHeight: 26
+                                            Layout.preferredHeight: 35
                                             model: RegimeTaskTree.availableValves
-                                            font.pointSize: 7
+                                            font.pointSize: 9
                                         }
 
                                         Button {
                                             text: "+"
-                                            Layout.preferredWidth: 26; Layout.preferredHeight: 26
-                                            font { pointSize: 10; bold: true }
+                                            Layout.preferredWidth: 35; Layout.preferredHeight: 35
+                                            font { pointSize: 11; bold: true }
                                             onClicked: addValveToStep(stepDelegate.index, valvePicker.currentText)
                                         }
                                     }
@@ -272,40 +282,37 @@ Item {
                                     rowSpacing: 4
                                     columnSpacing: 4
 
-                                    Text { text: qsTr("До (с):"); color: cSub; font { family: "Verdana"; pointSize: 7 } }
+                                    Text { text: qsTr("До (с):"); color: cSub; font { family: "Verdana"; pointSize: 8 } }
                                     SpinBox {
                                         from: 0; to: 600
                                         value: pauseBefore
-                                        Layout.preferredWidth: 66; Layout.preferredHeight: 24
-                                        font.pointSize: 7
-                                        onValueChanged: {
-                                            if (stepDelegate.index < stepsModel.count)
-                                                stepsModel.setProperty(stepDelegate.index, "pauseBefore", value)
-                                        }
+                                        Layout.preferredWidth: 70; Layout.preferredHeight: 35
+                                        wheelEnabled: false
+                                        onValueModified: stepsModel.setProperty(stepDelegate.index, "pauseBefore", value)
+                                        up.indicator:   ScrollArrow { arrowColor: "white"; transform: Translate { x: 48; y: 2  } }
+                                        down.indicator: ScrollArrow { arrowColor: "white"; rotation: 180; transform: Translate { x: 48; y: 12 } }
                                     }
 
-                                    Text { text: qsTr("Держать (с):"); color: cSub; font { family: "Verdana"; pointSize: 7 } }
+                                    Text { text: qsTr("Держать (с):"); color: cSub; font { family: "Verdana"; pointSize: 8 } }
                                     SpinBox {
                                         from: 1; to: 600
                                         value: dwell
-                                        Layout.preferredWidth: 66; Layout.preferredHeight: 24
-                                        font.pointSize: 7
-                                        onValueChanged: {
-                                            if (stepDelegate.index < stepsModel.count)
-                                                stepsModel.setProperty(stepDelegate.index, "dwell", value)
-                                        }
+                                        Layout.preferredWidth: 70; Layout.preferredHeight: 35
+                                        wheelEnabled: false
+                                        onValueModified: stepsModel.setProperty(stepDelegate.index, "dwell", value)
+                                        up.indicator:   ScrollArrow { arrowColor: "white"; transform: Translate { x: 48; y: 2  } }
+                                        down.indicator: ScrollArrow { arrowColor: "white"; rotation: 180; transform: Translate { x: 48; y: 12 } }
                                     }
 
-                                    Text { text: qsTr("После (с):"); color: cSub; font { family: "Verdana"; pointSize: 7 } }
+                                    Text { text: qsTr("После (с):"); color: cSub; font { family: "Verdana"; pointSize: 8 } }
                                     SpinBox {
                                         from: 0; to: 600
                                         value: pauseAfter
-                                        Layout.preferredWidth: 66; Layout.preferredHeight: 24
-                                        font.pointSize: 7
-                                        onValueChanged: {
-                                            if (stepDelegate.index < stepsModel.count)
-                                                stepsModel.setProperty(stepDelegate.index, "pauseAfter", value)
-                                        }
+                                        Layout.preferredWidth: 70; Layout.preferredHeight: 35
+                                        wheelEnabled: false
+                                        onValueModified: stepsModel.setProperty(stepDelegate.index, "pauseAfter", value)
+                                        up.indicator:   ScrollArrow { arrowColor: "white"; transform: Translate { x: 48; y: 2  } }
+                                        down.indicator: ScrollArrow { arrowColor: "white"; rotation: 180; transform: Translate { x: 48; y: 12 } }
                                     }
                                 }
 
@@ -314,36 +321,39 @@ Item {
                                     spacing: 3
 
                                     Button {
-                                        text: "↑"; implicitWidth: 30; implicitHeight: 22
-                                        font.pointSize: 9; enabled: stepDelegate.index > 0
+                                        text: "⬆️"; width: 40; height: 35
+                                        font.pointSize: 11; enabled: stepDelegate.index > 0
+                                        background: Rectangle { color: "transparent" }
                                         onClicked: moveUp(stepDelegate.index)
                                     }
                                     Button {
-                                        text: "↓"; implicitWidth: 30; implicitHeight: 22
-                                        font.pointSize: 9
+                                        text: "⬇️"; width: 40; height: 35
+                                        font.pointSize: 11
                                         enabled: stepDelegate.index < stepsModel.count - 1
+                                        background: Rectangle { color: "transparent" }
                                         onClicked: moveDown(stepDelegate.index)
                                     }
                                     Button {
-                                        text: "∥↑"; implicitWidth: 30; implicitHeight: 22
-                                        font.pointSize: 7; enabled: stepDelegate.index > 0
-                                        palette { button: cMerge }
+                                        text: "∥↑"; width: 40; height: 35
+                                        font.pointSize: 8; enabled: stepDelegate.index > 0
+                                        Material.background: cMerge
                                         ToolTip.visible: hovered
                                         ToolTip.text: qsTr("Объединить с предыдущим (параллельно)")
                                         onClicked: mergeWithPrev(stepDelegate.index)
                                     }
                                     Button {
-                                        text: "∥↓"; implicitWidth: 30; implicitHeight: 22
-                                        font.pointSize: 7
+                                        text: "∥↓"; width: 40; height: 35
+                                        font.pointSize: 8
                                         enabled: stepDelegate.index < stepsModel.count - 1
-                                        palette { button: cMerge }
+                                        Material.background: cMerge
                                         ToolTip.visible: hovered
                                         ToolTip.text: qsTr("Объединить со следующим (параллельно)")
                                         onClicked: mergeWithNext(stepDelegate.index)
                                     }
                                     Button {
-                                        text: "×"; implicitWidth: 30; implicitHeight: 22
-                                        font.pointSize: 9; palette { button: cDanger }
+                                        text: "🗑️"; width: 40; height: 35
+                                        font.pointSize: 11
+                                        background: Rectangle { color: "transparent" }
                                         onClicked: stepsModel.remove(stepDelegate.index)
                                     }
                                 }
@@ -377,7 +387,7 @@ Item {
                         stepsModel.append({
                             valves:      av.length > 0 ? av[0] : "",
                             pauseBefore: 0,
-                            dwell:       2,
+                            dwell:       5,
                             pauseAfter:  0
                         })
                     }
@@ -410,7 +420,7 @@ Item {
                     font { family: "Verdana"; pointSize: 9; bold: true }
                     Layout.preferredHeight: 32
                     enabled: !RegimeTaskTree.running
-                    palette { button: "#2D6A2D" }
+                    Material.background: "#2D6A2D"
                     onClicked: { applyConfig(); RegimeTaskTree.startAll() }
                 }
 
@@ -427,7 +437,7 @@ Item {
                     font { family: "Verdana"; pointSize: 9; bold: true }
                     Layout.preferredHeight: 32
                     enabled: RegimeTaskTree.running
-                    palette { button: cDanger }
+                    Material.background: cDanger
                     onClicked: RegimeTaskTree.stop()
                 }
             }

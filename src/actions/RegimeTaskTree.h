@@ -56,6 +56,16 @@ public:
     void setDataAcquisition(DataAcquisition* dataAcquisition);
     void setSecurity       (Security*        security);
 
+    // ── Vacuum regime configuration ──────────────────────────────────────────
+    // Датчик виртуального объёма B (prSB) для стража ДВ_СБР — вызывается из
+    // Grams::initActionHandler().
+    void setVacuumPressureSensor(DataCollection* sensor);
+
+    // Флаги пропуска блока C и второго тракта (инверсия легаси flagIncludeRK*;
+    // по умолчанию откачивается весь блок C, второй тракт выключен).
+    Q_INVOKABLE void setVacuumOptions(bool skipRK10, bool skipRK50,
+                                      bool skipRK300, bool secondTract);
+
     // ── Valve test configuration ─────────────────────────────────────────────
     // Called from Grams::initActionHandler() to seed available valve names.
     void setValveNamesForTest(const QStringList& names);
@@ -116,6 +126,8 @@ private:
     ValveControl*    m_valveControl    = nullptr;
     DataAcquisition* m_dataAcquisition = nullptr;
     Security*        m_security        = nullptr;
+
+    VacuumOptions m_vacuumOptions;
 
     QStringList            m_valveNamesForTest;
     QList<ValveStepConfig> m_valveTestSteps;

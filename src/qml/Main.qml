@@ -123,9 +123,8 @@ ApplicationWindow {
         id: grid
         anchors.fill: parent
         Item{
-            Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.minimumWidth: 1390
+            Layout.preferredWidth: 1310
             TabBar {
                 id: barMneno
                 width: parent.width
@@ -170,7 +169,7 @@ ApplicationWindow {
             id: sideMenu
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.minimumWidth: 500
+            Layout.minimumWidth: 590
         }
     }
     RoundButton{

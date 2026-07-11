@@ -221,55 +221,192 @@ void RegimeWorkerBase::onExecutionPhaseEnd(bool /*success*/) {}
 
 
 // ═════════════════════════════════════════════════════════════════════════════
-// VacuumRegimeWorker ("Вакуум")
+// VacuumRegimeWorker ("Вакуум") — Ф1–Ф3 перенесены из GramQt
+// (SequencerThread + testSeq/vacuum_cond.csv) на внутренний QTaskTree.
+// Рецепт и вся логика последовательности — в VacuumTaskTree.cpp.
 // ═════════════════════════════════════════════════════════════════════════════
-//
-// TODO: fill kVacuumValveName from Initialize profile (vacuumParameters.portName
-// is the serial port for the gauge, not the valve — check hardware profile for
-// the actual DO channel that controls the vacuum pump valve).
 
-static constexpr double kVacuumTargetPressureMbar = 10.0; // mbar target
-static const QString    kVacuumValveName           = "";   // TODO: set from profile
-
-void VacuumRegimeWorker::onExecutionPhaseStart()
+VacuumRegimeWorker::VacuumRegimeWorker(QObject* parent)
+    : QObject(parent)
 {
-    qDebug() << "[Вакуум] Opening vacuum valve";
-    if (m_cfg.valveControl && !kVacuumValveName.isEmpty()) {
+}
+
+VacuumRegimeWorker::~VacuumRegimeWorker()
+{
+    // Страховка на случай удаления без внешнего cancelTree(): отмена
+    // синхронно прогоняет done-хендлеры рецепта, закрывающие клапаны.
+    cancelTree();
+}
+
+void VacuumRegimeWorker::setConfig(const RegimeWorkerConfig& cfg)
+{
+    m_cfg = cfg;
+}
+
+void VacuumRegimeWorker::setVacuumOptions(const VacuumOptions& opts)
+{
+    m_opts = opts;
+}
+
+void VacuumRegimeWorker::start()
+{
+    if (m_cfg.logger)
+        m_runId = m_cfg.logger->openRun(m_cfg.regimeId, m_cfg.regimeName,
+                                        m_cfg.totalRepeats);
+    if (m_cfg.valveControl)
         m_cfg.valveControl->beginAction();
-        bool ok = m_cfg.valveControl->setValveFromAction(true, kVacuumValveName);
-        if (!ok)
-            qWarning() << "[Вакуум] Failed to open vacuum valve" << kVacuumValveName;
-        if (m_cfg.logger)
-            m_cfg.logger->logEvent(m_runId, ok ? RegimeLogger::kValveOpen
-                                               : RegimeLogger::kValveBlocked,
-                                   m_currentRepeat, 0, kVacuumValveName);
+
+    m_tree = new QtTaskTree::QTaskTree(buildVacuumRecipe(makeContext()), this);
+
+    connect(m_tree, &QtTaskTree::QTaskTree::done, this,
+            [this](QtTaskTree::DoneWith w) {
+                if (m_cfg.valveControl)
+                    m_cfg.valveControl->endAction();
+                emit done(w == QtTaskTree::DoneWith::Success);
+            });
+
+    m_tree->start();
+}
+
+void VacuumRegimeWorker::cancelTree()
+{
+    if (m_tree && m_tree->isRunning())
+        m_tree->cancel();   // синхронно: done-хендлеры рецепта закрывают клапаны
+}
+
+// ─── Контекст рецепта: швы к железу и RegimeManager ──────────────────────────
+
+VacuumTreeContext VacuumRegimeWorker::makeContext()
+{
+    VacuumTreeContext ctx;
+
+    ctx.dbSbrLim     = m_opts.dbSbrLim;
+    ctx.skipRK10     = m_opts.skipRK10;
+    ctx.skipRK50     = m_opts.skipRK50;
+    ctx.skipRK300    = m_opts.skipRK300;
+    ctx.secondTract  = m_opts.secondTract;
+    ctx.totalRepeats = m_cfg.totalRepeats;
+    ctx.pauseBus     = &m_pauseBus;
+
+    ctx.conditionType       = m_cfg.conditionType;
+    ctx.conditionTimeSec    = m_cfg.conditionTimeSec;
+    ctx.conditionTargetTemp = m_cfg.conditionTargetTemp;
+    if (m_cfg.conditionTempSensor) {
+        DataCollection* sensor = m_cfg.conditionTempSensor;
+        ctx.conditionTemp = [sensor] { return sensor->getCurValue(); };
     }
-}
 
-void VacuumRegimeWorker::onExecutionTick(int /*elapsedSec*/)
-{
-    if (m_cfg.dataAcquisition)
-        m_cfg.dataAcquisition->fastBufferRead();
-}
-
-bool VacuumRegimeWorker::isExecutionComplete(int elapsedSec) const
-{
-    // TODO: read vacuum pressure from DataAcquisition once getter is available
-    // double pressure = m_cfg.dataAcquisition->vacuumPressureMbar();
-    // if (pressure <= kVacuumTargetPressureMbar) return true;
-    return elapsedSec >= m_cfg.maxTimeSec;
-}
-
-void VacuumRegimeWorker::onExecutionPhaseEnd(bool success)
-{
-    qDebug() << "[Вакуум] Closing vacuum valve, success=" << success;
-    if (m_cfg.valveControl && !kVacuumValveName.isEmpty()) {
-        m_cfg.valveControl->setValveFromAction(false, kVacuumValveName);
-        m_cfg.valveControl->endAction();
-        if (m_cfg.logger)
-            m_cfg.logger->logEvent(m_runId, RegimeLogger::kValveClose,
-                                   m_currentRepeat, m_phaseElapsedSec, kVacuumValveName);
+    if (m_opts.pressureSensorB) {
+        DataCollection* pB = m_opts.pressureSensorB;
+        ctx.pressureB = [pB] { return pB->getCurValue(); };
+    } else {
+        // Без датчика страж ДВ_СБР видит 0.0 <= dbSbrLim — сбросы через К118
+        // не выполняются (клапан не открывается вслепую).
+        qWarning() << "[Вакуум] Датчик объёма B (prSB) не задан — "
+                      "сбросы через К118 отключены";
     }
+
+    ctx.setValve = [this](bool open, const QString& name) -> bool {
+        if (!m_cfg.valveControl) {
+            qWarning() << "[Вакуум] ValveControl не задан — операция с" << name
+                       << "отклонена";
+            return false;
+        }
+        const bool ok = m_cfg.valveControl->setValveFromAction(open, name);
+        if (open && !ok)
+            qWarning() << "[Вакуум] Открытие клапана" << name << "заблокировано";
+        if (m_cfg.logger) {
+            const char* type = open ? (ok ? RegimeLogger::kValveOpen
+                                          : RegimeLogger::kValveBlocked)
+                                    : RegimeLogger::kValveClose;
+            m_cfg.logger->logEvent(m_runId, type, -1, -1, name);
+        }
+        return ok;
+    };
+
+    ctx.onConditionProgress = [this](int elapsed, int repeat) {
+        if (m_cfg.manager)
+            m_cfg.manager->updateConditionProgress(m_cfg.regimeId, elapsed, repeat);
+    };
+    ctx.onConditionDone = [this](int repeat) {
+        if (m_cfg.manager)
+            m_cfg.manager->confirmConditionCompletion(m_cfg.regimeId, repeat);
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kConditionDone, repeat);
+    };
+    ctx.onProgress = [this](int elapsed, int repeat) {
+        if (m_cfg.manager)
+            m_cfg.manager->updateRegimeProgress(m_cfg.regimeId, elapsed, repeat);
+    };
+    ctx.onRepeatDone = [this](QtTaskTree::DoneWith w, int repeat) {
+        if (w == QtTaskTree::DoneWith::Cancel)
+            return;  // Stopped выставляет done-хендлер RegimeTaskTree
+        if (w == QtTaskTree::DoneWith::Success) {
+            if (m_cfg.manager)
+                m_cfg.manager->completeCurrentRepeat(m_cfg.regimeId, repeat);
+            if (m_cfg.logger)
+                m_cfg.logger->logEvent(m_runId, RegimeLogger::kRepeatDone, repeat);
+        } else {
+            if (m_cfg.manager)
+                m_cfg.manager->markRepeatAsError(m_cfg.regimeId, repeat);
+            if (m_cfg.logger)
+                m_cfg.logger->logEvent(m_runId, RegimeLogger::kRepeatError, repeat);
+        }
+    };
+    ctx.onRunFinished = [this](QtTaskTree::DoneWith w,
+                               int repeatsDone, int repeatsError) {
+        if (!m_cfg.logger)
+            return;
+        if (w == QtTaskTree::DoneWith::Cancel) {
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kCancelled, -1, -1,
+                                   m_cfg.regimeName);
+            m_cfg.logger->closeRun(m_runId, "cancelled", repeatsDone, repeatsError);
+            return;
+        }
+        const bool ok = (w == QtTaskTree::DoneWith::Success) && repeatsError == 0;
+        m_cfg.logger->logEvent(m_runId,
+                               ok ? RegimeLogger::kRegimeDone : RegimeLogger::kRegimeError,
+                               -1, -1,
+                               QString("done=%1 error=%2")
+                                   .arg(repeatsDone).arg(repeatsError));
+        m_cfg.logger->closeRun(m_runId, ok ? "success" : "error",
+                               repeatsDone, repeatsError);
+    };
+    ctx.onLabel = [](const QString& label) {
+        qDebug() << "[Вакуум]" << label;
+    };
+
+    return ctx;
+}
+
+// ─── Пауза / возобновление (шина PauseBus → PausableTicker в рецепте) ─────────
+//
+// Пауза замораживает текущую выдержку с открытым клапаном (легаси-подобное
+// поведение; альтернатива «закрыть и перезапустить» — см. неоднозначность №4
+// в docs/regimes/vacuum.md).
+
+void VacuumRegimeWorker::onPauseRequested()
+{
+    if (m_pauseBus.isPaused() || !m_tree || !m_tree->isRunning())
+        return;
+    m_pauseBus.pause();
+    if (m_cfg.manager)
+        m_cfg.manager->setRegimeState(m_cfg.regimeId, RegimeEnums::State::Paused);
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kPaused);
+    qDebug() << "[Вакуум] Пауза";
+}
+
+void VacuumRegimeWorker::onResumeRequested()
+{
+    if (!m_pauseBus.isPaused())
+        return;
+    m_pauseBus.resume();
+    if (m_cfg.manager)
+        m_cfg.manager->setRegimeState(m_cfg.regimeId, RegimeEnums::State::Running);
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kResumed);
+    qDebug() << "[Вакуум] Возобновление";
 }
 
 
