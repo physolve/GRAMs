@@ -108,7 +108,14 @@ void RegimeManager::saveRegimes()
 
 void RegimeManager::loadDefaultRegimes()
 {
-    const QString defaultFilePath = "profile/regime_a.json";
+    // По умолчанию грузим «Вакуум», настроенный на немедленный старт
+    // (condition none/0/0). Fallback на regime_a.json, если vacuum.json нет —
+    // сохраняет прежнее поведение.
+    QString defaultFilePath = "profile/vacuum.json";
+    if (!QFile::exists(defaultFilePath)) {
+        qWarning() << "vacuum.json not found, falling back to regime_a.json";
+        defaultFilePath = "profile/regime_a.json";
+    }
     QList<Regime> regimes = loadRegimesFromFile(defaultFilePath);
     m_model.clear();
     m_model.setRegimes(regimes);

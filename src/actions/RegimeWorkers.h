@@ -10,6 +10,8 @@
 #include "RegimeLogger.h"
 #include "VacuumTaskTree.h"
 
+class VacuumRunMonitor;   // наблюдатель состояния рецепта (src/actions/VacuumRunMonitor.h)
+
 // ─── Configuration injected by TaskTree setup handler ─────────────────────────
 
 struct RegimeWorkerConfig {
@@ -107,7 +109,14 @@ struct VacuumOptions {
     bool   skipRK300   = false;
     bool   secondTract = false;
     double dbSbrLim    = 1.65;   // порог сброса объёма B (GramQt Definer.h:334)
-    DataCollection* pressureSensorB = nullptr;  // виртуальный объём B (prSB)
+    int    perActionPauseMs = 1000;  // settle-пауза между действиями рецепта (0 = выкл)
+    QHash<int, int> stepPauseMs;     // индивидуальная задержка на узел (int(VacuumNode)→мс)
+    int    reliefDwellSec = 1;   // удержание К118 открытым при сбросе (≥1 с)
+    bool   foreVacuum  = true;   // форвакуумная откачка 11.5–11.7
+    bool   pumpRateCheck = true; // dP/dt-watchdog после открытия К176
+    OperatorBus* operatorBus = nullptr;  // стабильная шина решений (владеет RegimeTaskTree)
+    DataCollection* pressureSensorB    = nullptr;  // виртуальный объём B (prSB)
+    DataCollection* vacuumGaugeSensor  = nullptr;  // ДВ301 (Вакууметр, Торр)
 };
 
 // Standalone-воркер (контракт QCustomTask, как ValveTestWorker): start() строит
@@ -130,9 +139,9 @@ public:
 
     void setConfig(const RegimeWorkerConfig& cfg);
     void setVacuumOptions(const VacuumOptions& opts);
+    void setMonitor(VacuumRunMonitor* monitor);  // наблюдатель состояния для UI (nullable)
 
     void start();        // контракт QCustomTask
-    void cancelTree();   // синхронная отмена внутреннего дерева
 
 signals:
     void done(bool success);
@@ -140,6 +149,11 @@ signals:
 public slots:
     void onPauseRequested();
     void onResumeRequested();
+    // Отмена внутреннего дерева. Слот (не обычный метод) — чтобы внешний
+    // done-хендлер мог вызвать его ОТЛОЖЕННО через QMetaObject::invokeMethod
+    // с Qt::QueuedConnection и не вкладывать отмену внутреннего дерева в чужой
+    // хендлер (см. RegimeTaskTree::buildRegimeGroup, фикс краша pause→stop).
+    void cancelTree();
 
 private:
     VacuumTreeContext makeContext();
@@ -147,6 +161,7 @@ private:
     RegimeWorkerConfig m_cfg;
     VacuumOptions      m_opts;
     PauseBus           m_pauseBus;
+    VacuumRunMonitor*  m_monitor = nullptr;     // не владеет; живёт в RegimeTaskTree
     QtTaskTree::QTaskTree* m_tree  = nullptr;  // внутреннее дерево (child)
     qint64                 m_runId = -1;       // хендл записи в regime_log.db
 };

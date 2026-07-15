@@ -11,6 +11,7 @@
 #include "RegimeWorkers.h"
 #include "ValveTestWorker.h"
 #include "RegimeLogger.h"
+#include "VacuumRunMonitor.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RegimeTaskTree
@@ -61,10 +62,35 @@ public:
     // Grams::initActionHandler().
     void setVacuumPressureSensor(DataCollection* sensor);
 
+    // Датчик ДВ301 (Вакууметр) для форвакуумных этапов 11.5–11.7. Вызывается из
+    // Grams::initActionHandler().
+    void setVacuumGaugeSensor(DataCollection* sensor);
+
+    // Включение/выключение форвакуумной откачки 11.5–11.7 (по умолчанию вкл).
+    Q_INVOKABLE void setVacuumForevac(bool enabled);
+
     // Флаги пропуска блока C и второго тракта (инверсия легаси flagIncludeRK*;
     // по умолчанию откачивается весь блок C, второй тракт выключен).
     Q_INVOKABLE void setVacuumOptions(bool skipRK10, bool skipRK50,
                                       bool skipRK300, bool secondTract);
+
+    // Settle-пауза (мс) после каждого действия рецепта «Вакуум». По умолчанию
+    // 1000 мс; 0 = без пауз. Задаётся из RegimeApiSandbox перед стартом.
+    Q_INVOKABLE void setVacuumStepPauseMs(int ms);
+
+    // Индивидуальная задержка (сек) на каждый шаг: ключи — строки из
+    // vacuumStepKeys() ("f1","rk300","rk10","rk50","reliefMid","blockC",
+    // "secondTract","a1","bc","ef"), значения — секунды. «Задержка для КАЖДОГО».
+    Q_INVOKABLE void setVacuumStepDelays(const QVariantMap& secondsByStep);
+
+    // Стабильные ключи/подписи шагов для построения таблицы в QML.
+    Q_INVOKABLE QVariantList vacuumStepKeys() const;
+
+    // Удержание К118 открытым при сбросе (сек, ≥1).
+    Q_INVOKABLE void setVacuumReliefHoldSec(int sec);
+
+    // Включение dP/dt-watchdog после открытия К176.
+    Q_INVOKABLE void setVacuumPumpCheck(bool enabled);
 
     // ── Valve test configuration ─────────────────────────────────────────────
     // Called from Grams::initActionHandler() to seed available valve names.
@@ -86,6 +112,15 @@ public:
     bool isRunning()      const { return m_running; }
     bool isPaused()       const { return m_paused;  }
     int  activeRegimeId() const { return m_activeRegimeId; }
+
+    // Наблюдатель состояния рецепта «Вакуум» для live-развёртки в QML
+    // (RegimeApiSandbox). Позже переедет в RegimeManager.
+    Q_PROPERTY(QObject* vacuumMonitor READ vacuumMonitor CONSTANT)
+    QObject* vacuumMonitor() { return &m_vacuumMonitor; }
+
+    // Стабильная шина решений оператора (диалог dP/dt Стоп/Продолжить в QML).
+    Q_PROPERTY(QObject* operatorBus READ operatorBus CONSTANT)
+    QObject* operatorBus() { return &m_operatorBus; }
 
 public slots:
     // ── QML-invokable control ─────────────────────────────────────────────────
@@ -137,6 +172,8 @@ private:
 
     QtTaskTree::QTaskTree* m_tree           = nullptr;
     RegimeLogger           m_logger;
+    VacuumRunMonitor       m_vacuumMonitor;
+    OperatorBus            m_operatorBus;
     bool                   m_running        = false;
     bool                   m_paused         = false;
     int                    m_activeRegimeId = -1;

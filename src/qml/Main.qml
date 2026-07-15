@@ -132,10 +132,10 @@ ApplicationWindow {
                 anchors.left: parent.left
                 Repeater{
                     id: barMnenoRepeater
-                    model: ["Панель", "Мнемосхема", "Модель"]
+                    model: ["Панель", "Мнемосхема", "Модель", "Режим"]
                     TabButton{
                         text: modelData
-                        width: Math.max(120, barMneno.width/3)
+                        width: Math.max(120, barMneno.width/4)
                         font.pointSize: 12
                     }
                 }
@@ -162,6 +162,9 @@ ApplicationWindow {
                 }
                 TestField{
                     id: testMnemo
+                }
+                RegimeApiSandbox{
+                    id: regimeApiSandbox
                 }
             }
         }

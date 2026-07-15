@@ -16,8 +16,16 @@ Condition Condition::fromJson(const QJsonObject &json) {
     if (c.type.isEmpty() || (c.type != "none" && c.type != "time" && c.type != "temp")) {
         c.type = "none";
     }
+    // Отсутствующие поля дают 0 (toDouble/toInt), это штатно.
     c.temp = json["temp"].toDouble();
     c.time = json["time"].toInt();
+    // Укрепление: условие с нулевым/отрицательным параметром = немедленный старт.
+    // Кривой конфиг (type=temp/time, но time<=0 или temp<=0) иначе повесил бы
+    // режим на таймаут или на недостижимую цель — трактуем как "none".
+    if ((c.type == "time" && c.time <= 0) ||
+        (c.type == "temp" && (c.time <= 0 && c.temp <= 0.0))) {
+        c.type = "none";
+    }
     return c;
 }
 

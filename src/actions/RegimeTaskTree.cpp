@@ -21,6 +21,9 @@ RegimeTaskTree::RegimeTaskTree(QObject* parent)
     : QObject(parent)
 {
     m_logger.init("data/regime_log.db");
+    // Стабильная (переживающая пересоздание дерева) шина решений оператора,
+    // прокидывается в воркер «Вакуума» и доступна QML как RegimeTaskTree.operatorBus.
+    m_vacuumOptions.operatorBus = &m_operatorBus;
 }
 
 RegimeTaskTree::~RegimeTaskTree()
@@ -47,6 +50,17 @@ void RegimeTaskTree::setVacuumPressureSensor(DataCollection* sensor)
     m_vacuumOptions.pressureSensorB = sensor;
 }
 
+void RegimeTaskTree::setVacuumGaugeSensor(DataCollection* sensor)
+{
+    m_vacuumOptions.vacuumGaugeSensor = sensor;
+}
+
+void RegimeTaskTree::setVacuumForevac(bool enabled)
+{
+    m_vacuumOptions.foreVacuum = enabled;
+    qDebug() << "RegimeTaskTree: setVacuumForevac" << enabled;
+}
+
 void RegimeTaskTree::setVacuumOptions(bool skipRK10, bool skipRK50,
                                       bool skipRK300, bool secondTract)
 {
@@ -57,6 +71,80 @@ void RegimeTaskTree::setVacuumOptions(bool skipRK10, bool skipRK50,
     qDebug() << "RegimeTaskTree: setVacuumOptions skipRK10=" << skipRK10
              << "skipRK50=" << skipRK50 << "skipRK300=" << skipRK300
              << "secondTract=" << secondTract;
+}
+
+void RegimeTaskTree::setVacuumStepPauseMs(int ms)
+{
+    m_vacuumOptions.perActionPauseMs = qMax(0, ms);
+    qDebug() << "RegimeTaskTree: setVacuumStepPauseMs" << m_vacuumOptions.perActionPauseMs;
+}
+
+// Сопоставление строковых ключей шагов с узлами рецепта (VacuumNode).
+static const QList<QPair<QString, VacuumNode>>& vacuumStepMap()
+{
+    static const QList<QPair<QString, VacuumNode>> kMap = {
+        { QStringLiteral("f1"),          VacuumNode::F1Relief },
+        { QStringLiteral("rk300"),       VacuumNode::F2_RK300 },
+        { QStringLiteral("rk10"),        VacuumNode::F2_RK10 },
+        { QStringLiteral("rk50"),        VacuumNode::F2_RK50 },
+        { QStringLiteral("reliefMid"),   VacuumNode::F2_ReliefMid },
+        { QStringLiteral("blockC"),      VacuumNode::F2BlockC },
+        { QStringLiteral("secondTract"), VacuumNode::F3SecondTract },
+        { QStringLiteral("a1"),          VacuumNode::F5A1 },
+        { QStringLiteral("bc"),          VacuumNode::F6BC },
+        { QStringLiteral("ef"),          VacuumNode::F7EF },
+    };
+    return kMap;
+}
+
+void RegimeTaskTree::setVacuumStepDelays(const QVariantMap& secondsByStep)
+{
+    m_vacuumOptions.stepPauseMs.clear();
+    for (const auto& pair : vacuumStepMap()) {
+        if (secondsByStep.contains(pair.first)) {
+            const int sec = qMax(0, secondsByStep.value(pair.first).toInt());
+            m_vacuumOptions.stepPauseMs.insert(int(pair.second), sec * 1000);
+        }
+    }
+    qDebug() << "RegimeTaskTree: setVacuumStepDelays" << m_vacuumOptions.stepPauseMs.size()
+             << "steps";
+}
+
+QVariantList RegimeTaskTree::vacuumStepKeys() const
+{
+    // {key, label} для построения таблицы задержек в QML.
+    static const QList<QPair<QString, QString>> kLabels = {
+        { QStringLiteral("f1"),          QStringLiteral("Ф1 сброс К118") },
+        { QStringLiteral("rk300"),       QStringLiteral("C1 / RK300 (S3)") },
+        { QStringLiteral("rk10"),        QStringLiteral("C3 / RK10 (S1)") },
+        { QStringLiteral("rk50"),        QStringLiteral("C2 / RK50 (S2)") },
+        { QStringLiteral("reliefMid"),   QStringLiteral("Ф2 средний сброс") },
+        { QStringLiteral("blockC"),      QStringLiteral("Ф2 блок C (итог)") },
+        { QStringLiteral("secondTract"), QStringLiteral("Ф3 второй тракт") },
+        { QStringLiteral("a1"),          QStringLiteral("11.5 форвакуум A1") },
+        { QStringLiteral("bc"),          QStringLiteral("11.6 форвакуум B/C") },
+        { QStringLiteral("ef"),          QStringLiteral("11.7 форвакуум E/F") },
+    };
+    QVariantList out;
+    for (const auto& p : kLabels) {
+        QVariantMap m;
+        m["key"]   = p.first;
+        m["label"] = p.second;
+        out.append(m);
+    }
+    return out;
+}
+
+void RegimeTaskTree::setVacuumReliefHoldSec(int sec)
+{
+    m_vacuumOptions.reliefDwellSec = qMax(1, sec);
+    qDebug() << "RegimeTaskTree: setVacuumReliefHoldSec" << m_vacuumOptions.reliefDwellSec;
+}
+
+void RegimeTaskTree::setVacuumPumpCheck(bool enabled)
+{
+    m_vacuumOptions.pumpRateCheck = enabled;
+    qDebug() << "RegimeTaskTree: setVacuumPumpCheck" << enabled;
 }
 
 void RegimeTaskTree::setValveNamesForTest(const QStringList& names)
@@ -167,6 +255,12 @@ void RegimeTaskTree::stop()
 {
     if (!m_running || !m_tree) return;
     qDebug() << "RegimeTaskTree: stop requested";
+    // Если стоим на паузе — сначала снимаем её через штатный канал, чтобы
+    // замороженные тикеры (PausableTicker) не тирдаунились в замороженном
+    // состоянии при cancel(). Вместе с отложенным cancelTree это устраняет
+    // краш «Nested execution of handlers» при pause→stop.
+    if (m_paused)
+        emit resumeRequested();
     // cancel() is synchronous — done handlers fire with DoneWith::Cancel.
     m_tree->cancel();
     setRunning(false);
@@ -250,6 +344,10 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
                     }
                     w.setConfig(cfg);
                     w.setVacuumOptions(opts);
+                    m_vacuumMonitor.beginRun(cfg.totalRepeats);
+                    m_vacuumMonitor.setPaused(false);
+                    m_vacuumMonitor.setRunning(true);
+                    w.setMonitor(&m_vacuumMonitor);
                     connect(this, &RegimeTaskTree::pauseRequested,
                             &w,   &VacuumRegimeWorker::onPauseRequested);
                     connect(this, &RegimeTaskTree::resumeRequested,
@@ -261,10 +359,16 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
                 },
                 [doneFn](const VacuumRegimeWorker& w, DoneWith r) {
                     // При отмене внешнего дерева воркер уничтожается отложенно
-                    // (deleteLater) — внутреннее дерево отменяем синхронно,
-                    // чтобы cleanup-хендлеры рецепта закрыли клапаны немедленно.
+                    // (deleteLater). Внутреннее дерево отменяем ОТЛОЖЕННО через
+                    // очередь событий: синхронный вызов cancelTree() отсюда
+                    // вложил бы отмену внутреннего дерева в done-хендлер внешнего
+                    // («Nested execution of handlers» → краш, особенно при
+                    // активной паузе — замороженный PausableTicker/QBarrier).
+                    // QueuedConnection выполнит cancelTree() после раскрутки
+                    // внешнего хендлера; деструктор воркера — страховка.
                     if (r == DoneWith::Cancel)
-                        const_cast<VacuumRegimeWorker&>(w).cancelTree();
+                        QMetaObject::invokeMethod(const_cast<VacuumRegimeWorker*>(&w),
+                                                  "cancelTree", Qt::QueuedConnection);
                     doneFn(r);
                 }
             )
@@ -410,6 +514,7 @@ void RegimeTaskTree::setRunning(bool running, int activeRegimeId)
     if (!running) {
         m_activeRegimeId = -1;
         emit activeRegimeChanged();
+        m_vacuumMonitor.setRunning(false);
     } else if (activeRegimeId >= 0) {
         m_activeRegimeId = activeRegimeId;
     }
@@ -421,6 +526,7 @@ void RegimeTaskTree::setPaused(bool paused)
         m_paused = paused;
         emit pausedChanged();
     }
+    m_vacuumMonitor.setPaused(paused);
 }
 
 void RegimeTaskTree::cleanupTree()

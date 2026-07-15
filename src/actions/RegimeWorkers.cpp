@@ -1,4 +1,5 @@
 #include "RegimeWorkers.h"
+#include "VacuumRunMonitor.h"
 #include <QDebug>
 #include <algorithm>
 
@@ -248,6 +249,11 @@ void VacuumRegimeWorker::setVacuumOptions(const VacuumOptions& opts)
     m_opts = opts;
 }
 
+void VacuumRegimeWorker::setMonitor(VacuumRunMonitor* monitor)
+{
+    m_monitor = monitor;
+}
+
 void VacuumRegimeWorker::start()
 {
     if (m_cfg.logger)
@@ -258,10 +264,19 @@ void VacuumRegimeWorker::start()
 
     m_tree = new QtTaskTree::QTaskTree(buildVacuumRecipe(makeContext()), this);
 
+    // Агрегатный прогресс дерева → монитор (как в TaskTree demo).
+    if (m_monitor) {
+        m_monitor->setProgressMax(m_tree->progressMaximum());
+        connect(m_tree, &QtTaskTree::QTaskTree::progressValueChanged, this,
+                [this](int v) { if (m_monitor) m_monitor->setProgress(v); });
+    }
+
     connect(m_tree, &QtTaskTree::QTaskTree::done, this,
             [this](QtTaskTree::DoneWith w) {
                 if (m_cfg.valveControl)
                     m_cfg.valveControl->endAction();
+                if (m_monitor)
+                    m_monitor->setRunning(false);
                 emit done(w == QtTaskTree::DoneWith::Success);
             });
 
@@ -270,8 +285,19 @@ void VacuumRegimeWorker::start()
 
 void VacuumRegimeWorker::cancelTree()
 {
-    if (m_tree && m_tree->isRunning())
-        m_tree->cancel();   // синхронно: done-хендлеры рецепта закрывают клапаны
+    if (!m_tree || !m_tree->isRunning())
+        return;
+    // Рвём связь inner-tree.done → emit done(): при отмене внешний QCustomTask
+    // уже сообщил Cancel и завершился. Повторный emit done() из отменяемого
+    // внутреннего дерева реэмитил бы в уже завершённый QTaskInterface → краш
+    // (в т.ч. сценарий pause→stop из QML). Клапаны закрывают done-хендлеры
+    // рецепта во время cancel(); endAction/monitor выполняем здесь напрямую.
+    disconnect(m_tree, &QtTaskTree::QTaskTree::done, this, nullptr);
+    m_tree->cancel();
+    if (m_cfg.valveControl)
+        m_cfg.valveControl->endAction();
+    if (m_monitor)
+        m_monitor->setRunning(false);
 }
 
 // ─── Контекст рецепта: швы к железу и RegimeManager ──────────────────────────
@@ -286,7 +312,23 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
     ctx.skipRK300    = m_opts.skipRK300;
     ctx.secondTract  = m_opts.secondTract;
     ctx.totalRepeats = m_cfg.totalRepeats;
+    ctx.perActionPauseMs = m_opts.perActionPauseMs;
+    ctx.stepPauseMs  = m_opts.stepPauseMs;
+    ctx.reliefDwellSec = qMax(1, m_opts.reliefDwellSec);   // К118 держим ≥1 с
+    ctx.foreVacuum   = m_opts.foreVacuum;
+    ctx.pumpRateCheck = m_opts.pumpRateCheck;
+    ctx.operatorBus  = m_opts.operatorBus;                 // стабильная шина из RegimeTaskTree
     ctx.pauseBus     = &m_pauseBus;
+
+    // ДВ301 (Вакууметр) читает в Торр (setAltUnitCoef 0.001333 торр→бар);
+    // пороги форвакуума в ТЗ — в Па. 1 Торр = 133.322 Па.
+    if (m_opts.vacuumGaugeSensor) {
+        DataCollection* gauge = m_opts.vacuumGaugeSensor;
+        ctx.pressureVacPa = [gauge] { return gauge->getCurValue() * 133.322; };
+    } else {
+        qWarning() << "[Вакуум] Датчик ДВ301 (Вакууметр) не задан — форвакуумные "
+                      "этапы 11.5–11.7 завершатся по таймауту";
+    }
 
     ctx.conditionType       = m_cfg.conditionType;
     ctx.conditionTimeSec    = m_cfg.conditionTimeSec;
@@ -315,6 +357,8 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
         const bool ok = m_cfg.valveControl->setValveFromAction(open, name);
         if (open && !ok)
             qWarning() << "[Вакуум] Открытие клапана" << name << "заблокировано";
+        if (m_monitor)
+            m_monitor->onValve(name, open && ok);
         if (m_cfg.logger) {
             const char* type = open ? (ok ? RegimeLogger::kValveOpen
                                           : RegimeLogger::kValveBlocked)
@@ -327,6 +371,8 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
     ctx.onConditionProgress = [this](int elapsed, int repeat) {
         if (m_cfg.manager)
             m_cfg.manager->updateConditionProgress(m_cfg.regimeId, elapsed, repeat);
+        if (m_monitor)
+            m_monitor->onConditionProgress(elapsed, repeat);
     };
     ctx.onConditionDone = [this](int repeat) {
         if (m_cfg.manager)
@@ -337,6 +383,8 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
     ctx.onProgress = [this](int elapsed, int repeat) {
         if (m_cfg.manager)
             m_cfg.manager->updateRegimeProgress(m_cfg.regimeId, elapsed, repeat);
+        if (m_monitor)
+            m_monitor->onProgress(elapsed, repeat);
     };
     ctx.onRepeatDone = [this](QtTaskTree::DoneWith w, int repeat) {
         if (w == QtTaskTree::DoneWith::Cancel)
@@ -346,15 +394,21 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
                 m_cfg.manager->completeCurrentRepeat(m_cfg.regimeId, repeat);
             if (m_cfg.logger)
                 m_cfg.logger->logEvent(m_runId, RegimeLogger::kRepeatDone, repeat);
+            if (m_monitor)
+                m_monitor->onRepeatDone(true, repeat);
         } else {
             if (m_cfg.manager)
                 m_cfg.manager->markRepeatAsError(m_cfg.regimeId, repeat);
             if (m_cfg.logger)
                 m_cfg.logger->logEvent(m_runId, RegimeLogger::kRepeatError, repeat);
+            if (m_monitor)
+                m_monitor->onRepeatDone(false, repeat);
         }
     };
     ctx.onRunFinished = [this](QtTaskTree::DoneWith w,
                                int repeatsDone, int repeatsError) {
+        if (m_monitor)
+            m_monitor->onRunFinished(repeatsDone, repeatsError);
         if (!m_cfg.logger)
             return;
         if (w == QtTaskTree::DoneWith::Cancel) {
@@ -372,8 +426,14 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
         m_cfg.logger->closeRun(m_runId, ok ? "success" : "error",
                                repeatsDone, repeatsError);
     };
-    ctx.onLabel = [](const QString& label) {
+    ctx.onLabel = [this](const QString& label) {
         qDebug() << "[Вакуум]" << label;
+        if (m_monitor)
+            m_monitor->onLabel(label);
+    };
+    ctx.onNode = [this](VacuumNode node, NodeState state) {
+        if (m_monitor)
+            m_monitor->onNode(node, state);
     };
 
     return ctx;

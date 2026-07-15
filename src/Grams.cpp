@@ -335,6 +335,9 @@ void Grams::initGUI(){
 
     qmlRegisterSingletonInstance("Grams.actionHandlerSingleton", 1, 0, "ActionHandler", &m_actionHandler);
     qmlRegisterSingletonInstance("Grams.regimeTaskTreeSingleton", 1, 0, "RegimeTaskTree", &m_regimeTaskTree);
+    // Тип наблюдателя рецепта «Вакуум» — доступен как RegimeTaskTree.vacuumMonitor
+    qmlRegisterUncreatableType<VacuumRunMonitor>("Grams.regimeTaskTreeSingleton", 1, 0,
+        "VacuumRunMonitor", "Accessed via RegimeTaskTree.vacuumMonitor");
     //m_engine.rootContext()->setContextProperty("openGLSupported", openGLSupported);
     // m_engine.rootContext()->setContextProperty("_valveModel", &valveModel);
     // m_engine.rootContext()->setContextProperty("_myModel", &dataModel);
@@ -530,6 +533,8 @@ void Grams::initActionHandler(){
     m_regimeTaskTree.setSecurity(&m_safeModule);
     // Виртуальный объём B для стража ДВ_СБР режима «Вакуум» (аналог m_vir_B в GramQt)
     m_regimeTaskTree.setVacuumPressureSensor(&prSB);
+    // ДВ301 (Вакууметр) для форвакуумных этапов 11.5–11.7
+    m_regimeTaskTree.setVacuumGaugeSensor(&m_vacuumSensor);
     // Pass valve names for the "Тест клапанов" regime.
     // initSource.m_hardware.m_valves contains the ordered list from the JSON profile.
     m_regimeTaskTree.setValveNamesForTest(initSource.m_hardware.m_valves);

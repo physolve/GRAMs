@@ -67,5 +67,6 @@
         <file>qml/SideMenu.qml</file>
         <file>qml/UserExperiment.qml</file>
         <file>qml/ValveTestSetup.qml</file>
+        <file>qml/RegimeApiSandbox.qml</file>
     </qresource>
 </RCC>

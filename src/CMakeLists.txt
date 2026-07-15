@@ -99,6 +99,7 @@ source_group("Libs Source" FILES ${CPP_LIBS})
 add_definitions(-DQCUSTOMPLOT_USE_OPENGL)
 
 add_subdirectory(runtable)
+add_subdirectory(actions/tests)
 
 qt6_add_executable(${EXECUTABLE_NAME} ${SOURCES}
 ${CPP_CONTROLLERS}
