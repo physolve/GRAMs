@@ -21,6 +21,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/.
 # ValveControl/biodaq (все швы через VacuumTreeContext).
 add_executable(VacuumTreeTests
     test_vacuum_tree.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../recipes/RecipeCommon.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../recipes/VacuumTaskTree.cpp
 )
 
