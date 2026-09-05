@@ -166,6 +166,12 @@ Group buildSupplyRecipe(const SupplyTreeContext& ctx, const Storage<SupplyRunSta
                 // итог складывается в shared-состояние, а в Storage его
                 // переносит done-хендлер группы, который уже в контексте дерева.
                 t.isComplete = [ctx, stop, elapsedMs](int ticks) -> bool {
+                    // PausableTicker::start() вызывает isComplete(0) как
+                    // предварительную проверку «а не готово ли уже». Тик с
+                    // номером 0 — не такт измерения, работы в нём быть не должно,
+                    // иначе точек окажется на одну больше заданного числа.
+                    if (ticks == 0)
+                        return false;
                     *elapsedMs = ticks * qMax(1, ctx.tickIntervalMs);
 
                     if (ctx.fastBufferRead)
