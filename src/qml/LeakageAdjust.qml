@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import Grams.dataSourceSingleton 1.0
 import Grams.reactionQuartileSingleton 1.0
+import Grams.regimeTaskTreeSingleton 1.0
 
 Window {
     id: root
@@ -44,6 +45,8 @@ Window {
             spacing: 10
             Button{
                 checkable: true
+                // Рецепт «Натекание» сам управляет дозирующим клапаном.
+                enabled: !RegimeTaskTree.running
                 text: checked ? "Остановить натекание газа" : "Начать натекание газа"
                 onClicked:{
                     if(leakageValveChoose.currentIndex == 0){
