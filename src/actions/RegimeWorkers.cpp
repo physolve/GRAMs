@@ -313,10 +313,13 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
     ctx.secondTract  = m_opts.secondTract;
     ctx.totalRepeats = m_cfg.totalRepeats;
     ctx.perActionPauseMs = m_opts.perActionPauseMs;
-    ctx.stepPauseMs  = m_opts.stepPauseMs;
     ctx.reliefDwellSec = qMax(1, m_opts.reliefDwellSec);   // К118 держим ≥1 с
     ctx.foreVacuum   = m_opts.foreVacuum;
+    ctx.targetVacPa       = m_opts.targetVacPa;
+    ctx.turboSwitchHoldSec = m_opts.turboSwitchHoldSec;
+    ctx.foreVacTimeoutSec = m_opts.foreVacTimeoutSec;
     ctx.pumpRateCheck = m_opts.pumpRateCheck;
+    ctx.continuousPumping = m_opts.continuousPumping;
     ctx.operatorBus  = m_opts.operatorBus;                 // стабильная шина из RegimeTaskTree
     ctx.pauseBus     = &m_pauseBus;
 
@@ -434,6 +437,22 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
     ctx.onNode = [this](VacuumNode node, NodeState state) {
         if (m_monitor)
             m_monitor->onNode(node, state);
+    };
+    ctx.onForevacProgress = [this](VacuumNode node, double currentPa,
+                                   int heldSec, int elapsedSec) {
+        if (m_monitor)
+            m_monitor->onForevacProgress(node, currentPa, heldSec, elapsedSec);
+    };
+    ctx.onForevacDone = [this](VacuumNode node, bool success) {
+        if (m_monitor)
+            m_monitor->onForevacDone(node, success);
+    };
+    ctx.onFailure = [this](const QString& reason) {
+        qWarning() << "[Вакуум] Отказ:" << reason;
+        if (m_monitor)
+            m_monitor->onFailure(reason);
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kRegimeError, -1, -1, reason);
     };
 
     return ctx;

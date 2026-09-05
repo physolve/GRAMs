@@ -1,7 +1,9 @@
 #include "SerialCtrl.h"
 
+#include <cmath>
+
 SerialCtrl::SerialCtrl(QObject *parent) : 
-    QObject(parent), m_serial(new QSerialPort(this)) // unique pointer
+    QObject(parent), m_serial(new QSerialPort(this)), threshold(0) // unique pointer
 {
     connect(m_serial, &QSerialPort::errorOccurred, this, &SerialCtrl::handleError);
     // connect(m_serial, &QSerialPort::readyRead, this, &SerialCtrl::readData);
@@ -83,7 +85,75 @@ void SerialCtrl::setLogText(const QString &text)
     }
 }
 
-VacuumController::VacuumController(QObject *parent) : SerialCtrl(parent), lastData(0), isEnquiry(false)
+VacuumController::VacuumController(QObject *parent) :
+    SerialCtrl(parent), m_timer(new QTimer(this)), m_lastData(0)
+{
+    connect(m_serial, &QSerialPort::readyRead, this, &VacuumController::readData);
+    connect(m_timer, &QTimer::timeout, this, &VacuumController::processEvents);
+}
+
+VacuumController::~VacuumController(){
+    m_timer->stop();
+}
+
+void VacuumController::requestData(){
+    if(!m_serial->isOpen())
+        return;
+    m_serial->write("001M^\r");
+}
+
+void VacuumController::processEvents(){
+    requestData();
+}
+
+void VacuumController::readData(){
+    m_data.append(m_serial->readAll());
+    if (m_data.length() < 12)
+        return;                     // serial reads arrive fragmented; wait for full frame
+    //data format 001M100023D\r -> 1.000Ex (x = 23-20 = 3)
+    const QByteArray data = m_data;
+    m_data.clear();
+
+    QString responce = QString::fromLocal8Bit(data);
+    responce.remove(0, 4);          // strip "001M" header
+    responce.chop(2);               // strip checksum char + CR
+
+    bool ok = true;
+    double result = responce.first(4).toDouble(&ok) / 1000.0;
+    int mantissa = responce.last(2).toInt() - 20;
+
+    if (result != 0 && ok) {
+        m_lastData = result * std::pow(10, mantissa);
+        qDebug() << "Vacuum:" << m_lastData;
+    }
+    else {
+        if (++threshold > 3) {
+            shuttingOff();
+        }
+    }
+}
+
+void VacuumController::shuttingOff(){
+    qDebug() << "Wrong data in sensor!";
+    stopReading();
+    //emit to qml status about error
+}
+
+void VacuumController::startReading(){
+    threshold = 0;
+    m_timer->start(1000);
+}
+
+void VacuumController::stopReading(){
+    m_timer->stop();
+    m_lastData = 0;
+}
+
+double VacuumController::getData() const{
+    return m_lastData;
+}
+
+TurboVacuumController::TurboVacuumController(QObject *parent) : SerialCtrl(parent), lastData(0), isEnquiry(false)
 {
     // default request
     requestArray.resize(6);
@@ -96,17 +166,16 @@ VacuumController::VacuumController(QObject *parent) : SerialCtrl(parent), lastDa
     askData.resize(6); 
     const char a[6] = {'P', 'R', '1', '\r', '\n', '\0'};
     askData = QByteArray::fromHex(a);
-    // const char b[7] = {'\u','0','0','0'6\r\n};
     // other commands
-    connect(m_serial, &QSerialPort::readyRead, this, &VacuumController::readData);
+    connect(m_serial, &QSerialPort::readyRead, this, &TurboVacuumController::readData);
 }
 
-void VacuumController::requestData(){
+void TurboVacuumController::requestData(){
     // default request
     m_serial->write(requestArray);
 }
 
-void VacuumController::requestRepetitive(){
+void TurboVacuumController::requestRepetitive(){
     if(!m_serial->isWritable()){
         return;
     }
@@ -116,13 +185,13 @@ void VacuumController::requestRepetitive(){
     m_serial->write(enquiry);
 }
 
-void VacuumController::readData(){
+void TurboVacuumController::readData(){
     if(!isEnquiry){
         const QByteArray data = m_serial->readAll();
         const QString responce = QString::fromLocal8Bit(data);
         QByteArray acknolegement;
         acknolegement.resize(3);
-        acknolegement[0] = '\u0006';
+        acknolegement[0] = '\x06';
         acknolegement[1] = '\r';
         acknolegement[2] = '\n';
         if(data == acknolegement){
@@ -155,6 +224,6 @@ void VacuumController::readData(){
     lastData = value;
 }
 
-double VacuumController::getData() const{
+double TurboVacuumController::getData() const{
     return lastData;
 }

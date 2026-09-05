@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QHash>
 #include <QObject>
 #include <QPointer>
 #include <QString>
@@ -170,6 +169,12 @@ private:
 // поднимается операторский диалог (OperatorBus): «Продолжить» повторяет окно,
 // «Стоп» завершает задачу ошибкой (→ останов режима). QCustomTask-совместим
 // (start() + done(bool)). Pause-aware. Без operatorBus «не идёт» → done(false).
+//
+// startDelaySec — «мёртвая зона» перед ПЕРВЫМ окном: сразу после открытия К176
+// насос ещё выходит на режим, датчик ДВ301 стоит в over-range и dP/dt ложно
+// мала. Отсчёт окна (и точка p0) берётся только после этой задержки. На повторы
+// после «Продолжить» задержка не накладывается — насос уже работает, оператор
+// ждёт немедленной перепроверки.
 
 class PumpRateWatchdog : public QObject
 {
@@ -178,9 +183,10 @@ public:
     explicit PumpRateWatchdog(QObject* parent = nullptr);
 
     std::function<double()> pressurePa;   // ДВ301 в Па (nullable)
-    int    intervalMs = 1000;
-    int    windowSec  = 5;
-    double minDropPa  = 1.0;              // мин. падение давления за окно
+    int    intervalMs   = 1000;
+    int    startDelaySec = 30;            // пауза перед первым окном (выход насоса на режим)
+    int    windowSec    = 5;
+    double minDropPa    = 0.5;            // мин. падение давления за окно
     QPointer<PauseBus>    pauseBus;
     QPointer<OperatorBus> operatorBus;
 
@@ -198,6 +204,8 @@ private:
 
     QTimer m_timer;
     int    m_elapsed         = 0;
+    int    m_delayLeft       = 0;      // остаток «мёртвой зоны» текущего окна
+    bool   m_firstWindow     = true;   // задержка накладывается только на первое окно
     double m_p0              = 0.0;
     bool   m_awaitingOperator = false;
 };
@@ -260,7 +268,8 @@ enum class VacuumNode {
     F3SecondTract,   // Ф3: второй тракт (s20–s24)
     F5A1,            // 11.5: форвакуум A1 (К118→К178-импульс→К176)
     F6BC,            // 11.6: форвакуум B/C (клапаны C→К178-импульс→К176)
-    F7EF             // 11.7: форвакуум E/F (К151→К178-импульс→К176)
+    F7EF,            // 11.7: форвакуум E/F (К151→К178-импульс→К176)
+    ContinuousPumping // финал: тракт оставлен открытым под откачку (опция)
 };
 
 // ─── Контекст рецепта ─────────────────────────────────────────────────────────
@@ -275,15 +284,16 @@ struct VacuumTreeContext {
 
     // Параметры последовательности
     double dbSbrLim       = 1.65;  // DB_SBR_LIM (GramQt Definer.h:334)
-    int    reliefDwellSec = 5;     // time_5000 у шагов 11118 / 11179
+    // Выдержка «сброса» — К118 (s3/s16) и К179 второго тракта (s22): легаси
+    // time_5000. Зафиксирована на 10 с по результатам стенда; из UI не
+    // настраивается (см. docs/regimes/vacuum.md §5).
+    int    reliefDwellSec = 10;
     int    tickIntervalMs = 1000;  // 1 тик = 1 с в бою; в тестах меньше
     int    totalRepeats   = 1;
     // Пауза-выдержка после каждого дискретного действия рецепта (settlePause):
-    // даёт наблюдаемый темп разворачивания в песочнице. 0 = без пауз.
-    // perActionPauseMs — глобальный дефолт; stepPauseMs — переопределение на узел
-    // (ключ int(VacuumNode) → мс), «задержка для КАЖДОГО действия отдельно».
-    int    perActionPauseMs = 1000;
-    QHash<int, int> stepPauseMs;
+    // сколько клапан стоит в новом положении до следующей команды. Единая для
+    // всех шагов — 3 с (стенд); из UI не настраивается, в тестах 0.
+    int    perActionPauseMs = 3000;
 
     // Флаги пропуска объёмов блока C (инверсия легаси flagIncludeRK*: по
     // умолчанию весь блок C откачивается — решение Q2).
@@ -305,17 +315,25 @@ struct VacuumTreeContext {
     // Форвакуумная откачка 11.5–11.7 (по умолчанию включена в бою; тесты Ф1–Ф3
     // выключают, чтобы изолировать эталон). Параметры-ориентиры из ТЗ REQ-022.
     bool   foreVacuum        = true;
-    double targetVacPa       = 10.0;   // turboSwitchPressurePa (REQ-047/075)
-    int    turboSwitchHoldSec = 60;    // turboSwitchHoldSec — удержание ≤10 Па
+    double targetVacPa       = 40.0;   // turboSwitchPressurePa (REQ-047/075)
+    int    turboSwitchHoldSec = 60;    // turboSwitchHoldSec — удержание ≤ targetVacPa
     int    k178PulseMs       = 2000;   // импульс К178 (REQ-046)
     int    foreVacTimeoutSec = 300;    // таймаут форвакуумного этапа
 
     // dP/dt-watchdog после открытия К176 (REQ-020/076): проверка, что откачка
     // идёт. Диалог оператора — через OperatorBus.
     bool   pumpRateCheck     = true;
+    int    pumpCheckDelaySec  = 30;    // «мёртвая зона» перед первым окном (выход насоса на режим)
     int    pumpCheckWindowSec = 5;     // окно измерения dP/dt
-    double pumpMinDropPa      = 1.0;   // мин. падение давления за окно
+    double pumpMinDropPa      = 0.5;   // мин. падение давления за окно
     OperatorBus* operatorBus = nullptr;
+
+    // Непрерывная откачка: после успешного завершения ВСЕХ повторов оставить
+    // тракт открытым (C по skipRK* → К151 → К178 → К176), чтобы насос продолжал
+    // качать без автоматического закрытия. К118 (атмосфера) и К179 (турбо,
+    // интерлок с К176) не открываются никогда. При отмене/ошибке этап
+    // пропускается — рецепт закрывает всё, как раньше.
+    bool   continuousPumping = false;
 
     // Condition-фаза (повторяет семантику RegimeWorkerBase)
     QString conditionType       = QStringLiteral("none"); // "none"|"time"|"temp"
@@ -333,6 +351,20 @@ struct VacuumTreeContext {
     // Наблюдатель состояния узлов развёртки (nullable). Вызывается из
     // onGroupSetup (Running/Skipped) и onGroupDone (Success/Error/Cancelled).
     std::function<void(VacuumNode, NodeState)>      onNode;
+
+    // Live-прогресс форвакуумного удержания 11.5–11.7 (nullable). Тикает раз в
+    // ctx.tickIntervalMs, пока идёт pausableHoldUntil внутри foreVacPumpToTarget:
+    //   node      — какой из узлов F5A1/F6BC/F7EF сейчас качает
+    //   currentPa — показание ДВ301 (Па); NaN, если датчик не задан
+    //   heldSec   — набранное непрерывное удержание ≤ targetVacPa
+    //   elapsedSec— время с начала этапа (против foreVacTimeoutSec)
+    std::function<void(VacuumNode node, double currentPa,
+                       int heldSec, int elapsedSec)> onForevacProgress;
+    // Этап завершился (успех или нет) — снять live-индикацию.
+    std::function<void(VacuumNode node, bool success)> onForevacDone;
+    // Человекочитаемая причина отказа этапа — «причина завершения режима» в UI.
+    // Вызывается в точке отказа; первый вызов за прогон считается основным.
+    std::function<void(const QString& reason)>       onFailure;
 
     PauseBus* pauseBus = nullptr;
 };

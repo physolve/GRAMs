@@ -1,5 +1,7 @@
 #include "VacuumRunMonitor.h"
 
+#include <cmath>
+
 // ═════════════════════════════════════════════════════════════════════════════
 // VacuumStepModel — статичная развёртка узлов рецепта
 // ═════════════════════════════════════════════════════════════════════════════
@@ -27,6 +29,7 @@ const NodeMeta kNodes[] = {
     { VacuumNode::F5A1,          "форвакуум A1",           "11.5",    "К118→К178→К176", 0 },
     { VacuumNode::F6BC,          "форвакуум B/C",          "11.6",    "C→К178→К176",    0 },
     { VacuumNode::F7EF,          "форвакуум E/F",          "11.7",    "К151→К178→К176", 0 },
+    { VacuumNode::ContinuousPumping, "непрерывная откачка",  "финал",   "тракт остаётся открытым", 0 },
 };
 
 } // namespace
@@ -141,9 +144,19 @@ void VacuumRunMonitor::beginRun(int totalRepeats)
     m_repeatsDone   = 0;
     m_repeatsError  = 0;
     m_currentLabel.clear();
+    m_forevacNode       = -1;
+    m_forevacCurrentPa  = 0.0;
+    m_forevacHasReading = false;
+    m_forevacHeldSec    = 0;
+    m_forevacElapsedSec = 0;
+    m_finishReason.clear();
+    m_failureReason.clear();
+    m_finishState = -1;
     emit valveStatesChanged();
     emit progressChanged();
     emit currentLabelChanged();
+    emit forevacProgressChanged();
+    emit finishReasonChanged();
 }
 
 void VacuumRunMonitor::reset()
@@ -156,6 +169,23 @@ void VacuumRunMonitor::reset()
 void VacuumRunMonitor::onNode(VacuumNode node, NodeState state)
 {
     m_steps->setNodeState(node, state);
+    // Запасная причина отказа: первый узел, свалившийся в Error. Детальный текст
+    // из рецепта (onFailure) имеет приоритет и не затирается этим.
+    if (state == NodeState::Error && m_failureReason.isEmpty()) {
+        QString title;
+        for (const NodeMeta& m : kNodes) {
+            if (m.node != node)
+                continue;
+            title = QString::fromUtf8(m.phase);
+            if (!title.isEmpty())
+                title += QLatin1Char(' ');
+            title += QString::fromUtf8(m.label);
+            break;
+        }
+        m_failureReason = title.isEmpty()
+                            ? QStringLiteral("этап завершился ошибкой")
+                            : QStringLiteral("ошибка на этапе «%1»").arg(title);
+    }
 }
 
 void VacuumRunMonitor::onLabel(const QString& label)
@@ -204,7 +234,65 @@ void VacuumRunMonitor::onRunFinished(int repeatsDone, int repeatsError)
     m_repeatsDone  = repeatsDone;
     m_repeatsError = repeatsError;
     setRunning(false);
+    // Прогон закончился — гасим live-индикацию форвакуума, иначе строка 11.x
+    // осталась бы с последним показанием как будто откачка ещё идёт.
+    if (m_forevacNode >= 0) {
+        m_forevacNode = -1;
+        emit forevacProgressChanged();
+    }
     emit progressChanged();
+}
+
+// ── Форвакуум 11.5–11.7 ──────────────────────────────────────────────────────
+
+void VacuumRunMonitor::setForevacTarget(double targetPa, int holdSec, int timeoutSec)
+{
+    if (qFuzzyCompare(m_forevacTargetPa, targetPa)
+        && m_forevacHoldSec == holdSec && m_forevacTimeoutSec == timeoutSec)
+        return;
+    m_forevacTargetPa   = targetPa;
+    m_forevacHoldSec    = holdSec;
+    m_forevacTimeoutSec = timeoutSec;
+    emit forevacTargetChanged();
+}
+
+void VacuumRunMonitor::onForevacProgress(VacuumNode node, double currentPa,
+                                         int heldSec, int elapsedSec)
+{
+    m_forevacNode       = int(node);
+    m_forevacHasReading = !std::isnan(currentPa);
+    m_forevacCurrentPa  = m_forevacHasReading ? currentPa : 0.0;
+    m_forevacHeldSec    = heldSec;
+    m_forevacElapsedSec = elapsedSec;
+    emit forevacProgressChanged();
+}
+
+void VacuumRunMonitor::onForevacDone(VacuumNode node, bool success)
+{
+    Q_UNUSED(success)
+    if (m_forevacNode != int(node))
+        return;                       // уже переключились на следующий этап
+    m_forevacNode = -1;
+    emit forevacProgressChanged();
+}
+
+// ── Причина завершения ───────────────────────────────────────────────────────
+
+void VacuumRunMonitor::onFailure(const QString& reason)
+{
+    if (reason.isEmpty() || !m_failureReason.isEmpty())
+        return;                       // первая причина за прогон — основная
+    m_failureReason = reason;
+}
+
+void VacuumRunMonitor::setFinish(int state, const QString& reason)
+{
+    const QString text = reason.isEmpty() ? m_failureReason : reason;
+    if (m_finishState == state && m_finishReason == text)
+        return;
+    m_finishState  = state;
+    m_finishReason = text;
+    emit finishReasonChanged();
 }
 
 void VacuumRunMonitor::setProgress(int value)

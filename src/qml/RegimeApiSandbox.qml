@@ -77,6 +77,9 @@ Item {
         closePolicy: Popup.NoAutoClose
         title: "Проверка откачки"
         standardButtons: Dialog.NoButton
+        // Ширина задана явно: иначе implicitWidth диалога считается от
+        // переносимого текста, а тот — от ширины диалога (binding loop).
+        width: 420
 
         contentItem: ColumnLayout {
             spacing: 16
@@ -84,7 +87,7 @@ Item {
                 text: operatorDialog.message
                 color: root.cText
                 wrapMode: Text.WordWrap
-                Layout.preferredWidth: 360
+                Layout.fillWidth: true
             }
             RowLayout {
                 Layout.alignment: Qt.AlignRight
@@ -109,44 +112,70 @@ Item {
     property bool foreVacuum:  true   // форвакуумная откачка 11.5–11.7
     property bool pumpCheck:   true   // dP/dt-watchdog после открытия К176
     property int  repeats:     1
-    property int  stepPauseSec: 1   // общий дефолт settle-паузы
-    property int  reliefHoldSec: 1  // удержание К118 при сбросе (≥1 с)
+    // Тракт остаётся открытым после успешного прогона — насос качает дальше.
+    property bool continuousPumping: false
 
-    // Индивидуальные задержки на каждый шаг (ключ шага → секунды).
-    property var stepDelays: ({})
-    Component.onCompleted: {
-        var keys = RegimeTaskTree.vacuumStepKeys()
-        var d = {}
-        for (var i = 0; i < keys.length; ++i)
-            d[keys[i].key] = root.stepPauseSec
-        root.stepDelays = d
+    // Длительности зафиксированы в C++ (VacuumTreeContext) и из UI не правятся:
+    // шаг 3 с, сброс К118 10 с, «мёртвая зона» dP/dt 30 с.
+    readonly property string fixedTimings: "шаг 3 с · сброс К118 10 с · dP/dt через 30 с"
+
+    // Цель форвакуума 11.5–11.7 (ТЗ REQ-022). targetVacPa вводится текстом, а не
+    // SpinBox: диапазон 1e-4…1e5 Па охватывает пять порядков.
+    property real targetVacPa:  40.0
+    property int  holdSec:      60
+    property int  foreVacTimeoutSec: 300
+
+    // «Должно быть» для строки 11.x — из монитора, чтобы UI показывал реально
+    // применённое значение (после qBound в C++), а не то, что набрано в поле.
+    function fmtPa(v) {
+        if (!isFinite(v)) return "—"
+        if (v >= 1000 || (v > 0 && v < 0.01)) return v.toExponential(2) + " Па"
+        return v.toFixed(2) + " Па"
     }
 
     component Card : Rectangle {
         default property alias cardData: inner.data
         Layout.fillWidth: true
         color: root.cCard
-        radius: 8
+        radius: 6
         border.color: root.cBorder
         border.width: 1
-        implicitHeight: inner.implicitHeight + 24
+        implicitHeight: inner.implicitHeight + 14
         ColumnLayout {
             id: inner
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-            spacing: 8
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 7 }
+            spacing: 5
         }
+    }
+
+    // Компактные варианты контролов: единый мелкий шрифт и минимальные отступы,
+    // чтобы вся панель настроек умещалась в две строки.
+    component Chk : CheckBox {
+        padding: 2
+        font.pointSize: 9
+        ToolTip.visible: hovered && ToolTip.text.length > 0
+        ToolTip.delay: 500
+    }
+    component Num : SpinBox {
+        font.pointSize: 9
+        padding: 2
+        Layout.preferredWidth: 104
+    }
+    component Cap : Label {
+        color: root.cSub
+        font.pointSize: 9
     }
 
     ScrollView {
         id: scroll
         anchors.fill: parent
-        anchors.margins: 12
+        anchors.margins: 8
         contentWidth: availableWidth
         clip: true
 
         ColumnLayout {
             width: scroll.availableWidth
-            spacing: 14
+            spacing: 8
 
             // ── Заголовок + селектор режима ────────────────────────────────────
             RowLayout {
@@ -154,171 +183,324 @@ Item {
                 Label {
                     text: "Развёртка рецепта режима"
                     color: root.cText
-                    font.pointSize: 16
+                    font.pointSize: 13
                     font.bold: true
                 }
                 Item { Layout.fillWidth: true }
-                Label { text: "Режим:"; color: root.cSub }
+                Cap { text: "Режим:" }
                 ComboBox {
                     id: regimeSelector
                     model: ["Вакуум"]     // задел под будущие режимы
-                    Layout.preferredWidth: 180
+                    font.pointSize: 9
+                    Layout.preferredWidth: 140
                 }
             }
 
-            // ── Опции + управление ─────────────────────────────────────────────
+            // ── Опции запуска + управление (одна компактная карточка) ─────────
             Card {
+                // Ряд 1 — что откачиваем.
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 16
-                    Label { text: "Пропуск объёмов C:"; color: root.cSub }
-                    // Метки в терминах интерфейса C1/C2/C3 (ТЗ REQ-005); в скобках — легаси RK.
-                    CheckBox { text: "C1 (RK300)"; checked: root.skipRK300; onToggled: root.skipRK300 = checked }
-                    CheckBox { text: "C3 (RK10)";  checked: root.skipRK10;  onToggled: root.skipRK10  = checked }
-                    CheckBox { text: "C2 (RK50)";  checked: root.skipRK50;  onToggled: root.skipRK50  = checked }
-                    CheckBox { text: "2-й тракт"; checked: root.secondTract; onToggled: root.secondTract = checked }
-                    CheckBox { text: "форвакуум"; checked: root.foreVacuum; onToggled: root.foreVacuum = checked }
-                    CheckBox { text: "проверка dP/dt"; checked: root.pumpCheck; onToggled: root.pumpCheck = checked }
+                    spacing: 8
+                    Cap { text: "Пропуск C:" }
+                    // Метки в терминах интерфейса C1/C2/C3 (ТЗ REQ-005);
+                    // легаси-имена RK и DO-каналы — в подсказках.
+                    Chk {
+                        text: "C1"; ToolTip.text: "RK300 / S3 (К135)"
+                        checked: root.skipRK300; onToggled: root.skipRK300 = checked
+                    }
+                    Chk {
+                        text: "C2"; ToolTip.text: "RK50 / S2 (К133)"
+                        checked: root.skipRK50;  onToggled: root.skipRK50 = checked
+                    }
+                    Chk {
+                        text: "C3"; ToolTip.text: "RK10 / S1 (К131)"
+                        checked: root.skipRK10;  onToggled: root.skipRK10 = checked
+                    }
+                    Rectangle {
+                        implicitWidth: 1; Layout.preferredHeight: 18
+                        color: root.cBorder; opacity: 0.4
+                    }
+                    Chk {
+                        text: "2-й тракт"; ToolTip.text: "Ф3: К192/К179 (s20–s24)"
+                        checked: root.secondTract; onToggled: root.secondTract = checked
+                    }
+                    Chk {
+                        text: "форвакуум"; ToolTip.text: "Этапы 11.5–11.7 через К176"
+                        checked: root.foreVacuum; onToggled: root.foreVacuum = checked
+                    }
+                    Chk {
+                        text: "dP/dt"; ToolTip.text: "Проверка скорости откачки после открытия К176"
+                        checked: root.pumpCheck; onToggled: root.pumpCheck = checked
+                    }
+                    Chk {
+                        text: "непрерывная откачка"
+                        ToolTip.text: "После успешного прогона оставить тракт открытым — насос качает дальше"
+                        checked: root.continuousPumping
+                        onToggled: root.continuousPumping = checked
+                    }
                     Item { Layout.fillWidth: true }
-                    Label { text: "Сброс К118, с:"; color: root.cSub }
-                    SpinBox { from: 1; to: 30; value: root.reliefHoldSec; onValueModified: root.reliefHoldSec = value }
-                    Label { text: "Повторы:"; color: root.cSub }
-                    SpinBox { from: 1; to: 99; value: root.repeats; onValueModified: root.repeats = value }
+                    Cap { text: "Повторы:" }
+                    Num { from: 1; to: 99; value: root.repeats; onValueModified: root.repeats = value }
                 }
+
+                // Ряд 2 — цель форвакуума 11.5–11.7 (ТЗ REQ-022). targetVacPa
+                // вводится текстом, а не SpinBox: диапазон 1e-4…1e5 Па.
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: 6
+                    enabled: root.foreVacuum
+                    opacity: enabled ? 1.0 : 0.45
+                    Cap { text: "Форвакуум до:" }
+                    TextField {
+                        id: targetField
+                        Layout.preferredWidth: 76
+                        text: root.targetVacPa
+                        font.pointSize: 9
+                        font.family: "Consolas"
+                        horizontalAlignment: TextInput.AlignRight
+                        validator: DoubleValidator { bottom: 0.0001; top: 100000; notation: DoubleValidator.ScientificNotation }
+                        onEditingFinished: {
+                            var v = parseFloat(text)
+                            if (!isNaN(v) && v > 0) root.targetVacPa = v
+                            else text = root.targetVacPa
+                        }
+                    }
+                    Cap { text: "Па (ДВ301), удержать" }
+                    Num {
+                        from: 1; to: 3600; stepSize: 5
+                        value: root.holdSec; onValueModified: root.holdSec = value
+                    }
+                    Cap { text: "с, таймаут" }
+                    Num {
+                        from: 10; to: 7200; stepSize: 30
+                        value: root.foreVacTimeoutSec
+                        onValueModified: root.foreVacTimeoutSec = value
+                    }
+                    Cap { text: "с" }
+                    Button {
+                        text: "⟲"
+                        flat: true
+                        font.pointSize: 9
+                        ToolTip.text: "Значения по умолчанию: 40 Па / 60 с / 300 с"
+                        ToolTip.visible: hovered
+                        ToolTip.delay: 500
+                        onClicked: {
+                            root.targetVacPa = 40.0
+                            root.holdSec = 60
+                            root.foreVacTimeoutSec = 300
+                            targetField.text = root.targetVacPa
+                        }
+                    }
+                    Item { Layout.fillWidth: true }
+                }
+
+                // Ряд 3 — управление прогоном. Длительности шагов не настраиваются:
+                // они зафиксированы в VacuumTreeContext, здесь только напоминание.
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
                     Button {
                         text: "▶ Старт"
+                        font.pointSize: 9
                         enabled: !RegimeTaskTree.running
                         onClicked: {
                             RegimeTaskTree.setVacuumOptions(root.skipRK10, root.skipRK50,
                                                             root.skipRK300, root.secondTract)
                             RegimeTaskTree.setVacuumForevac(root.foreVacuum)
+                            RegimeTaskTree.setVacuumForevacTarget(root.targetVacPa,
+                                                                  root.holdSec,
+                                                                  root.foreVacTimeoutSec)
                             RegimeTaskTree.setVacuumPumpCheck(root.pumpCheck)
-                            RegimeTaskTree.setVacuumStepPauseMs(root.stepPauseSec * 1000)
-                            RegimeTaskTree.setVacuumStepDelays(root.stepDelays)
-                            RegimeTaskTree.setVacuumReliefHoldSec(root.reliefHoldSec)
+                            RegimeTaskTree.setVacuumContinuousPumping(root.continuousPumping)
                             RegimeTaskTree.startAll()
                         }
                     }
                     Button {
                         text: RegimeTaskTree.paused ? "▷ Резюм" : "⏸ Пауза"
+                        font.pointSize: 9
                         enabled: RegimeTaskTree.running
                         onClicked: RegimeTaskTree.paused ? RegimeTaskTree.resume()
                                                          : RegimeTaskTree.pause()
                     }
                     Button {
                         text: "⏹ Стоп"
+                        font.pointSize: 9
                         enabled: RegimeTaskTree.running
                         onClicked: RegimeTaskTree.stop()
                     }
                     Button {
                         text: "⟲ Сброс"
+                        font.pointSize: 9
                         enabled: !RegimeTaskTree.running
                         onClicked: root.mon.reset()
                     }
+                    Cap { text: root.fixedTimings; font.pointSize: 8 }
                     Item { Layout.fillWidth: true }
                     Label {
                         text: RegimeTaskTree.running
                               ? (RegimeTaskTree.paused ? "на паузе" : "выполняется")
                               : "остановлен"
                         color: RegimeTaskTree.running ? root.stateColor(1) : root.cSub
+                        font.pointSize: 9
                         font.bold: true
                     }
                 }
             }
 
-            // ── Задержки шагов (индивидуально «для КАЖДОГО действия») ──────────
-            Card {
-                RowLayout {
-                    Layout.fillWidth: true
-                    Label { text: "Задержка после каждого шага, с"; color: root.cBorder; font.bold: true }
-                    Item { Layout.fillWidth: true }
-                    Label { text: "общий дефолт:"; color: root.cSub }
-                    SpinBox {
-                        from: 0; to: 30; value: root.stepPauseSec
-                        onValueModified: {
-                            root.stepPauseSec = value
-                            var d = {}
-                            var keys = RegimeTaskTree.vacuumStepKeys()
-                            for (var i = 0; i < keys.length; ++i)
-                                d[keys[i].key] = value
-                            root.stepDelays = d
-                        }
-                    }
-                }
-                Flow {
-                    Layout.fillWidth: true
-                    spacing: 12
-                    Repeater {
-                        model: RegimeTaskTree.vacuumStepKeys()
-                        delegate: RowLayout {
-                            required property var modelData
-                            spacing: 6
-                            Label { text: modelData.label; color: root.cText; font.pointSize: 9 }
-                            SpinBox {
-                                from: 0; to: 60
-                                value: root.stepDelays[modelData.key] !== undefined ? root.stepDelays[modelData.key] : root.stepPauseSec
-                                onValueModified: {
-                                    var d = root.stepDelays
-                                    d[modelData.key] = value
-                                    root.stepDelays = d
-                                }
-                            }
-                        }
-                    }
-                }
-            }
 
             // ── Развёртка рецепта (дерево узлов + состояния) ───────────────────
             Card {
                 RowLayout {
                     Layout.fillWidth: true
-                    Label { text: "Рецепт «Вакуум» — узлы и состояние"; color: root.cBorder; font.bold: true }
-                    Item { Layout.fillWidth: true }
                     Label {
-                        text: "текущая фаза: " + (root.mon.currentLabel.length ? root.mon.currentLabel : "—")
-                        color: root.cSub
+                        text: "Рецепт «Вакуум» — узлы и состояние"
+                        color: root.cBorder; font.bold: true; font.pointSize: 10
                     }
+                    Item { Layout.fillWidth: true }
+                    Cap { text: "текущая фаза: " + (root.mon.currentLabel.length ? root.mon.currentLabel : "—") }
                 }
                 Repeater {
                     model: root.mon.steps
-                    delegate: Rectangle {
+                    delegate: ColumnLayout {
+                        id: stepRow
                         required property var model
+                        // Узлы форвакуума (VacuumNode: F5A1=8, F6BC=9, F7EF=10) —
+                        // единственные, под которыми рисуется цель и её прогресс.
+                        readonly property bool isForevac: stepRow.model.nodeId >= 8
+                                                          && stepRow.model.nodeId <= 10
+                        readonly property bool pumping: root.mon.forevacActive
+                                                        && root.mon.forevacNode === stepRow.model.nodeId
                         Layout.fillWidth: true
-                        implicitHeight: 30
-                        color: model.depth > 0 ? root.cField : "transparent"
-                        radius: 4
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 8 + model.depth * 26
-                            anchors.rightMargin: 8
-                            spacing: 10
-                            // Чип состояния
-                            Rectangle {
-                                width: 14; height: 14; radius: 3
-                                color: root.stateColor(model.state)
-                                border.color: root.cBg; border.width: 1
-                                // «Спиннер»: пульсация при Running
-                                SequentialAnimation on opacity {
-                                    running: model.state === 1
-                                    loops: Animation.Infinite
-                                    NumberAnimation { to: 0.35; duration: 500 }
-                                    NumberAnimation { to: 1.0;  duration: 500 }
+                        spacing: 2
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: 26
+                            color: stepRow.model.depth > 0 ? root.cField : "transparent"
+                            radius: 4
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 8 + stepRow.model.depth * 26
+                                anchors.rightMargin: 8
+                                spacing: 10
+                                // Чип состояния
+                                Rectangle {
+                                    // implicit*, а не width/height: элемент под управлением RowLayout
+                                    implicitWidth: 14; implicitHeight: 14; radius: 3
+                                    color: root.stateColor(stepRow.model.state)
+                                    border.color: root.cBg; border.width: 1
+                                    // «Спиннер»: пульсация при Running
+                                    SequentialAnimation on opacity {
+                                        running: stepRow.model.state === 1
+                                        loops: Animation.Infinite
+                                        NumberAnimation { to: 0.35; duration: 500 }
+                                        NumberAnimation { to: 1.0;  duration: 500 }
+                                    }
+                                }
+                                Label {
+                                    text: (stepRow.model.phase.length ? stepRow.model.phase + "  " : "")
+                                          + stepRow.model.label
+                                    color: root.cText
+                                    font.bold: stepRow.model.depth === 0
+                                }
+                                Label {
+                                    text: stepRow.model.sRange
+                                    color: root.cSub; font.pointSize: 8; font.family: "Consolas"
+                                }
+                                Item { Layout.fillWidth: true }
+                                Label {
+                                    text: root.stateText(stepRow.model.state)
+                                    color: root.stateColor(stepRow.model.state)
+                                    font.pointSize: 9
                                 }
                             }
-                            Label {
-                                text: (model.phase.length ? model.phase + "  " : "") + model.label
-                                color: root.cText
-                                font.bold: model.depth === 0
-                            }
-                            Label { text: model.sRange; color: root.cSub; font.pointSize: 8; font.family: "Consolas" }
-                            Item { Layout.fillWidth: true }
-                            Label {
-                                text: root.stateText(model.state)
-                                color: root.stateColor(model.state)
-                                font.pointSize: 9
+                        }
+
+                        // ── Прогресс откачки под строкой узла 11.5 / 11.6 / 11.7 ──
+                        // Цель («должно быть») видна всегда; текущее ДВ301, набранное
+                        // удержание и таймаут — только пока качает именно этот узел.
+                        Rectangle {
+                            visible: stepRow.isForevac
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 8 + stepRow.model.depth * 26 + 24
+                            implicitHeight: fvCol.implicitHeight + 12
+                            color: stepRow.pumping ? Qt.darker(root.cAccent, 1.15) : root.cField
+                            radius: 4
+                            border.width: stepRow.pumping ? 1 : 0
+                            border.color: root.cBorder
+
+                            ColumnLayout {
+                                id: fvCol
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 6 }
+                                spacing: 4
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    Label {
+                                        text: "цель: ≤ " + root.fmtPa(root.mon.forevacTargetPa)
+                                        color: root.cBorder
+                                        font.pointSize: 9; font.bold: true
+                                        font.family: "Consolas"
+                                    }
+                                    Label {
+                                        text: "удержание " + root.mon.forevacHoldSec
+                                              + " с · таймаут " + root.mon.forevacTimeoutSec + " с"
+                                        color: root.cSub; font.pointSize: 8
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    Label {
+                                        visible: stepRow.pumping
+                                        text: root.mon.forevacHasReading
+                                              ? "ДВ301: " + root.fmtPa(root.mon.forevacCurrentPa)
+                                              : "ДВ301: нет датчика"
+                                        color: !root.mon.forevacHasReading ? root.stateColor(3)
+                                             : (root.mon.forevacCurrentPa <= root.mon.forevacTargetPa
+                                                ? root.stateColor(2) : root.cText)
+                                        font.pointSize: 10; font.bold: true
+                                        font.family: "Consolas"
+                                    }
+                                }
+
+                                // Набранное непрерывное удержание ≤ цели
+                                RowLayout {
+                                    visible: stepRow.pumping
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    Label { text: "удержано:"; color: root.cSub; font.pointSize: 8 }
+                                    ProgressBar {
+                                        Layout.fillWidth: true
+                                        from: 0
+                                        to: Math.max(1, root.mon.forevacHoldSec)
+                                        value: root.mon.forevacHeldSec
+                                    }
+                                    Label {
+                                        text: root.mon.forevacHeldSec + " / " + root.mon.forevacHoldSec + " с"
+                                        color: root.cText; font.pointSize: 8; font.family: "Consolas"
+                                    }
+                                }
+
+                                // Время этапа против таймаута
+                                RowLayout {
+                                    visible: stepRow.pumping
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    Label { text: "этап:"; color: root.cSub; font.pointSize: 8 }
+                                    ProgressBar {
+                                        Layout.fillWidth: true
+                                        from: 0
+                                        to: Math.max(1, root.mon.forevacTimeoutSec)
+                                        value: root.mon.forevacElapsedSec
+                                    }
+                                    Label {
+                                        text: root.mon.forevacElapsedSec + " / "
+                                              + root.mon.forevacTimeoutSec + " с"
+                                        color: root.mon.forevacElapsedSec > root.mon.forevacTimeoutSec * 0.8
+                                               ? root.stateColor(1) : root.cSub
+                                        font.pointSize: 8; font.family: "Consolas"
+                                    }
+                                }
                             }
                         }
                     }
@@ -341,6 +523,49 @@ Item {
                     Label { text: root.mon.repeatsDone; color: root.stateColor(2) }
                     Label { text: "С ошибкой:"; color: root.cSub }
                     Label { text: root.mon.repeatsError; color: root.stateColor(3) }
+                }
+
+                // ── Причина завершения режима ─────────────────────────────────
+                // RegimeEnums::State: 1 Stopped, 5 Done, 6 Error.
+                Rectangle {
+                    visible: root.mon.finishReason.length > 0
+                    Layout.fillWidth: true
+                    implicitHeight: finishRow.implicitHeight + 16
+                    radius: 4
+                    color: root.cField
+                    border.width: 1
+                    border.color: root.mon.finishState === 6 ? root.stateColor(3)
+                                : root.mon.finishState === 5 ? root.stateColor(2)
+                                                             : root.stateColor(4)
+                    RowLayout {
+                        id: finishRow
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                        spacing: 10
+                        Label {
+                            text: root.mon.finishState === 6 ? "✕"
+                                : root.mon.finishState === 5 ? "✓" : "⏹"
+                            color: root.mon.finishState === 6 ? root.stateColor(3)
+                                 : root.mon.finishState === 5 ? root.stateColor(2)
+                                                              : root.stateColor(4)
+                            font.pointSize: 13; font.bold: true
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Label {
+                                text: root.mon.finishState === 6 ? "Режим завершён с ошибкой"
+                                    : root.mon.finishState === 5 ? "Режим завершён"
+                                                                 : "Режим остановлен"
+                                color: root.cText; font.bold: true
+                            }
+                            Label {
+                                text: root.mon.finishReason
+                                color: root.cSub
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
                 }
                 RowLayout {
                     Layout.fillWidth: true

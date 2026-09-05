@@ -71,6 +71,23 @@ class VacuumRunMonitor : public QObject
     Q_PROPERTY(int         repeatsError  READ repeatsError  NOTIFY progressChanged)
     Q_PROPERTY(QVariantMap valveStates   READ valveStates   NOTIFY valveStatesChanged)
 
+    // ── Форвакуум 11.5–11.7: цель и live-прогресс её достижения ───────────────
+    // forevacNode — int(VacuumNode) качающего сейчас узла, либо -1. QML сопоставляет
+    // его с model.nodeId строки развёртки, чтобы нарисовать прогресс ПОД этой строкой.
+    Q_PROPERTY(double  forevacTargetPa  READ forevacTargetPa  NOTIFY forevacTargetChanged)
+    Q_PROPERTY(int     forevacHoldSec   READ forevacHoldSec   NOTIFY forevacTargetChanged)
+    Q_PROPERTY(int     forevacTimeoutSec READ forevacTimeoutSec NOTIFY forevacTargetChanged)
+    Q_PROPERTY(int     forevacNode      READ forevacNode      NOTIFY forevacProgressChanged)
+    Q_PROPERTY(bool    forevacActive    READ forevacActive    NOTIFY forevacProgressChanged)
+    Q_PROPERTY(double  forevacCurrentPa READ forevacCurrentPa NOTIFY forevacProgressChanged)
+    Q_PROPERTY(bool    forevacHasReading READ forevacHasReading NOTIFY forevacProgressChanged)
+    Q_PROPERTY(int     forevacHeldSec   READ forevacHeldSec   NOTIFY forevacProgressChanged)
+    Q_PROPERTY(int     forevacElapsedSec READ forevacElapsedSec NOTIFY forevacProgressChanged)
+
+    // ── Причина завершения прогона (пусто, пока прогон не закончился) ─────────
+    Q_PROPERTY(QString finishReason READ finishReason NOTIFY finishReasonChanged)
+    Q_PROPERTY(int     finishState  READ finishState  NOTIFY finishReasonChanged)
+
 public:
     explicit VacuumRunMonitor(QObject* parent = nullptr);
 
@@ -87,6 +104,19 @@ public:
     int         repeatsError()  const { return m_repeatsError; }
     QVariantMap valveStates()   const { return m_valveStates; }
 
+    double  forevacTargetPa()   const { return m_forevacTargetPa; }
+    int     forevacHoldSec()    const { return m_forevacHoldSec; }
+    int     forevacTimeoutSec() const { return m_forevacTimeoutSec; }
+    int     forevacNode()       const { return m_forevacNode; }
+    bool    forevacActive()     const { return m_forevacNode >= 0; }
+    double  forevacCurrentPa()  const { return m_forevacCurrentPa; }
+    bool    forevacHasReading() const { return m_forevacHasReading; }
+    int     forevacHeldSec()    const { return m_forevacHeldSec; }
+    int     forevacElapsedSec() const { return m_forevacElapsedSec; }
+
+    QString finishReason() const { return m_finishReason; }
+    int     finishState()  const { return m_finishState; }
+
     // ── Приёмники состояния (из воркера / рецепта) ────────────────────────────
     void beginRun(int totalRepeats);
     void onNode(VacuumNode node, NodeState state);
@@ -96,6 +126,17 @@ public:
     void onConditionProgress(int elapsedSec, int repeat);
     void onRepeatDone(bool success, int repeat);
     void onRunFinished(int repeatsDone, int repeatsError);
+    // Цель форвакуума — выставляется до старта, чтобы UI показывал «должно быть»
+    // ещё до входа в 11.5.
+    void setForevacTarget(double targetPa, int holdSec, int timeoutSec);
+    void onForevacProgress(VacuumNode node, double currentPa, int heldSec, int elapsedSec);
+    void onForevacDone(VacuumNode node, bool success);
+    // Причина отказа из рецепта (детальная). Первая за прогон побеждает —
+    // последующие каскадные отказы её не затирают.
+    void onFailure(const QString& reason);
+    // Итог прогона: state — RegimeEnums::State (Done/Error/Stopped), reason —
+    // готовый текст либо пусто (тогда берётся накопленная причина отказа).
+    void setFinish(int state, const QString& reason);
     void setProgress(int value);
     void setProgressMax(int max);
     void setRunning(bool running);
@@ -110,6 +151,9 @@ signals:
     void progressChanged();
     void currentLabelChanged();
     void valveStatesChanged();
+    void forevacTargetChanged();
+    void forevacProgressChanged();
+    void finishReasonChanged();
 
 private:
     void initValves();
@@ -126,4 +170,17 @@ private:
     int         m_repeatsDone    = 0;
     int         m_repeatsError   = 0;
     QVariantMap m_valveStates;
+
+    double m_forevacTargetPa   = 40.0;
+    int    m_forevacHoldSec    = 60;
+    int    m_forevacTimeoutSec = 300;
+    int    m_forevacNode       = -1;      // int(VacuumNode) активного этапа, -1 = нет
+    double m_forevacCurrentPa  = 0.0;
+    bool   m_forevacHasReading = false;   // false, когда датчик ДВ301 не задан
+    int    m_forevacHeldSec    = 0;
+    int    m_forevacElapsedSec = 0;
+
+    QString m_finishReason;
+    QString m_failureReason;              // первая причина отказа из рецепта
+    int     m_finishState = -1;           // RegimeEnums::State, -1 = не завершён
 };

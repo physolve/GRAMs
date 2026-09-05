@@ -61,6 +61,22 @@ void RegimeTaskTree::setVacuumForevac(bool enabled)
     qDebug() << "RegimeTaskTree: setVacuumForevac" << enabled;
 }
 
+void RegimeTaskTree::setVacuumForevacTarget(double targetPa, int holdSec, int timeoutSec)
+{
+    // Границы намеренно широкие: 1e-4 Па перекрывает турбо-диапазон, верх — грубый
+    // форвакуум. Ноль/отрицательное давление недостижимо и повесило бы этап до таймаута.
+    m_vacuumOptions.targetVacPa        = qBound(1e-4, targetPa, 1.0e5);
+    m_vacuumOptions.turboSwitchHoldSec = qMax(1, holdSec);
+    m_vacuumOptions.foreVacTimeoutSec  = qMax(1, timeoutSec);
+    m_vacuumMonitor.setForevacTarget(m_vacuumOptions.targetVacPa,
+                                     m_vacuumOptions.turboSwitchHoldSec,
+                                     m_vacuumOptions.foreVacTimeoutSec);
+    qDebug() << "RegimeTaskTree: setVacuumForevacTarget"
+             << m_vacuumOptions.targetVacPa << "Pa, hold"
+             << m_vacuumOptions.turboSwitchHoldSec << "s, timeout"
+             << m_vacuumOptions.foreVacTimeoutSec << "s";
+}
+
 void RegimeTaskTree::setVacuumOptions(bool skipRK10, bool skipRK50,
                                       bool skipRK300, bool secondTract)
 {
@@ -73,72 +89,10 @@ void RegimeTaskTree::setVacuumOptions(bool skipRK10, bool skipRK50,
              << "secondTract=" << secondTract;
 }
 
-void RegimeTaskTree::setVacuumStepPauseMs(int ms)
+void RegimeTaskTree::setVacuumContinuousPumping(bool enabled)
 {
-    m_vacuumOptions.perActionPauseMs = qMax(0, ms);
-    qDebug() << "RegimeTaskTree: setVacuumStepPauseMs" << m_vacuumOptions.perActionPauseMs;
-}
-
-// Сопоставление строковых ключей шагов с узлами рецепта (VacuumNode).
-static const QList<QPair<QString, VacuumNode>>& vacuumStepMap()
-{
-    static const QList<QPair<QString, VacuumNode>> kMap = {
-        { QStringLiteral("f1"),          VacuumNode::F1Relief },
-        { QStringLiteral("rk300"),       VacuumNode::F2_RK300 },
-        { QStringLiteral("rk10"),        VacuumNode::F2_RK10 },
-        { QStringLiteral("rk50"),        VacuumNode::F2_RK50 },
-        { QStringLiteral("reliefMid"),   VacuumNode::F2_ReliefMid },
-        { QStringLiteral("blockC"),      VacuumNode::F2BlockC },
-        { QStringLiteral("secondTract"), VacuumNode::F3SecondTract },
-        { QStringLiteral("a1"),          VacuumNode::F5A1 },
-        { QStringLiteral("bc"),          VacuumNode::F6BC },
-        { QStringLiteral("ef"),          VacuumNode::F7EF },
-    };
-    return kMap;
-}
-
-void RegimeTaskTree::setVacuumStepDelays(const QVariantMap& secondsByStep)
-{
-    m_vacuumOptions.stepPauseMs.clear();
-    for (const auto& pair : vacuumStepMap()) {
-        if (secondsByStep.contains(pair.first)) {
-            const int sec = qMax(0, secondsByStep.value(pair.first).toInt());
-            m_vacuumOptions.stepPauseMs.insert(int(pair.second), sec * 1000);
-        }
-    }
-    qDebug() << "RegimeTaskTree: setVacuumStepDelays" << m_vacuumOptions.stepPauseMs.size()
-             << "steps";
-}
-
-QVariantList RegimeTaskTree::vacuumStepKeys() const
-{
-    // {key, label} для построения таблицы задержек в QML.
-    static const QList<QPair<QString, QString>> kLabels = {
-        { QStringLiteral("f1"),          QStringLiteral("Ф1 сброс К118") },
-        { QStringLiteral("rk300"),       QStringLiteral("C1 / RK300 (S3)") },
-        { QStringLiteral("rk10"),        QStringLiteral("C3 / RK10 (S1)") },
-        { QStringLiteral("rk50"),        QStringLiteral("C2 / RK50 (S2)") },
-        { QStringLiteral("reliefMid"),   QStringLiteral("Ф2 средний сброс") },
-        { QStringLiteral("blockC"),      QStringLiteral("Ф2 блок C (итог)") },
-        { QStringLiteral("secondTract"), QStringLiteral("Ф3 второй тракт") },
-        { QStringLiteral("a1"),          QStringLiteral("11.5 форвакуум A1") },
-        { QStringLiteral("bc"),          QStringLiteral("11.6 форвакуум B/C") },
-        { QStringLiteral("ef"),          QStringLiteral("11.7 форвакуум E/F") },
-    };
-    QVariantList out;
-    for (const auto& p : kLabels) {
-        QVariantMap m;
-        m["key"]   = p.first;
-        m["label"] = p.second;
-        out.append(m);
-    }
-    return out;
-}
-
-void RegimeTaskTree::setVacuumReliefHoldSec(int sec)
-{
-    m_vacuumOptions.reliefDwellSec = qMax(1, sec);
-    qDebug() << "RegimeTaskTree: setVacuumReliefHoldSec" << m_vacuumOptions.reliefDwellSec;
+    m_vacuumOptions.continuousPumping = enabled;
+    qDebug() << "RegimeTaskTree: setVacuumContinuousPumping" << enabled;
 }
 
 void RegimeTaskTree::setVacuumPumpCheck(bool enabled)
@@ -218,7 +172,10 @@ void RegimeTaskTree::startFrom(int startRegimeId)
         qDebug() << "RegimeTaskTree: sequence finished,"
                  << (result == DoneWith::Success ? "success"
                    : result == DoneWith::Error   ? "error"
-                                                 : "cancelled");
+                                                 : "cancelled")
+                 << "—" << (m_vacuumMonitor.finishReason().isEmpty()
+                                ? QStringLiteral("причина не зафиксирована")
+                                : m_vacuumMonitor.finishReason());
 
         emit executionFinished(success);
         setRunning(false);
@@ -316,14 +273,25 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
 
     // ── Done handler — shared across all regime types ─────────────────────────
     auto doneFn = [regimeId, name, this](DoneWith result) {
+        // Причина завершения: показывается в UI рядом с итогом режима, чтобы
+        // «завершён с ошибкой» не приходилось выяснять по логу.
         if (result == DoneWith::Success) {
             m_manager->completeRegimeExecution(regimeId);
+            m_vacuumMonitor.setFinish(int(RegimeEnums::State::Done),
+                                      QStringLiteral("Режим «%1» завершён успешно").arg(name));
         } else if (result == DoneWith::Cancel) {
             m_manager->setRegimeState(regimeId, RegimeEnums::State::Stopped);
             if (m_logger.isOpen())
                 m_logger.logEvent(-1, RegimeLogger::kCancelled, -1, -1, name);
+            m_vacuumMonitor.setFinish(int(RegimeEnums::State::Stopped),
+                                      QStringLiteral("Режим «%1» остановлен оператором").arg(name));
         } else { // Error
             m_manager->setRegimeState(regimeId, RegimeEnums::State::Error);
+            // Пустая строка ⇒ монитор подставит накопленную причину отказа
+            // (детальную из рецепта либо имя упавшего узла).
+            m_vacuumMonitor.setFinish(int(RegimeEnums::State::Error), QString());
+            qWarning() << "RegimeTaskTree: regime" << regimeId << name
+                       << "finished with error —" << m_vacuumMonitor.finishReason();
         }
         emit regimeFinished(regimeId, result == DoneWith::Success);
     };
@@ -345,6 +313,10 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
                     w.setConfig(cfg);
                     w.setVacuumOptions(opts);
                     m_vacuumMonitor.beginRun(cfg.totalRepeats);
+                    // Цель форвакуума видна в развёртке до входа в 11.5.
+                    m_vacuumMonitor.setForevacTarget(opts.targetVacPa,
+                                                     opts.turboSwitchHoldSec,
+                                                     opts.foreVacTimeoutSec);
                     m_vacuumMonitor.setPaused(false);
                     m_vacuumMonitor.setRunning(true);
                     w.setMonitor(&m_vacuumMonitor);

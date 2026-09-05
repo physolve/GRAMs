@@ -1,6 +1,7 @@
 #include "VacuumTaskTree.h"
 
 #include <QDebug>
+#include <limits>
 #include <memory>
 
 using namespace QtTaskTree;
@@ -68,7 +69,13 @@ void PumpRateWatchdog::start()
 void PumpRateWatchdog::beginWindow()
 {
     m_elapsed = 0;
-    m_p0 = pressurePa ? pressurePa() : 0.0;
+    // Первое окно открывается только после «мёртвой зоны»: пока насос выходит
+    // на режим, ДВ301 стоит в over-range и dP/dt ложно мала (ложный отказ).
+    m_delayLeft = m_firstWindow ? qMax(0, startDelaySec) : 0;
+    m_firstWindow = false;
+    // p0 берётся здесь только если задержки нет; иначе — по её истечении,
+    // чтобы падение за время выхода на режим не засчитывалось в окно.
+    m_p0 = (m_delayLeft == 0 && pressurePa) ? pressurePa() : 0.0;
     m_awaitingOperator = false;
     if (pauseBus && pauseBus->isPaused())
         return;                         // стартуем замороженными, ждём resume
@@ -77,6 +84,11 @@ void PumpRateWatchdog::beginWindow()
 
 void PumpRateWatchdog::tick()
 {
+    if (m_delayLeft > 0) {
+        if (--m_delayLeft == 0)
+            m_p0 = pressurePa ? pressurePa() : 0.0;   // отсчёт окна с этой точки
+        return;
+    }
     ++m_elapsed;
     if (m_elapsed < windowSec)
         return;
@@ -117,6 +129,26 @@ using TickerTask    = QCustomTask<PausableTicker>;
 using PumpRateTask  = QCustomTask<PumpRateWatchdog>;
 
 namespace {
+
+// Короткая подпись узла для человекочитаемых причин отказа (UI/лог).
+QString nodeTitle(VacuumNode node)
+{
+    switch (node) {
+    case VacuumNode::Condition:     return QStringLiteral("Условие");
+    case VacuumNode::F1Relief:      return QStringLiteral("Ф1 сброс");
+    case VacuumNode::F2BlockC:      return QStringLiteral("Ф2 блок C");
+    case VacuumNode::F2_RK300:      return QStringLiteral("Ф2 C1/RK300");
+    case VacuumNode::F2_RK10:       return QStringLiteral("Ф2 C3/RK10");
+    case VacuumNode::F2_RK50:       return QStringLiteral("Ф2 C2/RK50");
+    case VacuumNode::F2_ReliefMid:  return QStringLiteral("Ф2 средний сброс");
+    case VacuumNode::F3SecondTract: return QStringLiteral("Ф3 второй тракт");
+    case VacuumNode::F5A1:          return QStringLiteral("11.5 форвакуум A1");
+    case VacuumNode::F6BC:          return QStringLiteral("11.6 форвакуум B/C");
+    case VacuumNode::F7EF:          return QStringLiteral("11.7 форвакуум E/F");
+    case VacuumNode::ContinuousPumping: return QStringLiteral("Непрерывная откачка");
+    }
+    return QStringLiteral("этап");
+}
 
 // ── Наблюдение за узлами развёртки (аддитивно, control-flow не меняет) ─────────
 NodeState doneToNode(DoneWith w)
@@ -238,14 +270,7 @@ GroupItem settlePauseMs(const VacuumTreeContext& ctx, int ms)
     });
 }
 
-// Задержка после действия конкретного узла: индивидуальное значение из
-// stepPauseMs (таблица «для КАЖДОГО действия»), иначе глобальный perActionPauseMs.
-GroupItem settlePauseFor(const VacuumTreeContext& ctx, VacuumNode node)
-{
-    return settlePauseMs(ctx, ctx.stepPauseMs.value(int(node), ctx.perActionPauseMs));
-}
-
-// Обобщённая пауза (глобальный дефолт) — для точек без своего узла.
+// Пауза после действия (единая для всех шагов рецепта, ctx.perActionPauseMs).
 GroupItem settlePause(const VacuumTreeContext& ctx)
 {
     return settlePauseMs(ctx, ctx.perActionPauseMs);
@@ -362,7 +387,7 @@ ExecutableItem buildBlockC(const Storage<VacuumRunState>& st,
         // Держим S3 открытым свою настраиваемую задержку перед закрытием, иначе
         // при пропущенном сбросе (P ≤ порога) S3 открывается и тут же
         // закрывается — «мигание» RK300 на стенде.
-        settlePauseFor(ctx, VacuumNode::F2_RK300),
+        settlePause(ctx),
         onGroupDone([st, ctx, opts](DoneWith w) {          // s10: 10135
             if (!ctx.skipRK300 && ctx.onNode)
                 ctx.onNode(VacuumNode::F2_RK300, doneToNode(w));
@@ -384,10 +409,10 @@ ExecutableItem buildBlockC(const Storage<VacuumRunState>& st,
     // даже когда RK10 пропущен — так в CSV.
     items << skipUnlessNode(ctx, VacuumNode::F2_RK10, !ctx.skipRK10,
                         { openValveTask(st, ctx, VacuumValve::K131, &VacuumRunState::s1Open) });
-    items << settlePauseFor(ctx, VacuumNode::F2_RK10);
+    items << settlePause(ctx);
     items << skipUnlessNode(ctx, VacuumNode::F2_RK50, !ctx.skipRK50,
                         { openValveTask(st, ctx, VacuumValve::K133, &VacuumRunState::s2Open) });
-    items << settlePauseFor(ctx, VacuumNode::F2_RK50);
+    items << settlePause(ctx);
 
     if (opts.reliefAndClose)
         items << withNode(ctx, VacuumNode::F2_ReliefMid,
@@ -461,7 +486,7 @@ ExecutableItem secondTractGroup(const Storage<VacuumRunState>& st,
 // Форвакуумная откачка 11.5–11.7 (A1, B/C, E/F) — перенос ТЗ v5, раздел 12.1
 // ═════════════════════════════════════════════════════════════════════════════
 //
-// ОБЛАСТЬ: только форвакуум через К176 (ForeVacPumpTo10Pa, REQ-074/075). Турбо
+// ОБЛАСТЬ: только форвакуум через К176 (ForeVacPumpToTarget, REQ-074/075). Турбо
 // (К179, раздел 12.2), over-range/watchdog (REQ-076/079/081) и foundation-модули
 // (БД C, interlock-матрица, OperatorBus) — сознательно отложены (план §4).
 // Интерлок К176⇄К179 не нарушается: К179 здесь не открывается вовсе.
@@ -471,24 +496,31 @@ ExecutableItem secondTractGroup(const Storage<VacuumRunState>& st,
 // Успех = удержание достигнуто. Таймаут по общему elapsed ⇒ группа возвращает
 // Error (PausableTicker сам умеет только done(true), поэтому исход различаем
 // разделяемым флагом succeeded в onGroupDone). pred читает ТОЛЬКО через швы.
+// onTick (nullable) вызывается КАЖДЫЙ тик с (held, elapsed) — для live-прогресса
+// в UI. onTimeout (nullable) — только при реальном исчерпании timeoutSec (не при
+// отмене), чтобы объемлющий этап сообщил человекочитаемую причину.
 ExecutableItem pausableHoldUntil(const VacuumTreeContext& ctx,
                                  std::function<bool()> pred,
-                                 int holdSec, int timeoutSec)
+                                 int holdSec, int timeoutSec,
+                                 std::function<void(int heldSec, int elapsedSec)> onTick = {},
+                                 std::function<void()> onTimeout = {})
 {
     auto held      = std::make_shared<int>(0);
     auto succeeded = std::make_shared<bool>(false);
     return Group {
         sequential,
-        TickerTask([ctx, pred, holdSec, timeoutSec, held, succeeded](PausableTicker& t) {
+        TickerTask([ctx, pred, holdSec, timeoutSec, held, succeeded, onTick](PausableTicker& t) {
             *held = 0;
             *succeeded = false;
             t.intervalMs = ctx.tickIntervalMs;
             t.pauseBus   = ctx.pauseBus;
-            t.isComplete = [pred, holdSec, timeoutSec, held, succeeded](int elapsed) -> bool {
+            t.isComplete = [pred, holdSec, timeoutSec, held, succeeded, onTick](int elapsed) -> bool {
                 if (pred && pred())
                     ++(*held);
                 else
                     *held = 0;
+                if (onTick)
+                    onTick(*held, elapsed);
                 if (*held >= holdSec) {
                     *succeeded = true;
                     return true;                                  // удержание достигнуто
@@ -498,9 +530,11 @@ ExecutableItem pausableHoldUntil(const VacuumTreeContext& ctx,
                 return false;
             };
         }),
-        onGroupDone([succeeded](DoneWith w) -> DoneResult {
+        onGroupDone([succeeded, onTimeout](DoneWith w) -> DoneResult {
             // Success только при реальном удержании; таймаут/отмена → Error,
             // чтобы объемлющий этап закрыл клапаны в своём onGroupDone.
+            if (w == DoneWith::Success && !*succeeded && onTimeout)
+                onTimeout();
             return (w == DoneWith::Success && *succeeded)
                        ? DoneResult::Success : DoneResult::Error;
         })
@@ -538,22 +572,35 @@ ExecutableItem valvePulse(const Storage<VacuumRunState>& st,
     };
 }
 
-// ── R-02: ForeVacPumpTo10Pa (REQ-047/050/053, 074/075) ────────────────────────
+// ── R-02: ForeVacPumpToTarget (REQ-047/050/053, 074/075) ────────────────────────
 // Открыть К176 → удерживать ДВ301 ≤ targetVacPa не менее turboSwitchHoldSec.
 // К179 НЕ открывается. К176 закрывается при любом исходе.
-ExecutableItem foreVacPumpTo10Pa(const Storage<VacuumRunState>& st,
-                                 const VacuumTreeContext& ctx)
+// node — узел развёртки, которому принадлежит этот этап (F5A1/F6BC/F7EF):
+// нужен только для адресации live-прогресса в UI.
+ExecutableItem foreVacPumpToTarget(const Storage<VacuumRunState>& st,
+                                 const VacuumTreeContext& ctx,
+                                 VacuumNode node)
 {
     return Group {
         sequential,
-        onGroupSetup([st, ctx]() -> SetupResult {
+        onGroupSetup([st, ctx, node]() -> SetupResult {
             // К178 (AR5) уже закрыт импульсом стадии; открываем только К176 (AR6).
-            if (!ctx.setValve || !ctx.setValve(true, VacuumValve::K176))
+            if (!ctx.setValve || !ctx.setValve(true, VacuumValve::K176)) {
+                if (ctx.onFailure)
+                    ctx.onFailure(QStringLiteral("%1: не удалось открыть К176 (форвакуумный насос)")
+                                      .arg(nodeTitle(node)));
                 return SetupResult::StopWithError;
+            }
             st->k176Open = true;
             if (ctx.onLabel)
                 ctx.onLabel(QStringLiteral("Форвакуум К176 → ДВ301 ≤ %1 Па")
                                 .arg(ctx.targetVacPa));
+            // Стартовая отсечка прогресса: цель видна в UI сразу, до первого тика.
+            if (ctx.onForevacProgress)
+                ctx.onForevacProgress(node,
+                                      ctx.pressureVacPa ? ctx.pressureVacPa()
+                                                        : std::numeric_limits<double>::quiet_NaN(),
+                                      0, 0);
             return SetupResult::Continue;
         }),
         // dP/dt-watchdog (REQ-020/076): убедиться, что после открытия К176
@@ -561,8 +608,9 @@ ExecutableItem foreVacPumpTo10Pa(const Storage<VacuumRunState>& st,
         ctx.pumpRateCheck
             ? GroupItem(PumpRateTask([ctx](PumpRateWatchdog& w) {
                   w.pressurePa  = ctx.pressureVacPa;
-                  w.intervalMs  = ctx.tickIntervalMs;
-                  w.windowSec   = ctx.pumpCheckWindowSec;
+                  w.intervalMs   = ctx.tickIntervalMs;
+                  w.startDelaySec = ctx.pumpCheckDelaySec;
+                  w.windowSec    = ctx.pumpCheckWindowSec;
                   w.minDropPa   = ctx.pumpMinDropPa;
                   w.pauseBus    = ctx.pauseBus;
                   w.operatorBus = ctx.operatorBus;
@@ -574,13 +622,40 @@ ExecutableItem foreVacPumpTo10Pa(const Storage<VacuumRunState>& st,
                     return false;                    // нет датчика → удержание не набирается
                 return ctx.pressureVacPa() <= ctx.targetVacPa;
             },
-            ctx.turboSwitchHoldSec, ctx.foreVacTimeoutSec),
-        onGroupDone([st, ctx](DoneWith) {
+            ctx.turboSwitchHoldSec, ctx.foreVacTimeoutSec,
+            [ctx, node](int held, int elapsed) {     // live-прогресс в UI
+                if (ctx.onForevacProgress)
+                    ctx.onForevacProgress(node,
+                                          ctx.pressureVacPa ? ctx.pressureVacPa()
+                                                            : std::numeric_limits<double>::quiet_NaN(),
+                                          held, elapsed);
+            },
+            [ctx, node] {                            // причина отказа этапа
+                if (!ctx.onFailure)
+                    return;
+                if (!ctx.pressureVacPa) {
+                    ctx.onFailure(QStringLiteral("%1: датчик ДВ301 не задан — удержание "
+                                                 "≤ %2 Па не набрано за %3 с")
+                                      .arg(nodeTitle(node)).arg(ctx.targetVacPa)
+                                      .arg(ctx.foreVacTimeoutSec));
+                    return;
+                }
+                ctx.onFailure(QStringLiteral("%1: таймаут форвакуума — ДВ301 %2 Па не "
+                                             "удержалось ≤ %3 Па в течение %4 с (лимит %5 с)")
+                                  .arg(nodeTitle(node))
+                                  .arg(ctx.pressureVacPa(), 0, 'g', 3)
+                                  .arg(ctx.targetVacPa)
+                                  .arg(ctx.turboSwitchHoldSec)
+                                  .arg(ctx.foreVacTimeoutSec));
+            }),
+        onGroupDone([st, ctx, node](DoneWith w) {
             if (st->k176Open) {
                 if (ctx.setValve)
                     ctx.setValve(false, VacuumValve::K176);
                 st->k176Open = false;
             }
+            if (ctx.onForevacDone)
+                ctx.onForevacDone(node, w == DoneWith::Success);
         })
     };
 }
@@ -598,7 +673,7 @@ ExecutableItem buildForevacA1(const Storage<VacuumRunState>& st,
         settlePause(ctx),
         valvePulse(st, ctx, VacuumValve::K178, &VacuumRunState::k178Open, ctx.k178PulseMs), // REQ-046
         settlePause(ctx),
-        foreVacPumpTo10Pa(st, ctx)                                 // REQ-047 (закрытие К176 внутри)
+        foreVacPumpToTarget(st, ctx, VacuumNode::F5A1)               // REQ-047 (закрытие К176 внутри)
     };
 }
 
@@ -633,7 +708,7 @@ ExecutableItem buildForevacBC(const Storage<VacuumRunState>& st,
         settlePause(ctx),
         valvePulse(st, ctx, VacuumValve::K178, &VacuumRunState::k178Open, ctx.k178PulseMs), // REQ-049
         settlePause(ctx),
-        foreVacPumpTo10Pa(st, ctx),                                // REQ-050 (C открыты во время откачки)
+        foreVacPumpToTarget(st, ctx, VacuumNode::F6BC),              // REQ-050 (C открыты во время откачки)
         onGroupDone([st, ctx](DoneWith) {                          // REQ-051: закрыть C
             if (st->s3Open) { if (ctx.setValve) ctx.setValve(false, VacuumValve::K135); st->s3Open = false; }
             if (st->s2Open) { if (ctx.setValve) ctx.setValve(false, VacuumValve::K133); st->s2Open = false; }
@@ -661,7 +736,7 @@ ExecutableItem buildForevacEF(const Storage<VacuumRunState>& st,
         settlePause(ctx),
         valvePulse(st, ctx, VacuumValve::K178, &VacuumRunState::k178Open, ctx.k178PulseMs),
         settlePause(ctx),
-        foreVacPumpTo10Pa(st, ctx),                                // REQ-053
+        foreVacPumpToTarget(st, ctx, VacuumNode::F7EF),              // REQ-053
         onGroupDone([st, ctx](DoneWith) {                          // REQ-054: закрыть К151
             if (st->k151Open) {
                 if (ctx.setValve) ctx.setValve(false, VacuumValve::K151);
@@ -682,27 +757,86 @@ ExecutableItem executionPhase(const Storage<VacuumRunState>& st,
         if (ctx.onLabel)
             ctx.onLabel(QStringLiteral("Ф1: стартовый сброс (s1)"));
     });
-    items << settlePauseFor(ctx, VacuumNode::F1Relief);
+    items << settlePause(ctx);
     items << withNode(ctx, VacuumNode::F1Relief,
                       reliefTriplet(st, ctx, iter));       // Ф1: s2–s4
-    items << settlePauseFor(ctx, VacuumNode::F2BlockC);
+    items << settlePause(ctx);
     items << withNode(ctx, VacuumNode::F2BlockC,
                       buildBlockC(st, ctx, iter, BlockCOptions{ /*reliefAndClose=*/true })); // Ф2: s5–s19
-    items << settlePauseFor(ctx, VacuumNode::F3SecondTract);
+    items << settlePause(ctx);
     items << secondTractGroup(st, ctx, iter);              // Ф3: s20–s24 (узел inline)
 
     // Форвакуумная откачка 11.5–11.7 (gated foreVacuum; skipUnlessNode эмитит
     // Skipped при выключении — как ветки блока C).
-    items << settlePauseFor(ctx, VacuumNode::F5A1);
+    items << settlePause(ctx);
     items << skipUnlessNode(ctx, VacuumNode::F5A1, ctx.foreVacuum,
                             { buildForevacA1(st, ctx, iter) });
-    items << settlePauseFor(ctx, VacuumNode::F6BC);
+    items << settlePause(ctx);
     items << skipUnlessNode(ctx, VacuumNode::F6BC, ctx.foreVacuum,
                             { buildForevacBC(st, ctx) });
-    items << settlePauseFor(ctx, VacuumNode::F7EF);
+    items << settlePause(ctx);
     items << skipUnlessNode(ctx, VacuumNode::F7EF, ctx.foreVacuum,
                             { buildForevacEF(st, ctx) });
 
+    return Group(items);
+}
+
+// ── Непрерывная откачка (опция) ───────────────────────────────────────────────
+// «В конце автоматического режима оставить весь тракт открытым для
+// продолжительной откачки». Выполняется ОДИН раз — после последнего повтора,
+// вне тела For, поэтому повтор N+1 никогда не стартует с открытым К176.
+//
+// Порядок открытия — от объёмов к насосу (объёмы C → К151 → магистраль К178 →
+// насос К176): насос подключается последним, к уже собранному тракту.
+// Сознательно НЕ открываются:
+//   К118 (AR4) — сброс в атмосферу, открытие сорвало бы вакуум;
+//   К179 (SL1) — турбо, интерлок с К176 (см. шапку файла).
+// Клапаны остаются открытыми намеренно: закрывать их — задача оператора.
+//
+// Этап пропускается, если опция выключена ИЛИ хотя бы один повтор завершился
+// ошибкой: тракт открывается только после штатного прогона. Отмена (Стоп)
+// сюда не доходит вовсе — For возвращает Error, sequential-группа обрывается.
+ExecutableItem continuousPumpingTail(const VacuumTreeContext& ctx,
+                                     const Storage<VacuumRunSummary>& summary)
+{
+    auto openValve = [ctx](const QString& valve) {
+        return QSyncTask([ctx, valve]() -> bool {
+            return ctx.setValve && ctx.setValve(true, valve);
+        });
+    };
+    auto ran = std::make_shared<bool>(false);
+
+    GroupItems items { sequential };
+    items << onGroupSetup([ctx, summary, ran]() -> SetupResult {
+        *ran = ctx.continuousPumping && summary->repeatsError == 0;
+        if (!*ran) {
+            if (ctx.onNode && ctx.continuousPumping)
+                ctx.onNode(VacuumNode::ContinuousPumping, NodeState::Skipped);
+            return SetupResult::StopWithSuccess;
+        }
+        if (ctx.onNode)
+            ctx.onNode(VacuumNode::ContinuousPumping, NodeState::Running);
+        if (ctx.onLabel)
+            ctx.onLabel(QStringLiteral("Непрерывная откачка: тракт оставлен открытым"));
+        return SetupResult::Continue;
+    });
+
+    if (!ctx.skipRK300) { items << openValve(VacuumValve::K135); items << settlePause(ctx); }
+    if (!ctx.skipRK50)  { items << openValve(VacuumValve::K133); items << settlePause(ctx); }
+    if (!ctx.skipRK10)  { items << openValve(VacuumValve::K131); items << settlePause(ctx); }
+    if (ctx.secondTract) { items << openValve(VacuumValve::K192); items << settlePause(ctx); }
+    items << openValve(VacuumValve::K151);
+    items << settlePause(ctx);
+    items << openValve(VacuumValve::K178);
+    items << settlePause(ctx);
+    items << openValve(VacuumValve::K176);
+
+    items << onGroupDone([ctx, ran](DoneWith w) {
+        if (*ran && ctx.onNode)
+            ctx.onNode(VacuumNode::ContinuousPumping, doneToNode(w));
+        if (*ran && w != DoneWith::Success && ctx.onFailure)
+            ctx.onFailure(QStringLiteral("Непрерывная откачка: не удалось открыть тракт"));
+    });
     return Group(items);
 }
 
@@ -744,6 +878,8 @@ Group buildVacuumRecipe(const VacuumTreeContext& ctx,
                 })
             }
         },
+        // Опциональный финал: тракт остаётся открытым под продолжительную откачку.
+        continuousPumpingTail(ctx, summary),
         onGroupDone([summary, ctx](DoneWith w) -> DoneResult {
             const bool ok = (w == DoneWith::Success) && summary->repeatsError == 0;
             if (ctx.onRunFinished)

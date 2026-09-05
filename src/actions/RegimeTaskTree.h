@@ -74,23 +74,19 @@ public:
     Q_INVOKABLE void setVacuumOptions(bool skipRK10, bool skipRK50,
                                       bool skipRK300, bool secondTract);
 
-    // Settle-пауза (мс) после каждого действия рецепта «Вакуум». По умолчанию
-    // 1000 мс; 0 = без пауз. Задаётся из RegimeApiSandbox перед стартом.
-    Q_INVOKABLE void setVacuumStepPauseMs(int ms);
-
-    // Индивидуальная задержка (сек) на каждый шаг: ключи — строки из
-    // vacuumStepKeys() ("f1","rk300","rk10","rk50","reliefMid","blockC",
-    // "secondTract","a1","bc","ef"), значения — секунды. «Задержка для КАЖДОГО».
-    Q_INVOKABLE void setVacuumStepDelays(const QVariantMap& secondsByStep);
-
-    // Стабильные ключи/подписи шагов для построения таблицы в QML.
-    Q_INVOKABLE QVariantList vacuumStepKeys() const;
-
-    // Удержание К118 открытым при сбросе (сек, ≥1).
-    Q_INVOKABLE void setVacuumReliefHoldSec(int sec);
+    // Оставить тракт открытым после успешного завершения всех повторов
+    // («непрерывная откачка»): клапаны C/К151/К178/К176 не закрываются, насос
+    // продолжает качать. Длительности шагов (3 с) и сброса К118 (10 с)
+    // зафиксированы в коде — настройки из UI для них нет.
+    Q_INVOKABLE void setVacuumContinuousPumping(bool enabled);
 
     // Включение dP/dt-watchdog после открытия К176.
     Q_INVOKABLE void setVacuumPumpCheck(bool enabled);
+
+    // Цель форвакуумных этапов 11.5–11.7: до какого давления качать (ДВ301, Па),
+    // сколько секунд его надо удержать непрерывно и лимит этапа целиком.
+    // Дефолты ТЗ REQ-022: 10 Па / 60 с / 300 с.
+    Q_INVOKABLE void setVacuumForevacTarget(double targetPa, int holdSec, int timeoutSec);
 
     // ── Valve test configuration ─────────────────────────────────────────────
     // Called from Grams::initActionHandler() to seed available valve names.

@@ -123,12 +123,12 @@ void DataAcquisition::initSerialVacuum(const vacuumParameters &parameterVacuum){
     a.timeout = parameterVacuum.m_timeout;
     reqVacuum.setSerialPortInfo(a);
     reqVacuum.openSerialPort();
-    // if ok
-    reqVacuum.requestData();
+    // if ok - gauge is polled by the controller own 1 s timer
+    reqVacuum.startReading();
 }
 
 void DataAcquisition::testVacuumQuery(){
-    reqVacuum.requestRepetitive();
+    reqVacuum.requestData();
 }
 
 
@@ -174,7 +174,6 @@ void DataAcquisition::processEvents(){
     
     const auto &readDataVacuum = reqVacuum.getData();
     m_vacuumSensor->addPoint(readDataVacuum);
-    reqVacuum.requestRepetitive();
     
     if(m_leakageMeasure){
         fillLeakageRQ();

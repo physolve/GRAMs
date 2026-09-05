@@ -109,11 +109,22 @@ struct VacuumOptions {
     bool   skipRK300   = false;
     bool   secondTract = false;
     double dbSbrLim    = 1.65;   // порог сброса объёма B (GramQt Definer.h:334)
-    int    perActionPauseMs = 1000;  // settle-пауза между действиями рецепта (0 = выкл)
-    QHash<int, int> stepPauseMs;     // индивидуальная задержка на узел (int(VacuumNode)→мс)
-    int    reliefDwellSec = 1;   // удержание К118 открытым при сбросе (≥1 с)
+    // Длительности зафиксированы по результатам стенда и из UI не настраиваются:
+    // 3 с — сколько клапан стоит в новом положении до следующей команды;
+    // 10 с — сброс через К118 (и выдержка К179 второго тракта, легаси time_5000).
+    int    perActionPauseMs = 3000;
+    int    reliefDwellSec   = 10;
     bool   foreVacuum  = true;   // форвакуумная откачка 11.5–11.7
+    // Цель форвакуума 11.5–11.7 (ДВ301, Па) и её условия. Дефолты = ТЗ REQ-022
+    // (turboSwitchPressurePa / turboSwitchHoldSec); переопределяются из QML через
+    // RegimeTaskTree::setVacuumForevacTarget().
+    double targetVacPa        = 40.0;
+    int    turboSwitchHoldSec = 60;   // непрерывное удержание ≤ targetVacPa
+    int    foreVacTimeoutSec  = 300;  // лимит этапа целиком
     bool   pumpRateCheck = true; // dP/dt-watchdog после открытия К176
+    // Оставить тракт открытым после успешного завершения всех повторов, чтобы
+    // насос продолжал качать без автоматического закрытия клапанов.
+    bool   continuousPumping = false;
     OperatorBus* operatorBus = nullptr;  // стабильная шина решений (владеет RegimeTaskTree)
     DataCollection* pressureSensorB    = nullptr;  // виртуальный объём B (prSB)
     DataCollection* vacuumGaugeSensor  = nullptr;  // ДВ301 (Вакууметр, Торр)
