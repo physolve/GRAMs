@@ -115,12 +115,22 @@ struct VacuumOptions {
     int    perActionPauseMs = 3000;
     int    reliefDwellSec   = 10;
     bool   foreVacuum  = true;   // форвакуумная откачка 11.5–11.7
-    // Цель форвакуума 11.5–11.7 (ДВ301, Па) и её условия. Дефолты = ТЗ REQ-022
-    // (turboSwitchPressurePa / turboSwitchHoldSec); переопределяются из QML через
-    // RegimeTaskTree::setVacuumForevacTarget().
+    // Цель форвакуума 11.5–11.7 (ДВ301, Па) и её условия. Переопределяется из
+    // QML через RegimeTaskTree::setVacuumForevacTarget(). Это ЦЕЛЬ ЭТАПА —
+    // не путать с гейтом перехода на турбонасос ниже.
     double targetVacPa        = 40.0;
-    int    turboSwitchHoldSec = 60;   // непрерывное удержание ≤ targetVacPa
+    int    foreVacHoldSec     = 60;   // непрерывное удержание ≤ targetVacPa
     int    foreVacTimeoutSec  = 300;  // лимит этапа целиком
+
+    // Турбо 12.2. Пороги — из profile/GRAMsPfp.json (vacuumSafety), не из UI:
+    // цель форвакуумного этапа и гейт перехода на турбонасос — РАЗНЫЕ величины.
+    bool   turboTract            = true;   // Advanced: исключить тракт турбонасоса
+    double turboSwitchPressurePa = 10.0;   // гейт по ДВ301 (REQ-078/080)
+    int    turboSwitchHoldSec    = 60;     // удержание гейта (REQ-080)
+    double turboReturnPressurePa = 30.0;   // порог отката (REQ-083)
+    int    turboTimeoutSec       = 600;    // лимит набора гейта
+    int    overrangeWaitSec      = 300;    // over range ДВ301 (REQ-079)
+    int    overrangeWaitSec2     = 350;    // over range ДВ302 (REQ-081)
     bool   pumpRateCheck = true; // dP/dt-watchdog после открытия К176
     // Оставить тракт открытым после успешного завершения всех повторов, чтобы
     // насос продолжал качать без автоматического закрытия клапанов.
@@ -128,6 +138,7 @@ struct VacuumOptions {
     OperatorBus* operatorBus = nullptr;  // стабильная шина решений (владеет RegimeTaskTree)
     DataCollection* pressureSensorB    = nullptr;  // виртуальный объём B (prSB)
     DataCollection* vacuumGaugeSensor  = nullptr;  // ДВ301 (Вакууметр, Торр)
+    DataCollection* turboGaugeSensor   = nullptr;  // ДВ302 (Вакууметр турбо, Торр)
 };
 
 // Standalone-воркер (контракт QCustomTask, как ValveTestWorker): start() строит

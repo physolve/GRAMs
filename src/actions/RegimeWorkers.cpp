@@ -316,9 +316,17 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
     ctx.reliefDwellSec = qMax(1, m_opts.reliefDwellSec);   // К118 держим ≥1 с
     ctx.foreVacuum   = m_opts.foreVacuum;
     ctx.targetVacPa       = m_opts.targetVacPa;
-    ctx.turboSwitchHoldSec = m_opts.turboSwitchHoldSec;
+    ctx.foreVacHoldSec    = m_opts.foreVacHoldSec;
     ctx.foreVacTimeoutSec = m_opts.foreVacTimeoutSec;
     ctx.pumpRateCheck = m_opts.pumpRateCheck;
+    // Турбо 12.2 — пороги безопасности из JSON, не из UI.
+    ctx.turboTract            = m_opts.turboTract;
+    ctx.turboSwitchPressurePa = m_opts.turboSwitchPressurePa;
+    ctx.turboSwitchHoldSec    = m_opts.turboSwitchHoldSec;
+    ctx.turboReturnPressurePa = m_opts.turboReturnPressurePa;
+    ctx.turboTimeoutSec       = m_opts.turboTimeoutSec;
+    ctx.overrangeWaitSec      = m_opts.overrangeWaitSec;
+    ctx.overrangeWaitSec2     = m_opts.overrangeWaitSec2;
     ctx.continuousPumping = m_opts.continuousPumping;
     ctx.operatorBus  = m_opts.operatorBus;                 // стабильная шина из RegimeTaskTree
     ctx.pauseBus     = &m_pauseBus;
@@ -327,10 +335,25 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
     // пороги форвакуума в ТЗ — в Па. 1 Торр = 133.322 Па.
     if (m_opts.vacuumGaugeSensor) {
         DataCollection* gauge = m_opts.vacuumGaugeSensor;
-        ctx.pressureVacPa = [gauge] { return gauge->getCurValue() * 133.322; };
+        ctx.pressureVacPa = [gauge] {
+            return Reading(gauge->getCurValue() * 133.322, gauge->quality());
+        };
     } else {
         qWarning() << "[Вакуум] Датчик ДВ301 (Вакууметр) не задан — форвакуумные "
                       "этапы 11.5–11.7 завершатся по таймауту";
+    }
+
+    // ДВ302 (Вакууметр турбо) — тот же прибор, что раньше стоял как ДВ301,
+    // теперь на втором тракте за К179. Без него условие У3 гейта перехода
+    // не выполняется, и режим остаётся на форвакууме — это безопасный исход.
+    if (m_opts.turboGaugeSensor) {
+        DataCollection* gauge = m_opts.turboGaugeSensor;
+        ctx.pressureTurboPa = [gauge] {
+            return Reading(gauge->getCurValue() * 133.322, gauge->quality());
+        };
+    } else {
+        qWarning() << "[Вакуум] Датчик ДВ302 (Вакууметр турбо) не задан — "
+                      "перехода на турбомолекулярный насос не будет";
     }
 
     ctx.conditionType       = m_cfg.conditionType;
@@ -370,6 +393,21 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
         }
         return ok;
     };
+
+    // V-02 (REQ-082/084): подтверждение ФАКТА, а не команды. Без ValveControl
+    // шов не ставится вовсе — рецепт тогда откажется открывать К179.
+    if (m_cfg.valveControl) {
+        ctx.confirmValve = [this](bool expectedOpen, const QString& name) -> bool {
+            const bool ok = m_cfg.valveControl->confirmValve(name, expectedOpen);
+            if (!ok)
+                qWarning() << "[Вакуум] Readback клапана" << name
+                           << "не подтвердил состояние" << expectedOpen;
+            if (m_cfg.logger && !ok)
+                m_cfg.logger->logEvent(m_runId, RegimeLogger::kValveBlocked, -1, -1,
+                                       QStringLiteral("readback %1").arg(name));
+            return ok;
+        };
+    }
 
     ctx.onConditionProgress = [this](int elapsed, int repeat) {
         if (m_cfg.manager)

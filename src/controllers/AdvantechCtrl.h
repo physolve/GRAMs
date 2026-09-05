@@ -111,6 +111,11 @@ public:
     void setInfo(const AdvDOType &info); // might be override function
     void ConfigureDeviceDO();
     void readData() override;
+    // Как readData(), но сообщает, удалось ли чтение. readData() при ошибке
+    // молча оставляет прежний m_vector, и потребитель не отличает «прочитал»
+    // от «не смог» — для подтверждения состояния клапана (REQ-082) это
+    // недопустимо.
+    bool refresh();
     AdvDOType getInfo() const; // move to base class
     QVector<bool> getData();
     bool setData(const QVector<bool> &changedState);

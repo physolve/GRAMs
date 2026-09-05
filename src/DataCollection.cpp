@@ -15,7 +15,19 @@ void DataCollection::clearPoints(){
     m_curValue = 0;
 }
 void DataCollection::addPoint(const double &val_y){
-    m_y.append(m_curValue = val_y);        
+    m_y.append(m_curValue = val_y);
+    m_quality = Quality::Valid;
+}
+
+// Перегрузка с качеством: вакуумметры сообщают over range / отсутствие ответа,
+// и рецепт обязан отличать это от достоверного низкого давления.
+void DataCollection::addPoint(const double &val_y, const Quality &quality){
+    m_y.append(m_curValue = val_y);
+    m_quality = quality;
+}
+
+Quality DataCollection::quality() const{
+    return m_quality;
 }
 
 QVector<double> DataCollection::getValue() const {

@@ -75,7 +75,7 @@ void PumpRateWatchdog::beginWindow()
     m_firstWindow = false;
     // p0 берётся здесь только если задержки нет; иначе — по её истечении,
     // чтобы падение за время выхода на режим не засчитывалось в окно.
-    m_p0 = (m_delayLeft == 0 && pressurePa) ? pressurePa() : 0.0;
+    m_p0 = (m_delayLeft == 0 && pressurePa) ? pressurePa().valuePa : 0.0;
     m_awaitingOperator = false;
     if (pauseBus && pauseBus->isPaused())
         return;                         // стартуем замороженными, ждём resume
@@ -86,16 +86,23 @@ void PumpRateWatchdog::tick()
 {
     if (m_delayLeft > 0) {
         if (--m_delayLeft == 0)
-            m_p0 = pressurePa ? pressurePa() : 0.0;   // отсчёт окна с этой точки
+            m_p0 = pressurePa ? pressurePa().valuePa : 0.0;  // отсчёт окна с этой точки
         return;
     }
     ++m_elapsed;
     if (m_elapsed < windowSec)
         return;
     m_timer.stop();
-    const double p1   = pressurePa ? pressurePa() : 0.0;
-    const double drop = m_p0 - p1;      // падение давления за окно
-    if (drop >= minDropPa) {            // давление падает → откачка идёт
+    const Reading r = pressurePa ? pressurePa() : Reading(0.0, Quality::NoResponse);
+    // Over range — нормальная фаза выхода насоса на режим, а не «откачка не
+    // идёт»: судить о dP/dt по зашкалившему датчику нельзя. Открываем новое
+    // окно, не поднимая оператора.
+    if (r.isOverRange()) {
+        beginWindow();
+        return;
+    }
+    const double drop = m_p0 - r.valuePa;   // падение давления за окно
+    if (r.isValid() && drop >= minDropPa) { // давление падает → откачка идёт
         emit done(true);
         return;
     }
@@ -145,9 +152,23 @@ QString nodeTitle(VacuumNode node)
     case VacuumNode::F5A1:          return QStringLiteral("11.5 форвакуум A1");
     case VacuumNode::F6BC:          return QStringLiteral("11.6 форвакуум B/C");
     case VacuumNode::F7EF:          return QStringLiteral("11.7 форвакуум E/F");
+    case VacuumNode::TurboGate:     return QStringLiteral("12.2 гейт перехода на турбо");
+    case VacuumNode::TurboSwitch:   return QStringLiteral("12.2 переключение К176→К179");
+    case VacuumNode::TurboPumping:  return QStringLiteral("12.2 турбо-откачка");
+    case VacuumNode::TurboFallback: return QStringLiteral("12.2 откат на форвакуум");
     case VacuumNode::ContinuousPumping: return QStringLiteral("Непрерывная откачка");
     }
     return QStringLiteral("этап");
+}
+
+// Значение показания для UI: NaN, если датчика нет ИЛИ показание недостоверно.
+// Монитор отличает NaN через std::isnan и гасит строку «есть показание».
+double readingOrNan(const std::function<Reading()>& seam)
+{
+    if (!seam)
+        return std::numeric_limits<double>::quiet_NaN();
+    const Reading r = seam();
+    return r.isValid() ? r.valuePa : std::numeric_limits<double>::quiet_NaN();
 }
 
 // ── Наблюдение за узлами развёртки (аддитивно, control-flow не меняет) ─────────
@@ -573,7 +594,7 @@ ExecutableItem valvePulse(const Storage<VacuumRunState>& st,
 }
 
 // ── R-02: ForeVacPumpToTarget (REQ-047/050/053, 074/075) ────────────────────────
-// Открыть К176 → удерживать ДВ301 ≤ targetVacPa не менее turboSwitchHoldSec.
+// Открыть К176 → удерживать ДВ301 ≤ targetVacPa не менее foreVacHoldSec.
 // К179 НЕ открывается. К176 закрывается при любом исходе.
 // node — узел развёртки, которому принадлежит этот этап (F5A1/F6BC/F7EF):
 // нужен только для адресации live-прогресса в UI.
@@ -597,10 +618,7 @@ ExecutableItem foreVacPumpToTarget(const Storage<VacuumRunState>& st,
                                 .arg(ctx.targetVacPa));
             // Стартовая отсечка прогресса: цель видна в UI сразу, до первого тика.
             if (ctx.onForevacProgress)
-                ctx.onForevacProgress(node,
-                                      ctx.pressureVacPa ? ctx.pressureVacPa()
-                                                        : std::numeric_limits<double>::quiet_NaN(),
-                                      0, 0);
+                ctx.onForevacProgress(node, readingOrNan(ctx.pressureVacPa), 0, 0);
             return SetupResult::Continue;
         }),
         // dP/dt-watchdog (REQ-020/076): убедиться, что после открытия К176
@@ -620,14 +638,17 @@ ExecutableItem foreVacPumpToTarget(const Storage<VacuumRunState>& st,
             [ctx]() -> bool {
                 if (!ctx.pressureVacPa)
                     return false;                    // нет датчика → удержание не набирается
-                return ctx.pressureVacPa() <= ctx.targetVacPa;
+                const Reading r = ctx.pressureVacPa();
+                // Недостоверное показание НЕ засчитывается: мёртвый датчик,
+                // отдающий 0, иначе выглядел бы как достигнутая цель.
+                if (!r.isValid())
+                    return false;
+                return r.valuePa <= ctx.targetVacPa;
             },
-            ctx.turboSwitchHoldSec, ctx.foreVacTimeoutSec,
+            ctx.foreVacHoldSec, ctx.foreVacTimeoutSec,
             [ctx, node](int held, int elapsed) {     // live-прогресс в UI
                 if (ctx.onForevacProgress)
-                    ctx.onForevacProgress(node,
-                                          ctx.pressureVacPa ? ctx.pressureVacPa()
-                                                            : std::numeric_limits<double>::quiet_NaN(),
+                    ctx.onForevacProgress(node, readingOrNan(ctx.pressureVacPa),
                                           held, elapsed);
             },
             [ctx, node] {                            // причина отказа этапа
@@ -640,12 +661,14 @@ ExecutableItem foreVacPumpToTarget(const Storage<VacuumRunState>& st,
                                       .arg(ctx.foreVacTimeoutSec));
                     return;
                 }
-                ctx.onFailure(QStringLiteral("%1: таймаут форвакуума — ДВ301 %2 Па не "
-                                             "удержалось ≤ %3 Па в течение %4 с (лимит %5 с)")
+                const Reading r = ctx.pressureVacPa();
+                ctx.onFailure(QStringLiteral("%1: таймаут форвакуума — ДВ301 %2 Па (%3) не "
+                                             "удержалось ≤ %4 Па в течение %5 с (лимит %6 с)")
                                   .arg(nodeTitle(node))
-                                  .arg(ctx.pressureVacPa(), 0, 'g', 3)
+                                  .arg(r.valuePa, 0, 'g', 3)
+                                  .arg(qualityName(r.quality))
                                   .arg(ctx.targetVacPa)
-                                  .arg(ctx.turboSwitchHoldSec)
+                                  .arg(ctx.foreVacHoldSec)
                                   .arg(ctx.foreVacTimeoutSec));
             }),
         onGroupDone([st, ctx, node](DoneWith w) {

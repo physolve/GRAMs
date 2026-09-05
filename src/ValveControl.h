@@ -31,11 +31,26 @@ public:
     void endAction();
     bool isActionInterrupted() const;
     bool setValveFromAction(bool state, const QString& name);
+    // Подтверждение ФАКТА состояния клапана (V-02, REQ-082/084).
+    //
+    // setValveFromAction сообщает результат КОМАНДЫ: «Security не запретил и
+    // Write вернул Success». Этого мало для перехода на турбомолекулярный
+    // насос — открыть К179 на непрощавшемся форвакуумном тракте значит
+    // испортить насос. confirmValve перечитывает состояние с платы.
+    //
+    // Ограничение: чтение DO — это регистр-защёлка выхода, не датчик положения
+    // (подробности в AdvantechDO::refresh). Без сконфигурированной платы
+    // возвращает false: недоказанное состояние считаем неподтверждённым.
+    bool confirmValve(const QString& name, bool expected);
+    // Кэш последней команды (без обращения к железу). known = false, если
+    // имени нет в реестре.
+    bool valveState(const QString& name, bool* known = nullptr) const;
     Q_INVOKABLE void setManualChamberValve(bool state);
     Q_INVOKABLE void setValveState(bool state, int valveId);
     bool sendValveStates();
     bool isControlRunning();
     void valveChangeUpdater(const QString& valveName, bool newState);
+    QVariantMap getGuiValsValve() const;
 
 signals:
     void guiValsValveChanged();
@@ -49,7 +64,6 @@ private:
     Valve* m_chamberValve;
     Security* m_safeModule;
 
-    QVariantMap getGuiValsValve() const;
     QStringList valveNameList;
     QStringList m_gasSupplyValves;
     QStringList m_gasStoreValves;

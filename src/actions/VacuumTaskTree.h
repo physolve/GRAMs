@@ -6,6 +6,8 @@
 #include <QTimer>
 #include <qtasktree.h>
 
+#include "../SensorQuality.h"
+
 #include <functional>
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -39,7 +41,31 @@ inline const QString K179 = QStringLiteral("SL1");
 inline const QString K176 = QStringLiteral("AR6");  // форвакуумный насос
 inline const QString K178 = QStringLiteral("AR5");  // магистраль (импульс 2 с)
 inline const QString K151 = QStringLiteral("R3");   // линия E/F (макс. поток к камере)
+// Тракт общей откачки 11.7б (REQ-055). DO-каналы уже существуют
+// (src/Grams.h:153,160) — не хватало только символов здесь.
+inline const QString K171 = QStringLiteral("S4");   // pressure range storage
+inline const QString K173 = QStringLiteral("R4");   // pressure range reaction
 }
+
+// ─── Показание датчика ────────────────────────────────────────────────────────
+//
+// Значение в паскалях плюс признак качества (Quality — см. src/SensorQuality.h).
+
+struct Reading {
+    double  valuePa = 0.0;
+    Quality quality = Quality::Valid;
+
+    Reading() = default;
+    // НЕ explicit намеренно: std::function<Reading()> принимает лямбду,
+    // возвращающую double, поэтому существующие тесты вида
+    //   ctx.pressureVacPa = [] { return 5.0; };
+    // компилируются без правок.
+    Reading(double pa) : valuePa(pa) {}
+    Reading(double pa, Quality q) : valuePa(pa), quality(q) {}
+
+    bool isValid()     const { return quality == Quality::Valid; }
+    bool isOverRange() const { return quality == Quality::OverRange; }
+};
 
 // ─── PauseBus ─────────────────────────────────────────────────────────────────
 //
@@ -182,7 +208,7 @@ class PumpRateWatchdog : public QObject
 public:
     explicit PumpRateWatchdog(QObject* parent = nullptr);
 
-    std::function<double()> pressurePa;   // ДВ301 в Па (nullable)
+    std::function<Reading()> pressurePa;  // ДВ301 в Па с качеством (nullable)
     int    intervalMs   = 1000;
     int    startDelaySec = 30;            // пауза перед первым окном (выход насоса на режим)
     int    windowSec    = 5;
@@ -224,6 +250,7 @@ struct VacuumRunState {
     bool sl2Open  = false;   // K192
     bool sl1Open  = false;   // K179
     bool k176Open = false;   // AR6 — форвакуумный насос
+    bool k179Open = false;   // SL1 — турбомолекулярный насос (12.2)
     bool k178Open = false;   // AR5 — магистраль
     bool k151Open = false;   // R3  — линия E/F
     int  elapsedSec  = 0;    // суммарное время выдержек execution-фазы повтора
@@ -269,6 +296,10 @@ enum class VacuumNode {
     F5A1,            // 11.5: форвакуум A1 (К118→К178-импульс→К176)
     F6BC,            // 11.6: форвакуум B/C (клапаны C→К178-импульс→К176)
     F7EF,            // 11.7: форвакуум E/F (К151→К178-импульс→К176)
+    TurboGate,       // 12.2: гейт перехода (ДВ301 ≤ порог, удержание, ДВ302 валиден)
+    TurboSwitch,     // 12.2: переключение К176 → К179 с подтверждением readback
+    TurboPumping,    // 12.2: турбо-откачка, контроль по ДВ302
+    TurboFallback,   // 12.2: откат на форвакуум по turboReturnPressurePa
     ContinuousPumping // финал: тракт оставлен открытым под откачку (опция)
 };
 
@@ -280,7 +311,27 @@ struct VacuumTreeContext {
     std::function<double()> pressureB;      // виртуальный объём B (аналог m_vir_B)
     // ДВ301 в Паскалях (форвакуум 11.5–11.7). nullable: без датчика удержание
     // не набирается ⇒ этап падает по таймауту, клапаны закрываются.
-    std::function<double()> pressureVacPa;
+    // Возвращает Reading; лямбда, возвращающая double, тоже подходит —
+    // Reading конструируется из double неявно с Quality::Valid.
+    std::function<Reading()> pressureVacPa;
+    // ДВ302 в Паскалях (турбо-область, раздел 12.2). nullable: без датчика
+    // условие У3 гейта не выполняется ⇒ перехода на турбонасос не будет.
+    std::function<Reading()> pressureTurboPa;
+
+    // Readback фактического состояния клапана (V-02, REQ-082/084). nullable.
+    //
+    // setValve сообщает результат КОМАНДЫ, а не ФАКТА: «клапан закрыт» и
+    // «команда на закрытие принята» — разные утверждения, и REQ-082 требует
+    // именно первого. Без этого шва турбо-переход не выполняется вовсе:
+    // открыть К179 на непрощавшемся форвакуумном тракте — порча насоса.
+    //
+    // ОГРАНИЧЕНИЕ: на Advantech USB-47xx чтение DO возвращает регистр-защёлку
+    // выхода, а не независимый датчик положения. Это ловит потерянную запись,
+    // сброс платы, перечисление USB и чужую запись в порт, но НЕ доказывает,
+    // что клапан физически переместился. Физическое подтверждение потребовало
+    // бы концевиков на InstantDiCtrl — в проекте их нет. Дивергенция от REQ-082
+    // осознанная, см. docs/regimes/vacuum.md.
+    std::function<bool(bool expectedOpen, const QString& valve)> confirmValve;
 
     // Параметры последовательности
     double dbSbrLim       = 1.65;  // DB_SBR_LIM (GramQt Definer.h:334)
@@ -314,11 +365,42 @@ struct VacuumTreeContext {
 
     // Форвакуумная откачка 11.5–11.7 (по умолчанию включена в бою; тесты Ф1–Ф3
     // выключают, чтобы изолировать эталон). Параметры-ориентиры из ТЗ REQ-022.
+    //
+    // ВАЖНО: targetVacPa — ЦЕЛЬ форвакуумных этапов, а НЕ гейт перехода на
+    // турбонасос. Это разные величины (REQ-047/075 против REQ-078/080). Если
+    // совместить их в одном параметре, оператор, подняв цель до 40 Па «чтобы
+    // форвакуум отработал быстрее», одновременно разрешит запуск турбонасоса
+    // при 40 Па — тихий отказ безопасности. Гейт живёт ниже, в блоке 12.2.
     bool   foreVacuum        = true;
-    double targetVacPa       = 40.0;   // turboSwitchPressurePa (REQ-047/075)
-    int    turboSwitchHoldSec = 60;    // turboSwitchHoldSec — удержание ≤ targetVacPa
+    double targetVacPa       = 40.0;   // цель этапов 11.5–11.7 (REQ-047/075)
+    int    foreVacHoldSec    = 60;     // непрерывное удержание ≤ targetVacPa
     int    k178PulseMs       = 2000;   // импульс К178 (REQ-046)
     int    foreVacTimeoutSec = 300;    // таймаут форвакуумного этапа
+
+    // ── Турбомолекулярный насос, раздел 12.2 (REQ-077…084) ────────────────────
+    //
+    // Топология: магистраль → AR6/К176 (форвакуум) и SL1/К179 (турбо) → ДВ302 →
+    // SL2/К192 (выход второго тракта; атмосфера, если камеры нет). К176 и К179
+    // НИКОГДА не открыты одновременно (REQ-008, REQ-084).
+    //
+    // Пороги приходят из JSON (profile/GRAMsPfp.json → vacuumSafety), а не из
+    // UI: это гейты безопасности, их нельзя менять с рабочего экрана.
+    bool   turboTract            = true;   // Advanced: исключить тракт турбонасоса (разд. 9.1)
+    double turboSwitchPressurePa = 10.0;   // гейт перехода по ДВ301 (REQ-078/080)
+    int    turboSwitchHoldSec    = 60;     // непрерывное удержание гейта (REQ-080)
+    double turboReturnPressurePa = 30.0;   // порог отката на форвакуум (REQ-083)
+    int    turboTimeoutSec       = 600;    // лимит набора гейта целиком
+    // Гистерезис 10 Па на вход / 30 Па на выход — намеренный: при равных
+    // порогах система у границы начала бы циклически переключать К176 и К179,
+    // что опаснее любого из двух устойчивых состояний.
+    //
+    // Over range — не отказ датчика, а нормальная фаза процесса (REQ-079/081):
+    // выдержка → повторная проверка → предупреждение и безопасное действие →
+    // повторная выдержка → критическая ошибка либо ожидание оператора.
+    // Безопасное действие РАЗНОЕ: для ДВ301 — закрыть К176, для ДВ302 —
+    // не открывать / закрыть К179. Смешивать их нельзя.
+    int    overrangeWaitSec  = 300;    // ожидание over range ДВ301 (REQ-079)
+    int    overrangeWaitSec2 = 350;    // ожидание over range ДВ302 (REQ-081)
 
     // dP/dt-watchdog после открытия К176 (REQ-020/076): проверка, что откачка
     // идёт. Диалог оператора — через OperatorBus.
@@ -362,6 +444,18 @@ struct VacuumTreeContext {
                        int heldSec, int elapsedSec)> onForevacProgress;
     // Этап завершился (успех или нет) — снять live-индикацию.
     std::function<void(VacuumNode node, bool success)> onForevacDone;
+
+    // Live-прогресс турбо-этапа 12.2 (nullable). Тикает раз в ctx.tickIntervalMs,
+    // пока набирается гейт либо идёт откачка через К179:
+    //   node    — TurboGate / TurboPumping
+    //   p301    — ДВ301 с качеством, p302 — ДВ302 с качеством
+    //   heldSec — набранное непрерывное удержание гейта (0 на TurboPumping)
+    std::function<void(VacuumNode node, Reading p301, Reading p302,
+                       int heldSec, int elapsedSec)> onTurboProgress;
+    // Факт переключения насосного клапана: true = перешли на турбо (К179),
+    // false = откат на форвакуум (К176). Обе стороны обязаны попасть в журнал
+    // (REQ-082/083), поэтому шов вызывается и при откате.
+    std::function<void(bool toTurbo)> onTurboSwitched;
     // Человекочитаемая причина отказа этапа — «причина завершения режима» в UI.
     // Вызывается в точке отказа; первый вызов за прогон считается основным.
     std::function<void(const QString& reason)>       onFailure;

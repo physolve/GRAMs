@@ -97,6 +97,38 @@ bool ValveControl::sendValveStates(){
     return reqValveDO.setData(changedState);
 }
 
+// V-02 (REQ-082/084) — см. комментарий в заголовке.
+bool ValveControl::confirmValve(const QString& name, bool expected){
+    if(!valveController)
+        return false;          // платы нет — состояние недоказуемо
+    const int index = valveNameList.indexOf(name);
+    if(index == -1)
+        return false;
+    if(!reqValveDO.refresh())
+        return false;          // чтение не удалось — не выдаём старые данные за факт
+    const auto &readData = reqValveDO.getData();
+    if(index >= readData.count())
+        return false;
+    const bool actual = readData[index];
+    // Расхождение модели и платы — сигнал сам по себе: приводим модель к факту,
+    // иначе интерфейс продолжит показывать желаемое вместо действительного.
+    if(m_valves[index]->getState() != actual){
+        m_valves[index]->setState(actual);
+        emit guiValsValveChanged();
+    }
+    return actual == expected;
+}
+
+bool ValveControl::valveState(const QString& name, bool* known) const{
+    const int index = valveNameList.indexOf(name);
+    if(index == -1){
+        if(known) *known = false;
+        return false;
+    }
+    if(known) *known = true;
+    return m_valves[index]->getState();
+}
+
 QVariantMap ValveControl::getGuiValsValve() const{
     QVariantMap valveState;
     for(auto valve : m_valves){

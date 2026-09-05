@@ -460,32 +460,36 @@ void AdvantechDO::applyFeatures(){ // first read data mask don't need
 }
 
 void AdvantechDO::readData(){
-	uint8_t *portStates = new uint8_t[portCount];
-    ErrorCode errorCode = Success;
-	errorCode = m_instantDoCtrl->Read(0, portCount, portStates);
+	refresh();          // исход чтения здесь никого не интересует
+}
+
+// Чтение состояния DO-порта с явным исходом (V-02, REQ-082/084).
+//
+// ВНИМАНИЕ: InstantDoCtrl::Read возвращает регистр-защёлку ВЫХОДА, а не
+// независимый датчик положения клапана. Это подтверждает, что плата держит
+// поданный бит (ловит потерянную запись, сброс платы, перечисление USB, чужую
+// запись в порт), но НЕ доказывает, что клапан физически переместился. Для
+// физического подтверждения нужны концевики на InstantDiCtrl — в проекте их нет.
+bool AdvantechDO::refresh(){
+	if(!m_instantDoCtrl)
+		return false;
+	QVector<uint8_t> portStates(portCount, 0);
+	ErrorCode errorCode = m_instantDoCtrl->Read(0, portCount, portStates.data());
 	CheckError(errorCode);
 	if (errorCode != Success)
-	{
-		return;
-	}
+		return false;          // m_vector намеренно остаётся прежним
 	QVector<bool> vector;
-	for(int i  = 0; i< portCount; ++i){
+	vector.reserve(portCount * 8);
+	for(int i = 0; i < portCount; ++i){
 		for(int j = 0; j < 8; ++j){
-			// portStates == 00100000 
-			//			0	0
-			// 			1		0
-			// 			2			1
-			// 			3				0
-			// 			4					0
-			// 			5						0
-			// 			6							0
-			// 			7								0
-			// vector = [0,0,1,0,0,0,0,0]
+			// portStates == 00100000 -> vector = [0,0,1,0,0,0,0,0]
 			vector.append(portStates[i]>>j&0x1);
 		}
 	}
 	m_vector = vector;
+	return true;
 }
+
 
 QVector<bool> AdvantechDO::getData(){ // const & ?
 	//vector=scaledData;

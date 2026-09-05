@@ -3,6 +3,8 @@
 #include <QList>
 #include <QString>
 
+#include "SensorQuality.h"
+
 enum DataType{
     Dimensionless,
     Pressure,
@@ -18,11 +20,17 @@ public:
     virtual ~DataCollection();
     void clearPoints();
     void addPoint(const double &val_y);
+    // Перегрузка с качеством: датчики, умеющие сообщать over range / отсутствие
+    // ответа (вакуумметры), пишут точку вместе с признаком достоверности.
+    void addPoint(const double &val_y, const Quality &quality);
     QVector<double> getValue() const;
     QVector<double> getLastToChart() const;
     double getCurValue() const;
     void setAltUnitCoef(const double &coef);
     double getAltUnit() const;
+    // Качество последней записанной точки. Для аналоговых каналов Advantech
+    // всегда Valid — они не умеют сообщать о недостоверности.
+    Quality quality() const;
     QString m_name;
     DataType m_type;
     // alternative unit
@@ -31,6 +39,7 @@ protected:
     QList<double> m_y; // one second data
     double m_curValue;
     double m_altUnitA;
+    Quality m_quality = Quality::Valid;
 };
 
 class ControllerData : public DataCollection
