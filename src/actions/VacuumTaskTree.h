@@ -106,14 +106,29 @@ private:
 //
 // Блокирующее решение оператора (аналог PauseBus). Задача рецепта вызывает
 // request(code,msg) → QML показывает диалог → оператор жмёт кнопку → respond().
-// Используется watchdog'ом dP/dt: «откачка не идёт» → Стоп / Продолжить.
+//
+// Код события говорит QML, ЧТО именно случилось, чтобы диалог мог показать
+// осмысленный заголовок и подходящий набор кнопок. ТЗ требует решения
+// оператора минимум в четырёх точках, и «Стоп/Продолжить» на все случаи
+// не годится: при over range ДВ302 продолжать «как есть» нельзя — К179
+// открывать запрещено.
 
 class OperatorBus : public QObject
 {
     Q_OBJECT
 public:
-    enum Decision { None = 0, Continue = 1, Stop = 2 };
+    enum Decision { None = 0, Continue = 1, Stop = 2, Retry = 3, Abort = 4 };
     Q_ENUM(Decision)
+
+    // Коды событий: значения стабильны, QML на них завязан.
+    enum Event {
+        NoEvent          = 0,
+        PumpRateLow      = 1,  // dP/dt мала (REQ-020/076)
+        Dv301OverRange   = 2,  // ДВ301 вне диапазона (REQ-079)
+        Dv302OverRange   = 3,  // ДВ302 вне диапазона (REQ-081)
+        TurboReadbackBad = 4   // закрытие К176 не подтверждено (REQ-082)
+    };
+    Q_ENUM(Event)
 
     using QObject::QObject;
 
@@ -131,8 +146,24 @@ public:
     // Свойства для QML-диалога.
     Q_PROPERTY(bool active READ active NOTIFY decisionRequired)
     Q_PROPERTY(QString message READ message NOTIFY decisionRequired)
+    Q_PROPERTY(int code READ code NOTIFY decisionRequired)
+    Q_PROPERTY(QString title READ title NOTIFY decisionRequired)
     bool    active()  const { return m_decision == None && !m_activeMessage.isEmpty(); }
     QString message() const { return m_activeMessage; }
+    int     code()    const { return m_activeCode; }
+
+    // Заголовок диалога по коду события — чтобы оператор с первого взгляда
+    // понимал, о каком узле установки идёт речь.
+    QString title() const
+    {
+        switch (m_activeCode) {
+        case PumpRateLow:      return QStringLiteral("Проверка откачки");
+        case Dv301OverRange:   return QStringLiteral("ДВ301 вне диапазона");
+        case Dv302OverRange:   return QStringLiteral("ДВ302 вне диапазона");
+        case TurboReadbackBad: return QStringLiteral("Клапан К176 не подтверждён");
+        }
+        return QStringLiteral("Требуется решение оператора");
+    }
 
     // Из QML: ответ оператора (1 = Продолжить, 2 = Стоп).
     Q_INVOKABLE void respond(int d)
@@ -186,6 +217,39 @@ private slots:
 private:
     QTimer m_timer;
     int    m_elapsed = 0;
+};
+
+// ─── OperatorPrompt ───────────────────────────────────────────────────────────
+//
+// Блокирующее ожидание решения оператора (REQ-020/033/069/079/081).
+// QCustomTask-совместим: start() + done(bool). Pause-aware не нужен — задача и
+// так стоит, пока человек не ответит.
+//
+// Без operatorBus решение получить неоткуда, поэтому done(false): «нет способа
+// спросить» трактуется как отказ, а не как молчаливое согласие.
+
+class OperatorPrompt : public QObject
+{
+    Q_OBJECT
+public:
+    explicit OperatorPrompt(QObject* parent = nullptr);
+
+    int     code = OperatorBus::NoEvent;
+    QString message;
+    // Решения, которые считаются согласием продолжить. Остальные → done(false).
+    QList<int> acceptDecisions { OperatorBus::Continue, OperatorBus::Retry };
+    QPointer<OperatorBus> operatorBus;
+
+    void start();                         // контракт QCustomTask
+
+signals:
+    void done(bool success);
+
+private slots:
+    void onDecision(int d);
+
+private:
+    bool m_awaiting = false;
 };
 
 // ─── PumpRateWatchdog ─────────────────────────────────────────────────────────

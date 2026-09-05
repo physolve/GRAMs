@@ -714,7 +714,7 @@ TEST(VacuumTree, ContinuousPumpingLeavesTractOpen)
     EXPECT_FALSE(rec.state.value("AR4"));  // К118 — сброс в атмосферу
     EXPECT_FALSE(rec.state.value("SL1"));  // К179 — турбо (интерлок с К176)
     // Насос подключается последним.
-    EXPECT_TRUE(rec.sequence().endsWith(QStringLiteral("+R3 +AR5 +AR6")));
+    EXPECT_TRUE(rec.sequence().endsWith(QStringLiteral("+R3 +AR5 -SL1 +AR6")));
 }
 
 TEST(VacuumTree, ContinuousPumpingOffClosesEverything)
@@ -752,7 +752,7 @@ TEST(VacuumTree, ContinuousPumpingRunsOnceAfterAllRepeats)
     ctx.totalRepeats      = 3;
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    EXPECT_EQ(rec.sequence().count(QStringLiteral("+R3 +AR5 +AR6")), 1);
+    EXPECT_EQ(rec.sequence().count(QStringLiteral("+R3 +AR5 -SL1 +AR6")), 1);
 }
 
 // ─── Жёстко заданные длительности (не настраиваются из UI) ───────────────────
@@ -898,4 +898,294 @@ int main(int argc, char** argv)
     QCoreApplication app(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Раздел 12.2 — переход на турбомолекулярный насос (REQ-077…084)
+// ═════════════════════════════════════════════════════════════════════════════
+//
+// Топология: AR6/К176 (форвакуум) и SL1/К179 (турбо) на одной магистрали;
+// одновременно открытыми они быть не должны никогда (REQ-008/084).
+
+namespace {
+
+// Контекст с включённым турбо-этапом: форвакуум отрабатывает мгновенно,
+// ДВ302 валиден и глубоко под порогом возврата.
+VacuumTreeContext makeTurboCtx(Recorder& rec)
+{
+    VacuumTreeContext ctx = makeForevacCtx(rec);
+    ctx.pressureVacPa   = [] { return 5.0; };    // ≤ targetVacPa и ≤ порога гейта
+    ctx.pressureTurboPa = [] { return 1.0; };    // валиден, ниже порога возврата
+    ctx.turboTract            = true;
+    ctx.turboSwitchPressurePa = 10.0;
+    ctx.turboSwitchHoldSec    = 2;
+    ctx.turboReturnPressurePa = 30.0;
+    ctx.turboTimeoutSec       = 50;
+    ctx.overrangeWaitSec      = 2;
+    ctx.overrangeWaitSec2     = 2;
+    // Readback по умолчанию подтверждает то, что записано в моке клапанов.
+    ctx.confirmValve = [&rec](bool expectedOpen, const QString& name) {
+        return rec.state.value(name, false) == expectedOpen;
+    };
+    return ctx;
+}
+
+// Индексы операций над клапаном в записанной последовательности.
+QList<int> opIndexes(const Recorder& rec, bool open, const QString& name)
+{
+    QList<int> out;
+    for (int i = 0; i < rec.ops.size(); ++i)
+        if (rec.ops.at(i).open == open && rec.ops.at(i).name == name)
+            out << i;
+    return out;
+}
+
+// Инвариант REQ-008: К176 и К179 никогда не открыты одновременно.
+bool pumpsNeverBothOpen(const Recorder& rec)
+{
+    bool k176 = false, k179 = false;
+    for (const ValveOp& op : rec.ops) {
+        if (op.name == VacuumValve::K176) k176 = op.open;
+        if (op.name == VacuumValve::K179) k179 = op.open;
+        if (k176 && k179)
+            return false;
+    }
+    return true;
+}
+
+} // namespace
+
+TEST(VacuumTree, TurboSwitchHappensWhenAllConditionsMet)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+
+    QList<bool> switches;
+    ctx.onTurboSwitched = [&switches](bool toTurbo) { switches.append(toTurbo); };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+
+    // Переход состоялся ровно один раз и именно на турбо.
+    EXPECT_EQ(switches, QList<bool>{ true });
+
+    // К179 открыт ПОСЛЕ последнего закрытия К176 — порядок из REQ-082.
+    const QList<int> opensK179  = opIndexes(rec, true,  VacuumValve::K179);
+    const QList<int> closesK176 = opIndexes(rec, false, VacuumValve::K176);
+    ASSERT_FALSE(opensK179.isEmpty());
+    ASSERT_FALSE(closesK176.isEmpty());
+    EXPECT_LT(closesK176.last(), opensK179.last());
+}
+
+TEST(VacuumTree, TurboHoldResetsOnConditionBreak)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.turboSwitchHoldSec = 3;
+
+    // Давление «дышит» между 5 и 20 Па: обе точки ≤ targetVacPa (40), поэтому
+    // форвакуумные этапы 11.5–11.7 проходят, но 20 Па > turboSwitchPressurePa
+    // (10), поэтому непрерывного удержания гейта не набирается никогда и он
+    // обязан упасть по таймауту. Проверяется именно сброс счётчика удержания.
+    auto tick = std::make_shared<int>(0);
+    ctx.pressureVacPa = [tick] {
+        return (((*tick)++ % 2) == 0) ? 5.0 : 20.0;
+    };
+    ctx.turboTimeoutSec = 12;
+
+    QString reason;
+    ctx.onFailure = [&reason](const QString& r) { if (reason.isEmpty()) reason = r; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Error);
+    // Клапан турбонасоса не открывался ни разу.
+    EXPECT_TRUE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(reason.contains(QStringLiteral("гейт")));
+}
+
+TEST(VacuumTree, Dv301OverRangeSingleWaitsThenContinues)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.overrangeWaitSec = 3;
+
+    // Первые тики — over range, затем показание возвращается в диапазон.
+    auto calls = std::make_shared<int>(0);
+    ctx.pressureVacPa = [calls] {
+        const int n = (*calls)++;
+        return n < 2 ? Reading(9e5, Quality::OverRange) : Reading(5.0);
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    // Переход всё равно состоялся: over range был временным.
+    EXPECT_FALSE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
+}
+
+TEST(VacuumTree, Dv301OverRangeDoubleIsCritical)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.overrangeWaitSec = 2;
+    ctx.pressureVacPa = [] { return Reading(9e5, Quality::OverRange); };
+
+    QString reason;
+    ctx.onFailure = [&reason](const QString& r) { if (reason.isEmpty()) reason = r; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Error);
+    // Безопасное действие для ДВ301 — закрыть К176; К179 не открывается.
+    EXPECT_TRUE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(reason.contains(QStringLiteral("ДВ301")));
+}
+
+TEST(VacuumTree, Dv302OverRangeDoubleAwaitsOperatorAndKeepsK179Closed)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.overrangeWaitSec2 = 2;
+    ctx.pressureTurboPa = [] { return Reading(9e5, Quality::OverRange); };
+
+    OperatorBus bus;
+    ctx.operatorBus = &bus;
+    int prompts = 0;
+    int seenCode = 0;
+    QObject::connect(&bus, &OperatorBus::decisionRequired, &bus,
+                     [&](int code, QString) {
+                         ++prompts;
+                         seenCode = code;
+                         bus.respond(OperatorBus::Stop);
+                     });
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Error);
+    EXPECT_EQ(prompts, 1);
+    EXPECT_EQ(seenCode, int(OperatorBus::Dv302OverRange));
+    // Ключевое: турбоклапан не открыт ни при каком решении оператора.
+    EXPECT_TRUE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
+    EXPECT_TRUE(rec.allClosed());
+}
+
+TEST(VacuumTree, ReadbackFailureBlocksTurboValve)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    // Команда на закрытие К176 проходит, но readback её НЕ подтверждает.
+    ctx.confirmValve = [](bool, const QString&) { return false; };
+
+    QString reason;
+    ctx.onFailure = [&reason](const QString& r) { if (reason.isEmpty()) reason = r; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Error);
+    // Единственное, что действительно важно: К179 не открылся.
+    EXPECT_TRUE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(reason.contains(QStringLiteral("не подтверждено")));
+}
+
+TEST(VacuumTree, TurboMissingReadbackSeamBlocksTurboValve)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.confirmValve = nullptr;      // шва нет ⇒ REQ-082 непроверяем
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Error);
+    EXPECT_TRUE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
+    EXPECT_TRUE(rec.allClosed());
+}
+
+TEST(VacuumTree, TurboFallbackOnReturnPressureReopensK176)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+
+    // ДВ302 валиден на гейте, но после переключения уходит выше порога возврата.
+    auto switched = std::make_shared<bool>(false);
+    ctx.onTurboSwitched = [switched](bool toTurbo) { if (toTurbo) *switched = true; };
+    ctx.pressureTurboPa = [switched] {
+        return *switched ? Reading(40.0) : Reading(1.0);
+    };
+
+    QList<bool> switches;
+    ctx.onTurboSwitched = [switched, &switches](bool toTurbo) {
+        if (toTurbo) *switched = true;
+        switches.append(toTurbo);
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    // Переход, затем откат — обе стороны обязаны попасть в журнал (REQ-083).
+    EXPECT_EQ(switches, (QList<bool>{ true, false }));
+    // К179 закрыт раньше, чем К176 снова открыт.
+    const QList<int> closesK179 = opIndexes(rec, false, VacuumValve::K179);
+    const QList<int> opensK176  = opIndexes(rec, true,  VacuumValve::K176);
+    ASSERT_FALSE(closesK179.isEmpty());
+    ASSERT_FALSE(opensK176.isEmpty());
+    EXPECT_LT(closesK179.last(), opensK176.last());
+    EXPECT_TRUE(rec.allClosed());
+}
+
+TEST(VacuumTree, TurboTractExcludedSkipsAllTurboNodes)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.turboTract = false;
+
+    QMap<int, NodeState> states;
+    ctx.onNode = [&states](VacuumNode n, NodeState s) { states[int(n)] = s; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_EQ(states.value(int(VacuumNode::TurboGate)), NodeState::Skipped);
+    EXPECT_TRUE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
+    EXPECT_TRUE(rec.allClosed());
+}
+
+TEST(VacuumTree, TurboSkippedWithoutDv302)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.pressureTurboPa = nullptr;   // датчика нет ⇒ У3 недостижимо
+
+    QMap<int, NodeState> states;
+    ctx.onNode = [&states](VacuumNode n, NodeState s) { states[int(n)] = s; };
+
+    // Пропуск, а не таймаут: «этап не выполнялся» ≠ «этап не смог».
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_EQ(states.value(int(VacuumNode::TurboGate)), NodeState::Skipped);
+    EXPECT_TRUE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
+}
+
+TEST(VacuumTree, CancelDuringTurboGateClosesBothPumps)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.pressureVacPa   = [] { return 50.0; };   // гейт не набирается — висим
+    ctx.turboTimeoutSec = 10000;
+
+    QTaskTree tree(buildVacuumRecipe(ctx));
+    QEventLoop loop;
+    QObject::connect(&tree, &QTaskTree::done, &loop, [&loop](DoneWith) { loop.quit(); });
+    tree.start();
+    QTimer::singleShot(60, &tree, [&tree] { tree.cancel(); });
+    loop.exec();
+
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+}
+
+TEST(VacuumTree, SecondTractOpensTurboValveOnlyWithK176Closed)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = rec.makeCtx();
+    ctx.secondTract = true;
+    // Readback подтверждает реальное состояние мока.
+    ctx.confirmValve = [&rec](bool expectedOpen, const QString& name) {
+        return rec.state.value(name, false) == expectedOpen;
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    // Ф3 по-прежнему открывает второй тракт: К192, затем К179.
+    EXPECT_FALSE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
 }
