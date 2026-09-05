@@ -10,6 +10,7 @@
 #include "../Security.h"
 #include "workers/RegimeWorkers.h"
 #include "workers/ValveTestWorker.h"
+#include "workers/ChainWorkers.h"
 #include "RegimeLogger.h"
 #include "workers/VacuumRunMonitor.h"
 
@@ -101,6 +102,25 @@ public:
     // Дефолты ТЗ REQ-022: 10 Па / 60 с / 300 с.
     Q_INVOKABLE void setVacuumForevacTarget(double targetPa, int holdSec, int timeoutSec);
 
+    // ── Цепочка «Вакуум → Напуск → Натекание» ────────────────────────────────
+    //
+    // Параметры прогона приходят из UI, пороги гейтов — из профиля. Гейт здесь
+    // защищает достоверность эксперимента, а не оборудование, но принцип тот
+    // же: величина зависит от стенда, значит живёт в конфигурации.
+    Q_INVOKABLE void setSupplyParams(const QString& port, int openTimeMs,
+                                     double pressureLimitBar);
+    Q_INVOKABLE void setLeakageParams(const QString& valve, int durationSec,
+                                      double targetDeltaBar);
+    void setChainGates(double supplyMaxStartBar, double leakageMinStorageBar,
+                       double leakageMaxReactionBar);
+    // Указатели на подсистемы — из Grams::initActionHandler().
+    void setSupplySources(DataCollection* storageSensor,
+                          AddRemoveQuartile* addRemoveQuartile);
+    void setLeakageSources(DataCollection* storageSensor,
+                           DataCollection* reactionSensor,
+                           DataCollection* temperatureSensor,
+                           ReactionQuartile* reactionQuartile);
+
     // ── Valve test configuration ─────────────────────────────────────────────
     // Called from Grams::initActionHandler() to seed available valve names.
     void setValveNamesForTest(const QStringList& names);
@@ -171,7 +191,9 @@ private:
     DataAcquisition* m_dataAcquisition = nullptr;
     Security*        m_security        = nullptr;
 
-    VacuumOptions m_vacuumOptions;
+    VacuumOptions  m_vacuumOptions;
+    SupplyOptions  m_supplyOptions;
+    LeakageOptions m_leakageOptions;
 
     QStringList            m_valveNamesForTest;
     QList<ValveStepConfig> m_valveTestSteps;

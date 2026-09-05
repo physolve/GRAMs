@@ -275,6 +275,14 @@ Item {
                 onTriggered: RegimeManager.model.addRow("Режим г")
             }
             MenuItem {
+                text: qsTr("Напуск")
+                onTriggered: RegimeManager.model.addRow("Напуск")
+            }
+            MenuItem {
+                text: qsTr("Натекание")
+                onTriggered: RegimeManager.model.addRow("Натекание")
+            }
+            MenuItem {
                 text: qsTr("Тест клапанов")
                 onTriggered: RegimeManager.model.addRow("Тест клапанов")
             }

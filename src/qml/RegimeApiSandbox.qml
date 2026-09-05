@@ -131,6 +131,17 @@ Item {
     // Advanced-опция ТЗ разд. 9.1: полностью исключить тракт турбонасоса.
     property bool turboTract: true
 
+    // ── Параметры цепочки «Напуск → Натекание» ───────────────────────────────
+    // Это параметры ПРОГОНА (меняются от прогона к прогону и задают результат),
+    // поэтому им место в интерфейсе. Пороги гейтов цепочки сюда не выносятся —
+    // они из профиля, как и пороги безопасности вакуума.
+    property string supplyPort:        "AR1"
+    property int    supplyOpenTimeSec: 10
+    property real   supplyLimitBar:    10.0
+    property string leakageValve:      "R1"
+    property int    leakageDurationSec: 60
+    property real   leakageTargetDeltaBar: 0.0
+
     // Длительности зафиксированы в C++ (VacuumTreeContext) и из UI не правятся:
     // шаг 3 с, сброс К118 10 с, «мёртвая зона» dP/dt 30 с.
     readonly property string fixedTimings: "шаг 3 с · сброс К118 10 с · dP/dt через 30 с"
@@ -336,6 +347,14 @@ Item {
                             RegimeTaskTree.setVacuumPumpCheck(root.pumpCheck)
                             RegimeTaskTree.setVacuumContinuousPumping(root.continuousPumping)
                             RegimeTaskTree.setVacuumTurboTract(root.turboTract)
+                            // Цепочка: параметры применяются к режимам
+                            // «Напуск» и «Натекание» из очереди RunTable.
+                            RegimeTaskTree.setSupplyParams(root.supplyPort,
+                                                           root.supplyOpenTimeSec * 1000,
+                                                           root.supplyLimitBar)
+                            RegimeTaskTree.setLeakageParams(root.leakageValve,
+                                                            root.leakageDurationSec,
+                                                            root.leakageTargetDeltaBar)
                             RegimeTaskTree.startAll()
                         }
                     }
@@ -435,6 +454,74 @@ Item {
                         to: Math.max(1, root.mon.turboGateHoldSec)
                         value: root.mon.turboHeldSec
                     }
+                }
+
+                // ── Цепочка: Напуск → Натекание ───────────────────────────────
+                //
+                // Режимы добавляются в очередь через меню «Добавить» в RunTable;
+                // здесь задаются их параметры прогона. Гейты цепочки (тракт
+                // откачан, накопитель заряжен) проверяются рецептами и в UI не
+                // настраиваются.
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Cap { text: "Напуск: порт" }
+                    TextField {
+                        Layout.preferredWidth: 64
+                        text: root.supplyPort
+                        onEditingFinished: root.supplyPort = text
+                    }
+                    Cap { text: "время, с" }
+                    Num {
+                        from: 1; to: 3600
+                        value: root.supplyOpenTimeSec
+                        onValueModified: root.supplyOpenTimeSec = value
+                    }
+                    Cap { text: "до, бар" }
+                    TextField {
+                        Layout.preferredWidth: 72
+                        text: root.supplyLimitBar
+                        onEditingFinished: {
+                            var v = parseFloat(text.replace(",", "."))
+                            if (!isNaN(v) && v > 0)
+                                root.supplyLimitBar = v
+                            text = root.supplyLimitBar
+                        }
+                    }
+                    Item { Layout.fillWidth: true }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Cap { text: "Натекание: клапан" }
+                    TextField {
+                        Layout.preferredWidth: 64
+                        text: root.leakageValve
+                        onEditingFinished: root.leakageValve = text
+                    }
+                    Cap { text: "длительность, с" }
+                    Num {
+                        from: 1; to: 36000
+                        value: root.leakageDurationSec
+                        onValueModified: root.leakageDurationSec = value
+                    }
+                    Cap { text: "или Δp, бар" }
+                    TextField {
+                        Layout.preferredWidth: 72
+                        text: root.leakageTargetDeltaBar
+                        ToolTip.text: "0 — не использовать перепад как условие остановки"
+                        ToolTip.visible: hovered
+                        onEditingFinished: {
+                            var v = parseFloat(text.replace(",", "."))
+                            if (!isNaN(v) && v >= 0)
+                                root.leakageTargetDeltaBar = v
+                            text = root.leakageTargetDeltaBar
+                        }
+                    }
+                    Item { Layout.fillWidth: true }
                 }
             }
 

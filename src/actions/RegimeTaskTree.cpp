@@ -12,6 +12,8 @@ using VacuumTask    = QCustomTask<VacuumRegimeWorker>;
 using RegimeBTask   = QCustomTask<RegimeBWorker>;
 using RegimeGTask   = QCustomTask<RegimeGWorker>;
 using ValveTestTask = QCustomTask<ValveTestWorker>;
+using SupplyTask    = QCustomTask<SupplyRegimeWorker>;
+using LeakageTask   = QCustomTask<LeakageRegimeWorker>;
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Construction / destruction
@@ -135,6 +137,63 @@ void RegimeTaskTree::setVacuumTurboTract(bool enabled)
 {
     m_vacuumOptions.turboTract = enabled;
     qDebug() << "RegimeTaskTree: setVacuumTurboTract" << enabled;
+}
+
+// ── Цепочка «Вакуум → Напуск → Натекание» ────────────────────────────────────
+
+void RegimeTaskTree::setSupplyParams(const QString& port, int openTimeMs,
+                                     double pressureLimitBar)
+{
+    m_supplyOptions.port             = port;
+    m_supplyOptions.openTimeMs       = qMax(1, openTimeMs);
+    // Предел давления зажимаем так же, как цель форвакуума: ноль недостижим и
+    // подвесил бы напуск до конца отведённого времени.
+    m_supplyOptions.pressureLimitBar = qBound(1e-4, pressureLimitBar, 1.0e3);
+    qDebug() << "RegimeTaskTree: setSupplyParams port" << port
+             << "time" << m_supplyOptions.openTimeMs << "ms, limit"
+             << m_supplyOptions.pressureLimitBar << "bar";
+}
+
+void RegimeTaskTree::setLeakageParams(const QString& valve, int durationSec,
+                                      double targetDeltaBar)
+{
+    m_leakageOptions.valve          = valve;
+    m_leakageOptions.durationSec    = qMax(1, durationSec);
+    // 0 — законное значение: «не использовать перепад как условие остановки».
+    m_leakageOptions.targetDeltaBar = qMax(0.0, targetDeltaBar);
+    qDebug() << "RegimeTaskTree: setLeakageParams valve" << valve
+             << "duration" << m_leakageOptions.durationSec << "s, target dP"
+             << m_leakageOptions.targetDeltaBar << "bar";
+}
+
+void RegimeTaskTree::setChainGates(double supplyMaxStartBar,
+                                   double leakageMinStorageBar,
+                                   double leakageMaxReactionBar)
+{
+    m_supplyOptions.gateMaxStartBar     = qMax(0.0, supplyMaxStartBar);
+    m_leakageOptions.gateMinStorageBar  = qMax(0.0, leakageMinStorageBar);
+    m_leakageOptions.gateMaxReactionBar = qMax(0.0, leakageMaxReactionBar);
+    qDebug() << "RegimeTaskTree: setChainGates supply<=" << supplyMaxStartBar
+             << "leakage storage>=" << leakageMinStorageBar
+             << "reaction<=" << leakageMaxReactionBar << "bar";
+}
+
+void RegimeTaskTree::setSupplySources(DataCollection* storageSensor,
+                                      AddRemoveQuartile* addRemoveQuartile)
+{
+    m_supplyOptions.storageSensor     = storageSensor;
+    m_supplyOptions.addRemoveQuartile = addRemoveQuartile;
+}
+
+void RegimeTaskTree::setLeakageSources(DataCollection* storageSensor,
+                                       DataCollection* reactionSensor,
+                                       DataCollection* temperatureSensor,
+                                       ReactionQuartile* reactionQuartile)
+{
+    m_leakageOptions.storageSensor     = storageSensor;
+    m_leakageOptions.reactionSensor    = reactionSensor;
+    m_leakageOptions.temperatureSensor = temperatureSensor;
+    m_leakageOptions.reactionQuartile  = reactionQuartile;
 }
 
 void RegimeTaskTree::setVacuumPumpCheck(bool enabled)
@@ -469,12 +528,84 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
         };
     }
 
-    // ── Unknown regime name — skip silently ───────────────────────────────────
-    qWarning() << "RegimeTaskTree: unknown regime name" << name << "— skipping";
+    if (name == "Напуск") {
+        RegimeWorkerConfig cfg = makeConfig(regimeId, regime);
+        SupplyOptions opts = m_supplyOptions;
+
+        return Group {
+            sequential,
+            SupplyTask(
+                [cfg, opts, regimeId, name, this](SupplyRegimeWorker& w) -> SetupResult {
+                    if (!m_manager->startRegimeExecution(regimeId))
+                        return SetupResult::StopWithError;
+                    w.setConfig(cfg);
+                    w.setOptions(opts);
+                    connect(this, &RegimeTaskTree::pauseRequested,
+                            &w,   &SupplyRegimeWorker::onPauseRequested);
+                    connect(this, &RegimeTaskTree::resumeRequested,
+                            &w,   &SupplyRegimeWorker::onResumeRequested);
+                    m_activeRegimeId = regimeId;
+                    emit activeRegimeChanged();
+                    emit regimeStarted(regimeId, name);
+                    return SetupResult::Continue;
+                },
+                [doneFn](const SupplyRegimeWorker& w, DoneWith r) {
+                    if (r == DoneWith::Cancel)
+                        QMetaObject::invokeMethod(const_cast<SupplyRegimeWorker*>(&w),
+                                                  "cancelTree", Qt::QueuedConnection);
+                    doneFn(r);
+                }
+            )
+        };
+    }
+
+    if (name == "Натекание") {
+        RegimeWorkerConfig cfg = makeConfig(regimeId, regime);
+        LeakageOptions opts = m_leakageOptions;
+
+        return Group {
+            sequential,
+            LeakageTask(
+                [cfg, opts, regimeId, name, this](LeakageRegimeWorker& w) -> SetupResult {
+                    if (!m_manager->startRegimeExecution(regimeId))
+                        return SetupResult::StopWithError;
+                    w.setConfig(cfg);
+                    w.setOptions(opts);
+                    connect(this, &RegimeTaskTree::pauseRequested,
+                            &w,   &LeakageRegimeWorker::onPauseRequested);
+                    connect(this, &RegimeTaskTree::resumeRequested,
+                            &w,   &LeakageRegimeWorker::onResumeRequested);
+                    m_activeRegimeId = regimeId;
+                    emit activeRegimeChanged();
+                    emit regimeStarted(regimeId, name);
+                    return SetupResult::Continue;
+                },
+                [doneFn](const LeakageRegimeWorker& w, DoneWith r) {
+                    if (r == DoneWith::Cancel)
+                        QMetaObject::invokeMethod(const_cast<LeakageRegimeWorker*>(&w),
+                                                  "cancelTree", Qt::QueuedConnection);
+                    doneFn(r);
+                }
+            )
+        };
+    }
+
+    // ── Неизвестное имя режима — ОШИБКА, а не тихий пропуск ───────────────────
+    //
+    // Раньше здесь стоял StopWithSuccess: режим с незнакомым именем молча
+    // «выполнялся». Профильные «Режим а»/«Режим б» из regime_a.json именно так
+    // и проходили — оператор видел успех там, где не выполнялось ничего.
+    qWarning() << "RegimeTaskTree: неизвестное имя режима" << name;
     return Group {
-        onGroupSetup([name]() -> SetupResult {
-            qDebug() << "Skipping unknown regime:" << name;
-            return SetupResult::StopWithSuccess;
+        onGroupSetup([]() -> SetupResult { return SetupResult::Continue; }),
+        QSyncTask([this, regimeId, name]() -> bool {
+            m_manager->setRegimeState(regimeId, RegimeEnums::State::Error);
+            m_vacuumMonitor.setFinish(int(RegimeEnums::State::Error),
+                                      QStringLiteral("Неизвестный режим «%1»: воркер "
+                                                     "не зарегистрирован в "
+                                                     "RegimeTaskTree::buildRegimeGroup()")
+                                          .arg(name));
+            return false;
         })
     };
 }

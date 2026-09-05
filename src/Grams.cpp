@@ -552,6 +552,19 @@ void Grams::initActionHandler(){
     m_regimeTaskTree.setVacuumSafety(vs.m_turboSwitchPressurePa, vs.m_turboSwitchHoldSec,
                                      vs.m_turboReturnPressurePa, vs.m_turboTimeoutSec,
                                      vs.m_overrangeWaitSec, vs.m_overrangeWaitSec2);
+    // ── Цепочка «Вакуум → Напуск → Натекание» ────────────────────────────────
+    //
+    // Напуск смотрит на давление накопителя (prSH, DD311) и пишет точки через
+    // AddRemoveQuartile. Натекание сравнивает накопитель с реакционной
+    // областью (prRH, DD331) и считает расход в ReactionQuartile/GasLeakage.
+    m_regimeTaskTree.setSupplySources(&prSH, &m_addRemoveQuartile);
+    m_regimeTaskTree.setLeakageSources(&prSH, &prRH, &tmS, &m_reactionQuartile);
+    // Пороги гейтов цепочки. Значения предварительные — до измерений на стенде
+    // они консервативные: лучше отказать в старте, чем испортить прогон.
+    m_regimeTaskTree.setChainGates(/*supplyMaxStartBar=*/0.05,
+                                   /*leakageMinStorageBar=*/0.5,
+                                   /*leakageMaxReactionBar=*/0.05);
+
     // Pass valve names for the "Тест клапанов" regime.
     // initSource.m_hardware.m_valves contains the ordered list from the JSON profile.
     m_regimeTaskTree.setValveNamesForTest(initSource.m_hardware.m_valves);
