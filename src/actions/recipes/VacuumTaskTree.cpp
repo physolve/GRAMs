@@ -39,7 +39,7 @@ void PumpRateWatchdog::beginWindow()
     m_firstWindow = false;
     // p0 берётся здесь только если задержки нет; иначе — по её истечении,
     // чтобы падение за время выхода на режим не засчитывалось в окно.
-    m_p0 = (m_delayLeft == 0 && pressurePa) ? pressurePa().valuePa : 0.0;
+    m_p0 = (m_delayLeft == 0 && pressurePa) ? pressurePa().value : 0.0;
     m_awaitingOperator = false;
     if (pauseBus && pauseBus->isPaused())
         return;                         // стартуем замороженными, ждём resume
@@ -50,7 +50,7 @@ void PumpRateWatchdog::tick()
 {
     if (m_delayLeft > 0) {
         if (--m_delayLeft == 0)
-            m_p0 = pressurePa ? pressurePa().valuePa : 0.0;  // отсчёт окна с этой точки
+            m_p0 = pressurePa ? pressurePa().value : 0.0;  // отсчёт окна с этой точки
         return;
     }
     ++m_elapsed;
@@ -65,7 +65,7 @@ void PumpRateWatchdog::tick()
         beginWindow();
         return;
     }
-    const double drop = m_p0 - r.valuePa;   // падение давления за окно
+    const double drop = m_p0 - r.value;   // падение давления за окно
     if (r.isValid() && drop >= minDropPa) { // давление падает → откачка идёт
         emit done(true);
         return;
@@ -133,19 +133,10 @@ double readingOrNan(const std::function<Reading()>& seam)
     if (!seam)
         return std::numeric_limits<double>::quiet_NaN();
     const Reading r = seam();
-    return r.isValid() ? r.valuePa : std::numeric_limits<double>::quiet_NaN();
+    return r.isValid() ? r.value : std::numeric_limits<double>::quiet_NaN();
 }
 
 // ── Наблюдение за узлами развёртки (аддитивно, control-flow не меняет) ─────────
-NodeState doneToNode(DoneWith w)
-{
-    switch (w) {
-    case DoneWith::Success: return NodeState::Success;
-    case DoneWith::Cancel:  return NodeState::Cancelled;
-    default:                return NodeState::Error;
-    }
-}
-
 // Оборачивает узел парой onGroupSetup(Running)/onGroupDone(final) для монитора.
 // Для НЕ-пропускаемых узлов (Condition, F1Relief, F2BlockC, F2_ReliefMid,
 // F4Pumpdown). Пропускаемые узлы эмитят Skipped inline у себя (см. skipUnlessNode
@@ -620,7 +611,7 @@ ExecutableItem foreVacPumpToTarget(const Storage<VacuumRunState>& st,
                 // отдающий 0, иначе выглядел бы как достигнутая цель.
                 if (!r.isValid())
                     return false;
-                return r.valuePa <= ctx.targetVacPa;
+                return r.value <= ctx.targetVacPa;
             },
             ctx.foreVacHoldSec, ctx.foreVacTimeoutSec,
             [ctx, node](int held, int elapsed) {     // live-прогресс в UI
@@ -642,7 +633,7 @@ ExecutableItem foreVacPumpToTarget(const Storage<VacuumRunState>& st,
                 ctx.onFailure(QStringLiteral("%1: таймаут форвакуума — ДВ301 %2 Па (%3) не "
                                              "удержалось ≤ %4 Па в течение %5 с (лимит %6 с)")
                                   .arg(nodeTitle(node))
-                                  .arg(r.valuePa, 0, 'g', 3)
+                                  .arg(r.value, 0, 'g', 3)
                                   .arg(qualityName(r.quality))
                                   .arg(ctx.targetVacPa)
                                   .arg(ctx.foreVacHoldSec)
@@ -954,7 +945,7 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
         if (!ctx.pressureVacPa)
             return false;
         const Reading p301 = ctx.pressureVacPa();
-        if (!p301.isValid() || p301.valuePa > ctx.turboSwitchPressurePa)
+        if (!p301.isValid() || p301.value > ctx.turboSwitchPressurePa)
             return false;                       // У1
         if (!ctx.pressureTurboPa)
             return false;                       // У3: без ДВ302 контроля нет
@@ -1031,8 +1022,8 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
                         "12.2 гейт: условие перехода не набрано за %1 с — "
                         "ДВ301 %2 Па (%3), ДВ302 %4 Па (%5), порог ≤ %6 Па")
                             .arg(ctx.turboTimeoutSec)
-                            .arg(p301.valuePa, 0, 'g', 3).arg(qualityName(p301.quality))
-                            .arg(p302.valuePa, 0, 'g', 3).arg(qualityName(p302.quality))
+                            .arg(p301.value, 0, 'g', 3).arg(qualityName(p301.quality))
+                            .arg(p302.value, 0, 'g', 3).arg(qualityName(p302.quality))
                             .arg(ctx.turboSwitchPressurePa));
                 })
         }),
@@ -1066,7 +1057,7 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
                                             p302, 0, elapsed);
                     // Порог возврата — по достоверному показанию. Недостоверное
                     // не повод откатываться: этим занимается overRangeGuard.
-                    if (p302.isValid() && p302.valuePa >= ctx.turboReturnPressurePa) {
+                    if (p302.isValid() && p302.value >= ctx.turboReturnPressurePa) {
                         *fellBack = true;
                         return true;
                     }

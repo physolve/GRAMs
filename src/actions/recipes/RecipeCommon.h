@@ -29,12 +29,26 @@
 // того, какой режим исполняется.
 enum class NodeState { Initial, Running, Success, Error, Cancelled, Skipped };
 
+// Исход группы TaskTree → состояние узла развёртки. Общее для всех рецептов:
+// раньше эта функция дублировалась бы в каждом.
+inline NodeState doneToNode(QtTaskTree::DoneWith w)
+{
+    switch (w) {
+    case QtTaskTree::DoneWith::Success: return NodeState::Success;
+    case QtTaskTree::DoneWith::Cancel:  return NodeState::Cancelled;
+    default:                            return NodeState::Error;
+    }
+}
+
 // ─── Показание датчика ────────────────────────────────────────────────────────
 //
 // Значение в паскалях плюс признак качества (Quality — см. src/SensorQuality.h).
 
 struct Reading {
-    double  valuePa = 0.0;
+    // Единицу задаёт шов, а не тип: вакуумные швы отдают паскали, напуск —
+    // бары. Поэтому поле называется просто value — имя вроде valuePa лгало бы
+    // в половине мест использования.
+    double  value = 0.0;
     Quality quality = Quality::Valid;
 
     Reading() = default;
@@ -42,8 +56,8 @@ struct Reading {
     // возвращающую double, поэтому существующие тесты вида
     //   ctx.pressureVacPa = [] { return 5.0; };
     // компилируются без правок.
-    Reading(double pa) : valuePa(pa) {}
-    Reading(double pa, Quality q) : valuePa(pa), quality(q) {}
+    Reading(double v) : value(v) {}
+    Reading(double v, Quality q) : value(v), quality(q) {}
 
     bool isValid()     const { return quality == Quality::Valid; }
     bool isOverRange() const { return quality == Quality::OverRange; }

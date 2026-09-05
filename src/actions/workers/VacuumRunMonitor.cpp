@@ -306,9 +306,9 @@ void VacuumRunMonitor::onTurboProgress(VacuumNode node, Reading p301, Reading p3
                                        int heldSec, int elapsedSec)
 {
     m_turboNode       = int(node);
-    m_dv301Pa         = p301.valuePa;
+    m_dv301Pa         = p301.value;
     m_dv301Quality    = qualityName(p301.quality);
-    m_dv302Pa         = p302.valuePa;
+    m_dv302Pa         = p302.value;
     m_dv302Quality    = qualityName(p302.quality);
     m_turboHeldSec    = heldSec;
     m_turboElapsedSec = elapsedSec;
