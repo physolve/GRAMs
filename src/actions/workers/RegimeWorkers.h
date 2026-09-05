@@ -3,12 +3,12 @@
 #include <QObject>
 #include <QTimer>
 
-#include "../runtable/regimemanager.h"
-#include "../ValveControl.h"
-#include "../DataAcquisition.h"
-#include "../Security.h"
-#include "RegimeLogger.h"
-#include "VacuumTaskTree.h"
+#include "../../runtable/regimemanager.h"
+#include "../../ValveControl.h"
+#include "../../DataAcquisition.h"
+#include "../../Security.h"
+#include "../RegimeLogger.h"
+#include "../recipes/VacuumTaskTree.h"
 
 class VacuumRunMonitor;   // наблюдатель состояния рецепта (src/actions/VacuumRunMonitor.h)
 

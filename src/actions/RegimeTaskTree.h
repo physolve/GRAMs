@@ -8,10 +8,10 @@
 #include "../ValveControl.h"
 #include "../DataAcquisition.h"
 #include "../Security.h"
-#include "RegimeWorkers.h"
-#include "ValveTestWorker.h"
+#include "workers/RegimeWorkers.h"
+#include "workers/ValveTestWorker.h"
 #include "RegimeLogger.h"
-#include "VacuumRunMonitor.h"
+#include "workers/VacuumRunMonitor.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RegimeTaskTree

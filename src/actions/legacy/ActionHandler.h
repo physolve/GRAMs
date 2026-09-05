@@ -7,9 +7,9 @@
 
 #include "InletAction.h"
 #include "DataControlAction.h"
-#include "../ValveControl.h"
-#include "../Security.h"
-#include "../DataAcquisition.h"
+#include "../../ValveControl.h"
+#include "../../Security.h"
+#include "../../DataAcquisition.h"
 
 class ActionHandler : public QObject
 {

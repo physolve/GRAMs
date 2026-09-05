@@ -11,7 +11,7 @@
 // Все швы — через VacuumTreeContext; ValveControl/biodaq не нужны.
 // ─────────────────────────────────────────────────────────────────────────────
 
-#include "VacuumTaskTree.h"
+#include "recipes/VacuumTaskTree.h"
 
 #include <gtest/gtest.h>
 

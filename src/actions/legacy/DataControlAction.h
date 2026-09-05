@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QPromise>
-#include "../DataAcquisition.h"
+#include "../../DataAcquisition.h"
 
 struct DataControlAction
 {

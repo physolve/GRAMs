@@ -5,11 +5,11 @@
 #include <QStringList>
 #include <QList>
 
-#include "../runtable/regimemanager.h"
-#include "../ValveControl.h"
-#include "../DataAcquisition.h"
-#include "../Security.h"
-#include "RegimeLogger.h"
+#include "../../runtable/regimemanager.h"
+#include "../../ValveControl.h"
+#include "../../DataAcquisition.h"
+#include "../../Security.h"
+#include "../RegimeLogger.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ValveStepConfig — one step in the valve test sequence.

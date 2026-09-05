@@ -69,12 +69,26 @@ if(NOT DEFINED CPP_PLAYPATH)
     file(GLOB CPP_PLAYPATH ${CMAKE_CURRENT_SOURCE_DIR}/playpath/*.cpp)
 endif()
 
+# actions/ разделён по слоям, и GLOB здесь нерекурсивный, поэтому у каждой
+# подпапки своя пара:
+#   actions/          — оркестратор режимов и журнал прогонов
+#   actions/legacy/   — путь QtConcurrent + QPromise (ActionHandler, InletAction)
+#   actions/recipes/  — рецепты TaskTree: только Qt Core + TaskTree, без железа
+#   actions/workers/  — воркеры и мониторы, связывающие рецепты с железом
 if(NOT DEFINED HPP_ACTIONS)
-    file(GLOB HPP_ACTIONS ${CMAKE_CURRENT_SOURCE_DIR}/actions/*.h)
+    file(GLOB HPP_ACTIONS
+        ${CMAKE_CURRENT_SOURCE_DIR}/actions/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/actions/legacy/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/actions/recipes/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/actions/workers/*.h)
 endif()
 
 if(NOT DEFINED CPP_ACTIONS)
-    file(GLOB CPP_ACTIONS ${CMAKE_CURRENT_SOURCE_DIR}/actions/*.cpp)
+    file(GLOB CPP_ACTIONS
+        ${CMAKE_CURRENT_SOURCE_DIR}/actions/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/actions/legacy/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/actions/recipes/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/actions/workers/*.cpp)
 endif()
 
 if(NOT DEFINED HPP_CHARTS)

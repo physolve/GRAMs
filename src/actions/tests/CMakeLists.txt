@@ -14,13 +14,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+# .. даёт actions/, ../.. даёт src/ — рецепты включают ../../SensorQuality.h
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 
 # Рецепт «Вакуума» компилируется напрямую — тесты не зависят от
 # ValveControl/biodaq (все швы через VacuumTreeContext).
 add_executable(VacuumTreeTests
     test_vacuum_tree.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../VacuumTaskTree.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../recipes/VacuumTaskTree.cpp
 )
 
 target_link_libraries(VacuumTreeTests

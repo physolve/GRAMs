@@ -26,7 +26,7 @@
 #include "TimeStamp.h"
 #include "addon/TestField.h"
 #include "playpath/PlayPressure.h"
-#include "actions/ActionHandler.h"
+#include "actions/legacy/ActionHandler.h"
 #include "actions/RegimeTaskTree.h"
 #include "runtable/regime.h"
 #include "runtable/regimemanager.h"

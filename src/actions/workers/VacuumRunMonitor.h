@@ -5,7 +5,7 @@
 #include <QVariantMap>
 #include <QString>
 
-#include "VacuumTaskTree.h"   // VacuumNode, NodeState
+#include "../recipes/VacuumTaskTree.h"   // VacuumNode, NodeState
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VacuumRunMonitor — наблюдаемый мост состояния рецепта «Вакуум» в QML.

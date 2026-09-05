@@ -6,7 +6,7 @@
 #include <QTimer>
 #include <qtasktree.h>
 
-#include "../SensorQuality.h"
+#include "../../SensorQuality.h"
 
 #include <functional>
 
