@@ -84,6 +84,22 @@ class VacuumRunMonitor : public QObject
     Q_PROPERTY(int     forevacHeldSec   READ forevacHeldSec   NOTIFY forevacProgressChanged)
     Q_PROPERTY(int     forevacElapsedSec READ forevacElapsedSec NOTIFY forevacProgressChanged)
 
+    // ── Турбо-этап 12.2: активный насос и live-показания обоих датчиков ───────
+    // activePump: "" — оба закрыты, "fore" — К176, "turbo" — К179. Это
+    // единственный видимый оператору признак того, на каком насосе идёт
+    // откачка (REQ-008/082), поэтому свойство обязательное, а не украшение.
+    Q_PROPERTY(QString activePump    READ activePump    NOTIFY turboProgressChanged)
+    Q_PROPERTY(int     turboNode     READ turboNode     NOTIFY turboProgressChanged)
+    Q_PROPERTY(bool    turboActive   READ turboActive   NOTIFY turboProgressChanged)
+    Q_PROPERTY(double  dv301Pa       READ dv301Pa       NOTIFY turboProgressChanged)
+    Q_PROPERTY(QString dv301Quality  READ dv301Quality  NOTIFY turboProgressChanged)
+    Q_PROPERTY(double  dv302Pa       READ dv302Pa       NOTIFY turboProgressChanged)
+    Q_PROPERTY(QString dv302Quality  READ dv302Quality  NOTIFY turboProgressChanged)
+    Q_PROPERTY(int     turboHeldSec  READ turboHeldSec  NOTIFY turboProgressChanged)
+    Q_PROPERTY(int     turboElapsedSec READ turboElapsedSec NOTIFY turboProgressChanged)
+    Q_PROPERTY(double  turboGatePa   READ turboGatePa   NOTIFY turboTargetChanged)
+    Q_PROPERTY(int     turboGateHoldSec READ turboGateHoldSec NOTIFY turboTargetChanged)
+
     // ── Причина завершения прогона (пусто, пока прогон не закончился) ─────────
     Q_PROPERTY(QString finishReason READ finishReason NOTIFY finishReasonChanged)
     Q_PROPERTY(int     finishState  READ finishState  NOTIFY finishReasonChanged)
@@ -113,6 +129,23 @@ public:
     bool    forevacHasReading() const { return m_forevacHasReading; }
     int     forevacHeldSec()    const { return m_forevacHeldSec; }
     int     forevacElapsedSec() const { return m_forevacElapsedSec; }
+
+    QString activePump()      const { return m_activePump; }
+    int     turboNode()       const { return m_turboNode; }
+    bool    turboActive()     const { return m_turboNode >= 0; }
+    double  dv301Pa()         const { return m_dv301Pa; }
+    QString dv301Quality()    const { return m_dv301Quality; }
+    double  dv302Pa()         const { return m_dv302Pa; }
+    QString dv302Quality()    const { return m_dv302Quality; }
+    int     turboHeldSec()    const { return m_turboHeldSec; }
+    int     turboElapsedSec() const { return m_turboElapsedSec; }
+    double  turboGatePa()     const { return m_turboGatePa; }
+    int     turboGateHoldSec() const { return m_turboGateHoldSec; }
+
+    void setTurboGate(double gatePa, int holdSec);
+    void onTurboProgress(VacuumNode node, Reading p301, Reading p302,
+                         int heldSec, int elapsedSec);
+    void onTurboSwitched(bool toTurbo);
 
     QString finishReason() const { return m_finishReason; }
     int     finishState()  const { return m_finishState; }
@@ -154,6 +187,8 @@ signals:
     void forevacTargetChanged();
     void forevacProgressChanged();
     void finishReasonChanged();
+    void turboProgressChanged();
+    void turboTargetChanged();
 
 private:
     void initValves();
@@ -183,4 +218,16 @@ private:
     QString m_finishReason;
     QString m_failureReason;              // первая причина отказа из рецепта
     int     m_finishState = -1;           // RegimeEnums::State, -1 = не завершён
+
+    // ── Турбо-этап 12.2 ──────────────────────────────────────────────────────
+    QString m_activePump;                 // "", "fore" (К176), "turbo" (К179)
+    int     m_turboNode        = -1;      // int(VacuumNode) активного узла либо -1
+    double  m_dv301Pa          = 0.0;
+    QString m_dv301Quality;
+    double  m_dv302Pa          = 0.0;
+    QString m_dv302Quality;
+    int     m_turboHeldSec     = 0;
+    int     m_turboElapsedSec  = 0;
+    double  m_turboGatePa      = 10.0;    // порог перехода (REQ-078/080)
+    int     m_turboGateHoldSec = 60;      // удержание порога (REQ-080)
 };

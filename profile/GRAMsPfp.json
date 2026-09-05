@@ -150,13 +150,24 @@
                 "mass_spectr": "unknown"
             }
         },
-        "security": {
+        "vacuumSafety": {
+                "turboSwitchPressurePa": 10.0,
+                "turboSwitchHoldSec": 60,
+                "turboReturnPressurePa": 30.0,
+                "turboTimeoutSec": 600,
+                "overrangeWaitSec": 300,
+                "overrangeWaitSec2": 350,
+                "valveReadbackTimeoutMs": 2000
+            },
+            "security": {
             "contradictionValves":{
                 "AR1":["AR2", "AR3", "AR5", "AR4"],
                 "AR2":["AR1", "AR3", "AR5", "AR4"],
                 "AR3":["AR1", "AR2", "AR5", "AR4"],
                 "AR5":["AR1", "AR2", "AR3", "AR4"],
-                "AR4":["AR1", "AR2", "AR3", "AR5"]
+                "AR4":["AR1", "AR2", "AR3", "AR5"],
+                "AR6":["SL1"],
+                "SL1":["AR6"]
             },
             "twoOfThree": ["AR5", "SL1", "SL2"],
             "safetyQuars" : {

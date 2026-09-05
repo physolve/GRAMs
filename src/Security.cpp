@@ -1,5 +1,7 @@
 #include "Security.h"
 
+#include <QDebug>
+
 ValveGraph::ValveGraph(const QString &selfName): m_selfName(selfName), checkEachInList(false), checkRuleOfThree(false) {}
 void ValveGraph::addEachInList(const QStringList &nodeValveList){
     checkEachInList = true;
@@ -97,6 +99,24 @@ void Security::setContradictionValves(const QMap<QString, QStringList> &contradi
 }
 
 void Security::setRuleOfThreeValves(const QStringList &ruleOfThreeList){
+    if(ruleOfThreeList.size() < 3){
+        qWarning() << "Security: twoOfThree требует ровно три клапана, получено"
+                   << ruleOfThreeList;
+        return;
+    }
+    // ВАЖНО: имя клапана обязано попасть в ValveGraph.
+    //
+    // Раньше здесь стоял голый operator[], который для отсутствующего ключа
+    // default-конструирует ValveGraph с m_selfName == "unknown". Дальше
+    // applyGraphMask делает `if(!valveMap[m_selfName]) return false;`, а
+    // valveMap["unknown"] не существует и всегда false — то есть открыть такой
+    // клапан было НЕВОЗМОЖНО. Под это попадали SL1 (К179, турбонасос) и SL2
+    // (К192): в contradictionValves профиля их нет, они приходят только через
+    // twoOfThree. Ф3 «второй тракт» из-за этого не могла открыть К179.
+    for(const QString& name : ruleOfThreeList){
+        if(!m_contradictionValves.contains(name))
+            m_contradictionValves.insert(name, ValveGraph(name));
+    }
     m_contradictionValves[ruleOfThreeList[0]].addRuleOfThree(ruleOfThreeList[1],ruleOfThreeList[2]);
     m_contradictionValves[ruleOfThreeList[1]].addRuleOfThree(ruleOfThreeList[0],ruleOfThreeList[2]);
     m_contradictionValves[ruleOfThreeList[2]].addRuleOfThree(ruleOfThreeList[0],ruleOfThreeList[1]);

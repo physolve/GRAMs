@@ -83,6 +83,16 @@ public:
     // зафиксированы в коде — настройки из UI для них нет.
     Q_INVOKABLE void setVacuumContinuousPumping(bool enabled);
 
+    // Пороги безопасности турбо-этапа из profile/GRAMsPfp.json (vacuumSafety).
+    // Вызывается из Grams::initActionHandler(), НЕ из QML: гейт перехода на
+    // турбонасос не настраивается с рабочего экрана (см. ТЗ REQ-022).
+    void setVacuumSafety(double turboSwitchPressurePa, int turboSwitchHoldSec,
+                         double turboReturnPressurePa, int turboTimeoutSec,
+                         int overrangeWaitSec, int overrangeWaitSec2);
+
+    // Advanced-опция «исключить тракт турбомолекулярного насоса» (разд. 9.1).
+    Q_INVOKABLE void setVacuumTurboTract(bool enabled);
+
     // Включение dP/dt-watchdog после открытия К176.
     Q_INVOKABLE void setVacuumPumpCheck(bool enabled);
 

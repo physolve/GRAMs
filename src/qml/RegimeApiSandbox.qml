@@ -57,10 +57,16 @@ Item {
 
     Rectangle { anchors.fill: parent; color: cBg }
 
-    // ── Операторский диалог dP/dt (OperatorBus: Стоп / Продолжить) ─────────────
+    // ── Операторский диалог (OperatorBus) ─────────────────────────────────────
+    //
+    // ТЗ требует решения оператора не в одной точке, а минимум в четырёх, и
+    // они не равнозначны: при over range ДВ302 «продолжить как есть» означало
+    // бы открыть К179 на непрощавшемся тракте. Поэтому заголовок выбирается
+    // по коду события, а не один на все случаи.
     Connections {
         target: RegimeTaskTree.operatorBus
         function onDecisionRequired(code, message) {
+            operatorDialog.code = code
             operatorDialog.message = message
             operatorDialog.open()
         }
@@ -72,10 +78,18 @@ Item {
     Dialog {
         id: operatorDialog
         property string message: ""
+        property int    code: 0
+        // Коды из OperatorBus::Event.
+        readonly property var titles: ({
+            1: "Проверка откачки",
+            2: "ДВ301 вне диапазона",
+            3: "ДВ302 вне диапазона",
+            4: "Клапан К176 не подтверждён"
+        })
         anchors.centerIn: Overlay.overlay
         modal: true
         closePolicy: Popup.NoAutoClose
-        title: "Проверка откачки"
+        title: titles[code] !== undefined ? titles[code] : "Требуется решение оператора"
         standardButtons: Dialog.NoButton
         // Ширина задана явно: иначе implicitWidth диалога считается от
         // переносимого текста, а тот — от ширины диалога (binding loop).
@@ -114,6 +128,8 @@ Item {
     property int  repeats:     1
     // Тракт остаётся открытым после успешного прогона — насос качает дальше.
     property bool continuousPumping: false
+    // Advanced-опция ТЗ разд. 9.1: полностью исключить тракт турбонасоса.
+    property bool turboTract: true
 
     // Длительности зафиксированы в C++ (VacuumTreeContext) и из UI не правятся:
     // шаг 3 с, сброс К118 10 с, «мёртвая зона» dP/dt 30 с.
@@ -234,6 +250,12 @@ Item {
                         checked: root.pumpCheck; onToggled: root.pumpCheck = checked
                     }
                     Chk {
+                        text: "турбо-тракт"
+                        ToolTip.text: "Раздел 12.2: переход К176→К179. Снять — исключить тракт турбонасоса"
+                        checked: root.turboTract
+                        onToggled: root.turboTract = checked
+                    }
+                    Chk {
                         text: "непрерывная откачка"
                         ToolTip.text: "После успешного прогона оставить тракт открытым — насос качает дальше"
                         checked: root.continuousPumping
@@ -313,6 +335,7 @@ Item {
                                                                   root.foreVacTimeoutSec)
                             RegimeTaskTree.setVacuumPumpCheck(root.pumpCheck)
                             RegimeTaskTree.setVacuumContinuousPumping(root.continuousPumping)
+                            RegimeTaskTree.setVacuumTurboTract(root.turboTract)
                             RegimeTaskTree.startAll()
                         }
                     }
@@ -344,6 +367,73 @@ Item {
                         color: RegimeTaskTree.running ? root.stateColor(1) : root.cSub
                         font.pointSize: 9
                         font.bold: true
+                    }
+                }
+
+                // ── Турбо-этап 12.2: обязательная индикация ────────────────────
+                //
+                // Без этих полей оператор не может ни принять решение, которого
+                // от него требует ТЗ, ни понять, почему режим остановился:
+                //   активный насос — единственный видимый признак того, чем
+                //     сейчас качают (К176 и К179 одновременно открытыми быть не
+                //     должны, REQ-008);
+                //   показания с признаком качества — over range это ожидание,
+                //     а не ошибка, и путать их нельзя (REQ-079/081);
+                //   прогресс удержания — иначе 60 с гейта неотличимы от зависания.
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+
+                    Cap { text: "Насос:" }
+                    Rectangle {
+                        Layout.preferredWidth: 108
+                        Layout.preferredHeight: 22
+                        radius: 4
+                        color: root.mon.activePump === "turbo" ? "#1f6f3f"
+                             : root.mon.activePump === "fore"  ? "#3a3a52"
+                                                               : "transparent"
+                        border.color: root.cBorder
+                        Label {
+                            anchors.centerIn: parent
+                            font.pointSize: 9
+                            font.bold: true
+                            color: root.cText
+                            text: root.mon.activePump === "turbo" ? "турбо К179"
+                                : root.mon.activePump === "fore"  ? "форвакуум К176"
+                                                                  : "оба закрыты"
+                        }
+                    }
+
+                    Cap { text: "ДВ301:" }
+                    Label {
+                        font.pointSize: 9
+                        color: root.mon.dv301Quality === "валидно" ? root.cText : "#d0a050"
+                        text: root.fmtPa(root.mon.dv301Pa) + " (" + root.mon.dv301Quality + ")"
+                    }
+
+                    Cap { text: "ДВ302:" }
+                    Label {
+                        font.pointSize: 9
+                        color: root.mon.dv302Quality === "валидно" ? root.cText : "#d0a050"
+                        text: root.fmtPa(root.mon.dv302Pa) + " (" + root.mon.dv302Quality + ")"
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    // Прогресс удержания гейта: показывается, только пока гейт
+                    // действительно набирается.
+                    Cap {
+                        visible: root.mon.turboActive
+                        text: "гейт ≤ " + root.fmtPa(root.mon.turboGatePa)
+                              + ": " + root.mon.turboHeldSec + " / "
+                              + root.mon.turboGateHoldSec + " с"
+                    }
+                    ProgressBar {
+                        visible: root.mon.turboActive
+                        Layout.preferredWidth: 120
+                        from: 0
+                        to: Math.max(1, root.mon.turboGateHoldSec)
+                        value: root.mon.turboHeldSec
                     }
                 }
             }

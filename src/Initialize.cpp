@@ -169,6 +169,30 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
         safetyQuars[key] = safetyQuarsObject[key].toVariant().toStringList();
     }
     m_security = securityParameters{contradictionValves, twoOfThree, safetyQuars};
+
+    // Пороги безопасности вакуумного тракта. Секция опциональна: если её нет,
+    // остаются ориентиры ТЗ из значений по умолчанию структуры. Каждый ключ
+    // читается через contains(), иначе отсутствие ключа молча дало бы 0 —
+    // а нулевой порог перехода на турбонасос недостижим и подвесил бы этап.
+    const auto &vacuumSafetyObject = profileObject["vacuumSafety"].toObject();
+    if(!vacuumSafetyObject.isEmpty()){
+        vacuumSafetyParameters vs;
+        if(vacuumSafetyObject.contains("turboSwitchPressurePa"))
+            vs.m_turboSwitchPressurePa = vacuumSafetyObject["turboSwitchPressurePa"].toDouble();
+        if(vacuumSafetyObject.contains("turboSwitchHoldSec"))
+            vs.m_turboSwitchHoldSec = vacuumSafetyObject["turboSwitchHoldSec"].toInt();
+        if(vacuumSafetyObject.contains("turboReturnPressurePa"))
+            vs.m_turboReturnPressurePa = vacuumSafetyObject["turboReturnPressurePa"].toDouble();
+        if(vacuumSafetyObject.contains("turboTimeoutSec"))
+            vs.m_turboTimeoutSec = vacuumSafetyObject["turboTimeoutSec"].toInt();
+        if(vacuumSafetyObject.contains("overrangeWaitSec"))
+            vs.m_overrangeWaitSec = vacuumSafetyObject["overrangeWaitSec"].toInt();
+        if(vacuumSafetyObject.contains("overrangeWaitSec2"))
+            vs.m_overrangeWaitSec2 = vacuumSafetyObject["overrangeWaitSec2"].toInt();
+        if(vacuumSafetyObject.contains("valveReadbackTimeoutMs"))
+            vs.m_valveReadbackTimeoutMs = vacuumSafetyObject["valveReadbackTimeoutMs"].toInt();
+        m_vacuumSafety = vs;
+    }
 // security
 }
 
@@ -308,6 +332,10 @@ bool Initialize::serialCompareProfile(const QStringList& serialNames){
     // Результат определяет ТОЛЬКО ДВ301: отсутствие опционального ДВ302
     // не должно блокировать запуск приложения.
     return foundVacuum;
+}
+
+vacuumSafetyParameters Initialize::getVacuumSafetyParameters() const{
+    return m_vacuumSafety;
 }
 
 vacuumParameters Initialize::getVacuumTurboParameters() const{

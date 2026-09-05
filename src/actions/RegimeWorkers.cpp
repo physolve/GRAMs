@@ -485,6 +485,23 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
         if (m_monitor)
             m_monitor->onForevacDone(node, success);
     };
+    ctx.onTurboProgress = [this](VacuumNode node, Reading p301, Reading p302,
+                                 int heldSec, int elapsedSec) {
+        if (m_monitor)
+            m_monitor->onTurboProgress(node, p301, p302, heldSec, elapsedSec);
+    };
+    ctx.onTurboSwitched = [this](bool toTurbo) {
+        // Переключение насосного клапана — событие журнала в обе стороны
+        // (REQ-082 переход, REQ-083 откат), а не только при успехе.
+        qWarning() << "[Вакуум] Переключение насоса:"
+                   << (toTurbo ? "форвакуум → турбо" : "турбо → форвакуум");
+        if (m_monitor)
+            m_monitor->onTurboSwitched(toTurbo);
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kValveOpen, -1, -1,
+                                   toTurbo ? QStringLiteral("переход на турбонасос (К179)")
+                                           : QStringLiteral("откат на форвакуум (К176)"));
+    };
     ctx.onFailure = [this](const QString& reason) {
         qWarning() << "[Вакуум] Отказ:" << reason;
         if (m_monitor)

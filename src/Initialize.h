@@ -130,6 +130,30 @@ public:
     QString                     m_mass_spectr;
 };
 
+// Пороги безопасности вакуумного тракта (ТЗ REQ-022). Живут в профиле, а не в
+// коде и не в UI: величины определяются конкретным стендом, задаются при
+// пусконаладке и между прогонами не меняются. Вынос их на рабочий экран дал бы
+// возможность отключить защиту турбонасоса, не выходя из него.
+struct vacuumSafetyParameters{
+    Q_GADGET
+    Q_PROPERTY (double  turboSwitchPressurePa  MEMBER m_turboSwitchPressurePa)
+    Q_PROPERTY (int     turboSwitchHoldSec     MEMBER m_turboSwitchHoldSec)
+    Q_PROPERTY (double  turboReturnPressurePa  MEMBER m_turboReturnPressurePa)
+    Q_PROPERTY (int     turboTimeoutSec        MEMBER m_turboTimeoutSec)
+    Q_PROPERTY (int     overrangeWaitSec       MEMBER m_overrangeWaitSec)
+    Q_PROPERTY (int     overrangeWaitSec2      MEMBER m_overrangeWaitSec2)
+    Q_PROPERTY (int     valveReadbackTimeoutMs MEMBER m_valveReadbackTimeoutMs)
+public:
+    // Значения по умолчанию = ориентиры ТЗ: применяются, если секции нет в JSON.
+    double m_turboSwitchPressurePa  = 10.0;
+    int    m_turboSwitchHoldSec     = 60;
+    double m_turboReturnPressurePa  = 30.0;
+    int    m_turboTimeoutSec        = 600;
+    int    m_overrangeWaitSec       = 300;
+    int    m_overrangeWaitSec2      = 350;
+    int    m_valveReadbackTimeoutMs = 2000;
+};
+
 struct securityParameters{
     Q_GADGET
     Q_PROPERTY (QMap<QString, QStringList>  contradictionValves     MEMBER m_contradictionValves)
@@ -155,6 +179,7 @@ public:
     Q_PROPERTY(reactionQuarParameters reactionQuar MEMBER m_reactionQuar CONSTANT)
     Q_PROPERTY(secondLineQuarParameters secondLineQuar MEMBER m_secondLineQuar CONSTANT)
     Q_PROPERTY(securityParameters security MEMBER m_security CONSTANT)
+    Q_PROPERTY(vacuumSafetyParameters vacuumSafety MEMBER m_vacuumSafety CONSTANT)
     Q_PROPERTY(vacuumParameters vacuum MEMBER m_vacuum CONSTANT)
     Q_PROPERTY(vacuumParameters vacuumTurbo MEMBER m_vacuumTurbo CONSTANT)
 
@@ -165,12 +190,14 @@ public:
     void getParametersAItemp(daqParameters &params);
     vacuumParameters getVacuumParameters() const;
     vacuumParameters getVacuumTurboParameters() const;
+    vacuumSafetyParameters getVacuumSafetyParameters() const;
     bool hasVacuumTurbo() const;   // ДВ302 найден среди портов
     QList<PressureSensor> getPressureSensors() const;
     QStringList getTempSensors() const;
 
     hardwareParameters              m_hardware; // need m_valves and m_twoOfThree
     securityParameters              m_security; // need m_contradictionValves
+    vacuumSafetyParameters          m_vacuumSafety;
     addRemoveQuarParameters         m_addRemoveQuar; // need m_gasSupplyValves
     reactionQuarParameters          m_reactionQuar; // need m_gasLeakageValves and to ValveToRangePressure
     storageQuarParameters           m_storageQuar; // need to ValveToRangePressure

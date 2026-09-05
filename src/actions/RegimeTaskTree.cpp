@@ -100,6 +100,43 @@ void RegimeTaskTree::setVacuumContinuousPumping(bool enabled)
     qDebug() << "RegimeTaskTree: setVacuumContinuousPumping" << enabled;
 }
 
+void RegimeTaskTree::setVacuumSafety(double turboSwitchPressurePa, int turboSwitchHoldSec,
+                                     double turboReturnPressurePa, int turboTimeoutSec,
+                                     int overrangeWaitSec, int overrangeWaitSec2)
+{
+    // Границы как у setVacuumForevacTarget: ноль или отрицательное давление
+    // недостижимы и подвесили бы этап до таймаута.
+    m_vacuumOptions.turboSwitchPressurePa = qBound(1e-4, turboSwitchPressurePa, 1.0e5);
+    m_vacuumOptions.turboSwitchHoldSec    = qMax(1, turboSwitchHoldSec);
+    m_vacuumOptions.turboReturnPressurePa = qBound(1e-4, turboReturnPressurePa, 1.0e5);
+    m_vacuumOptions.turboTimeoutSec       = qMax(1, turboTimeoutSec);
+    m_vacuumOptions.overrangeWaitSec      = qMax(1, overrangeWaitSec);
+    m_vacuumOptions.overrangeWaitSec2     = qMax(1, overrangeWaitSec2);
+
+    // Гистерезис обязан быть: при равных порогах входа и выхода система у
+    // границы начнёт циклически переключать К176 и К179, что опаснее любого
+    // из двух устойчивых состояний.
+    if (m_vacuumOptions.turboReturnPressurePa <= m_vacuumOptions.turboSwitchPressurePa) {
+        qWarning() << "RegimeTaskTree: порог возврата"
+                   << m_vacuumOptions.turboReturnPressurePa
+                   << "Па не выше порога перехода"
+                   << m_vacuumOptions.turboSwitchPressurePa
+                   << "Па — гистерезиса нет, возможны частые переключения насосов";
+    }
+    m_vacuumMonitor.setTurboGate(m_vacuumOptions.turboSwitchPressurePa,
+                                 m_vacuumOptions.turboSwitchHoldSec);
+    qDebug() << "RegimeTaskTree: setVacuumSafety gate"
+             << m_vacuumOptions.turboSwitchPressurePa << "Pa, hold"
+             << m_vacuumOptions.turboSwitchHoldSec << "s, return"
+             << m_vacuumOptions.turboReturnPressurePa << "Pa";
+}
+
+void RegimeTaskTree::setVacuumTurboTract(bool enabled)
+{
+    m_vacuumOptions.turboTract = enabled;
+    qDebug() << "RegimeTaskTree: setVacuumTurboTract" << enabled;
+}
+
 void RegimeTaskTree::setVacuumPumpCheck(bool enabled)
 {
     m_vacuumOptions.pumpRateCheck = enabled;
@@ -319,6 +356,10 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
                     w.setVacuumOptions(opts);
                     m_vacuumMonitor.beginRun(cfg.totalRepeats);
                     // Цель форвакуума видна в развёртке до входа в 11.5.
+                    // Цель форвакуума и гейт турбо видны в развёртке до входа
+                    // в соответствующие этапы — это разные величины.
+                    m_vacuumMonitor.setTurboGate(opts.turboSwitchPressurePa,
+                                                 opts.turboSwitchHoldSec);
                     m_vacuumMonitor.setForevacTarget(opts.targetVacPa,
                                                      opts.turboSwitchHoldSec,
                                                      opts.foreVacTimeoutSec);

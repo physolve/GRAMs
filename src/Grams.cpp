@@ -547,6 +547,11 @@ void Grams::initActionHandler(){
     // ДВ301 (Вакууметр) для форвакуумных этапов 11.5–11.7
     m_regimeTaskTree.setVacuumGaugeSensor(&m_vacuumSensor);
     m_regimeTaskTree.setVacuumTurboGaugeSensor(&m_vacuumSensorTurbo);
+    // Пороги безопасности турбо-этапа приходят из профиля, а не из UI.
+    const auto& vs = initSource.getVacuumSafetyParameters();
+    m_regimeTaskTree.setVacuumSafety(vs.m_turboSwitchPressurePa, vs.m_turboSwitchHoldSec,
+                                     vs.m_turboReturnPressurePa, vs.m_turboTimeoutSec,
+                                     vs.m_overrangeWaitSec, vs.m_overrangeWaitSec2);
     // Pass valve names for the "Тест клапанов" regime.
     // initSource.m_hardware.m_valves contains the ordered list from the JSON profile.
     m_regimeTaskTree.setValveNamesForTest(initSource.m_hardware.m_valves);

@@ -156,6 +156,11 @@ void VacuumRunMonitor::beginRun(int totalRepeats)
     m_finishReason.clear();
     m_failureReason.clear();
     m_finishState = -1;
+    m_activePump.clear();
+    m_turboNode        = -1;
+    m_turboHeldSec     = 0;
+    m_turboElapsedSec  = 0;
+    emit turboProgressChanged();
     emit valveStatesChanged();
     emit progressChanged();
     emit currentLabelChanged();
@@ -244,6 +249,12 @@ void VacuumRunMonitor::onRunFinished(int repeatsDone, int repeatsError)
         m_forevacNode = -1;
         emit forevacProgressChanged();
     }
+    // Прогон закончился — насосных клапанов больше нет под управлением рецепта.
+    if (m_turboNode >= 0 || !m_activePump.isEmpty()) {
+        m_turboNode = -1;
+        m_activePump.clear();
+        emit turboProgressChanged();
+    }
     emit progressChanged();
 }
 
@@ -278,6 +289,37 @@ void VacuumRunMonitor::onForevacDone(VacuumNode node, bool success)
         return;                       // уже переключились на следующий этап
     m_forevacNode = -1;
     emit forevacProgressChanged();
+}
+
+// ── Турбо-этап 12.2 ──────────────────────────────────────────────────────────
+
+void VacuumRunMonitor::setTurboGate(double gatePa, int holdSec)
+{
+    if (qFuzzyCompare(m_turboGatePa, gatePa) && m_turboGateHoldSec == holdSec)
+        return;
+    m_turboGatePa = gatePa;
+    m_turboGateHoldSec = holdSec;
+    emit turboTargetChanged();
+}
+
+void VacuumRunMonitor::onTurboProgress(VacuumNode node, Reading p301, Reading p302,
+                                       int heldSec, int elapsedSec)
+{
+    m_turboNode       = int(node);
+    m_dv301Pa         = p301.valuePa;
+    m_dv301Quality    = qualityName(p301.quality);
+    m_dv302Pa         = p302.valuePa;
+    m_dv302Quality    = qualityName(p302.quality);
+    m_turboHeldSec    = heldSec;
+    m_turboElapsedSec = elapsedSec;
+    emit turboProgressChanged();
+}
+
+void VacuumRunMonitor::onTurboSwitched(bool toTurbo)
+{
+    // Активный насос — единственный видимый признак того, чем сейчас качают.
+    m_activePump = toTurbo ? QStringLiteral("turbo") : QStringLiteral("fore");
+    emit turboProgressChanged();
 }
 
 // ── Причина завершения ───────────────────────────────────────────────────────
