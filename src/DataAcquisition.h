@@ -26,6 +26,8 @@ public:
     void initDaqAIpres(const daqParameters &parameterAIpres);
     void initDaqAItemp(const daqParameters &parameterAItemp);
     void initSerialVacuum(const vacuumParameters &parameterVacuum);
+    // ДВ302 (второй тракт, турбо). Опционален: без него всё работает как раньше.
+    void initSerialTurboVacuum(const vacuumParameters &parameterVacuum);
 
     void startAcquisition();
     void stopAcquisition();
@@ -39,6 +41,7 @@ public:
     void setTempPointers(const QVector<ControllerData*>& ptr);
     void setFiltersDataPointers(const QVector<FilterData*>& ptr);
     void setVacuumPointer(DataCollection* ptr);
+    void setTurboVacuumPointer(DataCollection* ptr);
     Q_INVOKABLE void updateFilter(int chartIndex); // move to DataAcquisition
     
     void setSupplyPressurePtr(FilterData* high, FilterData* low);
@@ -46,6 +49,7 @@ public:
 
     Q_INVOKABLE bool setLeakageMeasure(bool leakageMeasure);
     Q_INVOKABLE void testVacuumQuery();
+    Q_INVOKABLE void testTurboVacuumQuery();
 
     void beginAction();
     void endAction();
@@ -85,7 +89,9 @@ private:
     QVector<ControllerData*> m_tempSensors;
     
     VacuumController reqVacuum;
-    DataCollection* m_vacuumSensor;
+    TurboVacuumController reqVacuumTurbo;
+    DataCollection* m_vacuumSensor = nullptr;
+    DataCollection* m_vacuumSensorTurbo = nullptr;
     
     FilterView filterView;
     QVector<FilterData*> m_filtersData;

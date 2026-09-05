@@ -18,7 +18,7 @@ void SerialCtrl::setSerialPortInfo(const SerialPortInfo &serialInfo){
     m_serialInfo = serialInfo;
 }
 
-void SerialCtrl::openSerialPort()
+bool SerialCtrl::openSerialPort()
 {
     m_serial->setPortName(m_serialInfo.portName);
     m_serial->setBaudRate(m_serialInfo.baudRate);
@@ -27,14 +27,17 @@ void SerialCtrl::openSerialPort()
     m_serial->setStopBits(m_serialInfo.stopBits);
     m_serial->setFlowControl(QSerialPort::NoFlowControl);
     if (m_serial->open(QIODevice::ReadWrite)) {
-        qDebug() << "Connected to " << m_serialInfo.description;
+        qDebug() << "Connected to " << m_serialInfo.description
+                 << "on" << m_serialInfo.portName;
         // setLogText(tr("Connected to %1 : %2, %3, %4, %5")
         //                   .arg(m_serialInfo.portName).arg(m_serialInfo.stringBaudRate).arg(m_serialInfo.stringDataBits)
         //                   .arg(m_serialInfo.stringParity).arg(m_serialInfo.stringStopBits));
-    } else {
-        // setLogText(tr("Open error"));
-        qDebug() << "Serial open error";
+        return true;
     }
+    // setLogText(tr("Open error"));
+    qDebug() << "Serial open error:" << m_serialInfo.portName
+             << m_serial->errorString();
+    return false;
 }
 
 void SerialCtrl::closeSerialPort()
@@ -124,6 +127,10 @@ void VacuumController::readData(){
 
     if (result != 0 && ok) {
         m_lastData = result * std::pow(10, mantissa);
+        m_quality  = Quality::Valid;
+        threshold  = 0;          // счётчик мусора сбрасывается удачным кадром,
+                                 // иначе 4 плохих кадра за всю сессию глушат
+                                 // датчик навсегда
         qDebug() << "Vacuum:" << m_lastData;
     }
     else {
@@ -139,22 +146,32 @@ void VacuumController::shuttingOff(){
     //emit to qml status about error
 }
 
+Quality VacuumController::quality() const{
+    return m_quality;
+}
+
 void VacuumController::startReading(){
     threshold = 0;
+    m_quality = Quality::NoResponse;   // валидным станет после первого кадра
     m_timer->start(1000);
 }
 
 void VacuumController::stopReading(){
     m_timer->stop();
-    m_lastData = 0;
+    // Показание НЕ обнуляется: 0 Па меньше любого порога вакуума, поэтому
+    // мёртвый датчик выглядел бы как достигнутая цель откачки. Значение
+    // остаётся последним известным, а качество говорит, что верить ему нельзя.
+    m_quality = Quality::NoResponse;
 }
 
 double VacuumController::getData() const{
     return m_lastData;
 }
 
-TurboVacuumController::TurboVacuumController(QObject *parent) : SerialCtrl(parent), lastData(0), isEnquiry(false)
+TurboVacuumController::TurboVacuumController(QObject *parent) :
+    SerialCtrl(parent), m_timer(new QTimer(this)), isEnquiry(false), lastData(0)
 {
+    connect(m_timer, &QTimer::timeout, this, &TurboVacuumController::processEvents);
     // default request
     requestArray.resize(6);
     requestArray[0] = 0x50; // P
@@ -170,9 +187,46 @@ TurboVacuumController::TurboVacuumController(QObject *parent) : SerialCtrl(paren
     connect(m_serial, &QSerialPort::readyRead, this, &TurboVacuumController::readData);
 }
 
+TurboVacuumController::~TurboVacuumController(){
+    m_timer->stop();
+}
+
 void TurboVacuumController::requestData(){
+    if(!m_serial->isOpen())
+        return;
     // default request
+    isEnquiry = false;          // новый цикл: ждём ACK, потом строку данных
     m_serial->write(requestArray);
+}
+
+// Один цикл опроса: запрос → ACK → enquiry → строка с показанием.
+void TurboVacuumController::processEvents(){
+    if(isEnquiry)
+        requestRepetitive();    // ACK уже получен — забираем данные
+    else
+        requestData();
+}
+
+void TurboVacuumController::startReading(){
+    threshold = 0;
+    m_quality = Quality::NoResponse;
+    isEnquiry = false;
+    m_timer->start(1000);
+}
+
+void TurboVacuumController::stopReading(){
+    m_timer->stop();
+    // Как и у ДВ301: значение не обнуляем, недостоверность выражаем качеством.
+    m_quality = Quality::NoResponse;
+}
+
+void TurboVacuumController::shuttingOff(){
+    qDebug() << "ДВ302: некорректные данные датчика";
+    stopReading();
+}
+
+Quality TurboVacuumController::quality() const{
+    return m_quality;
 }
 
 void TurboVacuumController::requestRepetitive(){

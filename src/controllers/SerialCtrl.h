@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SerialInfo.h"
+#include "../SensorQuality.h"
 // #include "datacollection.h"
 #include <QSerialPort>
 // #include <QElapsedTimer>
@@ -15,7 +16,7 @@ public:
     virtual ~SerialCtrl();
     void setSerialPortInfo(const SerialPortInfo &serialInfo);
     virtual void shuttingOff();
-    void openSerialPort();
+    bool openSerialPort();   // false = порт не открылся
     void closeSerialPort();
     virtual void requestData();
 private slots:
@@ -47,6 +48,9 @@ public:
     void startReading();
     void stopReading();
     double getData() const;
+    // Показание с признаком достоверности. getData() оставлен для графиков и
+    // GUI, где качество не нужно; рецепт режима обязан читать quality().
+    Quality quality() const;
 private slots:
     void readData() override;
     void processEvents();
@@ -54,25 +58,42 @@ private:
     QTimer* m_timer;
     QByteArray m_data;
     double m_lastData;
+    Quality m_quality = Quality::NoResponse;   // до первого кадра ответа нет
 };
 
-// Backup option: Pfeiffer-style turbo pump gauge (enquiry/acknowledgement
-// protocol over "USB Serial Port"). Former VacuumController implementation.
+// ДВ302 — вакуумметр второго тракта (турбо-область, раздел 12.2).
+//
+// Это тот же прибор, который раньше стоял как ДВ301: обмен
+// enquiry/acknowledgement, ответ с префиксом состояния. Отсюда готовый признак
+// over range (REQ-081) — префикс '2', и under range — префикс '1'.
+//
+// Топология: магистраль → AR6/К176 (форвакуум) и SL1/К179 (турбо) → ДВ302 →
+// SL2/К192 (выход второго тракта).
+//
+// В отличие от прежней схемы опрашивает себя сам, как VacuumController: период
+// опроса не должен зависеть от такта softTimer приложения.
 class TurboVacuumController : public SerialCtrl
 {
     Q_OBJECT
 public:
     TurboVacuumController(QObject *parent = nullptr);
+    ~TurboVacuumController() override;
     void requestData() override;
     void requestRepetitive();
+    void shuttingOff() override;
+    void startReading();
+    void stopReading();
     double getData() const;
+    Quality quality() const;
 signals:
     // void pressureChanged();
     // void pressureValChanged(); // temporally
     // void vacuumValChanged(); // temporally
 private slots:
     void readData() override;
+    void processEvents();
 private:
+    QTimer* m_timer;
     QString m_bufferData;
     QByteArray requestArray;
     // QElapsedTimer m_programmTime;
@@ -88,4 +109,5 @@ private:
     // QByteArray getPumpSpd; //?
     bool isEnquiry;
     double lastData;
+    Quality m_quality = Quality::NoResponse;   // до первого кадра ответа нет
 };

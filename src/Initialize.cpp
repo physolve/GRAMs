@@ -122,7 +122,22 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
     const auto& stopBits = vacuumObject["stopBits"].toInt();
     const auto& parity = vacuumObject["parity"].toInt();
     const auto& timeout = vacuumObject["timeout"].toInt();
-    m_vacuum = vacuumParameters{portName, description, baudRate, dataBits, stopBits, parity, timeout}; 
+    m_vacuum = vacuumParameters{portName, description, baudRate, dataBits, stopBits, parity, timeout};
+
+    // ДВ302 (второй тракт, турбо). Секция опциональна: на стенде без второго
+    // вакуумметра приложение обязано стартовать как раньше. Параметры обмена
+    // по умолчанию берём от ДВ301 — приборы однотипные.
+    const auto &turboObject = controllersObject["VacuumTurbo"].toObject();
+    if(!turboObject.isEmpty()){
+        m_vacuumTurbo = vacuumParameters{
+            turboObject["portName"].toString(),
+            turboObject["description"].toString(),
+            turboObject.contains("baudRate") ? turboObject["baudRate"].toInt() : baudRate,
+            turboObject.contains("dataBits") ? turboObject["dataBits"].toInt() : dataBits,
+            turboObject.contains("stopBits") ? turboObject["stopBits"].toInt() : stopBits,
+            turboObject.contains("parity")   ? turboObject["parity"].toInt()   : parity,
+            turboObject.contains("timeout")  ? turboObject["timeout"].toInt()  : timeout};
+    } 
 //controllers
 
 // quartiles
@@ -265,20 +280,42 @@ QStringList Initialize::getTempSensors() const{
 
 bool Initialize::serialCompareProfile(const QStringList& serialNames){
     // real to profile
-    QStringList unrecognizedControllers;
-    // int recognizedCnt = 0;
     qDebug() << serialNames;
+    bool foundVacuum = false;
+    m_vacuumTurboFound = false;
     for(const auto& serial : serialNames){
-        auto splitName = serial.split(", ");
-        qDebug() << splitName;
-        const QString& description = splitName[0];
-        const QString& portName = splitName[1];
+        // Формат SerialInfo::serialPortsInfo — "<description>, <portName>".
+        // Описание само может содержать ", ", поэтому режем по последней запятой.
+        const int sep = serial.lastIndexOf(", ");
+        if(sep < 0)
+            continue;
+        const QString description = serial.left(sep);
+        const QString portName    = serial.mid(sep + 2);
         if(m_vacuum.m_description == description && m_vacuum.m_portName == portName){
-            qDebug() << "Found Vacuum";
-            return true;
+            qDebug() << "Found Vacuum (ДВ301) on" << portName;
+            foundVacuum = true;
+        }
+        if(!m_vacuumTurbo.m_portName.isEmpty()
+           && m_vacuumTurbo.m_description == description
+           && m_vacuumTurbo.m_portName == portName){
+            qDebug() << "Found VacuumTurbo (ДВ302) on" << portName;
+            m_vacuumTurboFound = true;
         }
     }
-    return false;
+    if(!m_vacuumTurbo.m_portName.isEmpty() && !m_vacuumTurboFound)
+        qWarning() << "ДВ302 описан в профиле, но порт" << m_vacuumTurbo.m_portName
+                   << "не найден — перехода на турбомолекулярный насос не будет";
+    // Результат определяет ТОЛЬКО ДВ301: отсутствие опционального ДВ302
+    // не должно блокировать запуск приложения.
+    return foundVacuum;
+}
+
+vacuumParameters Initialize::getVacuumTurboParameters() const{
+    return m_vacuumTurbo;
+}
+
+bool Initialize::hasVacuumTurbo() const{
+    return m_vacuumTurboFound;
 }
 
 

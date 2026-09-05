@@ -162,6 +162,8 @@ void Grams::advAiController(){
 void Grams::vacuumController(){
     m_vacuumSensor.m_name = "Вакууметр";
     m_vacuumSensor.m_type = DataType::Pressure;
+    m_vacuumSensorTurbo.m_name = "Вакууметр турбо";
+    m_vacuumSensorTurbo.m_type = DataType::Pressure;
 
     if(!initSource.isInitializeOk())
         return;
@@ -170,6 +172,15 @@ void Grams::vacuumController(){
     m_vacuumSensor.setAltUnitCoef(0.001333); // torr to bar
     dataSource.setVacuumPointer(&m_vacuumSensor);
     dataSource.initSerialVacuum(parametersVacuum);
+
+    // ДВ302 — второй тракт (турбо), раздел 12.2. Опционален: если порт не
+    // найден среди реальных, второй вакуумметр просто не опрашивается, и
+    // перехода на турбомолекулярный насос не будет — безопасный исход.
+    if(initSource.hasVacuumTurbo()){
+        m_vacuumSensorTurbo.setAltUnitCoef(0.001333); // torr to bar
+        dataSource.setTurboVacuumPointer(&m_vacuumSensorTurbo);
+        dataSource.initSerialTurboVacuum(initSource.getVacuumTurboParameters());
+    }
     // update vacuum values
 }
 
@@ -535,6 +546,7 @@ void Grams::initActionHandler(){
     m_regimeTaskTree.setVacuumPressureSensor(&prSB);
     // ДВ301 (Вакууметр) для форвакуумных этапов 11.5–11.7
     m_regimeTaskTree.setVacuumGaugeSensor(&m_vacuumSensor);
+    m_regimeTaskTree.setVacuumTurboGaugeSensor(&m_vacuumSensorTurbo);
     // Pass valve names for the "Тест клапанов" regime.
     // initSource.m_hardware.m_valves contains the ordered list from the JSON profile.
     m_regimeTaskTree.setValveNamesForTest(initSource.m_hardware.m_valves);

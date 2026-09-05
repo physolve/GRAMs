@@ -65,6 +65,9 @@ public:
     // Датчик ДВ301 (Вакууметр) для форвакуумных этапов 11.5–11.7. Вызывается из
     // Grams::initActionHandler().
     void setVacuumGaugeSensor(DataCollection* sensor);
+    // ДВ302 (второй тракт, турбо). Без него условие У3 гейта не выполняется
+    // и режим остаётся на форвакууме — безопасный исход.
+    void setVacuumTurboGaugeSensor(DataCollection* sensor);
 
     // Включение/выключение форвакуумной откачки 11.5–11.7 (по умолчанию вкл).
     Q_INVOKABLE void setVacuumForevac(bool enabled);

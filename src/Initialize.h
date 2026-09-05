@@ -156,6 +156,7 @@ public:
     Q_PROPERTY(secondLineQuarParameters secondLineQuar MEMBER m_secondLineQuar CONSTANT)
     Q_PROPERTY(securityParameters security MEMBER m_security CONSTANT)
     Q_PROPERTY(vacuumParameters vacuum MEMBER m_vacuum CONSTANT)
+    Q_PROPERTY(vacuumParameters vacuumTurbo MEMBER m_vacuumTurbo CONSTANT)
 
     Q_PROPERTY(QList<daqParameters> daqGui MEMBER m_daq CONSTANT ) // profiled but changing state should be external
     
@@ -163,6 +164,8 @@ public:
     void getParametersAIpres(daqParameters &params);
     void getParametersAItemp(daqParameters &params);
     vacuumParameters getVacuumParameters() const;
+    vacuumParameters getVacuumTurboParameters() const;
+    bool hasVacuumTurbo() const;   // ДВ302 найден среди портов
     QList<PressureSensor> getPressureSensors() const;
     QStringList getTempSensors() const;
 
@@ -171,7 +174,10 @@ public:
     addRemoveQuarParameters         m_addRemoveQuar; // need m_gasSupplyValves
     reactionQuarParameters          m_reactionQuar; // need m_gasLeakageValves and to ValveToRangePressure
     storageQuarParameters           m_storageQuar; // need to ValveToRangePressure
-    vacuumParameters                m_vacuum; // need ?
+    vacuumParameters                m_vacuum;
+    // ДВ302 — второй тракт (турбо). Опционален: его отсутствие не должно
+    // мешать запуску приложения, поэтому в initializeOk он не участвует.
+    vacuumParameters                m_vacuumTurbo;
 
     bool isInitializeOk() const;
 signals:
@@ -185,6 +191,7 @@ private:
     // bool advantechDeviceCheck();
     bool advantechCompareProfile(const QStringList& advantechDeviceNames);
     bool serialCompareProfile(const QStringList& serialNames);
+    bool m_vacuumTurboFound = false;
     QString m_curInitProfile;
     
     QVariantMap m_profileJson;

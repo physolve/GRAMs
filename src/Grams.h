@@ -225,6 +225,7 @@ private:
     FilterData m_supplyPressureHigh;
     FilterData m_supplyPressureLow;
     DataCollection m_vacuumSensor;
+    DataCollection m_vacuumSensorTurbo;   // ДВ302, второй тракт (турбо)
     StorageQuartile m_storageQuartile;
     QuartileData prSQ;
     QuartileData tmSQ;

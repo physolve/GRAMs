@@ -55,6 +55,11 @@ void RegimeTaskTree::setVacuumGaugeSensor(DataCollection* sensor)
     m_vacuumOptions.vacuumGaugeSensor = sensor;
 }
 
+void RegimeTaskTree::setVacuumTurboGaugeSensor(DataCollection* sensor)
+{
+    m_vacuumOptions.turboGaugeSensor = sensor;
+}
+
 void RegimeTaskTree::setVacuumForevac(bool enabled)
 {
     m_vacuumOptions.foreVacuum = enabled;

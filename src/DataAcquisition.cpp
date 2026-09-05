@@ -54,6 +54,10 @@ void DataAcquisition::setFiltersDataPointers(const QVector<FilterData*>& ptr){
     m_filtersData = ptr;
 }
 
+void DataAcquisition::setTurboVacuumPointer(DataCollection* ptr){
+    m_vacuumSensorTurbo = ptr;
+}
+
 void DataAcquisition::setVacuumPointer(DataCollection* ptr){
     m_vacuumSensor = ptr;
 }
@@ -122,13 +126,45 @@ void DataAcquisition::initSerialVacuum(const vacuumParameters &parameterVacuum){
     a.stopBits = QSerialPort::StopBits(parameterVacuum.m_stopBits);
     a.timeout = parameterVacuum.m_timeout;
     reqVacuum.setSerialPortInfo(a);
-    reqVacuum.openSerialPort();
-    // if ok - gauge is polled by the controller own 1 s timer
+    if(!reqVacuum.openSerialPort()){
+        qWarning() << "ДВ301: порт" << a.portName << "не открылся — опрос не запущен";
+        return;
+    }
+    // gauge is polled by the controller own 1 s timer
     reqVacuum.startReading();
+}
+
+// ДВ302 — вакуумметр второго тракта (турбо-область). Тот же прибор, что раньше
+// стоял как ДВ301, поэтому обмен ведёт TurboVacuumController. Опрашивает себя
+// сам, как и ДВ301: период не привязан к такту softTimer приложения.
+void DataAcquisition::initSerialTurboVacuum(const vacuumParameters &parameterVacuum){
+    if(parameterVacuum.m_portName.isEmpty()){
+        qWarning() << "ДВ302 не сконфигурирован — второй вакуумметр не опрашивается";
+        return;
+    }
+    SerialPortInfo a;
+    a.portName    = parameterVacuum.m_portName;
+    a.description = parameterVacuum.m_description;
+    a.baudRate    = QSerialPort::BaudRate(parameterVacuum.m_baudRate);
+    a.dataBits    = QSerialPort::DataBits(parameterVacuum.m_dataBits);
+    a.parity      = QSerialPort::Parity(parameterVacuum.m_parity);
+    a.stopBits    = QSerialPort::StopBits(parameterVacuum.m_stopBits);
+    a.timeout     = parameterVacuum.m_timeout;
+    reqVacuumTurbo.setSerialPortInfo(a);
+    if(!reqVacuumTurbo.openSerialPort()){
+        qWarning() << "ДВ302: порт" << a.portName << "не открылся — опрос не запущен";
+        return;
+    }
+    reqVacuumTurbo.startReading();
 }
 
 void DataAcquisition::testVacuumQuery(){
     reqVacuum.requestData();
+}
+
+// Разовый запрос к ДВ302 для пусконаладки — без запуска режима.
+void DataAcquisition::testTurboVacuumQuery(){
+    reqVacuumTurbo.requestData();
 }
 
 
@@ -172,8 +208,10 @@ void DataAcquisition::processEvents(){
         canReadFast = true;
     }
     
-    const auto &readDataVacuum = reqVacuum.getData();
-    m_vacuumSensor->addPoint(readDataVacuum);
+    if(m_vacuumSensor)
+        m_vacuumSensor->addPoint(reqVacuum.getData(), reqVacuum.quality());
+    if(m_vacuumSensorTurbo)
+        m_vacuumSensorTurbo->addPoint(reqVacuumTurbo.getData(), reqVacuumTurbo.quality());
     
     if(m_leakageMeasure){
         fillLeakageRQ();
