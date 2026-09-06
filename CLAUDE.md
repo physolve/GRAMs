@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **GRAMs** (Gas Reaction Automated Machine) — Qt Quick / C++ приложение для автоматического управления установкой GRAM50, реализующей **волюметрический метод Сивертса** (исследование сорбции/десорбции водорода в гидридных материалах). Количество поглощённого H₂ определяется по изменению давления в калиброванных объёмах до и после контакта газа с образцом.
 
 - **Type:** Qt Quick Application + embedded static QML library (`RuntableLib`)
-- **Platform:** Linux (ветка `linux-dev`, основная цель) / Windows (сборка без biodaq)
+- **Platform:** Windows и Linux — обе с реальным оборудованием (Advantech DAQ / biodaq). Начиная с Day7 biodaq работает и на Windows: все клапаны доступны, проверка режимов ведётся на реальном стенде под Windows.
 - **Previous version:** GramQt (отдельный репозиторий) — источник алгоритмов для переноса
 
 ## Build Commands
@@ -101,7 +101,7 @@ cmd /c "`"$vcvars`" && cmake --build build --target VacuumTreeTests --parallel"
 - **Eigen3** — матричная алгебра (Kalman filter), системная зависимость
 - **QCustomPlot** — `src/lib/qcustomplot.{h,cpp}`, OpenGL-режим
 - **GoogleTest** — `FetchContent` (GitHub ZIP), только тесты
-- **biodaq / libDAQ** — prebuilt `.so` в `src/libDAQ/`, только Linux (DAQ-железо Advantech)
+- **biodaq / libDAQ** — DAQ-железо Advantech; доступен и на Windows, и на Linux (с Day7 стенд подключён под Windows)
 
 ## Code Conventions
 
@@ -120,7 +120,7 @@ ptr[]   — массивы указателей        — всегда пров
 
 > Этот раздел обновляется вручную по мере продвижения.
 
-**Текущий приоритет (в работе):** перенос автоматических режимов из GramQt в GRAMs. Готовы «в коде»: **Вакуум** (Ф1–Ф3 + форвакуум 11.5–11.7 + турбо-переход 12.2) и **Тест клапанов**; остальные — заглушки или ожидают.
+**Текущий приоритет (в работе):** перенос автоматических режимов из GramQt в GRAMs. Готовы «в коде»: **Вакуум** (Ф1–Ф3 + форвакуум 11.5–11.7 + турбо-переход 12.2), **Напуск**, **Натекание** и **Тест клапанов**; остальные — заглушки или ожидают.
 
 Очерёдность режимов:
 
@@ -131,16 +131,16 @@ ptr[]   — массивы указателей        — всегда пров
 | **Заглушка** | Только `qDebug` + `// TODO` в 4 методах |
 | **Структура (TODO)** | Каркас есть, но клапан `= ""` / completion закомментирован / сенсор не подключён |
 | **Реализован (код)** | Все 4 метода рабочие; не проверено на железе |
-| **Проверено на железе** | Реальный прогон на Linux + biodaq |
+| **Проверено на железе** | Реальный прогон на стенде (Windows или Linux + biodaq) |
 
 | Режим | Статус | Доказательство / что осталось |
 |---|---|---|
-| **Вакуум** | **Реализован (код)** Ф1–Ф3 (s1–s24) + форвакуум 11.5–11.7 (A1/B/C/E/F) + dP/dt-watchdog + **турбо-переход 12.2 (К176→К179)**; **осталось** герметичность (11.8), финальная откачка (11.9–11.11) | `VacuumTaskTree.cpp` рецепт на TaskTree; `buildPumpDownProcedure` (REQ-077…084) с гейтом `turboSwitchPressurePa`, `overRangeGuard` (REQ-079/081) и откатом по `turboReturnPressurePa`; `openTurboValve` — единственная точка открытия К179, с подтверждением readback К176 (REQ-082); `confirmValve` через `AdvantechDO::refresh`; `Reading`/`Quality` для ДВ301 и ДВ302; ДВ302 на `TurboVacuumController` (второй COM-порт); пороги в `profile/GRAMsPfp.json` → `vacuumSafety`; интерлок AR6⇄SL1 в `contradictionValves`; **64 теста ctest проходят** (51 `VacuumTreeTests`); **верификация на реальном стенде — не выполнялась** |
+| **Вакуум** | **Реализован (код)** Ф1–Ф3 (s1–s24) + форвакуум 11.5–11.7 (A1/B/C/E/F) + dP/dt-watchdog + **турбо-переход 12.2 (К176→К179)**; **осталось** герметичность (11.8), финальная откачка (11.9–11.11) — `docs/regimes/vacuum.md` | `recipes/VacuumTaskTree.cpp` рецепт на TaskTree; `buildPumpDownProcedure` (REQ-077…084) с гейтом `turboSwitchPressurePa`, `overRangeGuard` (REQ-079/081) и откатом по `turboReturnPressurePa`; `openTurboValve` — единственная точка открытия К179, с подтверждением readback К176 (REQ-082); `confirmValve` через `AdvantechDO::refresh`; `Reading`/`Quality` для ДВ301 и ДВ302; ДВ302 на `TurboVacuumController` (второй COM-порт); пороги в `profile/GRAMsPfp.json` → `vacuumSafety`; интерлок AR6⇄SL1 в `contradictionValves`; **51 тест `VacuumTreeTests`**; **верификация на стенде — не выполнялась** |
 | **Режим в** | **Заглушка** — `docs/regimes/regime-b.md` | `RegimeWorkers.cpp:417–441` все 4 метода = `qDebug` + `// TODO` |
 | **Режим г** | **Заглушка** — `docs/regimes/regime-g.md` | `RegimeWorkers.cpp:445–465` аналогично Режиму в |
 | **Тест клапанов** | **Реализован (код)** — `docs/regimes/valve-test.md` | `ValveTestWorker.cpp` полная state machine; не верифицирован на железе (Windows) |
-| **Напуск** | Ожидает | Воркер не создан |
-| **Натекание** | Ожидает | Воркер не создан |
+| **Напуск** | **Реализован (код)** — перенос `legacy/InletAction` на рецепт | `recipes/SupplyTaskTree.cpp` + `workers/ChainWorkers.cpp`; гейт «тракт откачан»; остановка по времени / пределу давления / вето quartile; `SupplyPort` и `AddRemoveQuartile` переиспользуются через швы; **11 тестов `SupplyTree`**; на стенде не проверялось |
+| **Натекание** | **Реализован (код)** — было тумблером, стало прогоном | `recipes/LeakageTaskTree.cpp` + `workers/ChainWorkers.cpp`; гейт «накопитель заряжен, камера откачана»; остановка по длительности / целевому Δp / недостоверному показанию; `GasLeakage` переиспользуется через швы; **9 тестов `LeakageTree`**; на стенде не проверялось. **Открыто:** как физически задаётся «оборот» дозирующего клапана |
 | **Калибровка** | Ожидает | Воркер не создан; узкое место для SYSTEST |
 | **SOAK** | Ожидает | Воркер не создан |
 | **PCI** | Ожидает | Воркер не создан |
@@ -159,7 +159,7 @@ ptr[]   — массивы указателей        — всегда пров
 - `Qt::Concurrent` уже подключён в обоих блоках `target_link_libraries` (`WIN32` / `else`) в `src/CMakeLists.txt` — дополнительных правок CMake для TaskTree не требуется.
 - Главный CMake-таргет: **`GRAMs`** — именно к нему добавлять новые `target_link_libraries`.
 - Лог пишется в `data/GRAMs-log.txt` относительно рабочей директории запуска; папка `data/` создаётся автоматически. Данные режимов: `data/leakageData/` (натекание), `data/supplyData/` (напуск), `data/regime_log.db` (SQLite лог регимов).
-- На Windows `biodaq` исключён, добавляется `opengl32`; на Linux линкуется `biodaq` из `src/libDAQ/`.
+- biodaq доступен на обеих платформах (Advantech DAQ). Проверка режимов «Вакуум» и др. ведётся на реальном оборудовании под Windows (Day7).
 
 ## Architecture
 
