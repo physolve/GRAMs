@@ -196,3 +196,151 @@ TEST_F(RegimeManagerTest, APIValidation) {
     // Test double start
     ASSERT_FALSE(manager.startRegimeExecution(0)); // Already running
 }
+
+// ============================================================================
+// Regression tests for three dangerous edge cases in the RegimeManager state
+// machine (the "state management" flow). Each test pins the CORRECT invariant,
+// so it currently FAILS (red) — it documents a real defect, not existing
+// behaviour. See analysis notes above each test.
+// ============================================================================
+
+namespace {
+// Small helper: read the current RegimeEnums::State of a regime row.
+RegimeEnums::State stateOf(RegimeManager &m, int row) {
+    return m.model()->data(m.model()->index(row, 0),
+                           ProtoTableModel::StateRole).value<RegimeEnums::State>();
+}
+} // namespace
+
+// ---------------------------------------------------------------------------
+// Edge case #1 — completeCurrentRepeat() ignores skipped/error repeats.
+//
+// completeCurrentRepeat() decides "all done" with `repeatsDone + 1 >= total`,
+// while skipCurrentRepeat()/markRepeatAsError() use the full sum of all three
+// buckets. So a run that mixes a skip (or error) with completions never has
+// enough *completed* repeats to trip the completion check: currentRepeat walks
+// off the end of the valid range and the regime stays Running forever.
+//
+// Physical hazard: the rig would attempt a non-existent extra sorption cycle
+// (currentRepeat == repeatCount) or hang mid-experiment instead of finishing.
+// ---------------------------------------------------------------------------
+TEST_F(RegimeManagerTest, CompleteIgnoresSkippedRepeats_Overruns) {
+    RegimeManager manager;
+    QList<Regime> regimes;
+
+    Regime r;
+    r.m_name = "Mixed outcomes";
+    r.m_maxTime = 60;
+    r.m_repeatCount = 3;          // three repeats total
+    r.m_condition.type = "time";
+    r.m_condition.time = 1;
+    regimes.append(r);
+    manager.model()->setRegimes(regimes);
+
+    ASSERT_TRUE(manager.startRegimeExecution(0));
+
+    // Repeat 0 is skipped (does not yet fill the quota: 0 done + 1 skip < 3).
+    ASSERT_TRUE(manager.skipCurrentRepeat(0, 0));
+    // Repeats 1 and 2 complete normally.
+    ASSERT_TRUE(manager.completeCurrentRepeat(0, 1));
+    ASSERT_TRUE(manager.completeCurrentRepeat(0, 2));
+
+    // 1 skipped + 2 completed == 3 == repeatCount, so the regime is finished.
+    // Correct behaviour: state == Done and currentRepeat never exceeds the
+    // last valid index (2).
+    auto info = manager.getRegimeExecutionInfo(0);
+    EXPECT_LE(info["currentRepeat"].toInt(), 2)
+        << "currentRepeat overran the valid range (rig would run a phantom repeat)";
+    EXPECT_EQ(stateOf(manager, 0), RegimeEnums::State::Done)
+        << "regime with a skipped repeat never reaches Done via completeCurrentRepeat()";
+}
+
+// ---------------------------------------------------------------------------
+// Edge case #2 — startRegimeExecution() re-runs a finished regime with stale
+// repeat counters.
+//
+// The only guard in startRegimeExecution() is `state == Running`. A regime in
+// state Done passes it. startRegimeExecution() resets currentRepeat / times /
+// conditionCompleted but NOT repeatsDone (only resetRegimeExecution() clears
+// that). So re-starting a completed regime leaves repeatsDone == repeatCount;
+// the very first completeCurrentRepeat() then sees `repeatsDone + 1 >= total`
+// and marks the regime Done after a SINGLE repeat instead of running the full
+// count.
+//
+// Physical hazard: an operator re-queues a completed multi-cycle regime and
+// only one cycle actually executes — silent under-running of the experiment.
+// ---------------------------------------------------------------------------
+TEST_F(RegimeManagerTest, RestartFinishedRegime_StaleCountersUnderrun) {
+    RegimeManager manager;
+    QList<Regime> regimes;
+
+    Regime r;
+    r.m_name = "Re-run without reset";
+    r.m_maxTime = 60;
+    r.m_repeatCount = 2;
+    r.m_condition.type = "time";
+    r.m_condition.time = 1;
+    regimes.append(r);
+    manager.model()->setRegimes(regimes);
+
+    // First full run: two completions -> Done, repeatsDone == 2.
+    ASSERT_TRUE(manager.startRegimeExecution(0));
+    ASSERT_TRUE(manager.completeCurrentRepeat(0, 0));
+    ASSERT_TRUE(manager.completeCurrentRepeat(0, 1));
+    ASSERT_EQ(stateOf(manager, 0), RegimeEnums::State::Done);
+
+    // Re-start WITHOUT resetRegimeExecution() (the guard allows it).
+    ASSERT_TRUE(manager.startRegimeExecution(0));
+
+    // Complete the first repeat of the new run. Correct behaviour: one repeat
+    // of two done -> still Running. Buggy behaviour: stale repeatsDone (==2)
+    // trips the completion check and the regime jumps straight to Done.
+    ASSERT_TRUE(manager.completeCurrentRepeat(0, 0));
+    EXPECT_EQ(stateOf(manager, 0), RegimeEnums::State::Running)
+        << "re-run of a finished regime completed after 1 repeat instead of "
+           "repeatCount (stale repeatsDone not cleared on start)";
+}
+
+// ---------------------------------------------------------------------------
+// Edge case #3 — startRegimeExecution() silently discards a Paused regime's
+// position.
+//
+// The guard rejects only Running. A Paused regime (mid-experiment, condition
+// phase satisfied, part-way through its repeats) passes the guard and has
+// currentRepeat / conditionCompleted / progress wiped back to zero, then is
+// forced to Running — restarting the whole sequence from repeat 0.
+//
+// Physical hazard: resuming through the wrong entry point re-runs valve /
+// pressurisation sequences already performed, from scratch.
+// Correct behaviour: a Paused regime's position must be preserved (resume),
+// not reset. This test asserts the paused position survives.
+// ---------------------------------------------------------------------------
+TEST_F(RegimeManagerTest, StartOnPausedRegime_LosesPosition) {
+    RegimeManager manager;
+    QList<Regime> regimes;
+
+    Regime r;
+    r.m_name = "Paused mid-run";
+    r.m_maxTime = 60;
+    r.m_repeatCount = 3;
+    r.m_condition.type = "time";
+    r.m_condition.time = 1;
+    regimes.append(r);
+    manager.model()->setRegimes(regimes);
+
+    ASSERT_TRUE(manager.startRegimeExecution(0));
+    ASSERT_TRUE(manager.completeCurrentRepeat(0, 0)); // advance to repeat 1
+    ASSERT_EQ(manager.getRegimeExecutionInfo(0)["currentRepeat"].toInt(), 1);
+
+    // Operator pauses the regime part-way through.
+    manager.model()->setData(manager.model()->index(0, 0),
+                             QVariant::fromValue(RegimeEnums::State::Paused),
+                             ProtoTableModel::StateRole);
+
+    // A stray start (e.g. wrong resume path) must not destroy the position.
+    manager.startRegimeExecution(0);
+
+    EXPECT_EQ(manager.getRegimeExecutionInfo(0)["currentRepeat"].toInt(), 1)
+        << "startRegimeExecution() on a Paused regime reset currentRepeat to 0, "
+           "silently restarting an in-progress experiment";
+}

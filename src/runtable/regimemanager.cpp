@@ -412,12 +412,26 @@ bool RegimeManager::startRegimeExecution(int regimeId)
         qWarning() << "startRegimeExecution: Regime" << regimeId << "is already running";
         return false;
     }
+    // Paused - это НЕ «не запущен»: режим стоит посреди прогона, с набранными
+    // повторами и выполненным условием. Старт отсюда обнулил бы позицию и
+    // повторил уже отработанные клапанные последовательности на установке.
+    // Возобновление идёт своим путём (RegimeTaskTree::resume), не через старт.
+    if (currentState == RegimeEnums::State::Paused) {
+        qWarning() << "startRegimeExecution: Regime" << regimeId
+                   << "is paused - use resume, position preserved";
+        return false;
+    }
     
-    // Reset execution tracking
+    // Reset execution tracking. Счётчики исходов обнуляются здесь же: без этого
+    // повторный запуск завершённого режима стартует с repeatsDone == repeatCount,
+    // и первый же completeCurrentRepeat() закрывает его после ОДНОГО повтора.
     m_model.setData(m_model.index(regimeId, 0), 0, ProtoTableModel::CurrentRepeatRole);
     m_model.setData(m_model.index(regimeId, 0), false, ProtoTableModel::ConditionCompletedRole);
     m_model.setData(m_model.index(regimeId, 0), 0, ProtoTableModel::ConditionTimePassedRole);
     m_model.setData(m_model.index(regimeId, 0), 0, ProtoTableModel::RegimeTimePassedRole);
+    m_model.setData(m_model.index(regimeId, 0), 0, ProtoTableModel::RepeatsDoneRole);
+    m_model.setData(m_model.index(regimeId, 0), 0, ProtoTableModel::RepeatsSkippedRole);
+    m_model.setData(m_model.index(regimeId, 0), 0, ProtoTableModel::RepeatsErrorRole);
     
     // Set state to running
     setRegimeState(regimeId, RegimeEnums::State::Running);
@@ -587,8 +601,15 @@ bool RegimeManager::completeCurrentRepeat(int regimeId, int currentRepeat)
     Regime regime = m_model.data(m_model.index(regimeId, 0), ProtoTableModel::RegimeRole).value<Regime>();
     int totalRepeats = regime.m_repeatCount;
     
-    if (repeatsDone + 1 >= totalRepeats) {
-        // All repeats completed - mark regime as done
+    // Квота считается по ВСЕМ трём исходам, как в skipCurrentRepeat() и
+    // markRepeatAsError(). Иначе прогон, где хотя бы один повтор пропущен или
+    // завершился ошибкой, никогда не наберёт нужного числа ЗАВЕРШЁННЫХ:
+    // currentRepeat уходит за последний валидный индекс, режим висит Running.
+    int repeatsSkipped = m_model.data(m_model.index(regimeId, 0), ProtoTableModel::RepeatsSkippedRole).toInt();
+    int repeatsError   = m_model.data(m_model.index(regimeId, 0), ProtoTableModel::RepeatsErrorRole).toInt();
+    
+    if (repeatsDone + repeatsSkipped + repeatsError + 1 >= totalRepeats) {
+        // All repeats processed - mark regime as done
         setRegimeState(regimeId, RegimeEnums::State::Done);
         qDebug() << "Regime" << regimeId << "completed all repeats";
     } else {
