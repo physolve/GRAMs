@@ -123,13 +123,11 @@ Item {
     property bool skipRK50:    false
     property bool skipRK300:   false
     property bool secondTract: false
-    property bool foreVacuum:  true   // форвакуумная откачка 11.5–11.7
     property bool pumpCheck:   true   // dP/dt-watchdog после открытия К176
     property int  repeats:     1
-    // Тракт остаётся открытым после успешного прогона — насос качает дальше.
+    // Тракт остаётся открытым после успешного прогона — турбонасос качает дальше.
+    // Применяется сразу, в том числе во время идущего режима (см. Chk ниже).
     property bool continuousPumping: false
-    // Advanced-опция ТЗ разд. 9.1: полностью исключить тракт турбонасоса.
-    property bool turboTract: true
 
     // ── Параметры цепочки «Напуск → Натекание» ───────────────────────────────
     // Это параметры ПРОГОНА (меняются от прогона к прогону и задают результат),
@@ -152,6 +150,13 @@ Item {
     property int  holdSec:      60
     property int  foreVacTimeoutSec: 300
 
+    // мм:сс для длительностей этапов (турбо-откачка идёт минутами).
+    function fmtSec(v) {
+        var m = Math.floor(v / 60)
+        var sec = Math.floor(v % 60)
+        return m + ":" + (sec < 10 ? "0" : "") + sec
+    }
+
     // «Должно быть» для строки 11.x — из монитора, чтобы UI показывал реально
     // применённое значение (после qBound в C++), а не то, что набрано в поле.
     function fmtPa(v) {
@@ -167,11 +172,11 @@ Item {
         radius: 6
         border.color: root.cBorder
         border.width: 1
-        implicitHeight: inner.implicitHeight + 14
+        implicitHeight: inner.implicitHeight + 10
         ColumnLayout {
             id: inner
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 7 }
-            spacing: 5
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 5 }
+            spacing: 3
         }
     }
 
@@ -202,7 +207,7 @@ Item {
 
         ColumnLayout {
             width: scroll.availableWidth
-            spacing: 8
+            spacing: 6
 
             // ── Заголовок + селектор режима ────────────────────────────────────
             RowLayout {
@@ -210,7 +215,7 @@ Item {
                 Label {
                     text: "Развёртка рецепта режима"
                     color: root.cText
-                    font.pointSize: 13
+                    font.pointSize: 11
                     font.bold: true
                 }
                 Item { Layout.fillWidth: true }
@@ -253,24 +258,24 @@ Item {
                         checked: root.secondTract; onToggled: root.secondTract = checked
                     }
                     Chk {
-                        text: "форвакуум"; ToolTip.text: "Этапы 11.5–11.7 через К176"
-                        checked: root.foreVacuum; onToggled: root.foreVacuum = checked
-                    }
-                    Chk {
                         text: "dP/dt"; ToolTip.text: "Проверка скорости откачки после открытия К176"
                         checked: root.pumpCheck; onToggled: root.pumpCheck = checked
                     }
-                    Chk {
-                        text: "турбо-тракт"
-                        ToolTip.text: "Раздел 12.2: переход К176→К179. Снять — исключить тракт турбонасоса"
-                        checked: root.turboTract
-                        onToggled: root.turboTract = checked
-                    }
+                    // Турбо-тракт (разд. 12.2) — обязательная часть режима,
+                    // выбора в интерфейсе нет.
                     Chk {
                         text: "непрерывная откачка"
-                        ToolTip.text: "После успешного прогона оставить тракт открытым — насос качает дальше"
+                        ToolTip.text: "После успешного прогона оставить тракт открытым "
+                                    + "(камера E/F, эталон B, бочка) на турбонасосе; "
+                                    + "форвакуумный К176 закрыт. Меняется и на ходу"
                         checked: root.continuousPumping
-                        onToggled: root.continuousPumping = checked
+                        onToggled: {
+                            root.continuousPumping = checked
+                            // Применяется немедленно: хвост рецепта выполняется
+                            // в самом конце прогона, и решение, принятое уже во
+                            // время режима, обязано до него дойти.
+                            RegimeTaskTree.setVacuumContinuousPumping(checked)
+                        }
                     }
                     Item { Layout.fillWidth: true }
                     Cap { text: "Повторы:" }
@@ -282,8 +287,6 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 6
-                    enabled: root.foreVacuum
-                    opacity: enabled ? 1.0 : 0.45
                     Cap { text: "Форвакуум до:" }
                     TextField {
                         id: targetField
@@ -299,18 +302,17 @@ Item {
                             else text = root.targetVacPa
                         }
                     }
-                    Cap { text: "Па (ДВ301), удержать" }
+                    Cap { text: "Па (ДВ301), удержать, с" }
                     Num {
                         from: 1; to: 3600; stepSize: 5
                         value: root.holdSec; onValueModified: root.holdSec = value
                     }
-                    Cap { text: "с, таймаут" }
+                    Cap { text: "таймаут, с" }
                     Num {
                         from: 10; to: 7200; stepSize: 30
                         value: root.foreVacTimeoutSec
                         onValueModified: root.foreVacTimeoutSec = value
                     }
-                    Cap { text: "с" }
                     Button {
                         text: "⟲"
                         flat: true
@@ -340,13 +342,11 @@ Item {
                         onClicked: {
                             RegimeTaskTree.setVacuumOptions(root.skipRK10, root.skipRK50,
                                                             root.skipRK300, root.secondTract)
-                            RegimeTaskTree.setVacuumForevac(root.foreVacuum)
                             RegimeTaskTree.setVacuumForevacTarget(root.targetVacPa,
                                                                   root.holdSec,
                                                                   root.foreVacTimeoutSec)
                             RegimeTaskTree.setVacuumPumpCheck(root.pumpCheck)
                             RegimeTaskTree.setVacuumContinuousPumping(root.continuousPumping)
-                            RegimeTaskTree.setVacuumTurboTract(root.turboTract)
                             // Цепочка: параметры применяются к режимам
                             // «Напуск» и «Натекание» из очереди RunTable.
                             RegimeTaskTree.setSupplyParams(root.supplyPort,
@@ -439,20 +439,25 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
-                    // Прогресс удержания гейта: показывается, только пока гейт
-                    // действительно набирается.
+                    // Прогресс турбо-этапа: до переключения — набор гейта, после
+                    // переключения — сама откачка. Без второй стадии полоса
+                    // замирала бы на нуле сразу после перехода на турбонасос, и
+                    // идущая откачка была бы неотличима от зависшего режима.
                     Cap {
-                        visible: root.mon.turboActive
-                        text: "гейт ≤ " + root.fmtPa(root.mon.turboGatePa)
-                              + ": " + root.mon.turboHeldSec + " / "
-                              + root.mon.turboGateHoldSec + " с"
+                        visible: root.mon.turboStage.length > 0
+                        text: root.mon.turboStage === "gate"
+                              ? "гейт ≤ " + root.fmtPa(root.mon.turboGatePa) + ": "
+                                + root.mon.turboProgressSec + " / "
+                                + root.mon.turboProgressMaxSec + " с"
+                              : "турбо-откачка: " + root.fmtSec(root.mon.turboProgressSec)
+                                + " / " + root.fmtSec(root.mon.turboProgressMaxSec)
                     }
                     ProgressBar {
-                        visible: root.mon.turboActive
+                        visible: root.mon.turboStage.length > 0
                         Layout.preferredWidth: 120
                         from: 0
-                        to: Math.max(1, root.mon.turboGateHoldSec)
-                        value: root.mon.turboHeldSec
+                        to: Math.max(1, root.mon.turboProgressMaxSec)
+                        value: root.mon.turboProgressSec
                     }
                 }
 

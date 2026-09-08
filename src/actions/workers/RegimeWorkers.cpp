@@ -314,7 +314,6 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
     ctx.totalRepeats = m_cfg.totalRepeats;
     ctx.perActionPauseMs = m_opts.perActionPauseMs;
     ctx.reliefDwellSec = qMax(1, m_opts.reliefDwellSec);   // К118 держим ≥1 с
-    ctx.foreVacuum   = m_opts.foreVacuum;
     ctx.targetVacPa       = m_opts.targetVacPa;
     ctx.foreVacHoldSec    = m_opts.foreVacHoldSec;
     ctx.foreVacTimeoutSec = m_opts.foreVacTimeoutSec;

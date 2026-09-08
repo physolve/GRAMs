@@ -1582,27 +1582,23 @@ ExecutableItem executionPhase(const Storage<VacuumRunState>& st,
     items << settlePause(ctx);
     items << secondTractGroup(st, ctx, iter);              // Ф3: s20–s24 (узел inline)
 
-    // Форвакуумная откачка 11.5–11.7 (gated foreVacuum; skipUnlessNode эмитит
-    // Skipped при выключении — как ветки блока C).
+    // Форвакуумная откачка 11.5–11.7. Не гейтится ничем: по ТЗ эти этапы
+    // обязательны и предшествуют любому турбо-этапу (REQ-047/050/053/056/077).
     items << settlePause(ctx);
-    items << skipUnlessNode(ctx, VacuumNode::F5A1, ctx.foreVacuum,
-                            { buildForevacA1(st, ctx, iter) });
+    items << withNode(ctx, VacuumNode::F5A1, buildForevacA1(st, ctx, iter));
     items << settlePause(ctx);
-    items << skipUnlessNode(ctx, VacuumNode::F6BC, ctx.foreVacuum,
-                            { buildForevacBC(st, ctx) });
+    items << withNode(ctx, VacuumNode::F6BC, buildForevacBC(st, ctx));
     items << settlePause(ctx);
-    items << skipUnlessNode(ctx, VacuumNode::F7EF, ctx.foreVacuum,
-                            { buildForevacEF(st, ctx) });
+    items << withNode(ctx, VacuumNode::F7EF, buildForevacEF(st, ctx));
 
     // Раздел 12.2 — переход на турбомолекулярный насос. Условий три, и каждое
     // отключает этап целиком (узлы помечаются Skipped, как ветки блока C):
     //   turboTract      — Advanced-опция «исключить тракт турбонасоса»;
-    //   foreVacuum      — без него ДВ301 не доводится до порога перехода;
     //   pressureTurboPa — без ДВ302 условие У3 гейта недостижимо в принципе.
     // Последнее — именно пропуск, а не ожидание таймаута: висеть turboTimeoutSec
     // ради заведомо известного исхода бессмысленно, а «этап не выполнялся» и
     // «этап не смог» — разные вещи для оператора и для журнала.
-    const bool turboPossible = ctx.turboTract && ctx.foreVacuum && bool(ctx.pressureTurboPa);
+    const bool turboPossible = ctx.turboTract && bool(ctx.pressureTurboPa);
 
     // 11.7б: общая откачка — тракт К171/К173/К151 + применимые C, магистраль
     // К178, затем PumpDownProcedure и testEvacTimeSec на турбонасосе.

@@ -19,6 +19,7 @@
 #include <QElapsedTimer>
 #include <QEventLoop>
 #include <memory>
+#include <string>
 #include <QMap>
 #include <QSet>
 #include <QStringList>
@@ -51,7 +52,14 @@ public:
         ctx.perActionPauseMs = 0;  // без settle-пауз: структура дерева как в эталоне
         ctx.reliefDwellSec   = 5;  // пин: эталонные ассерты elapsed не зависят от дефолта
         ctx.pumpCheckDelaySec = 0; // «мёртвая зона» dP/dt — отдельный тест
-        ctx.foreVacuum       = false;  // Ф1–Ф3 в изоляции; форвакуум — отдельные тесты
+        // Выключателя форвакуума больше нет: этапы 11.5–11.7 обязательны по ТЗ.
+        // Чтобы тесты Ф1–Ф3 оставались быстрыми и детерминированными, ДВ301
+        // мокается уже на цели — удержание набирается с первого тика.
+        ctx.pressureVacPa    = [] { return 0.0; };
+        ctx.foreVacHoldSec   = 1;
+        ctx.foreVacTimeoutSec = 10;
+        ctx.k178PulseMs      = 1;
+        ctx.pumpRateCheck    = false;  // dP/dt-watchdog — отдельные тесты
         ctx.setValve = [this](bool open, const QString& name) -> bool {
             if (open && blockedOpens.contains(name))
                 return false;
@@ -62,6 +70,10 @@ public:
         ctx.pressureB = [this] { return pressure(); };
         return ctx;
     }
+
+    // std::string, а не QString: gtest печатает QString как массив 2-байтовых
+    // объектов, и упавшая проверка последовательности становится нечитаемой.
+    std::string seq() const { return sequence().toStdString(); }
 
     QString sequence() const
     {
@@ -80,13 +92,19 @@ public:
     }
 };
 
-// Эталон s1–s24 при всех включённых ветках (изменения состояний клапанов):
-// Ф1: s2–s4; Ф2: s5–s19; Ф3: s20–s24.
-const QString kFullSequence = QStringLiteral(
+// Эталон прогона при всех включённых ветках (изменения состояний клапанов).
+// Ф1–Ф3 — это s1–s24 из GramQt; этапы 11.5–11.7 идут следом и теперь ВСЕГДА
+// выполняются: выключателя форвакуума больше нет ни в рецепте, ни в UI
+// (REQ-047/050/053/056/077). Поэтому эталон описывает весь прогон, а не только
+// легаси-часть — иначе он молча перестал бы покрывать половину режима.
+const std::string kFullSequence =
     "+AR4 -AR4 "                             // Ф1: триплет К118
     "+S3 +AR4 -AR4 -S3 "                     // Ф2: RK300 + триплет + закрытие
     "+S1 +S2 +AR4 -AR4 -S2 -S1 "             // Ф2: RK10/RK50 + триплет + закрытия
-    "+SL1 +SL2 -SL1 -SL2");                  // Ф3: второй тракт (К192, затем К179)
+    "+SL1 +SL2 -SL1 -SL2 "                   // Ф3: второй тракт (К192, затем К179)
+    "+AR4 -AR4 +AR5 -AR5 +AR6 -AR6 "         // 11.5 A1: сброс, импульс К178, К176
+    "+S3 +S2 +S1 +AR5 -AR5 +AR6 -AR6 -S3 -S2 -S1 "  // 11.6 B/C: объёмы C под откачку
+    "+R3 +AR5 -AR5 +AR6 -AR6 -R3";           // 11.7 E/F: К151, импульс К178, К176
 
 DoneWith runBlocking(const Group& recipe)
 {
@@ -138,7 +156,7 @@ TEST(VacuumTree, FullSequenceAllBranchesOn)
     ctx.secondTract = true;
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    EXPECT_EQ(rec.sequence(), kFullSequence);
+    EXPECT_EQ(rec.seq(), kFullSequence);
     EXPECT_TRUE(rec.allClosed());
 }
 
@@ -150,8 +168,13 @@ TEST(VacuumTree, AllSkippedAndPressureLowProducesNoValveOps)
     ctx.skipRK10 = ctx.skipRK50 = ctx.skipRK300 = true;
     ctx.secondTract = false;
 
+    // Легаси-часть Ф1–Ф3 не выполняет ни одной операции, но форвакуумные
+    // этапы обязательны и идут всегда — «пусто» относится только к Ф1–Ф3.
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    EXPECT_TRUE(rec.ops.isEmpty()) << rec.sequence().toStdString();
+    EXPECT_EQ(rec.seq(),
+              std::string("+AR5 -AR5 +AR6 -AR6 "
+                          "+AR5 -AR5 +AR6 -AR6 "
+                          "+R3 +AR5 -AR5 +AR6 -AR6 -R3"));
 }
 
 TEST(VacuumTree, SkipFlagsStillRunUnconditionalTriplets)
@@ -163,7 +186,13 @@ TEST(VacuumTree, SkipFlagsStillRunUnconditionalTriplets)
     ctx.secondTract = false;
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    EXPECT_EQ(rec.sequence(), QStringLiteral("+AR4 -AR4 +AR4 -AR4"));
+    // Форвакуум выполняется всегда: за легаси-триплетами идут этапы 11.5–11.7
+    // (блок C пропущен флагами, поэтому в 11.6 остаются только импульс и насос).
+    EXPECT_EQ(rec.seq(),
+              std::string("+AR4 -AR4 +AR4 -AR4 "
+                          "+AR4 -AR4 +AR5 -AR5 +AR6 -AR6 "
+                          "+AR5 -AR5 +AR6 -AR6 "
+                          "+R3 +AR5 -AR5 +AR6 -AR6 -R3"));
 }
 
 TEST(VacuumTree, ReliefGuardIsEvaluatedPerTriplet)
@@ -177,9 +206,12 @@ TEST(VacuumTree, ReliefGuardIsEvaluatedPerTriplet)
     ctx.secondTract = false;
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    EXPECT_EQ(calls, 3);  // Ф1, Ф2-S3, Ф2 s15–s17
-    EXPECT_EQ(rec.sequence(),
-              QStringLiteral("+AR4 -AR4 +S3 -S3 +S1 +S2 -S2 -S1"));
+    EXPECT_EQ(calls, 4);  // Ф1, Ф2-S3, Ф2 s15–s17 и сброс перед откачкой A1
+    EXPECT_EQ(rec.seq(),
+              std::string("+AR4 -AR4 +S3 -S3 +S1 +S2 -S2 -S1 "
+                          "+AR5 -AR5 +AR6 -AR6 "                 // 11.5 (сброс пропущен)
+                          "+S3 +S2 +S1 +AR5 -AR5 +AR6 -AR6 -S3 -S2 -S1 "
+                          "+R3 +AR5 -AR5 +AR6 -AR6 -R3"));
 }
 
 TEST(VacuumTree, SkipRk300OnlyOmitsItsSubgroup)
@@ -190,15 +222,18 @@ TEST(VacuumTree, SkipRk300OnlyOmitsItsSubgroup)
     ctx.secondTract = true;
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    EXPECT_EQ(rec.sequence(),
-              QStringLiteral("+AR4 -AR4 "
-                             "+S1 +S2 +AR4 -AR4 -S2 -S1 "
-                             "+SL1 +SL2 -SL1 -SL2"));
+    EXPECT_EQ(rec.seq(),
+              std::string("+AR4 -AR4 "
+                          "+S1 +S2 +AR4 -AR4 -S2 -S1 "
+                          "+SL1 +SL2 -SL1 -SL2 "
+                          "+AR4 -AR4 +AR5 -AR5 +AR6 -AR6 "
+                          "+S2 +S1 +AR5 -AR5 +AR6 -AR6 -S2 -S1 "   // C1 исключён и здесь
+                          "+R3 +AR5 -AR5 +AR6 -AR6 -R3"));
 }
 
 TEST(VacuumTree, ProgressTicksMatchDwells)
 {
-    // 4 выдержки по reliefDwellSec=5 тиков: elapsed накапливается 1..20.
+    // 5 выдержек по reliefDwellSec=5 тиков: elapsed накапливается 1..25.
     Recorder rec;
     VacuumTreeContext ctx = rec.makeCtx();
     ctx.secondTract = true;
@@ -208,7 +243,8 @@ TEST(VacuumTree, ProgressTicksMatchDwells)
     };
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    ASSERT_EQ(progress.size(), 20);
+    // 5 выдержек по 5 тиков: Ф1, Ф2-S3, Ф2 s15–s17, Ф3 и сброс перед откачкой A1.
+    ASSERT_EQ(progress.size(), 25);
     for (int i = 0; i < progress.size(); ++i)
         EXPECT_EQ(progress.at(i), i + 1);
 }
@@ -224,7 +260,7 @@ TEST(VacuumTree, CancelDuringPhase1ReliefClosesK118)
     CancelRun run = runWithCancelAt(3);
     EXPECT_EQ(run.result, DoneWith::Cancel);
     EXPECT_TRUE(run.rec.allClosed());
-    EXPECT_EQ(run.rec.sequence(), QStringLiteral("+AR4 -AR4"));
+    EXPECT_EQ(run.rec.seq(), std::string("+AR4 -AR4"));
 }
 
 TEST(VacuumTree, CancelDuringS3TripletClosesInsideOut)
@@ -233,8 +269,8 @@ TEST(VacuumTree, CancelDuringS3TripletClosesInsideOut)
     EXPECT_EQ(run.result, DoneWith::Cancel);
     EXPECT_TRUE(run.rec.allClosed());
     // Изнутри-наружу: сначала К118 (вложенный триплет), затем S3 (объемлющая группа)
-    EXPECT_EQ(run.rec.sequence(),
-              QStringLiteral("+AR4 -AR4 +S3 +AR4 -AR4 -S3"));
+    EXPECT_EQ(run.rec.seq(),
+              std::string("+AR4 -AR4 +S3 +AR4 -AR4 -S3"));
 }
 
 TEST(VacuumTree, CancelDuringBlockCTripletClosesAllOpened)
@@ -243,9 +279,9 @@ TEST(VacuumTree, CancelDuringBlockCTripletClosesAllOpened)
     EXPECT_EQ(run.result, DoneWith::Cancel);
     EXPECT_TRUE(run.rec.allClosed());
     // К118 (триплет) → S2 → S1 (порядок закрытий CSV s18–s19)
-    EXPECT_EQ(run.rec.sequence(),
-              QStringLiteral("+AR4 -AR4 +S3 +AR4 -AR4 -S3 "
-                             "+S1 +S2 +AR4 -AR4 -S2 -S1"));
+    EXPECT_EQ(run.rec.seq(),
+              std::string("+AR4 -AR4 +S3 +AR4 -AR4 -S3 "
+                          "+S1 +S2 +AR4 -AR4 -S2 -S1"));
 }
 
 TEST(VacuumTree, CancelDuringSecondTractClosesBothValves)
@@ -253,8 +289,13 @@ TEST(VacuumTree, CancelDuringSecondTractClosesBothValves)
     CancelRun run = runWithCancelAt(18);
     EXPECT_EQ(run.result, DoneWith::Cancel);
     EXPECT_TRUE(run.rec.allClosed());
-    EXPECT_EQ(run.rec.sequence(),
-              kFullSequence);  // отмена в Ф3 добирает те же закрытия SL1, SL2
+    // Отмена в Ф3 добирает закрытия SL1/SL2 и на этом заканчивает прогон:
+    // до форвакуумных этапов дело не доходит.
+    EXPECT_EQ(run.rec.seq(),
+              std::string("+AR4 -AR4 "
+                          "+S3 +AR4 -AR4 -S3 "
+                          "+S1 +S2 +AR4 -AR4 -S2 -S1 "
+                          "+SL1 +SL2 -SL1 -SL2"));
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -287,14 +328,14 @@ TEST(VacuumTree, RerunSameRecipeStartsFresh)
     QTaskTree tree1(recipe);
     tree1.onStorageSetup(st, assertFresh);
     EXPECT_EQ(tree1.runBlocking(), DoneWith::Success);
-    EXPECT_EQ(rec.sequence(), kFullSequence);
+    EXPECT_EQ(rec.seq(), kFullSequence);
 
     rec.ops.clear();
 
     QTaskTree tree2(recipe);
     tree2.onStorageSetup(st, assertFresh);
     EXPECT_EQ(tree2.runBlocking(), DoneWith::Success);
-    EXPECT_EQ(rec.sequence(), kFullSequence);
+    EXPECT_EQ(rec.seq(), kFullSequence);
 
     EXPECT_EQ(storagesCreated, 2);
 }
@@ -317,9 +358,9 @@ TEST(VacuumTree, RepeatsRecreateStateAndDoubleSequence)
     };
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    EXPECT_EQ(rec.sequence(), kFullSequence + QStringLiteral(" ") + kFullSequence);
+    EXPECT_EQ(rec.seq(), kFullSequence + " " + kFullSequence);
     EXPECT_EQ(repeats, (QList<int>{0, 1}));
-    EXPECT_EQ(maxElapsed, 20);  // elapsedSec пер-повторный, не накапливается между повторами
+    EXPECT_EQ(maxElapsed, 25);  // elapsedSec пер-повторный, не накапливается между повторами
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -395,7 +436,7 @@ TEST(VacuumTree, PauseFreezesDwellAndResumeCompletes)
 
     EXPECT_EQ(result, DoneWith::Success);
     EXPECT_EQ(ticksWhilePaused, 0);  // во время паузы тики не идут
-    EXPECT_EQ(rec.sequence(), kFullSequence);
+    EXPECT_EQ(rec.seq(), kFullSequence);
 }
 
 TEST(VacuumTree, ConditionPhaseTimeRunsBeforeValves)
@@ -445,7 +486,6 @@ VacuumTreeContext makeForevacCtx(Recorder& rec)
 {
     rec.pressure = [] { return 1.0; };           // ≤ DB_SBR_LIM: триплеты пропущены
     VacuumTreeContext ctx = rec.makeCtx();
-    ctx.foreVacuum        = true;
     ctx.skipRK10 = ctx.skipRK50 = ctx.skipRK300 = true;  // блок C без операций
     ctx.secondTract       = false;
     ctx.foreVacHoldSec     = 2;
@@ -466,10 +506,10 @@ TEST(VacuumTree, ForevacStagesOpenAndClosePumpTract)
     EXPECT_TRUE(rec.allClosed());
     // A1: импульс К178 + форвакуум К176; B/C: то же (C пропущены);
     // E/F: +К151, импульс К178, форвакуум К176, закрытие К151.
-    EXPECT_EQ(rec.sequence(),
-              QStringLiteral("+AR5 -AR5 +AR6 -AR6 "     // 11.5 A1
-                             "+AR5 -AR5 +AR6 -AR6 "     // 11.6 B/C
-                             "+R3 +AR5 -AR5 +AR6 -AR6 -R3"));  // 11.7 E/F
+    EXPECT_EQ(rec.seq(),
+              std::string("+AR5 -AR5 +AR6 -AR6 "     // 11.5 A1
+                          "+AR5 -AR5 +AR6 -AR6 "     // 11.6 B/C
+                          "+R3 +AR5 -AR5 +AR6 -AR6 -R3"));  // 11.7 E/F
 }
 
 TEST(VacuumTree, ForevacTimesOutWhenPressureStaysHigh)
@@ -483,7 +523,7 @@ TEST(VacuumTree, ForevacTimesOutWhenPressureStaysHigh)
     // но насосный тракт закрыт (К176), остальные этапы пропущены.
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Error);
     EXPECT_TRUE(rec.allClosed());
-    EXPECT_EQ(rec.sequence(), QStringLiteral("+AR5 -AR5 +AR6 -AR6"));
+    EXPECT_EQ(rec.seq(), std::string("+AR5 -AR5 +AR6 -AR6"));
 }
 
 TEST(VacuumTree, ForevacMissingSensorFailsSafe)
@@ -1019,20 +1059,30 @@ TEST(VacuumTree, ForevacBlockedPumpValveReportsReason)
     EXPECT_TRUE(rec.allClosed());
 }
 
-TEST(VacuumTree, ForevacProgressAbsentWhenForevacDisabled)
+TEST(VacuumTree, ForevacAlwaysRunsAndCannotBeDisabled)
 {
-    // Выключенный форвакуум не должен эмитить ни прогресс, ни причины отказа.
+    // Выключателя форвакуума нет ни в контексте рецепта, ни в VacuumOptions,
+    // ни в UI: этапы 11.5–11.7 обязательны и предшествуют любому турбо-этапу
+    // (REQ-047/050/053/056/077). Раньше здесь проверялось обратное — что
+    // выключенный форвакуум ничего не эмитит; теперь проверяется, что все три
+    // этапа отрабатывают всегда, каким бы ни был остальной набор опций.
     Recorder rec;
     VacuumTreeContext ctx = makeForevacCtx(rec);
-    ctx.foreVacuum = false;
+    ctx.pressureVacPa = [] { return 5.0; };
 
-    int progressCalls = 0, failureCalls = 0;
-    ctx.onForevacProgress = [&](VacuumNode, double, int, int) { ++progressCalls; };
-    ctx.onFailure         = [&](const QString&) { ++failureCalls; };
+    QSet<int> progressedNodes;
+    int failureCalls = 0;
+    ctx.onForevacProgress = [&](VacuumNode n, double, int, int) {
+        progressedNodes.insert(int(n));
+    };
+    ctx.onFailure = [&](const QString&) { ++failureCalls; };
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    EXPECT_EQ(progressCalls, 0);
     EXPECT_EQ(failureCalls, 0);
+    EXPECT_TRUE(progressedNodes.contains(int(VacuumNode::F5A1)));
+    EXPECT_TRUE(progressedNodes.contains(int(VacuumNode::F6BC)));
+    EXPECT_TRUE(progressedNodes.contains(int(VacuumNode::F7EF)));
+    EXPECT_TRUE(rec.allClosed());
 }
 
 // ─── main: QCoreApplication нужен для QTimer/QEventLoop внутри runBlocking ────

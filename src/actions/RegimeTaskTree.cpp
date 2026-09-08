@@ -62,12 +62,6 @@ void RegimeTaskTree::setVacuumTurboGaugeSensor(DataCollection* sensor)
     m_vacuumOptions.turboGaugeSensor = sensor;
 }
 
-void RegimeTaskTree::setVacuumForevac(bool enabled)
-{
-    m_vacuumOptions.foreVacuum = enabled;
-    qDebug() << "RegimeTaskTree: setVacuumForevac" << enabled;
-}
-
 void RegimeTaskTree::setVacuumForevacTarget(double targetPa, int holdSec, int timeoutSec)
 {
     // Границы намеренно широкие: 1e-4 Па перекрывает турбо-диапазон, верх — грубый

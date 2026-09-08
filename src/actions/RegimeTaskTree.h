@@ -71,7 +71,6 @@ public:
     void setVacuumTurboGaugeSensor(DataCollection* sensor);
 
     // Включение/выключение форвакуумной откачки 11.5–11.7 (по умолчанию вкл).
-    Q_INVOKABLE void setVacuumForevac(bool enabled);
 
     // Флаги пропуска блока C и второго тракта (инверсия легаси flagIncludeRK*;
     // по умолчанию откачивается весь блок C, второй тракт выключен).
