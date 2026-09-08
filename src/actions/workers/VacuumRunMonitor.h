@@ -99,10 +99,30 @@ class VacuumRunMonitor : public QObject
     Q_PROPERTY(int     turboElapsedSec READ turboElapsedSec NOTIFY turboProgressChanged)
     Q_PROPERTY(double  turboGatePa   READ turboGatePa   NOTIFY turboTargetChanged)
     Q_PROPERTY(int     turboGateHoldSec READ turboGateHoldSec NOTIFY turboTargetChanged)
+    Q_PROPERTY(int     turboTimeoutSec  READ turboTimeoutSec  NOTIFY turboTargetChanged)
+
+    // ── Прогресс турбо-этапа: одна пара «значение / максимум» на обе стадии ───
+    //
+    // До переключения (TurboGate) набирается непрерывное удержание ДВ301 ≤ гейта,
+    // после переключения (TurboPumping) идёт сама откачка турбонасосом, и её
+    // критерий завершения — отведённое время. Это РАЗНЫЕ величины, но оператору
+    // нужна одна полоса, которая не замирает при переходе, поэтому монитор
+    // отдаёт готовые value/max и имя стадии, а QML не разбирает VacuumNode.
+    //   turboStage: "" — этапа нет, "gate" — набор гейта, "pumping" — откачка.
+    Q_PROPERTY(QString turboStage        READ turboStage        NOTIFY turboProgressChanged)
+    Q_PROPERTY(int     turboProgressSec  READ turboProgressSec  NOTIFY turboProgressChanged)
+    Q_PROPERTY(int     turboProgressMaxSec READ turboProgressMaxSec NOTIFY turboProgressChanged)
 
     // ── Причина завершения прогона (пусто, пока прогон не закончился) ─────────
     Q_PROPERTY(QString finishReason READ finishReason NOTIFY finishReasonChanged)
     Q_PROPERTY(int     finishState  READ finishState  NOTIFY finishReasonChanged)
+
+    // ── Пропущенные этапы и предупреждения прогона ────────────────────────────
+    // «Этап не выполнялся» и «этап пройден» обязаны выглядеть в интерфейсе
+    // по-разному, поэтому причины пропуска живут отдельным списком, а не в
+    // общей строке статуса.
+    Q_PROPERTY(QStringList skippedStages READ skippedStages NOTIFY noticesChanged)
+    Q_PROPERTY(QStringList warnings      READ warnings      NOTIFY noticesChanged)
 
 public:
     explicit VacuumRunMonitor(QObject* parent = nullptr);
@@ -119,6 +139,8 @@ public:
     int         repeatsDone()   const { return m_repeatsDone; }
     int         repeatsError()  const { return m_repeatsError; }
     QVariantMap valveStates()   const { return m_valveStates; }
+    QStringList skippedStages() const { return m_skippedStages; }
+    QStringList warnings()      const { return m_warnings; }
 
     double  forevacTargetPa()   const { return m_forevacTargetPa; }
     int     forevacHoldSec()    const { return m_forevacHoldSec; }
@@ -141,8 +163,12 @@ public:
     int     turboElapsedSec() const { return m_turboElapsedSec; }
     double  turboGatePa()     const { return m_turboGatePa; }
     int     turboGateHoldSec() const { return m_turboGateHoldSec; }
+    int     turboTimeoutSec() const { return m_turboTimeoutSec; }
+    QString turboStage()       const;
+    int     turboProgressSec() const;
+    int     turboProgressMaxSec() const;
 
-    void setTurboGate(double gatePa, int holdSec);
+    void setTurboGate(double gatePa, int holdSec, int timeoutSec);
     void onTurboProgress(VacuumNode node, Reading p301, Reading p302,
                          int heldSec, int elapsedSec);
     void onTurboSwitched(bool toTurbo);
@@ -167,6 +193,12 @@ public:
     // Причина отказа из рецепта (детальная). Первая за прогон побеждает —
     // последующие каскадные отказы её не затирают.
     void onFailure(const QString& reason);
+    // Этап не выполнялся и почему (node = int(VacuumNode)). Копится списком:
+    // за прогон может быть пропущено несколько этапов, и оператор обязан
+    // увидеть их все, а не только первый.
+    void onStageSkipped(int node, const QString& reason);
+    // Предупреждение без остановки режима (REQ-062). Тоже списком.
+    void onWarning(const QString& message);
     // Итог прогона: state — RegimeEnums::State (Done/Error/Stopped), reason —
     // готовый текст либо пусто (тогда берётся накопленная причина отказа).
     void setFinish(int state, const QString& reason);
@@ -189,6 +221,7 @@ signals:
     void finishReasonChanged();
     void turboProgressChanged();
     void turboTargetChanged();
+    void noticesChanged();
 
 private:
     void initValves();
@@ -215,7 +248,9 @@ private:
     int    m_forevacHeldSec    = 0;
     int    m_forevacElapsedSec = 0;
 
-    QString m_finishReason;
+    QString     m_finishReason;
+    QStringList m_skippedStages;          // причины пропуска этапов за прогон
+    QStringList m_warnings;               // предупреждения без остановки режима
     QString m_failureReason;              // первая причина отказа из рецепта
     int     m_finishState = -1;           // RegimeEnums::State, -1 = не завершён
 
@@ -230,4 +265,5 @@ private:
     int     m_turboElapsedSec  = 0;
     double  m_turboGatePa      = 10.0;    // порог перехода (REQ-078/080)
     int     m_turboGateHoldSec = 60;      // удержание порога (REQ-080)
+    int     m_turboTimeoutSec  = 600;     // отведённое время турбо-откачки
 };

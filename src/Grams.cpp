@@ -78,8 +78,8 @@ void Grams::initDigitalData(){
     vR4.m_name = "R4"; // "Pressure range reaction";
     vR5.m_name = "R5"; // "Chamber manual valve";
 
-    vSL1.m_name = "SL1"; // "Second line outlet";
-    vSL2.m_name = "SL2"; // "Second line barrel";
+    vSL1.m_name = "SL1"; // "Second line outlet" (К192)
+    vSL2.m_name = "SL2"; // "Second line vacuum" (К179 — турбомолекулярный насос)
 
     timeAnalog.m_name = "Время";
 
@@ -552,6 +552,19 @@ void Grams::initActionHandler(){
     m_regimeTaskTree.setVacuumSafety(vs.m_turboSwitchPressurePa, vs.m_turboSwitchHoldSec,
                                      vs.m_turboReturnPressurePa, vs.m_turboTimeoutSec,
                                      vs.m_overrangeWaitSec, vs.m_overrangeWaitSec2);
+    // Наборы клапанов этапов 11.7б/11.8/11.9-11.11 — тоже из профиля (REQ-055).
+    const auto& vt = initSource.getVacuumTractParameters();
+    QMap<QString, double> dPLeakMax;
+    for (auto it = vs.m_dPLeakMax.cbegin(); it != vs.m_dPLeakMax.cend(); ++it)
+        dPLeakMax.insert(it.key(), it.value().toDouble());
+    m_regimeTaskTree.setVacuumTract(vt.m_generalPumping, vt.m_leakTest, vt.m_finalPumping,
+                                    vs.m_testEvacTimeSec, vs.m_leakTestDurationSec,
+                                    dPLeakMax);
+    // Датчики герметичности 11.8. ДД312 — s_lowPressure storageQuar (prSA),
+    // читает в барах, поэтому и порог dP_leak_max задан в барах.
+    // ДД333 в профиле GRAM50 отсутствует: область камеры этим этапом не
+    // проверяется, и это зафиксировано в docs/regimes/vacuum.md, а не скрыто.
+    m_regimeTaskTree.setVacuumLeakSensor(QStringLiteral("DD312"), &prSA);
     // ── Цепочка «Вакуум → Напуск → Натекание» ────────────────────────────────
     //
     // Напуск смотрит на давление накопителя (prSH, DD311) и пишет точки через

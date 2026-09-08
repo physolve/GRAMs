@@ -91,7 +91,28 @@ public:
                          double turboReturnPressurePa, int turboTimeoutSec,
                          int overrangeWaitSec, int overrangeWaitSec2);
 
+    // Наборы клапанов и пороги этапов 11.7б/11.8/11.9-11.11 из профиля
+    // (vacuumTract, vacuumSafety). Как и setVacuumSafety, вызывается из
+    // Grams::initActionHandler(), а НЕ из QML: REQ-055 требует хранить точный
+    // набор клапанов в конфигурации, и менять его с рабочего экрана нельзя.
+    void setVacuumTract(const QStringList& generalPumping,
+                        const QStringList& leakTest,
+                        const QStringList& finalPumping,
+                        int testEvacTimeSec, int leakTestDurationSec,
+                        const QMap<QString, double>& dPLeakMax);
+    // Датчик канала герметичности: имя из dP_leak_max -> источник показаний.
+    void setVacuumLeakSensor(const QString& name, DataCollection* sensor);
+
+    // Цель и длительность финальной откачки камеры 11.10 (targetVAC, EvacTime).
+    Q_INVOKABLE void setVacuumFinalTarget(double targetVacuumPa, int evacTimeSec);
+
     // Advanced-опция «исключить тракт турбомолекулярного насоса» (разд. 9.1).
+    //
+    // В интерфейсе выбора БОЛЬШЕ НЕТ: турбо-этап 12.2 — обязательная часть
+    // режима «Вакуум», и оператор его не отключает. Метод оставлен как
+    // сервисный шов (отладка стенда без турбонасоса, тесты); по умолчанию
+    // turboTract = true, и рецепт пропускает этап только сам — когда нет ДВ302
+    // или выключен форвакуум.
     Q_INVOKABLE void setVacuumTurboTract(bool enabled);
 
     // Включение dP/dt-watchdog после открытия К176.
@@ -171,6 +192,9 @@ signals:
     // ── Forwarded to workers ─────────────────────────────────────────────────
     void pauseRequested();
     void resumeRequested();
+    // Опция «непрерывная откачка» изменена во время прогона: воркер «Вакуума»
+    // подхватывает её на ходу, хвост рецепта читает значение в момент запуска.
+    void vacuumContinuousPumpingChanged(bool enabled);
 
 private:
     // ── Recipe builders ──────────────────────────────────────────────────────

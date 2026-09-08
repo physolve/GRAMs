@@ -30,8 +30,31 @@ void PumpRateWatchdog::start()
     beginWindow();
 }
 
+// Давление уже на цели этапа или ниже — откачивать нечего. dP/dt в этой точке
+// не характеризует насос: он может стоять на минимуме потока, а показание —
+// колебаться около нуля. Проверять здесь нечего, и любой вердикт «мала» был бы
+// ложным.
+bool PumpRateWatchdog::atTarget() const
+{
+    if (!pressurePa)
+        return false;
+    const Reading r = pressurePa();
+    // Только достоверное показание: мёртвый датчик, отдающий 0, иначе выглядел
+    // бы как достигнутая цель и молча снимал проверку откачки.
+    return r.isValid() && r.value <= targetPa;
+}
+
 void PumpRateWatchdog::beginWindow()
 {
+    // Проверка dP/dt только выше цели (см. targetPa в заголовке).
+    if (atTarget()) {
+        m_timer.stop();
+        // Отложенный emit: beginWindow вызывается в том числе из start(), а
+        // done прямо из start() пришёл бы раньше, чем вызывающая сторона
+        // успела войти в своё ожидание.
+        QTimer::singleShot(0, this, [this] { emit done(true); });
+        return;
+    }
     m_elapsed = 0;
     // Первое окно открывается только после «мёртвой зоны»: пока насос выходит
     // на режим, ДВ301 стоит в over-range и dP/dt ложно мала (ложный отказ).
@@ -48,6 +71,13 @@ void PumpRateWatchdog::beginWindow()
 
 void PumpRateWatchdog::tick()
 {
+    // Цель могла быть достигнута прямо в «мёртвой зоне» или посреди окна —
+    // тогда окно досчитывать незачем: откачка очевидно шла.
+    if (atTarget()) {
+        m_timer.stop();
+        emit done(true);
+        return;
+    }
     if (m_delayLeft > 0) {
         if (--m_delayLeft == 0)
             m_p0 = pressurePa ? pressurePa().value : 0.0;  // отсчёт окна с этой точки
@@ -121,6 +151,11 @@ QString nodeTitle(VacuumNode node)
     case VacuumNode::TurboSwitch:   return QStringLiteral("12.2 переключение К176→К179");
     case VacuumNode::TurboPumping:  return QStringLiteral("12.2 турбо-откачка");
     case VacuumNode::TurboFallback: return QStringLiteral("12.2 откат на форвакуум");
+    case VacuumNode::GeneralPumping: return QStringLiteral("11.7б общая откачка");
+    case VacuumNode::LeakTest:      return QStringLiteral("11.8 герметичность");
+    case VacuumNode::FinalPrep:     return QStringLiteral("11.9 подготовка финальной откачки");
+    case VacuumNode::FinalPumping:  return QStringLiteral("11.10 финальная откачка камеры");
+    case VacuumNode::FinalClose:    return QStringLiteral("11.11 финальное закрытие");
     case VacuumNode::ContinuousPumping: return QStringLiteral("Непрерывная откачка");
     }
     return QStringLiteral("этап");
@@ -420,7 +455,7 @@ ExecutableItem buildBlockC(const Storage<VacuumRunState>& st,
 // ── Ф3 «Второй тракт, проход 1» (s20–s24) ─────────────────────────────────────
 // Страж s20 (21009, легаси cond_phase_9 = flagIncludeSecTract,
 // Conditions.cpp:334), false → goto_5: пропуск всей фазы.
-// s21: 11192 (SL2) → s22: 11179 (SL1) time_5000 → s23: 10192 → s24: 10179.
+// s21: 11192 (SL1) → s22: 11179 (SL2) time_5000 → s23: 10192 → s24: 10179.
 // Открытие К179 определено ниже, вместе с процедурой 12.2: Ф3 обязана
 // проходить через ту же единственную точку, что и турбо-переход.
 ExecutableItem openTurboValve(const Storage<VacuumRunState>& st,
@@ -441,7 +476,7 @@ ExecutableItem secondTractGroup(const Storage<VacuumRunState>& st,
             if (ctx.onNode) ctx.onNode(VacuumNode::F3SecondTract, NodeState::Running);
             if (!ctx.setValve || !ctx.setValve(true, VacuumValve::K192))
                 return SetupResult::StopWithError;         // s21: 11192
-            st->sl2Open = true;
+            st->k192Open = true;
             // s22: 11179 — К179 это КЛАПАН ТУРБОНАСОСА. Открывается только
             // через единую точку openTurboValve, которая гарантирует закрытый
             // К176 (REQ-008). Раньше здесь был прямой setValve в обход проверки.
@@ -449,22 +484,22 @@ ExecutableItem secondTractGroup(const Storage<VacuumRunState>& st,
         }),
         openTurboValve(st, ctx, /*requireConfirm=*/false),
         QSyncTask([st]() -> bool {
-            st->sl1Open = st->k179Open;   // закрытием ниже управляет эта группа
+            st->k179TractOpen = st->k179Open;   // закрытием ниже управляет эта группа
             return true;
         }),
         pausableDelay(st, ctx, ctx.reliefDwellSec, iter),  // s22: выдержка time_5000
-        onGroupDone([st, ctx](DoneWith w) {                // s23–s24: SL2, затем SL1
+        onGroupDone([st, ctx](DoneWith w) {                // s23–s24: К192, затем К179
             if (ctx.secondTract && ctx.onNode)
                 ctx.onNode(VacuumNode::F3SecondTract, doneToNode(w));
-            if (st->sl2Open) {
+            if (st->k192Open) {
                 if (ctx.setValve)
                     ctx.setValve(false, VacuumValve::K192);
-                st->sl2Open = false;
+                st->k192Open = false;
             }
-            if (st->sl1Open) {
+            if (st->k179TractOpen) {
                 if (ctx.setValve)
                     ctx.setValve(false, VacuumValve::K179);
-                st->sl1Open = false;
+                st->k179TractOpen = false;
                 st->k179Open = false;
             }
         })
@@ -598,6 +633,7 @@ ExecutableItem foreVacPumpToTarget(const Storage<VacuumRunState>& st,
                   w.startDelaySec = ctx.pumpCheckDelaySec;
                   w.windowSec    = ctx.pumpCheckWindowSec;
                   w.minDropPa   = ctx.pumpMinDropPa;
+                  w.targetPa    = ctx.targetVacPa;
                   w.pauseBus    = ctx.pauseBus;
                   w.operatorBus = ctx.operatorBus;
               }))
@@ -744,8 +780,8 @@ ExecutableItem buildForevacEF(const Storage<VacuumRunState>& st,
 //
 // Топология (подтверждена на стенде):
 //   магистраль ──┬── AR6 / К176 ── форвакуумный насос
-//                └── SL1 / К179 ── турбомолекулярный насос ── ДВ302 ──
-//                                   SL2 / К192 ── выход второго тракта
+//                └── SL2 / К179 ── турбомолекулярный насос ── ДВ302 ──
+//                                   SL1 / К192 ── выход второго тракта
 //
 // К176 и К179 НИКОГДА не открыты одновременно (REQ-008/084): турбонасос,
 // запущенный на форвакуумный тракт, выходит из строя. Это не «сбой режима»,
@@ -852,45 +888,60 @@ ExecutableItem overRangeGuard(const VacuumTreeContext& ctx,
 // requireConfirm = false (Ф3): К176 в этой ветке не открывался ни разу, и до
 // появления readback на стенде Ф3 обязана работать как прежде. Если шов задан,
 // проверка выполняется и здесь — строго безопаснее прежнего поведения.
+//
+// k176Open — то, что рецепт знает о состоянии К176: nullptr означает «состояние
+// неизвестно» (хвост непрерывной откачки живёт вне Storage повтора), и тогда
+// закрытие выполняется безусловно — оно идемпотентно.
+bool connectTurboPump(const VacuumTreeContext& ctx, bool requireConfirm, bool* k176Open)
+{
+    // 1. К176 обязан быть закрыт (REQ-008).
+    if (!k176Open || *k176Open) {
+        if (!ctx.setValve || !ctx.setValve(false, VacuumValve::K176)) {
+            if (ctx.onFailure)
+                ctx.onFailure(QStringLiteral(
+                    "Переход на турбо: не удалось закрыть К176 — К179 не открывается"));
+            return false;
+        }
+        if (k176Open)
+            *k176Open = false;
+    }
+
+    // 2. Подтверждение ФАКТА закрытия, а не приёма команды (REQ-082).
+    if (ctx.confirmValve) {
+        if (!ctx.confirmValve(false, VacuumValve::K176)) {
+            if (ctx.onFailure)
+                ctx.onFailure(QStringLiteral(
+                    "Переход на турбо: закрытие К176 не подтверждено чтением "
+                    "состояния — К179 НЕ открыт (REQ-082)"));
+            return false;
+        }
+    } else if (requireConfirm) {
+        if (ctx.onFailure)
+            ctx.onFailure(QStringLiteral(
+                "Переход на турбо: нет шва подтверждения состояния клапана — "
+                "REQ-082 непроверяем, К179 НЕ открыт"));
+        return false;
+    }
+
+    // 3. Только теперь турбоклапан.
+    if (!ctx.setValve || !ctx.setValve(true, VacuumValve::K179)) {
+        if (ctx.onFailure)
+            ctx.onFailure(QStringLiteral("Переход на турбо: К179 не открылся"));
+        return false;
+    }
+    return true;
+}
+
 ExecutableItem openTurboValve(const Storage<VacuumRunState>& st,
                               const VacuumTreeContext& ctx,
                               bool requireConfirm)
 {
     return QSyncTask([st, ctx, requireConfirm]() -> bool {
-        // 1. К176 обязан быть закрыт (REQ-008).
-        if (st->k176Open) {
-            if (!ctx.setValve || !ctx.setValve(false, VacuumValve::K176)) {
-                if (ctx.onFailure)
-                    ctx.onFailure(QStringLiteral(
-                        "Переход на турбо: не удалось закрыть К176 — К179 не открывается"));
-                return false;
-            }
-            st->k176Open = false;
-        }
-
-        // 2. Подтверждение ФАКТА закрытия, а не приёма команды (REQ-082).
-        if (ctx.confirmValve) {
-            if (!ctx.confirmValve(false, VacuumValve::K176)) {
-                if (ctx.onFailure)
-                    ctx.onFailure(QStringLiteral(
-                        "Переход на турбо: закрытие К176 не подтверждено чтением "
-                        "состояния — К179 НЕ открыт (REQ-082)"));
-                return false;
-            }
-        } else if (requireConfirm) {
-            if (ctx.onFailure)
-                ctx.onFailure(QStringLiteral(
-                    "Переход на турбо: нет шва подтверждения состояния клапана — "
-                    "REQ-082 непроверяем, К179 НЕ открыт"));
+        bool k176Open = st->k176Open;
+        const bool ok = connectTurboPump(ctx, requireConfirm, &k176Open);
+        st->k176Open = k176Open;
+        if (!ok)
             return false;
-        }
-
-        // 3. Только теперь турбоклапан.
-        if (!ctx.setValve || !ctx.setValve(true, VacuumValve::K179)) {
-            if (ctx.onFailure)
-                ctx.onFailure(QStringLiteral("Переход на турбо: К179 не открылся"));
-            return false;
-        }
         st->k179Open = true;
         if (requireConfirm && ctx.onTurboSwitched)
             ctx.onTurboSwitched(true);
@@ -936,8 +987,21 @@ ExecutableItem turboFallback(const Storage<VacuumRunState>& st,
 // Критерий завершения турбо-откачки здесь — отведённое время: целевое давление
 // targetVAC и EvacTime относятся к финальной откачке 11.9–11.11, которая в
 // объём этой работы не входит.
+// Параметры вызова процедуры. Значения по умолчанию воспроизводят прежнее
+// поведение единственного вызова из цепочки Ф, поэтому существующие тесты
+// 12.2 остаются в силе без правок.
+struct PumpDownOptions {
+    // Длительность фазы откачки после перехода на К179. <0 — ctx.turboTimeoutSec.
+    // 11.7б задаёт testEvacTimeSec (REQ-057), 11.10 — evacTimeSec (REQ-068).
+    int  pumpingSec = -1;
+    // Закрыть оба насосных клапана по завершении. 11.9→11.10 идут на ОДНОМ
+    // насосе, и закрытие между ними сорвало бы набранный вакуум.
+    bool closePumps = true;
+};
+
 ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
-                                      const VacuumTreeContext& ctx)
+                                      const VacuumTreeContext& ctx,
+                                      const PumpDownOptions& opts = {})
 {
     // Предикат гейта: У1 и У3 сразу; У2 «непрерывно» обеспечивает
     // pausableHoldUntil, обнуляя счётчик при срыве условия.
@@ -968,6 +1032,8 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
     };
 
     auto fellBack = std::make_shared<bool>(false);
+    const int pumpingSec = opts.pumpingSec < 0 ? ctx.turboTimeoutSec : opts.pumpingSec;
+    const bool closePumps = opts.closePumps;
 
     return Group {
         sequential,
@@ -1043,10 +1109,10 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
                                     .arg(ctx.turboReturnPressurePa));
                 return SetupResult::Continue;
             }),
-            TickerTask([ctx, fellBack](PausableTicker& t) {
+            TickerTask([ctx, fellBack, pumpingSec](PausableTicker& t) {
                 t.intervalMs = ctx.tickIntervalMs;
                 t.pauseBus   = ctx.pauseBus;
-                t.isComplete = [ctx, fellBack](int elapsed) -> bool {
+                t.isComplete = [ctx, fellBack, pumpingSec](int elapsed) -> bool {
                     const Reading p302 = ctx.pressureTurboPa
                                              ? ctx.pressureTurboPa()
                                              : Reading(0.0, Quality::NoResponse);
@@ -1061,7 +1127,7 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
                         *fellBack = true;
                         return true;
                     }
-                    return elapsed >= ctx.turboTimeoutSec;
+                    return elapsed >= pumpingSec;
                 };
             })
         }),
@@ -1080,7 +1146,13 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
         // (система вернулась на форвакуум), но по завершении этапа тракт всё
         // равно приводится в закрытое состояние; непрерывная откачка, если она
         // включена, откроет его заново своим хвостом.
-        onGroupDone([st, ctx](DoneWith) {
+        onGroupDone([st, ctx, closePumps](DoneWith w) {
+            // closePumps = false оставляет активный насос работать — но только
+            // при штатном исходе. Отмена и ошибка обязаны привести тракт в
+            // закрытое состояние в любом случае, иначе останов режима оставил
+            // бы установку с открытым насосным клапаном.
+            if (!closePumps && w == DoneWith::Success)
+                return;
             if (st->k179Open) {
                 if (ctx.setValve)
                     ctx.setValve(false, VacuumValve::K179);
@@ -1093,6 +1165,402 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
             }
         })
     };
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Этапы 11.7б / 11.8 / 11.9–11.11 — тракт до камеры (REQ-055…073)
+// ═════════════════════════════════════════════════════════════════════════════
+//
+// До этих этапов режим физически ничего не откачивал: цепочка Ф закрывает за
+// собой К151 (11.7), К178 живёт только импульсом, а К171/К173 не открывались
+// вовсе — турбонасос подключался к отсечённой магистрали. Здесь собирается
+// настоящий тракт, и набор клапанов приходит ИЗ КОНФИГУРАЦИИ (REQ-055),
+// а не из кода: см. profile/GRAMsPfp.json → vacuumTract.
+
+// Открыть набор клапанов тракта в порядке, заданном конфигурацией. Порядок —
+// часть требования: REQ-055 требует открыть К171 и К173 ДО форвакуумного
+// тракта, и переставить их местами нельзя. Первый отказ останавливает этап:
+// открывать остаток на заведомо неполном тракте бессмысленно и небезопасно.
+bool openTract(const Storage<VacuumRunState>& st, const VacuumTreeContext& ctx,
+               const QStringList& valves)
+{
+    for (const QString& v : valves) {
+        if (!ctx.setValve || !ctx.setValve(true, v))
+            return false;
+        st->tractOpen.append(v);
+    }
+    return true;
+}
+
+// Закрыть всё, что этап открыл, обратным обходом (REQ-070/071). Обратный
+// порядок не косметика: насосный конец тракта отсекается раньше, чем
+// разъединяются объёмы между собой. Групповой команды у контроллера нет —
+// ValveControl пишет DO-регистр целиком на каждую запись, — поэтому каждое
+// закрытие идёт отдельным вызовом шва и, значит, отдельной строкой журнала,
+// чего REQ-071 и требует даже от групповой команды.
+void closeTract(const Storage<VacuumRunState>& st, const VacuumTreeContext& ctx)
+{
+    while (!st->tractOpen.isEmpty()) {
+        const QString v = st->tractOpen.takeLast();
+        if (ctx.setValve)
+            ctx.setValve(false, v);
+    }
+}
+
+// Применимые клапаны блока C по флагам исключения (REQ-055 «применимые клапаны
+// группы C»). Порядок C1→C2→C3 совпадает с 11.6, чтобы журналы двух этапов
+// читались одинаково.
+QStringList blockCValves(const VacuumTreeContext& ctx)
+{
+    QStringList out;
+    if (!ctx.skipRK300) out << VacuumValve::K135;   // C1
+    if (!ctx.skipRK50)  out << VacuumValve::K133;   // C2
+    if (!ctx.skipRK10)  out << VacuumValve::K131;   // C3
+    return out;
+}
+
+// Этап не выполняется и почему. Пропуск отмечается И в развёртке (Skipped), И
+// отдельным швом с текстом: без текста оператор увидит серую строку и не
+// узнает, что именно не сконфигурировано.
+void skipStage(const VacuumTreeContext& ctx, VacuumNode node, const QString& reason)
+{
+    if (ctx.onNode)         ctx.onNode(node, NodeState::Skipped);
+    if (ctx.onStageSkipped) ctx.onStageSkipped(node, reason);
+}
+
+// ── 11.7б: общая откачка с подключением турбонасоса (REQ-055–058) ─────────────
+//
+// Порядок из ТЗ: К171 и К173 → К151 и применимые C → К178 → К176 → гейт
+// ≤ turboSwitchPressurePa с удержанием → переход на К179 → testEvacTimeSec.
+// Гейт и переход не дублируются здесь намеренно: это ровно шаги 1–3
+// PumpDownProcedure (REQ-056 «только после этого разрешается переход»), и
+// второй экземпляр той же логики разошёлся бы с первым при первой же правке.
+ExecutableItem buildGeneralPumping(const Storage<VacuumRunState>& st,
+                                   const VacuumTreeContext& ctx)
+{
+    const bool configured = !ctx.generalPumpingValves.isEmpty();
+
+    PumpDownOptions opts;
+    opts.pumpingSec = ctx.testEvacTimeSec;   // REQ-057
+    opts.closePumps = true;                  // REQ-058
+
+    return Group {
+        sequential,
+        onGroupSetup([st, ctx, configured]() -> SetupResult {
+            if (!configured) {
+                skipStage(ctx, VacuumNode::GeneralPumping,
+                          QStringLiteral("11.7б: набор клапанов общей откачки не задан "
+                                         "в профиле (vacuumTract.generalPumping) — "
+                                         "этап не выполнялся"));
+                return SetupResult::StopWithSuccess;
+            }
+            if (ctx.onNode)  ctx.onNode(VacuumNode::GeneralPumping, NodeState::Running);
+            if (ctx.onLabel) ctx.onLabel(QStringLiteral("11.7б: общая откачка"));
+
+            // REQ-055: сначала тракт (К171, К173, К151), потом применимые C.
+            if (!openTract(st, ctx, ctx.generalPumpingValves)
+                || !openTract(st, ctx, blockCValves(ctx))) {
+                if (ctx.onFailure)
+                    ctx.onFailure(QStringLiteral("11.7б: тракт общей откачки не собран — "
+                                                 "клапан не открылся"));
+                return SetupResult::StopWithError;
+            }
+            // REQ-056: форвакуумный тракт открывается ПОСЛЕ тракта, не раньше.
+            // К176 откроет сама PumpDownProcedure — здесь только магистраль.
+            if (!ctx.setValve(true, VacuumValve::K178)) {
+                if (ctx.onFailure)
+                    ctx.onFailure(QStringLiteral("11.7б: К178 (магистраль) не открылся"));
+                return SetupResult::StopWithError;
+            }
+            st->tractOpen.append(VacuumValve::K178);
+            st->k178Open = true;
+            return SetupResult::Continue;
+        }),
+        settlePause(ctx),
+        buildPumpDownProcedure(st, ctx, opts),
+        onGroupDone([st, ctx, configured](DoneWith w) {   // REQ-058
+            closeTract(st, ctx);
+            st->k178Open = false;
+            if (configured && ctx.onNode)
+                ctx.onNode(VacuumNode::GeneralPumping, doneToNode(w));
+        })
+    };
+}
+
+// ── 11.8: проверка герметичности (REQ-059–063) ────────────────────────────────
+//
+// Закрыть всё (это уже сделал предыдущий этап), открыть только контрольный
+// участок, снять начальные показания, выдержать leakTestDurationSec, сравнить
+// прирост с dP_leak_max ПОКАНАЛЬНО. Превышение хотя бы по одному каналу —
+// LEAK_DETECTED; в режиме «Вакуум» это ПРЕДУПРЕЖДЕНИЕ, режим продолжается
+// (REQ-062), поэтому этап всегда завершается успехом группы.
+//
+// Этап пропускается, если не задан участок ИЛИ не заданы каналы с порогами.
+// Молча «пройти» его нельзя: непроведённая проверка герметичности, показанная
+// как успешная, — худший из возможных исходов этого этапа.
+ExecutableItem buildLeakTest(const Storage<VacuumRunState>& st,
+                             const VacuumTreeContext& ctx)
+{
+    const bool configured = !ctx.leakTestValves.isEmpty() && !ctx.leakChannels.isEmpty();
+    auto initial = std::make_shared<QList<Reading>>();
+
+    return Group {
+        sequential,
+        onGroupSetup([st, ctx, configured, initial]() -> SetupResult {
+            if (!configured) {
+                const QString why =
+                    ctx.leakTestValves.isEmpty()
+                        ? QStringLiteral("11.8: участок проверки не задан в профиле "
+                                         "(vacuumTract.leakTest) — проверка НЕ проводилась")
+                        : QStringLiteral("11.8: порог dP_leak_max не задан в профиле "
+                                         "(vacuumSafety.dP_leak_max) — проверка НЕ проводилась");
+                skipStage(ctx, VacuumNode::LeakTest, why);
+                return SetupResult::StopWithSuccess;
+            }
+            if (ctx.onNode)  ctx.onNode(VacuumNode::LeakTest, NodeState::Running);
+            if (ctx.onLabel)
+                ctx.onLabel(QStringLiteral("11.8: герметичность — выдержка %1 с")
+                                .arg(ctx.leakTestDurationSec));
+
+            if (!openTract(st, ctx, ctx.leakTestValves)) {
+                if (ctx.onFailure)
+                    ctx.onFailure(QStringLiteral("11.8: участок проверки не собран — "
+                                                 "клапан не открылся"));
+                return SetupResult::StopWithError;
+            }
+            initial->clear();                       // REQ-060: начальные давления
+            for (const LeakChannel& ch : ctx.leakChannels)
+                initial->append(ch.read ? ch.read() : Reading(0.0, Quality::NoResponse));
+            return SetupResult::Continue;
+        }),
+        settlePause(ctx),
+        // Выдержка идёт через тикер: этап обязан вставать на паузу и отменяться,
+        // как всякое ожидание рецепта (см. src/actions/README.md).
+        TickerTask([ctx](PausableTicker& t) {
+            t.intervalMs = ctx.tickIntervalMs;
+            t.pauseBus   = ctx.pauseBus;
+            const int hold = ctx.leakTestDurationSec;
+            t.isComplete = [hold](int elapsed) { return elapsed >= hold; };
+        }),
+        QSyncTask([ctx, configured, initial]() -> bool {
+            if (!configured)
+                return true;
+            QStringList leaked;
+            QStringList unmeasured;
+            for (int i = 0; i < ctx.leakChannels.size(); ++i) {
+                const LeakChannel& ch = ctx.leakChannels.at(i);
+                const Reading before = i < initial->size() ? initial->at(i)
+                                                           : Reading(0.0, Quality::NoResponse);
+                const Reading after  = ch.read ? ch.read() : Reading(0.0, Quality::NoResponse);
+                // Недостоверное показание на любом конце выдержки означает, что
+                // канал НЕ проверен. Считать его герметичным нельзя: ноль с
+                // мёртвого датчика выглядит как идеальный результат.
+                if (!before.isValid() || !after.isValid()) {
+                    unmeasured << ch.name;
+                    continue;
+                }
+                const double rise = after.value - before.value;
+                if (rise > ch.maxRise)
+                    leaked << QStringLiteral("%1 +%2 (порог %3)")
+                                  .arg(ch.name)
+                                  .arg(rise,       0, 'g', 3)
+                                  .arg(ch.maxRise, 0, 'g', 3);
+            }
+            if (!leaked.isEmpty() && ctx.onWarning)          // REQ-062
+                ctx.onWarning(QStringLiteral("LEAK_DETECTED — проверка герметичности "
+                                             "не пройдена: %1. Режим продолжается")
+                                  .arg(leaked.join(QStringLiteral("; "))));
+            if (!unmeasured.isEmpty() && ctx.onWarning)
+                ctx.onWarning(QStringLiteral("11.8: каналы %1 не проверены — "
+                                             "недостоверное показание")
+                                  .arg(unmeasured.join(QStringLiteral(", "))));
+            if (leaked.isEmpty() && unmeasured.isEmpty() && ctx.onLabel)  // REQ-061
+                ctx.onLabel(QStringLiteral("11.8: герметичность подтверждена"));
+            return true;      // REQ-062: предупреждение, а не остановка режима
+        }),
+        onGroupDone([st, ctx, configured](DoneWith w) {
+            closeTract(st, ctx);
+            if (configured && ctx.onNode)
+                ctx.onNode(VacuumNode::LeakTest, doneToNode(w));
+        })
+    };
+}
+
+// ── 11.9–11.11: подготовка, финальная откачка камеры, финальное закрытие ──────
+//
+// REQ-064 и REQ-066 задают ОДИН и тот же набор клапанов (К173, К151, К171,
+// К178) плюс активный насосный, поэтому подготовка и откачка идут одной
+// группой на одном насосе: закрыть насос между ними означало бы сорвать
+// набранный вакуум и начать заново.
+//
+// REQ-067: если targetVAC лежит в форвакуумной области (≥ порога перехода),
+// переход на К179 не обязателен — качаем через К176 и контролируем ДВ301.
+// Иначе идёт полная PumpDownProcedure с контролем по ДВ302 (REQ-069).
+ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
+                                 const VacuumTreeContext& ctx)
+{
+    const bool configured = !ctx.finalPumpingValves.isEmpty();
+    // Выбор области и, вместе с ним, выбор датчика контроля (REQ-069).
+    const bool foreVacArea = ctx.targetVacuumPa >= ctx.turboSwitchPressurePa;
+    const std::function<Reading()> targetSeam =
+        foreVacArea ? ctx.pressureVacPa : ctx.pressureTurboPa;
+    const QString targetSensor = foreVacArea ? QStringLiteral("ДВ301")
+                                             : QStringLiteral("ДВ302");
+
+    PumpDownOptions opts;
+    opts.pumpingSec = ctx.evacTimeSec;   // REQ-068: время — условие завершения
+    opts.closePumps = false;             // закрытие — задача 11.11 ниже
+
+    GroupItems items { sequential };
+
+    // ── 11.9: подготовка тракта (REQ-064) ────────────────────────────────────
+    items << onGroupSetup([st, ctx, configured]() -> SetupResult {
+        if (!configured) {
+            skipStage(ctx, VacuumNode::FinalPrep,
+                      QStringLiteral("11.9/11.10: набор клапанов финальной откачки "
+                                     "не задан в профиле (vacuumTract.finalPumping) — "
+                                     "камера НЕ откачивалась"));
+            skipStage(ctx, VacuumNode::FinalPumping,
+                      QStringLiteral("11.10: пропущена вместе с 11.9"));
+            return SetupResult::StopWithSuccess;
+        }
+        if (ctx.onNode)  ctx.onNode(VacuumNode::FinalPrep, NodeState::Running);
+        if (ctx.onLabel) ctx.onLabel(QStringLiteral("11.9: подготовка финальной откачки камеры"));
+        if (!openTract(st, ctx, ctx.finalPumpingValves)) {
+            if (ctx.onFailure)
+                ctx.onFailure(QStringLiteral("11.9: тракт до камеры не собран — "
+                                             "клапан не открылся"));
+            if (ctx.onNode) ctx.onNode(VacuumNode::FinalPrep, NodeState::Error);
+            return SetupResult::StopWithError;
+        }
+        // REQ-066 называет К178 в минимальном наборе явно. Если конфигурация
+        // его уже содержит — второй раз не открываем и в список не дублируем.
+        if (!st->tractOpen.contains(VacuumValve::K178)) {
+            if (!ctx.setValve(true, VacuumValve::K178)) {
+                if (ctx.onFailure)
+                    ctx.onFailure(QStringLiteral("11.9: К178 (магистраль) не открылся"));
+                if (ctx.onNode) ctx.onNode(VacuumNode::FinalPrep, NodeState::Error);
+                return SetupResult::StopWithError;
+            }
+            st->tractOpen.append(VacuumValve::K178);
+        }
+        st->k178Open = true;
+        if (ctx.onNode) ctx.onNode(VacuumNode::FinalPrep, NodeState::Success);
+        return SetupResult::Continue;
+    });
+    items << settlePause(ctx);
+
+    // ── 11.10: собственно откачка (REQ-065–069) ──────────────────────────────
+    items << QSyncTask([ctx, foreVacArea, targetSensor]() -> bool {
+        if (ctx.onNode)  ctx.onNode(VacuumNode::FinalPumping, NodeState::Running);
+        if (ctx.onLabel)
+            ctx.onLabel(QStringLiteral("11.10: финальная откачка камеры — %1 с, "
+                                       "цель %2 Па по %3 (%4 область)")
+                            .arg(ctx.evacTimeSec)
+                            .arg(ctx.targetVacuumPa)
+                            .arg(targetSensor)
+                            .arg(foreVacArea ? QStringLiteral("форвакуумная")
+                                             : QStringLiteral("турбомолекулярная")));
+        return true;
+    });
+
+    if (foreVacArea) {
+        // REQ-067: турбо не обязателен. Открываем К176 и качаем отведённое
+        // время; гейт перехода не набирается вовсе — К179 не открывается.
+        items << Group {
+            sequential,
+            onGroupSetup([st, ctx]() -> SetupResult {
+                if (!ctx.setValve || !ctx.setValve(true, VacuumValve::K176)) {
+                    if (ctx.onFailure)
+                        ctx.onFailure(QStringLiteral("11.10: К176 (форвакуумный насос) "
+                                                     "не открылся"));
+                    return SetupResult::StopWithError;
+                }
+                st->k176Open = true;
+                return SetupResult::Continue;
+            }),
+            TickerTask([ctx](PausableTicker& t) {
+                t.intervalMs = ctx.tickIntervalMs;
+                t.pauseBus   = ctx.pauseBus;
+                const int evac = ctx.evacTimeSec;
+                t.isComplete = [ctx, evac](int elapsed) {
+                    if (ctx.onTurboProgress)
+                        ctx.onTurboProgress(VacuumNode::FinalPumping,
+                                            ctx.pressureVacPa ? ctx.pressureVacPa()
+                                                              : Reading(0.0, Quality::NoResponse),
+                                            ctx.pressureTurboPa ? ctx.pressureTurboPa()
+                                                                : Reading(0.0, Quality::NoResponse),
+                                            0, elapsed);
+                    return elapsed >= evac;
+                };
+            })
+        };
+    } else {
+        items << buildPumpDownProcedure(st, ctx, opts);
+    }
+
+    // ── Оценка результата: достигнут ли targetVAC (REQ-069) ──────────────────
+    //
+    // maxAdditionalEvacTime сознательно НЕ реализован: продление отменено
+    // бюджетом времени прогона (согласованная дивергенция от REQ-033/069,
+    // см. CLAUDE.md и docs/regimes/vacuum.md). Недостигнутая цель — не отказ
+    // режима, а зафиксированная причина завершения: этап закрывает тракт
+    // штатно и сообщает оператору, чего именно не хватило.
+    items << QSyncTask([ctx, targetSeam, targetSensor]() -> bool {
+        const Reading r = targetSeam ? targetSeam()
+                                     : Reading(0.0, Quality::NoResponse);
+        if (r.isValid() && r.value <= ctx.targetVacuumPa) {
+            if (ctx.onLabel)
+                ctx.onLabel(QStringLiteral("11.10: цель достигнута — %1 %2 Па ≤ %3 Па")
+                                .arg(targetSensor).arg(r.value, 0, 'g', 3)
+                                .arg(ctx.targetVacuumPa));
+            return true;
+        }
+        if (ctx.onFailure)
+            ctx.onFailure(QStringLiteral("11.10: время откачки (%1 с) истекло, цель "
+                                         "%2 Па не достигнута — %3 %4 Па (%5)")
+                              .arg(ctx.evacTimeSec)
+                              .arg(ctx.targetVacuumPa)
+                              .arg(targetSensor)
+                              .arg(r.value, 0, 'g', 3)
+                              .arg(qualityName(r.quality)));
+        return true;   // не отказ режима: причина записана, идём в 11.11
+    });
+
+    // ── 11.11: финальное закрытие (REQ-070–073) ──────────────────────────────
+    items << onGroupDone([st, ctx, configured, targetSeam, targetSensor](DoneWith w) {
+        if (!configured)
+            return;
+        if (ctx.onNode) {
+            ctx.onNode(VacuumNode::FinalPumping, doneToNode(w));
+            ctx.onNode(VacuumNode::FinalClose, NodeState::Running);
+        }
+        // Насосные клапаны закрываются первыми и по отдельности: активный насос
+        // обязан быть отсечён от тракта раньше, чем тракт начнёт разбираться.
+        if (st->k179Open) {
+            if (ctx.setValve) ctx.setValve(false, VacuumValve::K179);
+            st->k179Open = false;
+        }
+        if (st->k176Open) {
+            if (ctx.setValve) ctx.setValve(false, VacuumValve::K176);
+            st->k176Open = false;
+        }
+        closeTract(st, ctx);                 // REQ-070/071, каждый клапан отдельно
+        st->k178Open = false;
+        st->k151Open = false;
+        // REQ-072: финальное показание контрольного датчика в журнал.
+        if (ctx.onLabel) {
+            const Reading r = targetSeam ? targetSeam()
+                                         : Reading(0.0, Quality::NoResponse);
+            ctx.onLabel(QStringLiteral("11.11: клапаны закрыты, финальное %1 %2 Па (%3)")
+                            .arg(targetSensor).arg(r.value, 0, 'g', 3)
+                            .arg(qualityName(r.quality)));
+        }
+        if (ctx.onNode)
+            ctx.onNode(VacuumNode::FinalClose, doneToNode(w));
+    });
+
+    return Group(items);
 }
 
 ExecutableItem executionPhase(const Storage<VacuumRunState>& st,
@@ -1135,28 +1603,77 @@ ExecutableItem executionPhase(const Storage<VacuumRunState>& st,
     // ради заведомо известного исхода бессмысленно, а «этап не выполнялся» и
     // «этап не смог» — разные вещи для оператора и для журнала.
     const bool turboPossible = ctx.turboTract && ctx.foreVacuum && bool(ctx.pressureTurboPa);
+
+    // 11.7б: общая откачка — тракт К171/К173/К151 + применимые C, магистраль
+    // К178, затем PumpDownProcedure и testEvacTimeSec на турбонасосе.
+    // Именно здесь режим впервые качает НЕ отсечённую магистраль, а систему.
     items << settlePause(ctx);
     items << skipUnlessNode(ctx, VacuumNode::TurboGate, turboPossible,
-                            { buildPumpDownProcedure(st, ctx) });
+                            { buildGeneralPumping(st, ctx) });
+
+    // 11.8: герметичность. Идёт независимо от турбо-тракта: этап работает на
+    // закрытых насосах и меряет прирост давления, а не откачивает.
+    items << settlePause(ctx);
+    items << buildLeakTest(st, ctx);
+
+    // 11.9–11.11: подготовка тракта до камеры, финальная откачка, закрытие.
+    // Турбо-область требует ДВ302 и разрешённого тракта; форвакуумная область
+    // (REQ-067) обходится К176 и потому от turboPossible не зависит.
+    const bool finalNeedsTurbo = ctx.targetVacuumPa < ctx.turboSwitchPressurePa;
+    const bool finalPossible    = !finalNeedsTurbo || turboPossible;
+    items << settlePause(ctx);
+    // Узлы FinalPrep/FinalPumping/FinalClose эмитит сама группа — обернуть её
+    // в skipUnlessNode нельзя, иначе те же узлы получат по два состояния
+    // подряд и развёртка начнёт мигать. Пропуск объявляется явно и с причиной.
+    items << Group {
+        sequential,
+        onGroupSetup([ctx, finalPossible]() -> SetupResult {
+            if (finalPossible)
+                return SetupResult::Continue;
+            skipStage(ctx, VacuumNode::FinalPrep,
+                      QStringLiteral("11.9/11.10: цель %1 Па лежит в турбомолекулярной "
+                                     "области, а тракт турбонасоса недоступен "
+                                     "(ДВ302 или Advanced-опция) — камера НЕ откачивалась")
+                          .arg(ctx.targetVacuumPa));
+            skipStage(ctx, VacuumNode::FinalPumping,
+                      QStringLiteral("11.10: пропущена вместе с 11.9"));
+            return SetupResult::StopWithSuccess;
+        }),
+        buildFinalPumping(st, ctx)
+    };
 
     return Group(items);
 }
 
 // ── Непрерывная откачка (опция) ───────────────────────────────────────────────
-// «В конце автоматического режима оставить весь тракт открытым для
-// продолжительной откачки». Выполняется ОДИН раз — после последнего повтора,
-// вне тела For, поэтому повтор N+1 никогда не стартует с открытым К176.
+// «В конце автоматического режима оставить рабочий тракт открытым под
+// продолжительную откачку ТУРБОМОЛЕКУЛЯРНЫМ насосом». Выполняется ОДИН раз —
+// после последнего повтора, вне тела For, поэтому повтор N+1 никогда не
+// стартует с открытым насосным клапаном.
 //
-// Порядок открытия — от объёмов к насосу (объёмы C → К151 → магистраль К178 →
-// насос К176): насос подключается последним, к уже собранному тракту.
+// Тракт, который остаётся открытым (порядок — от объёмов к насосу):
+//   К151 (R3)  — камера F + линия E;
+//   эталонный резервуар B — собственного клапана не имеет, он на магистрали
+//                 и попадает в тракт вместе с ней;
+//   К178 (AR5) — бочка / магистраль;
+//   К179 (SL2) — турбомолекулярный насос, подключается последним.
+// Форвакуумный К176 (AR6) при этом ЗАКРЫТ — интерлок REQ-008/084; закрытие
+// и подтверждение readback идут через ту же connectTurboPump, что и переход
+// 12.2, поэтому обойти проверку состояния К176 здесь нельзя.
+//
 // Сознательно НЕ открываются:
-//   К118 (AR4) — сброс в атмосферу, открытие сорвало бы вакуум;
-//   К179 (SL1) — турбо, интерлок с К176 (см. шапку файла).
+//   К118 (AR4)       — сброс в атмосферу, открытие сорвало бы вакуум;
+//   C1/C2/C3         — баллоны блока C изолируются: качается рабочий тракт,
+//                      а не весь объём установки;
+//   К192 (SL1)       — выход второго тракта.
 // Клапаны остаются открытыми намеренно: закрывать их — задача оператора.
 //
 // Этап пропускается, если опция выключена ИЛИ хотя бы один повтор завершился
 // ошибкой: тракт открывается только после штатного прогона. Отмена (Стоп)
 // сюда не доходит вовсе — For возвращает Error, sequential-группа обрывается.
+//
+// Опция читается ЗДЕСЬ, в момент выполнения хвоста (шов continuousPumpingLive),
+// а не на старте прогона: оператор вправе передумать, пока режим идёт.
 ExecutableItem continuousPumpingTail(const VacuumTreeContext& ctx,
                                      const Storage<VacuumRunSummary>& summary)
 {
@@ -1169,38 +1686,35 @@ ExecutableItem continuousPumpingTail(const VacuumTreeContext& ctx,
 
     GroupItems items { sequential };
     items << onGroupSetup([ctx, summary, ran]() -> SetupResult {
-        *ran = ctx.continuousPumping && summary->repeatsError == 0;
+        const bool wanted = ctx.continuousPumpingLive ? ctx.continuousPumpingLive()
+                                                      : ctx.continuousPumping;
+        *ran = wanted && summary->repeatsError == 0;
         if (!*ran) {
-            if (ctx.onNode && ctx.continuousPumping)
+            if (ctx.onNode && wanted)
                 ctx.onNode(VacuumNode::ContinuousPumping, NodeState::Skipped);
             return SetupResult::StopWithSuccess;
         }
         if (ctx.onNode)
             ctx.onNode(VacuumNode::ContinuousPumping, NodeState::Running);
         if (ctx.onLabel)
-            ctx.onLabel(QStringLiteral("Непрерывная откачка: тракт оставлен открытым"));
+            ctx.onLabel(QStringLiteral("Непрерывная откачка: тракт (камера E/F, "
+                                       "эталон B, бочка) оставлен на турбонасосе"));
         return SetupResult::Continue;
     });
 
-    if (!ctx.skipRK300) { items << openValve(VacuumValve::K135); items << settlePause(ctx); }
-    if (!ctx.skipRK50)  { items << openValve(VacuumValve::K133); items << settlePause(ctx); }
-    if (!ctx.skipRK10)  { items << openValve(VacuumValve::K131); items << settlePause(ctx); }
-    if (ctx.secondTract) { items << openValve(VacuumValve::K192); items << settlePause(ctx); }
-    items << openValve(VacuumValve::K151);
+    items << openValve(VacuumValve::K151);       // камера F + линия E
     items << settlePause(ctx);
-    items << openValve(VacuumValve::K178);
+    items << openValve(VacuumValve::K178);       // бочка / магистраль (эталон B на ней)
     items << settlePause(ctx);
-    // Хвост качает ФОРВАКУУМОМ, поэтому К179 обязан быть закрыт (REQ-008).
-    // Процедура 12.2 закрывает его на любом исходе, но хвост живёт вне тела
-    // For и состояния повтора не видит — поэтому закрываем безусловно, а не
-    // «если открывали». Идемпотентно и не зависит от того, был ли турбо-этап.
+    // Насос подключается последним, к уже собранному тракту: закрыть К176,
+    // подтвердить закрытие чтением состояния, открыть К179 (REQ-008/082/084).
     items << QSyncTask([ctx]() -> bool {
-        if (ctx.setValve)
-            ctx.setValve(false, VacuumValve::K179);
+        if (!connectTurboPump(ctx, /*requireConfirm=*/true, /*k176Open=*/nullptr))
+            return false;
+        if (ctx.onTurboSwitched)
+            ctx.onTurboSwitched(true);
         return true;
     });
-    items << settlePause(ctx);
-    items << openValve(VacuumValve::K176);
 
     items << onGroupDone([ctx, ran](DoneWith w) {
         if (*ran && ctx.onNode)

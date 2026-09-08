@@ -151,13 +151,23 @@
             }
         },
         "vacuumSafety": {
-            "turboSwitchPressurePa": 10.0,
+            "turboSwitchPressurePa": 50.0,
             "turboSwitchHoldSec": 60,
-            "turboReturnPressurePa": 30.0,
+            "turboReturnPressurePa": 150.0,
             "turboTimeoutSec": 600,
             "overrangeWaitSec": 300,
             "overrangeWaitSec2": 350,
-            "valveReadbackTimeoutMs": 2000
+            "valveReadbackTimeoutMs": 2000,
+            "testEvacTimeSec": 300,
+            "leakTestDurationSec": 60,
+            "dP_leak_max": {
+                "DD312": 0.01
+            }
+        },
+        "vacuumTract": {
+            "generalPumping": ["S4", "R4", "R3"],
+            "leakTest": ["S4", "R4"],
+            "finalPumping": ["R4", "R3", "S4", "AR5"]
         },
         "security": {
             "contradictionValves":{
@@ -166,8 +176,8 @@
                 "AR3":["AR1", "AR2", "AR5", "AR4"],
                 "AR5":["AR1", "AR2", "AR3", "AR4"],
                 "AR4":["AR1", "AR2", "AR3", "AR5"],
-                "AR6":["SL1"],
-                "SL1":["AR6"]
+                "AR6":["SL2"],
+                "SL2":["AR6"]
             },
             "twoOfThree": ["AR5", "SL1", "SL2"],
             "safetyQuars" : {

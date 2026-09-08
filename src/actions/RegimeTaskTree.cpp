@@ -99,7 +99,60 @@ void RegimeTaskTree::setVacuumOptions(bool skipRK10, bool skipRK50,
 void RegimeTaskTree::setVacuumContinuousPumping(bool enabled)
 {
     m_vacuumOptions.continuousPumping = enabled;
+    // Опция редактируется и на ходу: хвост рецепта выполняется в самом конце
+    // прогона, поэтому решение оператора, принятое уже во время режима, обязано
+    // до него дойти. Сигнал подхватывает активный воркер (см. buildRegimeGroup).
+    emit vacuumContinuousPumpingChanged(enabled);
     qDebug() << "RegimeTaskTree: setVacuumContinuousPumping" << enabled;
+}
+
+void RegimeTaskTree::setVacuumTract(const QStringList& generalPumping,
+                                    const QStringList& leakTest,
+                                    const QStringList& finalPumping,
+                                    int testEvacTimeSec, int leakTestDurationSec,
+                                    const QMap<QString, double>& dPLeakMax)
+{
+    m_vacuumOptions.generalPumpingValves = generalPumping;
+    m_vacuumOptions.leakTestValves       = leakTest;
+    m_vacuumOptions.finalPumpingValves   = finalPumping;
+    m_vacuumOptions.testEvacTimeSec      = qMax(1, testEvacTimeSec);
+    m_vacuumOptions.leakTestDurationSec  = qMax(1, leakTestDurationSec);
+    m_vacuumOptions.dPLeakMax            = dPLeakMax;
+    // Пустой набор — не ошибка конфигурации, а осознанное «этап не выполняем».
+    // Но оператор обязан узнать об этом до старта, а не по серой строке в
+    // развёртке, поэтому предупреждение выводится уже здесь.
+    if (generalPumping.isEmpty())
+        qWarning() << "RegimeTaskTree: vacuumTract.generalPumping пуст — этап 11.7б "
+                      "(общая откачка) выполняться не будет";
+    if (finalPumping.isEmpty())
+        qWarning() << "RegimeTaskTree: vacuumTract.finalPumping пуст — этапы 11.9-11.10 "
+                      "(финальная откачка камеры) выполняться не будут";
+    if (leakTest.isEmpty() || dPLeakMax.isEmpty())
+        qWarning() << "RegimeTaskTree: проверка герметичности 11.8 не сконфигурирована "
+                      "(vacuumTract.leakTest / vacuumSafety.dP_leak_max) — этап будет "
+                      "пропущен с указанием причины";
+    qDebug() << "RegimeTaskTree: setVacuumTract general=" << generalPumping
+             << "leak=" << leakTest << "final=" << finalPumping
+             << "testEvac=" << m_vacuumOptions.testEvacTimeSec
+             << "leakHold=" << m_vacuumOptions.leakTestDurationSec
+             << "dP_leak_max=" << dPLeakMax;
+}
+
+void RegimeTaskTree::setVacuumLeakSensor(const QString& name, DataCollection* sensor)
+{
+    if (name.isEmpty() || !sensor)
+        return;
+    m_vacuumOptions.leakSensors.insert(name, sensor);
+}
+
+void RegimeTaskTree::setVacuumFinalTarget(double targetVacuumPa, int evacTimeSec)
+{
+    // Границы как у setVacuumForevacTarget: ноль или отрицательная цель
+    // недостижимы физически и превратили бы этап в вечное ожидание.
+    m_vacuumOptions.targetVacuumPa = qBound(1e-6, targetVacuumPa, 1.0e5);
+    m_vacuumOptions.evacTimeSec    = qMax(1, evacTimeSec);
+    qDebug() << "RegimeTaskTree: setVacuumFinalTarget" << m_vacuumOptions.targetVacuumPa
+             << "Pa," << m_vacuumOptions.evacTimeSec << "s";
 }
 
 void RegimeTaskTree::setVacuumSafety(double turboSwitchPressurePa, int turboSwitchHoldSec,
@@ -126,7 +179,8 @@ void RegimeTaskTree::setVacuumSafety(double turboSwitchPressurePa, int turboSwit
                    << "Па — гистерезиса нет, возможны частые переключения насосов";
     }
     m_vacuumMonitor.setTurboGate(m_vacuumOptions.turboSwitchPressurePa,
-                                 m_vacuumOptions.turboSwitchHoldSec);
+                                 m_vacuumOptions.turboSwitchHoldSec,
+                                 m_vacuumOptions.turboTimeoutSec);
     qDebug() << "RegimeTaskTree: setVacuumSafety gate"
              << m_vacuumOptions.turboSwitchPressurePa << "Pa, hold"
              << m_vacuumOptions.turboSwitchHoldSec << "s, return"
@@ -418,7 +472,8 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
                     // Цель форвакуума и гейт турбо видны в развёртке до входа
                     // в соответствующие этапы — это разные величины.
                     m_vacuumMonitor.setTurboGate(opts.turboSwitchPressurePa,
-                                                 opts.turboSwitchHoldSec);
+                                                 opts.turboSwitchHoldSec,
+                                                 opts.turboTimeoutSec);
                     m_vacuumMonitor.setForevacTarget(opts.targetVacPa,
                                                      opts.turboSwitchHoldSec,
                                                      opts.foreVacTimeoutSec);
@@ -429,6 +484,8 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
                             &w,   &VacuumRegimeWorker::onPauseRequested);
                     connect(this, &RegimeTaskTree::resumeRequested,
                             &w,   &VacuumRegimeWorker::onResumeRequested);
+                    connect(this, &RegimeTaskTree::vacuumContinuousPumpingChanged,
+                            &w,   &VacuumRegimeWorker::onContinuousPumpingChanged);
                     m_activeRegimeId = regimeId;
                     emit activeRegimeChanged();
                     emit regimeStarted(regimeId, name);

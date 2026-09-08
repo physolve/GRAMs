@@ -191,7 +191,27 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
             vs.m_overrangeWaitSec2 = vacuumSafetyObject["overrangeWaitSec2"].toInt();
         if(vacuumSafetyObject.contains("valveReadbackTimeoutMs"))
             vs.m_valveReadbackTimeoutMs = vacuumSafetyObject["valveReadbackTimeoutMs"].toInt();
+        if(vacuumSafetyObject.contains("testEvacTimeSec"))
+            vs.m_testEvacTimeSec = vacuumSafetyObject["testEvacTimeSec"].toInt();
+        if(vacuumSafetyObject.contains("leakTestDurationSec"))
+            vs.m_leakTestDurationSec = vacuumSafetyObject["leakTestDurationSec"].toInt();
+        // Порог герметичности читается поканально и БЕЗ значения по умолчанию:
+        // выдумать его нельзя, а отсутствие обязано выключить этап 11.8,
+        // а не пропустить его как «пройденный» (REQ-060/062).
+        if(vacuumSafetyObject.contains("dP_leak_max"))
+            vs.m_dPLeakMax = vacuumSafetyObject["dP_leak_max"].toObject().toVariantMap();
         m_vacuumSafety = vs;
+    }
+
+    // Наборы клапанов этапов 11.7б/11.8/11.9/11.10 (REQ-055/059/064/066).
+    // Секции нет ⇒ списки пусты ⇒ соответствующие этапы пропускаются с причиной.
+    const auto &vacuumTractObject = profileObject["vacuumTract"].toObject();
+    if(!vacuumTractObject.isEmpty()){
+        vacuumTractParameters vt;
+        vt.m_generalPumping = vacuumTractObject["generalPumping"].toVariant().toStringList();
+        vt.m_leakTest       = vacuumTractObject["leakTest"].toVariant().toStringList();
+        vt.m_finalPumping   = vacuumTractObject["finalPumping"].toVariant().toStringList();
+        m_vacuumTract = vt;
     }
 // security
 }
@@ -336,6 +356,10 @@ bool Initialize::serialCompareProfile(const QStringList& serialNames){
 
 vacuumSafetyParameters Initialize::getVacuumSafetyParameters() const{
     return m_vacuumSafety;
+}
+
+vacuumTractParameters Initialize::getVacuumTractParameters() const{
+    return m_vacuumTract;
 }
 
 vacuumParameters Initialize::getVacuumTurboParameters() const{

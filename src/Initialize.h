@@ -143,15 +143,40 @@ struct vacuumSafetyParameters{
     Q_PROPERTY (int     overrangeWaitSec       MEMBER m_overrangeWaitSec)
     Q_PROPERTY (int     overrangeWaitSec2      MEMBER m_overrangeWaitSec2)
     Q_PROPERTY (int     valveReadbackTimeoutMs MEMBER m_valveReadbackTimeoutMs)
+    Q_PROPERTY (int     testEvacTimeSec        MEMBER m_testEvacTimeSec)
+    Q_PROPERTY (int     leakTestDurationSec    MEMBER m_leakTestDurationSec)
+    Q_PROPERTY (QVariantMap dPLeakMax          MEMBER m_dPLeakMax)
 public:
     // Значения по умолчанию = ориентиры ТЗ: применяются, если секции нет в JSON.
-    double m_turboSwitchPressurePa  = 10.0;
+    double m_turboSwitchPressurePa  = 50.0;
     int    m_turboSwitchHoldSec     = 60;
-    double m_turboReturnPressurePa  = 30.0;
+    double m_turboReturnPressurePa  = 150.0;
     int    m_turboTimeoutSec        = 600;
     int    m_overrangeWaitSec       = 300;
     int    m_overrangeWaitSec2      = 350;
     int    m_valveReadbackTimeoutMs = 2000;
+    int    m_testEvacTimeSec        = 300;   // REQ-057: общая откачка на турбонасосе
+    int    m_leakTestDurationSec    = 60;    // REQ-060: выдержка проверки герметичности
+    // REQ-060: допустимый прирост давления за leakTestDurationSec, ПОКАНАЛЬНО
+    // (имя датчика → бары). Пустая карта = порог не задан ⇒ этап 11.8
+    // выполняться не должен: «не выполнялся» и «пройдено» — разные вещи.
+    QVariantMap m_dPLeakMax;
+};
+
+// Наборы клапанов этапов режима «Вакуум» (REQ-055/059/064/066). В коде их нет
+// намеренно: ТЗ прямо требует хранить точный набор в конфигурации и проверять
+// его по матрице interlock. Насосные клапаны (К176/К179) в списки НЕ входят —
+// ими распоряжается PumpDownProcedure, и смешивать их с трактом нельзя.
+struct vacuumTractParameters{
+    Q_GADGET
+    Q_PROPERTY (QStringList generalPumping MEMBER m_generalPumping)
+    Q_PROPERTY (QStringList leakTest       MEMBER m_leakTest)
+    Q_PROPERTY (QStringList finalPumping   MEMBER m_finalPumping)
+public:
+    // Пустой список = этап не сконфигурирован ⇒ пропускается с явной причиной.
+    QStringList m_generalPumping;   // 11.7б: К171, К173, К151 (+ применимые C)
+    QStringList m_leakTest;         // 11.8:  К171, К173
+    QStringList m_finalPumping;     // 11.9/11.10: К173, К151, К171, К178
 };
 
 struct securityParameters{
@@ -180,6 +205,7 @@ public:
     Q_PROPERTY(secondLineQuarParameters secondLineQuar MEMBER m_secondLineQuar CONSTANT)
     Q_PROPERTY(securityParameters security MEMBER m_security CONSTANT)
     Q_PROPERTY(vacuumSafetyParameters vacuumSafety MEMBER m_vacuumSafety CONSTANT)
+    Q_PROPERTY(vacuumTractParameters vacuumTract MEMBER m_vacuumTract CONSTANT)
     Q_PROPERTY(vacuumParameters vacuum MEMBER m_vacuum CONSTANT)
     Q_PROPERTY(vacuumParameters vacuumTurbo MEMBER m_vacuumTurbo CONSTANT)
 
@@ -191,6 +217,7 @@ public:
     vacuumParameters getVacuumParameters() const;
     vacuumParameters getVacuumTurboParameters() const;
     vacuumSafetyParameters getVacuumSafetyParameters() const;
+    vacuumTractParameters getVacuumTractParameters() const;
     bool hasVacuumTurbo() const;   // ДВ302 найден среди портов
     QList<PressureSensor> getPressureSensors() const;
     QStringList getTempSensors() const;
@@ -198,6 +225,7 @@ public:
     hardwareParameters              m_hardware; // need m_valves and m_twoOfThree
     securityParameters              m_security; // need m_contradictionValves
     vacuumSafetyParameters          m_vacuumSafety;
+    vacuumTractParameters           m_vacuumTract;
     addRemoveQuarParameters         m_addRemoveQuar; // need m_gasSupplyValves
     reactionQuarParameters          m_reactionQuar; // need m_gasLeakageValves and to ValveToRangePressure
     storageQuarParameters           m_storageQuar; // need to ValveToRangePressure

@@ -327,7 +327,39 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
     ctx.turboTimeoutSec       = m_opts.turboTimeoutSec;
     ctx.overrangeWaitSec      = m_opts.overrangeWaitSec;
     ctx.overrangeWaitSec2     = m_opts.overrangeWaitSec2;
+    // Этапы 11.7б/11.8/11.9-11.11: наборы клапанов и пороги приходят из профиля
+    // (REQ-055/059/064/066), в коде их нет намеренно.
+    ctx.generalPumpingValves = m_opts.generalPumpingValves;
+    ctx.leakTestValves       = m_opts.leakTestValves;
+    ctx.finalPumpingValves   = m_opts.finalPumpingValves;
+    ctx.testEvacTimeSec      = m_opts.testEvacTimeSec;
+    ctx.leakTestDurationSec  = m_opts.leakTestDurationSec;
+    ctx.targetVacuumPa       = m_opts.targetVacuumPa;
+    ctx.evacTimeSec          = m_opts.evacTimeSec;
+
+    // Каналы герметичности собираются только из тех имён, у которых есть И
+    // порог в конфигурации, И живой датчик. Канал без одного из двух в список
+    // не попадает: проверить его нечем, а «проверен и герметичен» — ложь.
+    for (auto it = m_opts.dPLeakMax.cbegin(); it != m_opts.dPLeakMax.cend(); ++it) {
+        DataCollection* sensor = m_opts.leakSensors.value(it.key(), nullptr);
+        if (!sensor) {
+            qWarning() << "[Вакуум] 11.8: порог герметичности задан для" << it.key()
+                       << "но датчик не подключён — канал не проверяется";
+            continue;
+        }
+        LeakChannel ch;
+        ch.name    = it.key();
+        ch.maxRise = it.value();
+        ch.read    = [sensor] { return Reading(sensor->getCurValue(), sensor->quality()); };
+        ctx.leakChannels.append(ch);
+    }
+    if (ctx.leakChannels.isEmpty())
+        qWarning() << "[Вакуум] 11.8: ни одного канала герметичности — этап будет "
+                      "пропущен с указанием причины, а не пройден";
+
     ctx.continuousPumping = m_opts.continuousPumping;
+    // Живое значение тумблера: оператор вправе передумать, пока режим идёт.
+    ctx.continuousPumpingLive = [this] { return m_opts.continuousPumping; };
     ctx.operatorBus  = m_opts.operatorBus;                 // стабильная шина из RegimeTaskTree
     ctx.pauseBus     = &m_pauseBus;
 
@@ -509,6 +541,23 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
         if (m_cfg.logger)
             m_cfg.logger->logEvent(m_runId, RegimeLogger::kRegimeError, -1, -1, reason);
     };
+    // Пропуск этапа: в журнал отдельным типом и в UI отдельной строкой. Тихо
+    // пропущенный этап читается оператором как выполненный — этого нельзя
+    // допускать в первую очередь для проверки герметичности (REQ-062).
+    ctx.onStageSkipped = [this](VacuumNode node, const QString& reason) {
+        qWarning() << "[Вакуум] Этап пропущен:" << reason;
+        if (m_monitor)
+            m_monitor->onStageSkipped(int(node), reason);
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kStageSkipped, -1, -1, reason);
+    };
+    ctx.onWarning = [this](const QString& message) {
+        qWarning() << "[Вакуум] Предупреждение:" << message;
+        if (m_monitor)
+            m_monitor->onWarning(message);
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kWarning, -1, -1, message);
+    };
 
     return ctx;
 }
@@ -541,6 +590,17 @@ void VacuumRegimeWorker::onResumeRequested()
     if (m_cfg.logger)
         m_cfg.logger->logEvent(m_runId, RegimeLogger::kResumed);
     qDebug() << "[Вакуум] Возобновление";
+}
+
+void VacuumRegimeWorker::onContinuousPumpingChanged(bool enabled)
+{
+    if (m_opts.continuousPumping == enabled)
+        return;
+    m_opts.continuousPumping = enabled;
+    // Хвост рецепта читает значение через шов continuousPumpingLive в момент
+    // своего выполнения, поэтому пересобирать дерево не нужно.
+    qDebug() << "[Вакуум] Непрерывная откачка"
+             << (enabled ? "включена" : "выключена") << "на ходу";
 }
 
 

@@ -33,7 +33,12 @@ const NodeMeta kNodes[] = {
     { VacuumNode::TurboSwitch,   "переключение К176→К179", "12.2",   "readback К176 → К179",  1 },
     { VacuumNode::TurboPumping,  "турбо-откачка",          "12.2",   "контроль ДВ302",        1 },
     { VacuumNode::TurboFallback, "откат на форвакуум",     "12.2",   "К179→К176 по порогу",   1 },
-    { VacuumNode::ContinuousPumping, "непрерывная откачка",  "финал",   "тракт остаётся открытым", 0 },
+    { VacuumNode::GeneralPumping, "общая откачка",         "11.7б", "К171/К173/К151/C→К178→насос", 0 },
+    { VacuumNode::LeakTest,      "проверка герметичности", "11.8",  "К171/К173, выдержка",         0 },
+    { VacuumNode::FinalPrep,     "подготовка тракта камеры", "11.9", "К173/К151/К171/К178",        0 },
+    { VacuumNode::FinalPumping,  "финальная откачка камеры", "11.10", "EvacTime + targetVAC",      1 },
+    { VacuumNode::FinalClose,    "финальное закрытие",     "11.11", "все клапаны, запись итогов",  1 },
+    { VacuumNode::ContinuousPumping, "непрерывная откачка",  "финал",   "тракт на турбонасосе", 0 },
 };
 
 } // namespace
@@ -129,8 +134,8 @@ void VacuumRunMonitor::initValves()
         { VacuumValve::K135, false },  // S3  (C1)
         { VacuumValve::K131, false },  // S1  (C3)
         { VacuumValve::K133, false },  // S2  (C2)
-        { VacuumValve::K192, false },  // SL2
-        { VacuumValve::K179, false },  // SL1
+        { VacuumValve::K192, false },  // SL1 — выход второго тракта
+        { VacuumValve::K179, false },  // SL2 — турбомолекулярный насос
         { VacuumValve::K176, false },  // AR6 — форвакуумный насос
         { VacuumValve::K178, false },  // AR5 — магистраль
         { VacuumValve::K151, false },  // R3  — линия E/F
@@ -155,12 +160,15 @@ void VacuumRunMonitor::beginRun(int totalRepeats)
     m_forevacElapsedSec = 0;
     m_finishReason.clear();
     m_failureReason.clear();
+    m_skippedStages.clear();
+    m_warnings.clear();
     m_finishState = -1;
     m_activePump.clear();
     m_turboNode        = -1;
     m_turboHeldSec     = 0;
     m_turboElapsedSec  = 0;
     emit turboProgressChanged();
+    emit noticesChanged();
     emit valveStatesChanged();
     emit progressChanged();
     emit currentLabelChanged();
@@ -293,13 +301,49 @@ void VacuumRunMonitor::onForevacDone(VacuumNode node, bool success)
 
 // ── Турбо-этап 12.2 ──────────────────────────────────────────────────────────
 
-void VacuumRunMonitor::setTurboGate(double gatePa, int holdSec)
+void VacuumRunMonitor::setTurboGate(double gatePa, int holdSec, int timeoutSec)
 {
-    if (qFuzzyCompare(m_turboGatePa, gatePa) && m_turboGateHoldSec == holdSec)
+    if (qFuzzyCompare(m_turboGatePa, gatePa) && m_turboGateHoldSec == holdSec
+        && m_turboTimeoutSec == timeoutSec)
         return;
-    m_turboGatePa = gatePa;
+    m_turboGatePa      = gatePa;
     m_turboGateHoldSec = holdSec;
+    m_turboTimeoutSec  = timeoutSec;
     emit turboTargetChanged();
+}
+
+// ── Прогресс турбо-этапа ─────────────────────────────────────────────────────
+//
+// Гейт и откачка меряются разным: до переключения — набранное удержание против
+// turboGateHoldSec, после — время этапа против turboTimeoutSec. Без второй
+// стадии полоса замирала бы на нуле сразу после перехода на турбонасос, и
+// оператор не отличал бы идущую откачку от зависшего режима.
+
+QString VacuumRunMonitor::turboStage() const
+{
+    if (m_turboNode == int(VacuumNode::TurboGate))
+        return QStringLiteral("gate");
+    if (m_turboNode == int(VacuumNode::TurboPumping))
+        return QStringLiteral("pumping");
+    return QString();
+}
+
+int VacuumRunMonitor::turboProgressSec() const
+{
+    if (m_turboNode == int(VacuumNode::TurboGate))
+        return m_turboHeldSec;
+    if (m_turboNode == int(VacuumNode::TurboPumping))
+        return m_turboElapsedSec;
+    return 0;
+}
+
+int VacuumRunMonitor::turboProgressMaxSec() const
+{
+    if (m_turboNode == int(VacuumNode::TurboGate))
+        return qMax(1, m_turboGateHoldSec);
+    if (m_turboNode == int(VacuumNode::TurboPumping))
+        return qMax(1, m_turboTimeoutSec);
+    return 1;
 }
 
 void VacuumRunMonitor::onTurboProgress(VacuumNode node, Reading p301, Reading p302,
@@ -329,6 +373,23 @@ void VacuumRunMonitor::onFailure(const QString& reason)
     if (reason.isEmpty() || !m_failureReason.isEmpty())
         return;                       // первая причина за прогон — основная
     m_failureReason = reason;
+}
+
+void VacuumRunMonitor::onStageSkipped(int node, const QString& reason)
+{
+    Q_UNUSED(node)
+    if (reason.isEmpty() || m_skippedStages.contains(reason))
+        return;
+    m_skippedStages.append(reason);
+    emit noticesChanged();
+}
+
+void VacuumRunMonitor::onWarning(const QString& message)
+{
+    if (message.isEmpty() || m_warnings.contains(message))
+        return;
+    m_warnings.append(message);
+    emit noticesChanged();
 }
 
 void VacuumRunMonitor::setFinish(int state, const QString& reason)

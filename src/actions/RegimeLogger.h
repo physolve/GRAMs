@@ -70,6 +70,11 @@ public:
     static constexpr const char* kValveOpen         = "valve_open";
     static constexpr const char* kValveClose        = "valve_close";
     static constexpr const char* kValveBlocked      = "valve_blocked";
+    // Этап не выполнялся и почему. Отдельный тип, а не kRegimeError: пропуск —
+    // не отказ, и в журнале это обязано различаться (REQ-062).
+    static constexpr const char* kStageSkipped      = "stage_skipped";
+    // Предупреждение без остановки режима (LEAK_DETECTED и т. п., REQ-062).
+    static constexpr const char* kWarning           = "warning";
 
 private:
     bool createSchema();

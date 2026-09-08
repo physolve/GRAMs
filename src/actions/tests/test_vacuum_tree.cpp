@@ -86,7 +86,7 @@ const QString kFullSequence = QStringLiteral(
     "+AR4 -AR4 "                             // Ф1: триплет К118
     "+S3 +AR4 -AR4 -S3 "                     // Ф2: RK300 + триплет + закрытие
     "+S1 +S2 +AR4 -AR4 -S2 -S1 "             // Ф2: RK10/RK50 + триплет + закрытия
-    "+SL2 +SL1 -SL2 -SL1");                  // Ф3: второй тракт
+    "+SL1 +SL2 -SL1 -SL2");                  // Ф3: второй тракт (К192, затем К179)
 
 DoneWith runBlocking(const Group& recipe)
 {
@@ -193,7 +193,7 @@ TEST(VacuumTree, SkipRk300OnlyOmitsItsSubgroup)
     EXPECT_EQ(rec.sequence(),
               QStringLiteral("+AR4 -AR4 "
                              "+S1 +S2 +AR4 -AR4 -S2 -S1 "
-                             "+SL2 +SL1 -SL2 -SL1"));
+                             "+SL1 +SL2 -SL1 -SL2"));
 }
 
 TEST(VacuumTree, ProgressTicksMatchDwells)
@@ -217,7 +217,7 @@ TEST(VacuumTree, ProgressTicksMatchDwells)
 // Критерий B: отмена в каждой точке «клапан открыт, идёт выдержка»
 // ═════════════════════════════════════════════════════════════════════════════
 // Точки (all-on, elapsed по выдержкам): Ф1 К118 = 1–5; Ф2 S3-триплет = 6–10;
-// Ф2 s15–s17 (S1+S2 открыты) = 11–15; Ф3 (SL2+SL1) = 16–20.
+// Ф2 s15–s17 (S1+S2 открыты) = 11–15; Ф3 (SL1+SL2) = 16–20.
 
 TEST(VacuumTree, CancelDuringPhase1ReliefClosesK118)
 {
@@ -254,7 +254,7 @@ TEST(VacuumTree, CancelDuringSecondTractClosesBothValves)
     EXPECT_EQ(run.result, DoneWith::Cancel);
     EXPECT_TRUE(run.rec.allClosed());
     EXPECT_EQ(run.rec.sequence(),
-              kFullSequence);  // отмена в Ф3 добирает те же закрытия SL2, SL1
+              kFullSequence);  // отмена в Ф3 добирает те же закрытия SL1, SL2
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -278,8 +278,8 @@ TEST(VacuumTree, RerunSameRecipeStartsFresh)
         EXPECT_FALSE(s.s1Open);
         EXPECT_FALSE(s.s2Open);
         EXPECT_FALSE(s.s3Open);
-        EXPECT_FALSE(s.sl1Open);
-        EXPECT_FALSE(s.sl2Open);
+        EXPECT_FALSE(s.k179TractOpen);
+        EXPECT_FALSE(s.k192Open);
         EXPECT_EQ(s.elapsedSec, 0);
         EXPECT_EQ(s.reliefCount, 0);
     };
@@ -329,7 +329,7 @@ TEST(VacuumTree, RepeatsRecreateStateAndDoubleSequence)
 TEST(VacuumTree, BlockedSecondTractValveClosesAlreadyOpened)
 {
     Recorder rec;
-    rec.blockedOpens.insert(QStringLiteral("SL1"));
+    rec.blockedOpens.insert(QStringLiteral("SL2"));
     VacuumTreeContext ctx = rec.makeCtx();
     ctx.secondTract = true;
 
@@ -340,8 +340,8 @@ TEST(VacuumTree, BlockedSecondTractValveClosesAlreadyOpened)
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Error);
     EXPECT_TRUE(rec.allClosed());
-    // SL2 успел открыться, SL1 заблокирован → откат: закрыть SL2
-    EXPECT_TRUE(rec.sequence().endsWith(QStringLiteral("+SL2 -SL2")))
+    // SL1 (К192) успел открыться, SL2 (К179) заблокирован → откат: закрыть SL1
+    EXPECT_TRUE(rec.sequence().endsWith(QStringLiteral("+SL1 -SL1")))
         << rec.sequence().toStdString();
     EXPECT_EQ(repeatResults, (QList<DoneWith>{DoneWith::Error}));
 }
@@ -349,7 +349,7 @@ TEST(VacuumTree, BlockedSecondTractValveClosesAlreadyOpened)
 TEST(VacuumTree, RunFinishedReportsCounts)
 {
     Recorder rec;
-    rec.blockedOpens.insert(QStringLiteral("SL1"));
+    rec.blockedOpens.insert(QStringLiteral("SL2"));
     VacuumTreeContext ctx = rec.makeCtx();
     ctx.secondTract = true;
 
@@ -692,29 +692,164 @@ TEST(VacuumTree, PumpWatchdogDelayAppliesOnlyToFirstWindow)
     EXPECT_GE(t.elapsed(), 100);
 }
 
+// ─── dP/dt проверяется только выше цели этапа ────────────────────────────────
+//
+// Цель 50 Па, а в тракте уже 30 Па: откачивать нечего, скорость откачки по
+// физике близка к нулю. Вердикт «мала» здесь означал бы ложный отказ.
+
+TEST(VacuumTree, PumpWatchdogSkippedBelowTarget)
+{
+    PumpRateWatchdog w;
+    w.pressurePa    = [] { return 30.0; };   // ниже цели и не меняется
+    w.intervalMs    = 20;
+    w.startDelaySec = 50;                    // 1 с: пропуск обязан быть мгновенным
+    w.windowSec     = 1;
+    w.minDropPa     = 1.0;
+    w.targetPa      = 50.0;
+
+    QElapsedTimer t;
+    t.start();
+    EXPECT_TRUE(runWatchdog(w));
+    EXPECT_LT(t.elapsed(), 100);             // «мёртвую зону» не выжидали
+}
+
+TEST(VacuumTree, PumpWatchdogChecksAboveTarget)
+{
+    // То же давление, но цель ниже его — проверка обязана состояться и
+    // закончиться отказом: давление стоит.
+    PumpRateWatchdog w;
+    w.pressurePa    = [] { return 30.0; };
+    w.intervalMs    = 20;
+    w.startDelaySec = 0;
+    w.windowSec     = 1;
+    w.minDropPa     = 1.0;
+    w.targetPa      = 10.0;
+    EXPECT_FALSE(runWatchdog(w));
+}
+
+TEST(VacuumTree, PumpWatchdogIgnoresInvalidReadingBelowTarget)
+{
+    // Мёртвый датчик, отдающий «0 Па», формально ниже цели. Снимать по нему
+    // проверку откачки нельзя — иначе отказ датчика маскирует отказ насоса.
+    PumpRateWatchdog w;
+    w.pressurePa    = [] { return Reading(0.0, Quality::NoResponse); };
+    w.intervalMs    = 20;
+    w.startDelaySec = 0;
+    w.windowSec     = 1;
+    w.minDropPa     = 1.0;
+    w.targetPa      = 50.0;
+    EXPECT_FALSE(runWatchdog(w));
+}
+
+TEST(VacuumTree, PumpWatchdogReachingTargetInsideWindowPasses)
+{
+    // Давление проваливается ниже цели посреди окна — окно досчитывать незачем,
+    // откачка очевидно шла.
+    auto p = std::make_shared<double>(100.0);
+    PumpRateWatchdog w;
+    w.pressurePa    = [p] { double v = *p; *p -= 10.0; return v; };
+    w.intervalMs    = 10;
+    w.startDelaySec = 0;
+    w.windowSec     = 100;                   // окно заведомо не успевает закрыться
+    w.minDropPa     = 1.0;
+    w.targetPa      = 50.0;
+    EXPECT_TRUE(runWatchdog(w));
+}
+
+TEST(VacuumTree, ForevacBelowTargetPassesWatchdogInRecipe)
+{
+    // Рецепт целиком: тракт уже откачан ниже цели, dP/dt-watchdog включён и
+    // оператора нет. До правки прогон падал бы в Error на первом же этапе.
+    Recorder rec;
+    VacuumTreeContext ctx = makeForevacCtx(rec);
+    ctx.pumpRateCheck      = true;
+    ctx.pumpCheckWindowSec = 2;
+    ctx.pumpMinDropPa      = 1.0;
+    ctx.targetVacPa        = 50.0;
+    ctx.foreVacHoldSec     = 1;
+    ctx.pressureVacPa      = [] { return 30.0; };   // ниже цели, не меняется
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+}
+
 // ─── Непрерывная откачка: тракт остаётся открытым после прогона ──────────────
+
+// Хвост оставляет открытым рабочий тракт на ТУРБОНАСОСЕ: камера E/F (К151),
+// эталон B (на магистрали, своего клапана нет), бочка (К178) и К179; К176
+// закрыт (интерлок REQ-008), баллоны C и К192 не открываются вовсе.
+const QString kContinuousTail = QStringLiteral("+R3 +AR5 -AR6 +SL2");
 
 TEST(VacuumTree, ContinuousPumpingLeavesTractOpen)
 {
     Recorder rec;
     VacuumTreeContext ctx = makeForevacCtx(rec);
-    ctx.skipRK10 = ctx.skipRK50 = ctx.skipRK300 = false;  // весь блок C в тракте
+    ctx.skipRK10 = ctx.skipRK50 = ctx.skipRK300 = false;  // блок C откачивается…
     ctx.pressureVacPa      = [] { return 5.0; };
+    ctx.confirmValve       = [&rec](bool expectedOpen, const QString& name) {
+        return rec.state.value(name, false) == expectedOpen;
+    };
     ctx.continuousPumping  = true;
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
     EXPECT_FALSE(rec.allClosed());
-    // Тракт собран от объёмов к насосу; К118 (атмосфера) и К179 (турбо) закрыты.
-    EXPECT_TRUE(rec.state.value("S3"));    // C1 / К135
-    EXPECT_TRUE(rec.state.value("S2"));    // C2 / К133
-    EXPECT_TRUE(rec.state.value("S1"));    // C3 / К131
-    EXPECT_TRUE(rec.state.value("R3"));    // К151 — линия E/F
-    EXPECT_TRUE(rec.state.value("AR5"));   // К178 — магистраль
-    EXPECT_TRUE(rec.state.value("AR6"));   // К176 — форвакуумный насос
+    EXPECT_TRUE(rec.state.value("R3"));    // К151 — камера F + линия E
+    EXPECT_TRUE(rec.state.value("AR5"));   // К178 — бочка / магистраль (эталон B)
+    EXPECT_TRUE(rec.state.value("SL2"));   // К179 — турбомолекулярный насос
+    EXPECT_FALSE(rec.state.value("AR6"));  // К176 — форвакуум закрыт (REQ-008)
     EXPECT_FALSE(rec.state.value("AR4"));  // К118 — сброс в атмосферу
-    EXPECT_FALSE(rec.state.value("SL1"));  // К179 — турбо (интерлок с К176)
-    // Насос подключается последним.
-    EXPECT_TRUE(rec.sequence().endsWith(QStringLiteral("+R3 +AR5 -SL1 +AR6")));
+    EXPECT_FALSE(rec.state.value("SL1"));  // К192 — выход второго тракта
+    // …но в открытом тракте баллоны C не остаются: качается рабочий тракт.
+    EXPECT_FALSE(rec.state.value("S3"));
+    EXPECT_FALSE(rec.state.value("S2"));
+    EXPECT_FALSE(rec.state.value("S1"));
+    // Насос подключается последним, к уже собранному тракту.
+    EXPECT_TRUE(rec.sequence().endsWith(kContinuousTail)) << rec.sequence().toStdString();
+}
+
+// Турбоклапан хвоста проходит ту же проверку REQ-082, что и переход 12.2:
+// без подтверждения закрытия К176 он не открывается, тракт не остаётся открытым.
+TEST(VacuumTree, ContinuousPumpingRequiresValveReadback)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeForevacCtx(rec);
+    ctx.pressureVacPa     = [] { return 5.0; };
+    ctx.continuousPumping = true;
+    ctx.confirmValve      = nullptr;      // readback-шва нет
+
+    QString reason;
+    ctx.onFailure = [&reason](const QString& r) { if (reason.isEmpty()) reason = r; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Error);
+    EXPECT_FALSE(rec.state.value("SL2"));
+    EXPECT_FALSE(reason.isEmpty());
+}
+
+// Опция читается в момент выполнения хвоста, а не на старте: оператор вправе
+// передумать, пока режим идёт.
+TEST(VacuumTree, ContinuousPumpingReadsLiveFlagAtTailTime)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeForevacCtx(rec);
+    ctx.pressureVacPa     = [] { return 5.0; };
+    ctx.confirmValve      = [&rec](bool expectedOpen, const QString& name) {
+        return rec.state.value(name, false) == expectedOpen;
+    };
+    ctx.continuousPumping     = false;             // снимок со «Старта» — выключено
+    ctx.continuousPumpingLive = [] { return true; };  // оператор включил на ходу
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.sequence().endsWith(kContinuousTail)) << rec.sequence().toStdString();
+
+    // И обратно: включено на старте, выключено на ходу — тракт закрывается.
+    Recorder rec2;
+    VacuumTreeContext ctx2 = makeForevacCtx(rec2);
+    ctx2.pressureVacPa         = [] { return 5.0; };
+    ctx2.continuousPumping     = true;
+    ctx2.continuousPumpingLive = [] { return false; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx2)), DoneWith::Success);
+    EXPECT_TRUE(rec2.allClosed());
 }
 
 TEST(VacuumTree, ContinuousPumpingOffClosesEverything)
@@ -748,11 +883,14 @@ TEST(VacuumTree, ContinuousPumpingRunsOnceAfterAllRepeats)
     Recorder rec;
     VacuumTreeContext ctx = makeForevacCtx(rec);
     ctx.pressureVacPa     = [] { return 5.0; };
+    ctx.confirmValve      = [&rec](bool expectedOpen, const QString& name) {
+        return rec.state.value(name, false) == expectedOpen;
+    };
     ctx.continuousPumping = true;
     ctx.totalRepeats      = 3;
 
     EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
-    EXPECT_EQ(rec.sequence().count(QStringLiteral("+R3 +AR5 -SL1 +AR6")), 1);
+    EXPECT_EQ(rec.sequence().count(kContinuousTail), 1);
 }
 
 // ─── Жёстко заданные длительности (не настраиваются из UI) ───────────────────
@@ -766,7 +904,13 @@ TEST(VacuumTree, HardcodedStepDurations)
     EXPECT_EQ(def.reliefDwellSec, 10);       // сброс К118 — 10 с
     EXPECT_EQ(def.pumpCheckDelaySec, 30);    // «мёртвая зона» dP/dt — 30 с
     EXPECT_DOUBLE_EQ(def.targetVacPa, 40.0);
-    EXPECT_DOUBLE_EQ(def.pumpMinDropPa, 0.5);
+    EXPECT_DOUBLE_EQ(def.pumpMinDropPa, 0.25);
+    // Гейт турбоперехода и порог отката — тоже не из UI (гейты безопасности).
+    // Значения уточнены по прогону на стенде: 10 Па оказались недостижимы.
+    EXPECT_DOUBLE_EQ(def.turboSwitchPressurePa, 50.0);
+    EXPECT_DOUBLE_EQ(def.turboReturnPressurePa, 150.0);
+    // Гистерезис обязан сохраняться при любом изменении порогов.
+    EXPECT_GT(def.turboReturnPressurePa, def.turboSwitchPressurePa);
 }
 
 // ─── Цель форвакуума и её live-прогресс (11.5–11.7) ──────────────────────────
@@ -904,7 +1048,7 @@ int main(int argc, char** argv)
 // Раздел 12.2 — переход на турбомолекулярный насос (REQ-077…084)
 // ═════════════════════════════════════════════════════════════════════════════
 //
-// Топология: AR6/К176 (форвакуум) и SL1/К179 (турбо) на одной магистрали;
+// Топология: AR6/К176 (форвакуум) и SL2/К179 (турбо) на одной магистрали;
 // одновременно открытыми они быть не должны никогда (REQ-008/084).
 
 namespace {
@@ -917,12 +1061,19 @@ VacuumTreeContext makeTurboCtx(Recorder& rec)
     ctx.pressureVacPa   = [] { return 5.0; };    // ≤ targetVacPa и ≤ порога гейта
     ctx.pressureTurboPa = [] { return 1.0; };    // валиден, ниже порога возврата
     ctx.turboTract            = true;
-    ctx.turboSwitchPressurePa = 10.0;
+    ctx.turboSwitchPressurePa = 50.0;
     ctx.turboSwitchHoldSec    = 2;
-    ctx.turboReturnPressurePa = 30.0;
+    ctx.turboReturnPressurePa = 150.0;
     ctx.turboTimeoutSec       = 50;
     ctx.overrangeWaitSec      = 2;
     ctx.overrangeWaitSec2     = 2;
+    // PumpDownProcedure больше не висит отдельным шагом после 11.7: по REQ-077
+    // она принадлежит общей откачке (11.7б) и финальной откачке камеры (11.10).
+    // Чтобы тесты 12.2 продолжали проверять ровно 12.2, здесь конфигурируется
+    // ТОЛЬКО тракт общей откачки; 11.8 и 11.9-11.10 остаются несконфигурированными
+    // и пропускаются с причиной, поэтому переход на турбо в прогоне ровно один.
+    ctx.generalPumpingValves = { VacuumValve::K171, VacuumValve::K173, VacuumValve::K151 };
+    ctx.testEvacTimeSec      = 1;
     // Readback по умолчанию подтверждает то, что записано в моке клапанов.
     ctx.confirmValve = [&rec](bool expectedOpen, const QString& name) {
         return rec.state.value(name, false) == expectedOpen;
@@ -984,13 +1135,16 @@ TEST(VacuumTree, TurboHoldResetsOnConditionBreak)
     VacuumTreeContext ctx = makeTurboCtx(rec);
     ctx.turboSwitchHoldSec = 3;
 
-    // Давление «дышит» между 5 и 20 Па: обе точки ≤ targetVacPa (40), поэтому
-    // форвакуумные этапы 11.5–11.7 проходят, но 20 Па > turboSwitchPressurePa
-    // (10), поэтому непрерывного удержания гейта не набирается никогда и он
-    // обязан упасть по таймауту. Проверяется именно сброс счётчика удержания.
+    // Гейт (50 Па) шире штатной цели форвакуума (40 Па), поэтому цель
+    // здесь ослаблена до 100 Па — иначе точку выше гейта не задать, не сломав
+    // этапы 11.5–11.7. Давление «дышит» между 5 и 60 Па: обе точки ≤ targetVacPa,
+    // поэтому форвакуум проходит, но 60 Па > turboSwitchPressurePa (50), и
+    // непрерывного удержания гейта не набирается никогда — он обязан упасть по
+    // таймауту. Проверяется именно сброс счётчика удержания.
+    ctx.targetVacPa = 100.0;
     auto tick = std::make_shared<int>(0);
     ctx.pressureVacPa = [tick] {
-        return (((*tick)++ % 2) == 0) ? 5.0 : 20.0;
+        return (((*tick)++ % 2) == 0) ? 5.0 : 60.0;
     };
     ctx.turboTimeoutSec = 12;
 
@@ -1103,7 +1257,7 @@ TEST(VacuumTree, TurboFallbackOnReturnPressureReopensK176)
     auto switched = std::make_shared<bool>(false);
     ctx.onTurboSwitched = [switched](bool toTurbo) { if (toTurbo) *switched = true; };
     ctx.pressureTurboPa = [switched] {
-        return *switched ? Reading(40.0) : Reading(1.0);
+        return *switched ? Reading(200.0) : Reading(1.0);
     };
 
     QList<bool> switches;
@@ -1188,4 +1342,511 @@ TEST(VacuumTree, SecondTractOpensTurboValveOnlyWithK176Closed)
     EXPECT_TRUE(pumpsNeverBothOpen(rec));
     // Ф3 по-прежнему открывает второй тракт: К192, затем К179.
     EXPECT_FALSE(opIndexes(rec, true, VacuumValve::K179).isEmpty());
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Этапы 11.7б / 11.8 / 11.9–11.11 — тракт до камеры (REQ-055…073)
+// ═════════════════════════════════════════════════════════════════════════════
+//
+// Инвариант REQ-008/084 (К176 и К179 никогда не открыты одновременно)
+// проверяется В КАЖДОМ тесте этих этапов — pumpsNeverBothOpen(rec). Открытый
+// одновременно с форвакуумным турбоклапан означает откачку форвакуумного
+// тракта турбонасосом, то есть его порчу, и никакая другая проверка этого
+// не поймает.
+
+namespace {
+
+// Полная конфигурация тракта: 11.7б, 11.8 и 11.9–11.11 включены. Значения
+// намеренно повторяют profile/GRAMsPfp.json → vacuumTract, чтобы тест ломался
+// при расхождении кода с конфигурацией стенда, а не только с самим собой.
+VacuumTreeContext makeTractCtx(Recorder& rec)
+{
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.generalPumpingValves = { VacuumValve::K171, VacuumValve::K173, VacuumValve::K151 };
+    ctx.leakTestValves       = { VacuumValve::K171, VacuumValve::K173 };
+    ctx.finalPumpingValves   = { VacuumValve::K173, VacuumValve::K151,
+                                 VacuumValve::K171, VacuumValve::K178 };
+    ctx.testEvacTimeSec      = 1;
+    ctx.leakTestDurationSec  = 2;
+    ctx.evacTimeSec          = 1;
+    // Цель ниже гейта перехода (50 Па) ⇒ турбо-область, контроль по ДВ302.
+    ctx.targetVacuumPa       = 0.5;
+    return ctx;
+}
+
+// Клапаны газовых баллонов: в режиме «Вакуум» обязаны оставаться закрытыми
+// (REQ-026). В рецепте они не упоминаются вовсе, и тест это фиксирует —
+// иначе первая же правка набора клапанов в профиле сможет их туда внести.
+bool gasValvesNeverTouched(const Recorder& rec)
+{
+    static const QStringList kGas { QStringLiteral("AR1"),    // К104
+                                    QStringLiteral("AR2"),    // К109
+                                    QStringLiteral("AR3") };  // К114
+    for (const ValveOp& op : rec.ops)
+        if (kGas.contains(op.name))
+            return false;
+    return true;
+}
+
+// Был ли клапан открыт хоть раз за прогон.
+bool everOpened(const Recorder& rec, const QString& name)
+{
+    for (const ValveOp& op : rec.ops)
+        if (op.open && op.name == name)
+            return true;
+    return false;
+}
+
+} // namespace
+
+// ── 11.7б: общая откачка (REQ-055–058) ───────────────────────────────────────
+
+TEST(VacuumTree, GeneralPumpingOpensTractBeforePumpAndClosesAfter)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.leakTestValves.clear();      // 11.8 и 11.9–11.10 — отдельные тесты
+    ctx.finalPumpingValves.clear();
+
+    QStringList skipped;
+    ctx.onStageSkipped = [&skipped](VacuumNode, const QString& r) { skipped << r; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    EXPECT_TRUE(gasValvesNeverTouched(rec));
+
+    // REQ-055: К171 и К173 открываются ДО форвакуумного тракта. Порядок здесь
+    // и есть требование — переставить их за К178/К176 нельзя.
+    const QList<int> openK171 = opIndexes(rec, true, VacuumValve::K171);
+    const QList<int> openK173 = opIndexes(rec, true, VacuumValve::K173);
+    const QList<int> openK178 = opIndexes(rec, true, VacuumValve::K178);
+    const QList<int> openK176 = opIndexes(rec, true, VacuumValve::K176);
+    ASSERT_FALSE(openK171.isEmpty());
+    ASSERT_FALSE(openK173.isEmpty());
+    ASSERT_FALSE(openK178.isEmpty());
+    ASSERT_FALSE(openK176.isEmpty());
+    EXPECT_LT(openK171.last(), openK178.last());
+    EXPECT_LT(openK173.last(), openK178.last());
+    EXPECT_LT(openK178.last(), openK176.last());
+
+    // REQ-056/057: переход на турбонасос состоялся именно на этом этапе.
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K179));
+
+    // К192 (SL1) — выход второго тракта в атмосферу. В тракте до камеры его
+    // быть не должно ни при каких условиях.
+    EXPECT_FALSE(everOpened(rec, VacuumValve::K192));
+
+    // Два непроведённых этапа обязаны объявиться причиной, а не тишиной.
+    EXPECT_EQ(skipped.size(), 3);   // 11.8 + 11.9 + 11.10
+}
+
+TEST(VacuumTree, GeneralPumpingIncludesApplicableBlockCValves)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.leakTestValves.clear();
+    ctx.finalPumpingValves.clear();
+    ctx.skipRK300 = false;           // C1 включён
+    ctx.skipRK50  = true;            // C2 исключён
+    ctx.skipRK10  = false;           // C3 включён
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+
+    // Открытие C на этапе 11.7б идёт ПОСЛЕ К171/К173 и ДО магистрали К178.
+    const QList<int> openC1  = opIndexes(rec, true, VacuumValve::K135);
+    const QList<int> openC3  = opIndexes(rec, true, VacuumValve::K131);
+    const QList<int> openK171 = opIndexes(rec, true, VacuumValve::K171);
+    const QList<int> openK178 = opIndexes(rec, true, VacuumValve::K178);
+    ASSERT_FALSE(openC1.isEmpty());
+    ASSERT_FALSE(openC3.isEmpty());
+    EXPECT_LT(openK171.last(), openC1.last());
+    EXPECT_LT(openC1.last(),  openK178.last());
+    EXPECT_LT(openC3.last(),  openK178.last());
+}
+
+TEST(VacuumTree, GeneralPumpingSkippedWithReasonWhenNotConfigured)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.generalPumpingValves.clear();
+    ctx.leakTestValves.clear();
+    ctx.finalPumpingValves.clear();
+
+    QList<VacuumNode> skippedNodes;
+    QStringList       reasons;
+    ctx.onStageSkipped = [&](VacuumNode n, const QString& r) {
+        skippedNodes << n;
+        reasons << r;
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    // Пропуск объявлен и назван — «этап не выполнялся» не должно выглядеть
+    // как «этап пройден».
+    EXPECT_TRUE(skippedNodes.contains(VacuumNode::GeneralPumping));
+    EXPECT_TRUE(reasons.join(QStringLiteral(" ")).contains(QStringLiteral("generalPumping")));
+    // Тракт не собирался — К171/К173 не трогались.
+    EXPECT_FALSE(everOpened(rec, VacuumValve::K171));
+    EXPECT_FALSE(everOpened(rec, VacuumValve::K173));
+}
+
+TEST(VacuumTree, GeneralPumpingBlockedValveClosesWhatWasOpened)
+{
+    Recorder rec;
+    // Блокируем К173 — второй клапан набора. К151 для этого не годится: он же
+    // участвует в 11.7 (E/F), и прогон свалился бы раньше, не дойдя до 11.7б.
+    rec.blockedOpens << VacuumValve::K173;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.leakTestValves.clear();
+    ctx.finalPumpingValves.clear();
+
+    QStringList failures;
+    ctx.onFailure = [&failures](const QString& r) { failures << r; };
+
+    runBlocking(buildVacuumRecipe(ctx));
+    // Главное — не исход дерева, а состояние установки: уже открытые К171/К173
+    // обязаны закрыться, насос не подключаться.
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    EXPECT_FALSE(everOpened(rec, VacuumValve::K179));
+    EXPECT_FALSE(failures.isEmpty());
+}
+
+TEST(VacuumTree, CancelDuringGeneralPumpingClosesTractAndPumps)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.leakTestValves.clear();
+    ctx.finalPumpingValves.clear();
+    ctx.turboSwitchHoldSec = 50;               // застрять на наборе гейта
+    ctx.turboTimeoutSec    = 500;
+
+    QTaskTree tree;
+    ctx.onNode = [&tree](VacuumNode node, NodeState state) {
+        if (node == VacuumNode::TurboGate && state == NodeState::Running)
+            QTimer::singleShot(0, &tree, [&tree] { tree.cancel(); });
+    };
+    tree.setRecipe(buildVacuumRecipe(ctx));
+
+    QEventLoop loop;
+    QObject::connect(&tree, &QTaskTree::done, &loop, [&loop](DoneWith) { loop.quit(); });
+    tree.start();
+    loop.exec();
+
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+}
+
+// ── 11.8: проверка герметичности (REQ-059–063) ───────────────────────────────
+
+TEST(VacuumTree, LeakTestPassesWhenRiseWithinThreshold)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.finalPumpingValves.clear();
+
+    // Первое чтение — начальное давление, второе — после выдержки. Прирост
+    // 0.002 бар меньше порога 0.01 ⇒ герметичность подтверждена.
+    auto reads = std::make_shared<int>(0);
+    LeakChannel ch;
+    ch.name    = QStringLiteral("DD312");
+    ch.maxRise = 0.01;
+    ch.read    = [reads] {
+        *reads += 1;
+        return Reading(*reads > 1 ? 0.102 : 0.100);
+    };
+    ctx.leakChannels << ch;
+
+    QStringList warnings;
+    ctx.onWarning = [&warnings](const QString& w) { warnings << w; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    EXPECT_TRUE(warnings.isEmpty());
+    // REQ-059: участок открывался, и это были именно К171/К173.
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K171));
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K173));
+}
+
+TEST(VacuumTree, LeakTestWarnsButContinuesOnLeak)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.finalPumpingValves.clear();
+
+    // Показание растёт на каждом чтении: за выдержку прирост заведомо больше
+    // порога, значит LEAK_DETECTED.
+    auto value = std::make_shared<double>(0.100);
+    LeakChannel ch;
+    ch.name    = QStringLiteral("DD312");
+    ch.maxRise = 0.001;
+    ch.read    = [value] { const double v = *value; *value += 0.05; return Reading(v); };
+    ctx.leakChannels << ch;
+
+    QStringList warnings;
+    ctx.onWarning = [&warnings](const QString& w) { warnings << w; };
+
+    // REQ-062: в режиме «Вакуум» это ПРЕДУПРЕЖДЕНИЕ — режим обязан продолжиться.
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    ASSERT_FALSE(warnings.isEmpty());
+    EXPECT_TRUE(warnings.first().contains(QStringLiteral("LEAK_DETECTED")));
+    EXPECT_TRUE(warnings.first().contains(QStringLiteral("DD312")));
+}
+
+TEST(VacuumTree, LeakTestSkippedWithReasonWithoutThreshold)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.finalPumpingValves.clear();
+    ctx.leakChannels.clear();          // dP_leak_max в конфигурации нет
+
+    QList<VacuumNode> skippedNodes;
+    QStringList       reasons;
+    ctx.onStageSkipped = [&](VacuumNode n, const QString& r) {
+        skippedNodes << n;
+        reasons << r;
+    };
+    QStringList warnings;
+    ctx.onWarning = [&warnings](const QString& w) { warnings << w; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    // Ключевое: «не проверяли» объявлено явно и НЕ выглядит как «пройдено».
+    EXPECT_TRUE(skippedNodes.contains(VacuumNode::LeakTest));
+    EXPECT_TRUE(reasons.join(QStringLiteral(" ")).contains(QStringLiteral("dP_leak_max")));
+    EXPECT_TRUE(warnings.isEmpty());
+}
+
+TEST(VacuumTree, LeakTestCountsInvalidReadingAsUnmeasuredNotTight)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.finalPumpingValves.clear();
+
+    // Мёртвый датчик, отдающий ноль. Без проверки качества это выглядело бы
+    // как идеальная герметичность — самый опасный из возможных ложных «ОК».
+    LeakChannel ch;
+    ch.name    = QStringLiteral("DD312");
+    ch.maxRise = 0.01;
+    ch.read    = [] { return Reading(0.0, Quality::NoResponse); };
+    ctx.leakChannels << ch;
+
+    QStringList warnings;
+    ctx.onWarning = [&warnings](const QString& w) { warnings << w; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    ASSERT_FALSE(warnings.isEmpty());
+    EXPECT_TRUE(warnings.first().contains(QStringLiteral("не проверены")));
+}
+
+TEST(VacuumTree, LeakTestRunsWithBothPumpsClosed)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.finalPumpingValves.clear();
+
+    LeakChannel ch;
+    ch.name    = QStringLiteral("DD312");
+    ch.maxRise = 0.01;
+    ch.read    = [] { return Reading(0.1); };
+    ctx.leakChannels << ch;
+
+    // Насосы на время выдержки обязаны быть закрыты: иначе меряется не
+    // натекание, а работа насоса.
+    bool pumpOpenDuringLeakTest = false;
+    bool inLeakTest = false;
+    ctx.onNode = [&](VacuumNode node, NodeState state) {
+        if (node == VacuumNode::LeakTest)
+            inLeakTest = (state == NodeState::Running);
+    };
+    ctx.setValve = [&](bool open, const QString& name) -> bool {
+        if (inLeakTest && open
+            && (name == VacuumValve::K176 || name == VacuumValve::K179))
+            pumpOpenDuringLeakTest = true;
+        rec.ops.append({open, name});
+        rec.state[name] = open;
+        return true;
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_FALSE(pumpOpenDuringLeakTest);
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    EXPECT_TRUE(rec.allClosed());
+}
+
+// ── 11.9–11.11: финальная откачка камеры (REQ-064–073) ───────────────────────
+
+TEST(VacuumTree, FinalPumpingOpensChamberTractAndReachesTurbo)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.generalPumpingValves.clear();   // изолируем 11.9–11.11
+    ctx.leakTestValves.clear();
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    EXPECT_TRUE(gasValvesNeverTouched(rec));
+
+    // REQ-066: минимальный набор тракта до камеры открыт целиком.
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K173));
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K151));
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K171));
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K178));
+    // Цель 0.5 Па лежит ниже гейта 50 Па ⇒ турбо-область (REQ-067/069).
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K179));
+    // Выход в атмосферу в тракте до камеры недопустим.
+    EXPECT_FALSE(everOpened(rec, VacuumValve::K192));
+
+    // REQ-064/066: тракт собран ДО подключения насоса.
+    const QList<int> openK151 = opIndexes(rec, true, VacuumValve::K151);
+    const QList<int> openK176 = opIndexes(rec, true, VacuumValve::K176);
+    ASSERT_FALSE(openK151.isEmpty());
+    ASSERT_FALSE(openK176.isEmpty());
+    EXPECT_LT(openK151.last(), openK176.last());
+}
+
+TEST(VacuumTree, FinalPumpingStaysOnForevacWhenTargetIsInForevacRange)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.generalPumpingValves.clear();
+    ctx.leakTestValves.clear();
+    // REQ-067: цель выше порога перехода — форвакуумная область, К179 не нужен.
+    ctx.targetVacuumPa = 100.0;
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K176));
+    EXPECT_FALSE(everOpened(rec, VacuumValve::K179));
+}
+
+TEST(VacuumTree, FinalPumpingReportsReasonWhenTargetNotReached)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.generalPumpingValves.clear();
+    ctx.leakTestValves.clear();
+    // Гейт перехода опущен ниже цели ⇒ цель попадает в форвакуумную область,
+    // контроль идёт по ДВ301 (REQ-069). ДВ301 отдаёт 5 Па, цель 1 Па —
+    // время истекло, цель не достигнута.
+    ctx.turboSwitchPressurePa = 0.1;
+    ctx.targetVacuumPa        = 1.0;
+    ctx.pressureVacPa         = [] { return 5.0; };
+
+    QStringList failures;
+    ctx.onFailure = [&failures](const QString& r) { failures << r; };
+
+    // Недостигнутая цель — не отказ режима: прогон завершается, причина
+    // записана, клапаны закрыты (REQ-069 + согласованная дивергенция по
+    // maxAdditionalEvacTime).
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    ASSERT_FALSE(failures.isEmpty());
+    EXPECT_TRUE(failures.join(QStringLiteral(" ")).contains(QStringLiteral("не достигнута")));
+}
+
+TEST(VacuumTree, FinalPumpingSkippedWithReasonWhenNotConfigured)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.generalPumpingValves.clear();
+    ctx.leakTestValves.clear();
+    ctx.finalPumpingValves.clear();
+
+    QList<VacuumNode> skippedNodes;
+    QStringList       reasons;
+    ctx.onStageSkipped = [&](VacuumNode n, const QString& r) {
+        skippedNodes << n;
+        reasons << r;
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    EXPECT_TRUE(skippedNodes.contains(VacuumNode::FinalPrep));
+    EXPECT_TRUE(skippedNodes.contains(VacuumNode::FinalPumping));
+    EXPECT_TRUE(reasons.join(QStringLiteral(" ")).contains(QStringLiteral("finalPumping")));
+}
+
+TEST(VacuumTree, FinalCloseClosesEveryValveItOpened)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.generalPumpingValves.clear();
+    ctx.leakTestValves.clear();
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    // REQ-070/071: каждое закрытие — отдельная операция, значит отдельная
+    // строка журнала. Проверяем, что для каждого открытия нашлось закрытие.
+    for (const QString& v : { VacuumValve::K173, VacuumValve::K151,
+                              VacuumValve::K171, VacuumValve::K178,
+                              VacuumValve::K176, VacuumValve::K179 }) {
+        if (!everOpened(rec, v))
+            continue;
+        EXPECT_FALSE(opIndexes(rec, false, v).isEmpty())
+            << "клапан " << v.toStdString() << " открывался, но не закрывался";
+    }
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+}
+
+TEST(VacuumTree, CancelDuringFinalPumpingClosesChamberTract)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.generalPumpingValves.clear();
+    ctx.leakTestValves.clear();
+    ctx.evacTimeSec = 500;                      // застрять в откачке
+
+    QTaskTree tree;
+    ctx.onNode = [&tree](VacuumNode node, NodeState state) {
+        if (node == VacuumNode::FinalPumping && state == NodeState::Running)
+            QTimer::singleShot(0, &tree, [&tree] { tree.cancel(); });
+    };
+    tree.setRecipe(buildVacuumRecipe(ctx));
+
+    QEventLoop loop;
+    QObject::connect(&tree, &QTaskTree::done, &loop, [&loop](DoneWith) { loop.quit(); });
+    tree.start();
+    loop.exec();
+
+    // Отмена посреди откачки камеры обязана оставить установку закрытой:
+    // открытый насосный клапан после «Стоп» — то, чего быть не должно.
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+}
+
+TEST(VacuumTree, FullTractRunKeepsPumpInterlockAcrossAllStages)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);   // 11.7б + 11.8 + 11.9–11.11
+
+    LeakChannel ch;
+    ch.name    = QStringLiteral("DD312");
+    ch.maxRise = 0.01;
+    ch.read    = [] { return Reading(0.1); };
+    ctx.leakChannels << ch;
+
+    QList<bool> switches;
+    ctx.onTurboSwitched = [&switches](bool toTurbo) { switches.append(toTurbo); };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    // Главный инвариант прогона целиком, через все три новых этапа.
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    EXPECT_TRUE(gasValvesNeverTouched(rec));
+    EXPECT_FALSE(everOpened(rec, VacuumValve::K192));
+    // Переход на турбонасос состоялся дважды — в 11.7б и в 11.10, — и оба раза
+    // именно на турбо, без откатов.
+    EXPECT_EQ(switches, (QList<bool>{ true, true }));
 }

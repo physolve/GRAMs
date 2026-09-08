@@ -125,13 +125,27 @@ struct VacuumOptions {
     // Турбо 12.2. Пороги — из profile/GRAMsPfp.json (vacuumSafety), не из UI:
     // цель форвакуумного этапа и гейт перехода на турбонасос — РАЗНЫЕ величины.
     bool   turboTract            = true;   // Advanced: исключить тракт турбонасоса
-    double turboSwitchPressurePa = 10.0;   // гейт по ДВ301 (REQ-078/080)
+    double turboSwitchPressurePa = 50.0;   // гейт по ДВ301 (REQ-078/080)
     int    turboSwitchHoldSec    = 60;     // удержание гейта (REQ-080)
-    double turboReturnPressurePa = 30.0;   // порог отката (REQ-083)
+    double turboReturnPressurePa = 150.0;  // порог отката (REQ-083)
     int    turboTimeoutSec       = 600;    // лимит набора гейта
     int    overrangeWaitSec      = 300;    // over range ДВ301 (REQ-079)
     int    overrangeWaitSec2     = 350;    // over range ДВ302 (REQ-081)
     bool   pumpRateCheck = true; // dP/dt-watchdog после открытия К176
+    // Этапы 11.7б/11.8/11.9-11.11: наборы клапанов и пороги из профиля
+    // (vacuumTract, vacuumSafety). Пустые списки = этап не сконфигурирован.
+    QStringList generalPumpingValves;
+    QStringList leakTestValves;
+    QStringList finalPumpingValves;
+    int    testEvacTimeSec     = 300;   // REQ-057
+    int    leakTestDurationSec = 60;    // REQ-060
+    // Имя датчика -> допустимый прирост за выдержку (в единицах датчика).
+    // Пусто = порог не задан, этап 11.8 пропускается с причиной.
+    QMap<QString, double> dPLeakMax;
+    // Датчики герметичности: имя из dPLeakMax -> источник показаний.
+    QMap<QString, DataCollection*> leakSensors;
+    double targetVacuumPa = 0.0133;     // targetVAC (REQ-029/036)
+    int    evacTimeSec    = 1800;       // EvacTime (REQ-029/036)
     // Оставить тракт открытым после успешного завершения всех повторов, чтобы
     // насос продолжал качать без автоматического закрытия клапанов.
     bool   continuousPumping = false;
@@ -171,6 +185,10 @@ signals:
 public slots:
     void onPauseRequested();
     void onResumeRequested();
+    // Живое редактирование опции «непрерывная откачка» во время прогона: хвост
+    // рецепта читает её в момент выполнения (шов continuousPumpingLive), а не
+    // берёт снимок со «Старта», поэтому тумблер работает и на ходу.
+    void onContinuousPumpingChanged(bool enabled);
     // Отмена внутреннего дерева. Слот (не обычный метод) — чтобы внешний
     // done-хендлер мог вызвать его ОТЛОЖЕННО через QMetaObject::invokeMethod
     // с Qt::QueuedConnection и не вкладывать отмену внутреннего дерева в чужой
