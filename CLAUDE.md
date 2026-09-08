@@ -135,7 +135,7 @@ ptr[]   — массивы указателей        — всегда пров
 
 | Режим | Статус | Доказательство / что осталось |
 |---|---|---|
-| **Вакуум** | **Реализован (код)** Ф1–Ф3 (s1–s24) + форвакуум 11.5–11.7 (A1/B/C/E/F) + dP/dt-watchdog + **турбо-переход 12.2 (К176→К179)**; **осталось** герметичность (11.8), финальная откачка (11.9–11.11) — `docs/regimes/vacuum.md` | `recipes/VacuumTaskTree.cpp` рецепт на TaskTree; `buildPumpDownProcedure` (REQ-077…084) с гейтом `turboSwitchPressurePa`, `overRangeGuard` (REQ-079/081) и откатом по `turboReturnPressurePa`; `openTurboValve` — единственная точка открытия К179, с подтверждением readback К176 (REQ-082); `confirmValve` через `AdvantechDO::refresh`; `Reading`/`Quality` для ДВ301 и ДВ302; ДВ302 на `TurboVacuumController` (второй COM-порт); пороги в `profile/GRAMsPfp.json` → `vacuumSafety`; интерлок AR6⇄SL1 в `contradictionValves`; **51 тест `VacuumTreeTests`**; **верификация на стенде — не выполнялась** |
+| **Вакуум** | **Реализован (код)** Ф1–Ф3 (s1–s24) + форвакуум 11.5–11.7 (A1/B/C/E/F) + dP/dt-watchdog + **турбо-переход 12.2 (К176→К179)**; **осталось** герметичность (11.8), финальная откачка (11.9–11.11) — `docs/regimes/vacuum.md` | `recipes/VacuumTaskTree.cpp` рецепт на TaskTree; `buildPumpDownProcedure` (REQ-077…084) с гейтом `turboSwitchPressurePa`, `overRangeGuard` (REQ-079/081) и откатом по `turboReturnPressurePa`; `connectTurboPump` — единственная точка открытия К179 (закрыть К176 → readback REQ-082 → открыть К179), её используют Ф3, переход 12.2 и хвост непрерывной откачки; **К179 = `SL2`, К192 = `SL1`** (исправлено 2026-09-07), интерлок AR6⇄SL2 в `contradictionValves`; `confirmValve` через `AdvantechDO::refresh`; `Reading`/`Quality` для ДВ301 и ДВ302; ДВ302 на `TurboVacuumController` (второй COM-порт); пороги в `profile/GRAMsPfp.json` → `vacuumSafety`; dP/dt-watchdog работает только выше цели этапа (`PumpRateWatchdog::targetPa`); турбо-этап обязателен (чекбокса в UI нет), прогресс двухстадийный (`VacuumRunMonitor::turboStage`); непрерывная откачка оставляет К151+К178+К179 при закрытом К176 и правится на ходу (`continuousPumpingLive`); **58 тестов `VacuumTreeTests`**; **верификация на стенде — не выполнялась** |
 | **Режим в** | **Заглушка** — `docs/regimes/regime-b.md` | `RegimeWorkers.cpp:417–441` все 4 метода = `qDebug` + `// TODO` |
 | **Режим г** | **Заглушка** — `docs/regimes/regime-g.md` | `RegimeWorkers.cpp:445–465` аналогично Режиму в |
 | **Тест клапанов** | **Реализован (код)** — `docs/regimes/valve-test.md` | `ValveTestWorker.cpp` полная state machine; не верифицирован на железе (Windows) |
@@ -145,6 +145,18 @@ ptr[]   — массивы указателей        — всегда пров
 | **SOAK** | Ожидает | Воркер не создан |
 | **PCI** | Ожидает | Воркер не создан |
 | **SYSTEST** | Ожидает | Воркер не создан |
+
+
+### Дивергенция: бюджет времени прогона (режим «Вакуум»)
+
+Время строки RunTable (`max_time`, **секунды**) — это бюджет **всего прогона**
+режима от старта Ф1, жёсткий потолок сверху. Это расходится с ТЗ v5, где
+`EvacTime` — приоритетное условие (REQ-032/068) с продлением до
+`maxAdditionalEvacTime` (REQ-033/069). Продление **отменено**,
+`maxAdditionalEvacTime` не реализован. Любое ожидание режима обрезается
+остатком бюджета; исчерпание завершает прогон штатно и с названной причиной, а
+не аварией. Расхождение согласовано и подлежит внесению в следующую редакцию
+ТЗ — подробности и таблица различий в `docs/regimes/vacuum.md` §7а.
 
 **Алгоритм добавления нового режима:**
 1. Изучить реализацию в GramQt

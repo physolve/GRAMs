@@ -162,6 +162,8 @@ void VacuumRunMonitor::beginRun(int totalRepeats)
     m_failureReason.clear();
     m_skippedStages.clear();
     m_warnings.clear();
+    m_budgetElapsedSec   = 0;
+    m_budgetRemainingSec = m_budgetTotalSec;
     m_finishState = -1;
     m_activePump.clear();
     m_turboNode        = -1;
@@ -169,6 +171,7 @@ void VacuumRunMonitor::beginRun(int totalRepeats)
     m_turboElapsedSec  = 0;
     emit turboProgressChanged();
     emit noticesChanged();
+    emit budgetChanged();
     emit valveStatesChanged();
     emit progressChanged();
     emit currentLabelChanged();
@@ -373,6 +376,23 @@ void VacuumRunMonitor::onFailure(const QString& reason)
     if (reason.isEmpty() || !m_failureReason.isEmpty())
         return;                       // первая причина за прогон — основная
     m_failureReason = reason;
+}
+
+void VacuumRunMonitor::onBudget(int elapsedSec, int remainingSec)
+{
+    if (m_budgetElapsedSec == elapsedSec && m_budgetRemainingSec == remainingSec)
+        return;
+    m_budgetElapsedSec   = elapsedSec;
+    m_budgetRemainingSec = remainingSec;
+    emit budgetChanged();
+}
+
+void VacuumRunMonitor::setBudgetTotal(int totalSec)
+{
+    if (m_budgetTotalSec == totalSec)
+        return;
+    m_budgetTotalSec = totalSec;
+    emit budgetChanged();
 }
 
 void VacuumRunMonitor::onStageSkipped(int node, const QString& reason)

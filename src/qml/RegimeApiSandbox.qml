@@ -165,6 +165,19 @@ Item {
         return v.toFixed(2) + " Па"
     }
 
+    // Формат времени как в столбце RunTable (ЧЧ:ММ:СС): одно число должно
+    // выглядеть одинаково в таблице и здесь, иначе их не сопоставить глазом.
+    function formatHms(seconds) {
+        if (seconds === undefined || seconds < 0)
+            return "--:--:--"
+        var h = Math.floor(seconds / 3600)
+        var m = Math.floor((seconds % 3600) / 60)
+        var s = Math.floor(seconds % 60)
+        return String(h).padStart(2, "0") + ":"
+             + String(m).padStart(2, "0") + ":"
+             + String(s).padStart(2, "0")
+    }
+
     component Card : Rectangle {
         default property alias cardData: inner.data
         Layout.fillWidth: true
@@ -696,7 +709,7 @@ Item {
                     Layout.fillWidth: true
                     columns: 4
                     columnSpacing: 20
-                    rowSpacing: 6
+                    rowSpacing: 4
                     Label { text: "Повтор:"; color: root.cSub }
                     Label { text: root.mon.currentRepeat + " / " + root.mon.totalRepeats; color: root.cText }
                     Label { text: "Выдержка, с:"; color: root.cSub }
@@ -705,6 +718,48 @@ Item {
                     Label { text: root.mon.repeatsDone; color: root.stateColor(2) }
                     Label { text: "С ошибкой:"; color: root.cSub }
                     Label { text: root.mon.repeatsError; color: root.stateColor(3) }
+                }
+
+                // ── Бюджет времени прогона (T_total строки RunTable) ───────────
+                //
+                // Показывается СУММАРНОЕ время прогона и остаток, а не только
+                // прогресс текущего этапа: на финальной откачке важно именно
+                // «сколько осталось до конца строки». Это то же число, что
+                // стоит в столбце времени RunTable.
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+                    visible: root.mon.budgetLimited
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+                        Label { text: "Время прогона:"; color: root.cSub }
+                        Label {
+                            text: root.formatHms(root.mon.budgetElapsedSec)
+                                  + " / " + root.formatHms(root.mon.budgetTotalSec)
+                            color: root.cText
+                            font.family: "Consolas"
+                        }
+                        Item { Layout.fillWidth: true }
+                        Label { text: "осталось:"; color: root.cSub }
+                        Label {
+                            text: root.formatHms(root.mon.budgetRemainingSec)
+                            font.family: "Consolas"
+                            font.bold: true
+                            // Красное на нуле: исчерпанный бюджет прекращает
+                            // прогон, и это должно быть видно без чтения лога.
+                            color: root.mon.budgetRemainingSec === 0 ? root.stateColor(3)
+                                 : root.mon.budgetRemainingSec < root.mon.budgetTotalSec * 0.1
+                                   ? "#d08770" : root.cText
+                        }
+                    }
+                    ProgressBar {
+                        Layout.fillWidth: true
+                        from: 0
+                        to: Math.max(1, root.mon.budgetTotalSec)
+                        value: root.mon.budgetElapsedSec
+                    }
                 }
 
                 // ── Причина завершения режима ─────────────────────────────────

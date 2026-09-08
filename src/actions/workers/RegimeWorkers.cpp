@@ -356,6 +356,11 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
         qWarning() << "[Вакуум] 11.8: ни одного канала герметичности — этап будет "
                       "пропущен с указанием причины, а не пройден";
 
+    // T_total прогона — время строки RunTable (max_time, секунды). Раньше оно
+    // доезжало до RegimeWorkerConfig и там умирало: вакуумный воркер его не
+    // читал, и суммарное время режима ничем не ограничивалось.
+    ctx.totalBudgetSec = qMax(0, m_cfg.maxTimeSec);
+
     ctx.continuousPumping = m_opts.continuousPumping;
     // Живое значение тумблера: оператор вправе передумать, пока режим идёт.
     ctx.continuousPumpingLive = [this] { return m_opts.continuousPumping; };
@@ -502,6 +507,10 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
         qDebug() << "[Вакуум]" << label;
         if (m_monitor)
             m_monitor->onLabel(label);
+    };
+    ctx.onBudget = [this](int elapsedSec, int remainingSec) {
+        if (m_monitor)
+            m_monitor->onBudget(elapsedSec, remainingSec);
     };
     ctx.onNode = [this](VacuumNode node, NodeState state) {
         if (m_monitor)

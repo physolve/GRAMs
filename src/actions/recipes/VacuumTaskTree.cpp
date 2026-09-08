@@ -161,6 +161,54 @@ QString nodeTitle(VacuumNode node)
     return QStringLiteral("этап");
 }
 
+// ── Учёт бюджета времени прогона (см. RunBudget в заголовке) ─────────────────
+//
+// Вызывается из isComplete КАЖДОГО ожидания рецепта — это единственное место,
+// где время режима вообще течёт. Возвращает true, когда бюджет исчерпан и
+// ожидание обязано прекратиться независимо от собственного условия.
+//
+// Тик засчитывается ДО проверки: PausableTicker вызывает isComplete уже после
+// того, как секунда прошла, и не засчитать её значило бы систематически
+// недосчитывать по одной секунде на каждое ожидание.
+bool budgetTick(const VacuumTreeContext& ctx)
+{
+    if (!ctx.budget || !ctx.budget->limited())
+        return false;
+    // Проверка ДО инкремента. PausableTicker всегда отрабатывает минимум один
+    // тик, поэтому ожидание, начатое на исчерпанном бюджете, обязано завершиться
+    // немедленно и НЕ добавлять к счётчику: иначе каждое следующее ожидание
+    // накручивало бы прогону лишнюю секунду и потолок переставал быть потолком.
+    // Гранулярность в один тик остаётся: ровно столько может занять обнаружение
+    // исчерпания. На секундном тике боевого режима это шум, а не отклонение.
+    if (ctx.budget->exhausted())
+        return true;
+    ++ctx.budget->usedSec;
+    if (ctx.onBudget)
+        ctx.onBudget(ctx.budget->usedSec, ctx.budget->remaining());
+    return ctx.budget->exhausted();
+}
+
+// Остаток бюджета; без бюджета — «сколько просили».
+int budgetClamp(const VacuumTreeContext& ctx, int seconds)
+{
+    return ctx.budget ? ctx.budget->clamp(seconds) : seconds;
+}
+
+// Исчерпанный бюджет — ШТАТНОЕ завершение с названной причиной, а не авария:
+// ТЗ-шные «достигнут targetVAC», «исчерпан бюджет», «остановлено оператором» и
+// «авария» обязаны различаться, и валить прогон в Error означало бы сообщить
+// оператору неправду о состоянии установки.
+void reportBudgetExhausted(const VacuumTreeContext& ctx)
+{
+    if (!ctx.budget || !ctx.budget->limited() || ctx.budget->reported)
+        return;
+    ctx.budget->reported = true;
+    if (ctx.onFailure)
+        ctx.onFailure(QStringLiteral(
+            "Бюджет прогона (%1 с, время строки RunTable) исчерпан — "
+            "оставшиеся этапы не выполнялись").arg(ctx.budget->totalSec));
+}
+
 // Значение показания для UI: NaN, если датчика нет ИЛИ показание недостоверно.
 // Монитор отличает NaN через std::isnan и гасит строку «есть показание».
 double readingOrNan(const std::function<Reading()>& seam)
@@ -255,7 +303,12 @@ ExecutableItem pausableDelay(const Storage<VacuumRunState>& st,
             const int repeat = int(iter.iteration());
             t.intervalMs = ctx.tickIntervalMs;
             t.pauseBus   = ctx.pauseBus;
-            t.isComplete = [seconds](int elapsed) { return elapsed >= seconds; };
+            // Выдержка обрезается остатком бюджета: прогон не вправе выйти
+            // за T_total ни на одном ожидании (см. RunBudget).
+            t.isComplete = [ctx, seconds](int elapsed) {
+                const bool outOfBudget = budgetTick(ctx);
+                return elapsed >= seconds || outOfBudget;
+            };
             if (ctx.onProgress) {
                 t.onTick = [ctx, base, repeat](int elapsed) {
                     ctx.onProgress(base + elapsed, repeat);
@@ -531,14 +584,22 @@ ExecutableItem pausableHoldUntil(const VacuumTreeContext& ctx,
 {
     auto held      = std::make_shared<int>(0);
     auto succeeded = std::make_shared<bool>(false);
+    // Ожидание, прерванное бюджетом, — не таймаут этапа: удержание не набрано
+    // не потому, что установка не справилась, а потому, что кончилось время
+    // строки. Такой исход обязан завершать прогон штатно.
+    auto byBudget  = std::make_shared<bool>(false);
     return Group {
         sequential,
-        TickerTask([ctx, pred, holdSec, timeoutSec, held, succeeded, onTick](PausableTicker& t) {
+        TickerTask([ctx, pred, holdSec, timeoutSec, held, succeeded, byBudget,
+                    onTick](PausableTicker& t) {
             *held = 0;
             *succeeded = false;
+            *byBudget  = false;
             t.intervalMs = ctx.tickIntervalMs;
             t.pauseBus   = ctx.pauseBus;
-            t.isComplete = [pred, holdSec, timeoutSec, held, succeeded, onTick](int elapsed) -> bool {
+            t.isComplete = [ctx, pred, holdSec, timeoutSec, held, succeeded, byBudget,
+                            onTick](int elapsed) -> bool {
+                const bool outOfBudget = budgetTick(ctx);
                 if (pred && pred())
                     ++(*held);
                 else
@@ -551,12 +612,24 @@ ExecutableItem pausableHoldUntil(const VacuumTreeContext& ctx,
                 }
                 if (timeoutSec > 0 && elapsed >= timeoutSec)
                     return true;                                  // таймаут (succeeded=false)
-                return false;
+                // Исчерпанный бюджет прекращает ожидание, но исход помечается
+                // отдельно: объемлющий этап закроет клапаны и завершится
+                // штатно, а не аварией.
+                if (outOfBudget)
+                    *byBudget = true;
+                return outOfBudget;
             };
         }),
-        onGroupDone([succeeded, onTimeout](DoneWith w) -> DoneResult {
+        onGroupDone([ctx, succeeded, byBudget, onTimeout](DoneWith w) -> DoneResult {
             // Success только при реальном удержании; таймаут/отмена → Error,
             // чтобы объемлющий этап закрыл клапаны в своём onGroupDone.
+            // Исключение — исчерпанный бюджет: этап так же закрывает за собой
+            // клапаны (его onGroupDone отработает), но прогон не объявляется
+            // аварийным, а идёт к штатному завершению с названной причиной.
+            if (w == DoneWith::Success && *byBudget) {
+                reportBudgetExhausted(ctx);
+                return DoneResult::Success;
+            }
             if (w == DoneWith::Success && !*succeeded && onTimeout)
                 onTimeout();
             return (w == DoneWith::Success && *succeeded)
@@ -991,8 +1064,10 @@ ExecutableItem turboFallback(const Storage<VacuumRunState>& st,
 // поведение единственного вызова из цепочки Ф, поэтому существующие тесты
 // 12.2 остаются в силе без правок.
 struct PumpDownOptions {
-    // Длительность фазы откачки после перехода на К179. <0 — ctx.turboTimeoutSec.
-    // 11.7б задаёт testEvacTimeSec (REQ-057), 11.10 — evacTimeSec (REQ-068).
+    // Длительность фазы откачки после перехода на К179. 11.7б задаёт
+    // testEvacTimeSec (REQ-057). <0 — «спросить в момент выполнения»: 11.10
+    // качает остаток бюджета, а он известен только на входе в этап
+    // (min(evacTimeSec, remaining), не больше turboTimeoutSec).
     int  pumpingSec = -1;
     // Закрыть оба насосных клапана по завершении. 11.9→11.10 идут на ОДНОМ
     // насосе, и закрытие между ними сорвало бы набранный вакуум.
@@ -1032,7 +1107,11 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
     };
 
     auto fellBack = std::make_shared<bool>(false);
-    const int pumpingSec = opts.pumpingSec < 0 ? ctx.turboTimeoutSec : opts.pumpingSec;
+    // Фиксированная длительность известна на сборке; «остаток бюджета» — нет,
+    // поэтому для неё считаем при выполнении, в onGroupSetup ниже.
+    const bool pumpUntilBudget = opts.pumpingSec < 0;
+    auto pumpingSecLive = std::make_shared<int>(ctx.turboTimeoutSec);
+    const int pumpingSecFixed = opts.pumpingSec;
     const bool closePumps = opts.closePumps;
 
     return Group {
@@ -1101,18 +1180,26 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
         // ── Шаг 4: турбо-откачка и порог возврата ─────────────────────────────
         withNode(ctx, VacuumNode::TurboPumping, Group {
             sequential,
-            onGroupSetup([ctx, fellBack]() -> SetupResult {
+            onGroupSetup([ctx, fellBack, pumpUntilBudget, pumpingSecFixed,
+                          pumpingSecLive]() -> SetupResult {
                 *fellBack = false;
+                // turboTimeoutSec ограничивает НАБОР гейта, а не длительность
+                // откачки, и потолком для 11.10 быть не может: 600 с обрезали
+                // бы штатные 30 минут EvacTime до десяти.
+                *pumpingSecLive = pumpUntilBudget
+                                      ? budgetClamp(ctx, ctx.evacTimeSec)
+                                      : pumpingSecFixed;
                 if (ctx.onLabel)
                     ctx.onLabel(QStringLiteral("Турбо-откачка: контроль ДВ302, "
                                                "порог возврата %1 Па")
                                     .arg(ctx.turboReturnPressurePa));
                 return SetupResult::Continue;
             }),
-            TickerTask([ctx, fellBack, pumpingSec](PausableTicker& t) {
+            TickerTask([ctx, fellBack, pumpingSecLive](PausableTicker& t) {
                 t.intervalMs = ctx.tickIntervalMs;
                 t.pauseBus   = ctx.pauseBus;
-                t.isComplete = [ctx, fellBack, pumpingSec](int elapsed) -> bool {
+                t.isComplete = [ctx, fellBack, pumpingSecLive](int elapsed) -> bool {
+                    const bool outOfBudget = budgetTick(ctx);
                     const Reading p302 = ctx.pressureTurboPa
                                              ? ctx.pressureTurboPa()
                                              : Reading(0.0, Quality::NoResponse);
@@ -1127,7 +1214,7 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
                         *fellBack = true;
                         return true;
                     }
-                    return elapsed >= pumpingSec;
+                    return elapsed >= *pumpingSecLive || outOfBudget;
                 };
             })
         }),
@@ -1226,6 +1313,27 @@ void skipStage(const VacuumTreeContext& ctx, VacuumNode node, const QString& rea
 {
     if (ctx.onNode)         ctx.onNode(node, NodeState::Skipped);
     if (ctx.onStageSkipped) ctx.onStageSkipped(node, reason);
+}
+
+// Этап, который не начинается при исчерпанном бюджете. Пропуск объявляется
+// причиной и состоянием узла — тихо «выполненным» этап выглядеть не должен.
+// Первый этап повтора (11.5) в гейте не нуждается: бюджет там заведомо цел.
+ExecutableItem budgetGate(const VacuumTreeContext& ctx, VacuumNode node,
+                          ExecutableItem stage)
+{
+    return Group {
+        sequential,
+        onGroupSetup([ctx, node]() -> SetupResult {
+            if (!ctx.budget || !ctx.budget->exhausted())
+                return SetupResult::Continue;
+            reportBudgetExhausted(ctx);
+            skipStage(ctx, node,
+                      QStringLiteral("%1: бюджет прогона исчерпан — этап не выполнялся")
+                          .arg(nodeTitle(node)));
+            return SetupResult::StopWithSuccess;
+        }),
+        stage
+    };
 }
 
 // ── 11.7б: общая откачка с подключением турбонасоса (REQ-055–058) ─────────────
@@ -1339,8 +1447,13 @@ ExecutableItem buildLeakTest(const Storage<VacuumRunState>& st,
         TickerTask([ctx](PausableTicker& t) {
             t.intervalMs = ctx.tickIntervalMs;
             t.pauseBus   = ctx.pauseBus;
-            const int hold = ctx.leakTestDurationSec;
-            t.isComplete = [hold](int elapsed) { return elapsed >= hold; };
+            // REQ-060 задаёт 60 с, но бюджет прогона выше по приоритету:
+            // выдержка герметичности обрезается остатком, как всякое ожидание.
+            const int hold = budgetClamp(ctx, ctx.leakTestDurationSec);
+            t.isComplete = [ctx, hold](int elapsed) {
+                const bool outOfBudget = budgetTick(ctx);
+                return elapsed >= hold || outOfBudget;
+            };
         }),
         QSyncTask([ctx, configured, initial]() -> bool {
             if (!configured)
@@ -1408,7 +1521,10 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
                                              : QStringLiteral("ДВ302");
 
     PumpDownOptions opts;
-    opts.pumpingSec = ctx.evacTimeSec;   // REQ-068: время — условие завершения
+    // Длительность откачки берётся НЕ здесь: остаток бюджета известен только в
+    // момент входа в этап, а рецепт собирается один раз до старта. -1 означает
+    // «спросить бюджет при выполнении» (см. PumpDownOptions::pumpingSec).
+    opts.pumpingSec = -1;
     opts.closePumps = false;             // закрытие — задача 11.11 ниже
 
     GroupItems items { sequential };
@@ -1450,24 +1566,43 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
     });
     items << settlePause(ctx);
 
-    // ── 11.10: собственно откачка (REQ-065–069) ──────────────────────────────
-    items << QSyncTask([ctx, foreVacArea, targetSensor]() -> bool {
+    // ── 11.10: собственно откачка (REQ-065–069 + бюджет) ─────────────────────
+    //
+    // remaining = T_total − elapsed. Откачка идёт ТОЛЬКО оставшееся время, а не
+    // полный EvacTime: бюджет строки RunTable — жёсткий потолок сверху
+    // (дивергенция от REQ-032/068, см. RunBudget в заголовке).
+    //
+    // remaining ≤ 0 — этап не запускается вовсе. Тихого «успеха» здесь быть не
+    // должно: цель проверяется по нужному датчику, причина завершения пишется
+    // явно, и управление уходит в закрытие по 11.11.
+    GroupItems pumping { sequential };
+    pumping << onGroupSetup([ctx, foreVacArea, targetSensor]() -> SetupResult {
+        const int remaining = ctx.budget ? ctx.budget->remaining() : ctx.evacTimeSec;
+        const int planned   = budgetClamp(ctx, ctx.evacTimeSec);
         if (ctx.onNode)  ctx.onNode(VacuumNode::FinalPumping, NodeState::Running);
+        if (remaining <= 0) {
+            if (ctx.onFailure)
+                ctx.onFailure(QStringLiteral(
+                    "11.10: бюджет прогона (%1 с) исчерпан до начала финальной "
+                    "откачки — камера не откачивалась")
+                        .arg(ctx.budget ? ctx.budget->totalSec : 0));
+            return SetupResult::StopWithSuccess;   // 11.11 отработает в onGroupDone
+        }
         if (ctx.onLabel)
-            ctx.onLabel(QStringLiteral("11.10: финальная откачка камеры — %1 с, "
-                                       "цель %2 Па по %3 (%4 область)")
-                            .arg(ctx.evacTimeSec)
+            ctx.onLabel(QStringLiteral("11.10: финальная откачка камеры — %1 с "
+                                       "(остаток бюджета), цель %2 Па по %3 (%4 область)")
+                            .arg(planned)
                             .arg(ctx.targetVacuumPa)
                             .arg(targetSensor)
                             .arg(foreVacArea ? QStringLiteral("форвакуумная")
                                              : QStringLiteral("турбомолекулярная")));
-        return true;
+        return SetupResult::Continue;
     });
 
     if (foreVacArea) {
         // REQ-067: турбо не обязателен. Открываем К176 и качаем отведённое
         // время; гейт перехода не набирается вовсе — К179 не открывается.
-        items << Group {
+        pumping << Group {
             sequential,
             onGroupSetup([st, ctx]() -> SetupResult {
                 if (!ctx.setValve || !ctx.setValve(true, VacuumValve::K176)) {
@@ -1482,8 +1617,9 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
             TickerTask([ctx](PausableTicker& t) {
                 t.intervalMs = ctx.tickIntervalMs;
                 t.pauseBus   = ctx.pauseBus;
-                const int evac = ctx.evacTimeSec;
+                const int evac = budgetClamp(ctx, ctx.evacTimeSec);
                 t.isComplete = [ctx, evac](int elapsed) {
+                    const bool outOfBudget = budgetTick(ctx);
                     if (ctx.onTurboProgress)
                         ctx.onTurboProgress(VacuumNode::FinalPumping,
                                             ctx.pressureVacPa ? ctx.pressureVacPa()
@@ -1491,12 +1627,12 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
                                             ctx.pressureTurboPa ? ctx.pressureTurboPa()
                                                                 : Reading(0.0, Quality::NoResponse),
                                             0, elapsed);
-                    return elapsed >= evac;
+                    return elapsed >= evac || outOfBudget;
                 };
             })
         };
     } else {
-        items << buildPumpDownProcedure(st, ctx, opts);
+        pumping << buildPumpDownProcedure(st, ctx, opts);
     }
 
     // ── Оценка результата: достигнут ли targetVAC (REQ-069) ──────────────────
@@ -1506,7 +1642,7 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
     // см. CLAUDE.md и docs/regimes/vacuum.md). Недостигнутая цель — не отказ
     // режима, а зафиксированная причина завершения: этап закрывает тракт
     // штатно и сообщает оператору, чего именно не хватило.
-    items << QSyncTask([ctx, targetSeam, targetSensor]() -> bool {
+    pumping << QSyncTask([ctx, targetSeam, targetSensor]() -> bool {
         const Reading r = targetSeam ? targetSeam()
                                      : Reading(0.0, Quality::NoResponse);
         if (r.isValid() && r.value <= ctx.targetVacuumPa) {
@@ -1516,16 +1652,30 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
                                 .arg(ctx.targetVacuumPa));
             return true;
         }
-        if (ctx.onFailure)
-            ctx.onFailure(QStringLiteral("11.10: время откачки (%1 с) истекло, цель "
-                                         "%2 Па не достигнута — %3 %4 Па (%5)")
-                              .arg(ctx.evacTimeSec)
-                              .arg(ctx.targetVacuumPa)
-                              .arg(targetSensor)
-                              .arg(r.value, 0, 'g', 3)
-                              .arg(qualityName(r.quality)));
+        // Причина завершения обязана быть различимой: исчерпанный бюджет и
+        // истёкшее время этапа — разные вещи, и «прогон кончился» не годится
+        // ни для журнала, ни для оператора.
+        if (ctx.onFailure) {
+            const bool outOfBudget = ctx.budget && ctx.budget->exhausted();
+            ctx.onFailure(outOfBudget
+                ? QStringLiteral("11.10: бюджет прогона (%1 с) исчерпан, цель %2 Па "
+                                 "не достигнута — %3 %4 Па (%5)")
+                      .arg(ctx.budget->totalSec)
+                      .arg(ctx.targetVacuumPa)
+                      .arg(targetSensor)
+                      .arg(r.value, 0, 'g', 3)
+                      .arg(qualityName(r.quality))
+                : QStringLiteral("11.10: время откачки (%1 с) истекло, цель %2 Па "
+                                 "не достигнута — %3 %4 Па (%5)")
+                      .arg(ctx.evacTimeSec)
+                      .arg(ctx.targetVacuumPa)
+                      .arg(targetSensor)
+                      .arg(r.value, 0, 'g', 3)
+                      .arg(qualityName(r.quality)));
+        }
         return true;   // не отказ режима: причина записана, идём в 11.11
     });
+    items << Group(pumping);
 
     // ── 11.11: финальное закрытие (REQ-070–073) ──────────────────────────────
     items << onGroupDone([st, ctx, configured, targetSeam, targetSensor](DoneWith w) {
@@ -1569,7 +1719,20 @@ ExecutableItem executionPhase(const Storage<VacuumRunState>& st,
 {
     GroupItems items { sequential };
 
+    // Бюджет отсчитывается ОТ СТАРТА Ф1 и заново на каждый повтор: max_time в
+    // модели RunTable — время одного повтора (см. RegimeManager::updateVisible-
+    // Regimes, где полное время строки = (условие + max_time) * repeatCount).
     items << QSyncTask([ctx] {                             // s1: 90018 метка
+        if (ctx.budget) {
+            ctx.budget->totalSec = ctx.totalBudgetSec;
+            ctx.budget->usedSec  = 0;
+            ctx.budget->reported = false;
+            // Стартовая отсечка: полный остаток виден в UI до первого тика.
+            // Без бюджета шов молчит — так тесты и отладка отличают «потолка
+            // нет» от «потолок есть и он ещё цел».
+            if (ctx.onBudget && ctx.budget->limited())
+                ctx.onBudget(0, ctx.budget->remaining());
+        }
         if (ctx.onLabel)
             ctx.onLabel(QStringLiteral("Ф1: стартовый сброс (s1)"));
     });
@@ -1587,9 +1750,11 @@ ExecutableItem executionPhase(const Storage<VacuumRunState>& st,
     items << settlePause(ctx);
     items << withNode(ctx, VacuumNode::F5A1, buildForevacA1(st, ctx, iter));
     items << settlePause(ctx);
-    items << withNode(ctx, VacuumNode::F6BC, buildForevacBC(st, ctx));
+    items << budgetGate(ctx, VacuumNode::F6BC,
+                        withNode(ctx, VacuumNode::F6BC, buildForevacBC(st, ctx)));
     items << settlePause(ctx);
-    items << withNode(ctx, VacuumNode::F7EF, buildForevacEF(st, ctx));
+    items << budgetGate(ctx, VacuumNode::F7EF,
+                        withNode(ctx, VacuumNode::F7EF, buildForevacEF(st, ctx)));
 
     // Раздел 12.2 — переход на турбомолекулярный насос. Условий три, и каждое
     // отключает этап целиком (узлы помечаются Skipped, как ветки блока C):
@@ -1604,13 +1769,14 @@ ExecutableItem executionPhase(const Storage<VacuumRunState>& st,
     // К178, затем PumpDownProcedure и testEvacTimeSec на турбонасосе.
     // Именно здесь режим впервые качает НЕ отсечённую магистраль, а систему.
     items << settlePause(ctx);
-    items << skipUnlessNode(ctx, VacuumNode::TurboGate, turboPossible,
-                            { buildGeneralPumping(st, ctx) });
+    items << budgetGate(ctx, VacuumNode::GeneralPumping,
+                        skipUnlessNode(ctx, VacuumNode::TurboGate, turboPossible,
+                                       { buildGeneralPumping(st, ctx) }));
 
     // 11.8: герметичность. Идёт независимо от турбо-тракта: этап работает на
     // закрытых насосах и меряет прирост давления, а не откачивает.
     items << settlePause(ctx);
-    items << buildLeakTest(st, ctx);
+    items << budgetGate(ctx, VacuumNode::LeakTest, buildLeakTest(st, ctx));
 
     // 11.9–11.11: подготовка тракта до камеры, финальная откачка, закрытие.
     // Турбо-область требует ДВ302 и разрешённого тракта; форвакуумная область
@@ -1727,10 +1893,21 @@ ExecutableItem continuousPumpingTail(const VacuumTreeContext& ctx,
 // buildVacuumRecipe
 // ═════════════════════════════════════════════════════════════════════════════
 
-Group buildVacuumRecipe(const VacuumTreeContext& ctx,
+Group buildVacuumRecipe(const VacuumTreeContext& ctxIn,
                         const Storage<VacuumRunState>& st,
                         const Storage<VacuumRunSummary>& summary)
 {
+    // Живой счётчик бюджета один на всё дерево: копии контекста, разлетающиеся
+    // по лямбдам, делят один shared_ptr. Обнуляется на входе в execution-фазу
+    // каждого повтора, поэтому повторный запуск того же рецепта не наследует
+    // потраченного времени — тот же принцип, что у Storage<VacuumRunState>.
+    VacuumTreeContext ctx = ctxIn;
+    if (!ctx.budget)
+        ctx.budget = std::make_shared<RunBudget>();
+    ctx.budget->totalSec = ctx.totalBudgetSec;
+    ctx.budget->usedSec  = 0;
+    ctx.budget->reported = false;
+
     const RepeatIterator iter(qMax(1, ctx.totalRepeats));
 
     return Group {

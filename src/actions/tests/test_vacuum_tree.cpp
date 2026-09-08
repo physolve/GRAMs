@@ -1900,3 +1900,184 @@ TEST(VacuumTree, FullTractRunKeepsPumpInterlockAcrossAllStages)
     // именно на турбо, без откатов.
     EXPECT_EQ(switches, (QList<bool>{ true, true }));
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Бюджет времени прогона (дивергенция от REQ-032/033/068/069)
+// ═════════════════════════════════════════════════════════════════════════════
+//
+// T_total — время строки RunTable (max_time, секунды) — ограничивает ВЕСЬ прогон
+// от старта Ф1, а не отдельный этап. maxAdditionalEvacTime отменён бюджетом.
+// В тестах тик равен миллисекунде, поэтому «секунда» бюджета — это один тик.
+
+TEST(VacuumTree, BudgetCapsTotalRunTime)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.leakTestDurationSec = 100;   // заведомо больше бюджета
+    ctx.evacTimeSec         = 100;
+    ctx.totalBudgetSec      = 6;
+
+    LeakChannel ch;
+    ch.name    = QStringLiteral("DD312");
+    ch.maxRise = 0.01;
+    ch.read    = [] { return Reading(0.1); };
+    ctx.leakChannels << ch;
+
+    int maxElapsed = 0;
+    ctx.onBudget = [&maxElapsed](int elapsedSec, int) {
+        maxElapsed = qMax(maxElapsed, elapsedSec);
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    // Суммарное время прогона не превышает T_total ни при каком сценарии —
+    // это и есть смысл потолка. Одно ожидание может закончиться ровно на
+    // границе, но перешагнуть её не может.
+    EXPECT_LE(maxElapsed, ctx.totalBudgetSec);
+}
+
+TEST(VacuumTree, BudgetExhaustedSkipsFinalPumpingWithExplicitReason)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.evacTimeSec    = 100;
+    ctx.totalBudgetSec = 2;          // выгорает ещё на форвакуумных этапах
+
+    LeakChannel ch;
+    ch.name    = QStringLiteral("DD312");
+    ch.maxRise = 0.01;
+    ch.read    = [] { return Reading(0.1); };
+    ctx.leakChannels << ch;
+
+    QStringList failures;
+    ctx.onFailure = [&failures](const QString& r) { failures << r; };
+
+    // Исчерпанный бюджет — это завершение с названной причиной, а не тихий
+    // успех и не авария.
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    ASSERT_FALSE(failures.isEmpty());
+    EXPECT_TRUE(failures.join(QStringLiteral(" ")).contains(QStringLiteral("бюджет")));
+}
+
+TEST(VacuumTree, FinalPumpingRunsOnlyRemainingBudgetNotFullEvacTime)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.generalPumpingValves.clear();      // изолируем 11.9–11.11
+    ctx.leakTestValves.clear();
+    ctx.evacTimeSec    = 100;              // полный EvacTime заведомо длиннее
+    ctx.totalBudgetSec = 12;
+
+    int maxPumpingElapsed = 0;
+    ctx.onTurboProgress = [&maxPumpingElapsed](VacuumNode node, Reading, Reading,
+                                               int, int elapsed) {
+        if (node == VacuumNode::TurboPumping || node == VacuumNode::FinalPumping)
+            maxPumpingElapsed = qMax(maxPumpingElapsed, elapsed);
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    // Откачка идёт остаток бюджета, а не полный EvacTime — иначе строка
+    // RunTable перестала бы быть потолком, а стала бы пожеланием.
+    EXPECT_GT(maxPumpingElapsed, 0);
+    EXPECT_LT(maxPumpingElapsed, ctx.evacTimeSec);
+    EXPECT_LE(maxPumpingElapsed, ctx.totalBudgetSec);
+}
+
+TEST(VacuumTree, BudgetClampsLeakTestHold)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.generalPumpingValves.clear();
+    ctx.finalPumpingValves.clear();
+    ctx.leakTestDurationSec = 100;          // REQ-060 задаёт 60 с, здесь больше
+    ctx.totalBudgetSec      = 10;
+
+    LeakChannel ch;
+    ch.name    = QStringLiteral("DD312");
+    ch.maxRise = 0.01;
+    ch.read    = [] { return Reading(0.1); };
+    ctx.leakChannels << ch;
+
+    int maxElapsed = 0;
+    ctx.onBudget = [&maxElapsed](int elapsedSec, int) {
+        maxElapsed = qMax(maxElapsed, elapsedSec);
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    // Выдержка герметичности — такое же ожидание, как всякое другое, и тоже
+    // обрезается остатком: иначе один этап съел бы весь бюджет строки.
+    EXPECT_LE(maxElapsed, ctx.totalBudgetSec);
+}
+
+TEST(VacuumTree, BudgetRemainingReachesZeroAndIsReported)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.evacTimeSec    = 100;
+    ctx.totalBudgetSec = 4;
+
+    QList<int> remainings;
+    ctx.onBudget = [&remainings](int, int remainingSec) { remainings << remainingSec; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    ASSERT_FALSE(remainings.isEmpty());
+    // Остаток монотонно убывает и доходит до нуля — именно это число UI и
+    // RunTable обязаны показывать одинаково.
+    // Первое значение — стартовая отсечка на входе в Ф1: бюджет ещё цел.
+    EXPECT_EQ(remainings.first(), ctx.totalBudgetSec);
+    EXPECT_EQ(remainings.last(), 0);
+    for (int i = 1; i < remainings.size(); ++i)
+        EXPECT_LE(remainings.at(i), remainings.at(i - 1));
+}
+
+TEST(VacuumTree, BudgetResetsOnEachRepeat)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.evacTimeSec    = 100;
+    ctx.totalBudgetSec = 4;
+    ctx.totalRepeats   = 2;
+
+    int maxElapsed = 0;
+    ctx.onBudget = [&maxElapsed](int elapsedSec, int) {
+        maxElapsed = qMax(maxElapsed, elapsedSec);
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    // max_time в модели RunTable — время ОДНОГО повтора (полное время строки =
+    // (условие + max_time) * repeatCount), поэтому счётчик обнуляется на входе
+    // в Ф1 каждого повтора и за два повтора не накапливается.
+    EXPECT_LE(maxElapsed, ctx.totalBudgetSec);
+}
+
+TEST(VacuumTree, NoBudgetLeavesTimingUntouched)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+    ctx.totalBudgetSec = 0;              // бюджет не задан
+
+    LeakChannel ch;
+    ch.name    = QStringLiteral("DD312");
+    ch.maxRise = 0.01;
+    ch.read    = [] { return Reading(0.1); };
+    ctx.leakChannels << ch;
+
+    int budgetCalls = 0;
+    ctx.onBudget = [&budgetCalls](int, int) { ++budgetCalls; };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    // Нулевой бюджет = прежнее поведение: счётчик не тикает, ожидания не
+    // обрезаются. Это путь для тестов и отладки, в бою строка RunTable всегда
+    // задаёт max_time.
+    EXPECT_EQ(budgetCalls, 0);
+}

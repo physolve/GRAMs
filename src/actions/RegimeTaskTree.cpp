@@ -461,6 +461,10 @@ Group RegimeTaskTree::buildRegimeGroup(int regimeId, const Regime& regime)
                     }
                     w.setConfig(cfg);
                     w.setVacuumOptions(opts);
+                    // T_total строки RunTable сообщается монитору ДО прогона:
+                    // остаток бюджета должен быть виден с первой секунды, а не
+                    // после первого тика.
+                    m_vacuumMonitor.setBudgetTotal(cfg.maxTimeSec);
                     m_vacuumMonitor.beginRun(cfg.totalRepeats);
                     // Цель форвакуума видна в развёртке до входа в 11.5.
                     // Цель форвакуума и гейт турбо видны в развёртке до входа
@@ -669,7 +673,7 @@ RegimeWorkerConfig RegimeTaskTree::makeConfig(int regimeId, const Regime& regime
     cfg.regimeId            = regimeId;
     cfg.regimeName          = regime.m_name;
     cfg.totalRepeats        = regime.m_repeatCount;
-    cfg.maxTimeSec          = regime.m_maxTime;
+    cfg.maxTimeSec          = regime.m_maxTime;   // T_total прогона, секунды
     cfg.tickIntervalMs      = 1000;
     cfg.conditionType       = regime.m_condition.type;
     cfg.conditionTimeSec    = regime.m_condition.time * 60;

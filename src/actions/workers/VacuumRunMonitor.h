@@ -113,6 +113,16 @@ class VacuumRunMonitor : public QObject
     Q_PROPERTY(int     turboProgressSec  READ turboProgressSec  NOTIFY turboProgressChanged)
     Q_PROPERTY(int     turboProgressMaxSec READ turboProgressMaxSec NOTIFY turboProgressChanged)
 
+    // ── Бюджет времени прогона (T_total из строки RunTable) ───────────────────
+    //
+    // Оператору нужно видеть суммарное время прогона и остаток, а не только
+    // прогресс текущего этапа: на финальной откачке важно именно «сколько
+    // осталось до конца строки», и это же число показывает RunTable.
+    Q_PROPERTY(int budgetTotalSec     READ budgetTotalSec     NOTIFY budgetChanged)
+    Q_PROPERTY(int budgetElapsedSec   READ budgetElapsedSec   NOTIFY budgetChanged)
+    Q_PROPERTY(int budgetRemainingSec READ budgetRemainingSec NOTIFY budgetChanged)
+    Q_PROPERTY(bool budgetLimited     READ budgetLimited      NOTIFY budgetChanged)
+
     // ── Причина завершения прогона (пусто, пока прогон не закончился) ─────────
     Q_PROPERTY(QString finishReason READ finishReason NOTIFY finishReasonChanged)
     Q_PROPERTY(int     finishState  READ finishState  NOTIFY finishReasonChanged)
@@ -139,6 +149,10 @@ public:
     int         repeatsDone()   const { return m_repeatsDone; }
     int         repeatsError()  const { return m_repeatsError; }
     QVariantMap valveStates()   const { return m_valveStates; }
+    int  budgetTotalSec()     const { return m_budgetTotalSec; }
+    int  budgetElapsedSec()   const { return m_budgetElapsedSec; }
+    int  budgetRemainingSec() const { return m_budgetRemainingSec; }
+    bool budgetLimited()      const { return m_budgetTotalSec > 0; }
     QStringList skippedStages() const { return m_skippedStages; }
     QStringList warnings()      const { return m_warnings; }
 
@@ -197,6 +211,10 @@ public:
     // за прогон может быть пропущено несколько этапов, и оператор обязан
     // увидеть их все, а не только первый.
     void onStageSkipped(int node, const QString& reason);
+    // Расход бюджета времени прогона: сколько прошло и сколько осталось.
+    void onBudget(int elapsedSec, int remainingSec);
+    // T_total прогона; вызывается до старта, из RegimeTaskTree.
+    void setBudgetTotal(int totalSec);
     // Предупреждение без остановки режима (REQ-062). Тоже списком.
     void onWarning(const QString& message);
     // Итог прогона: state — RegimeEnums::State (Done/Error/Stopped), reason —
@@ -222,6 +240,7 @@ signals:
     void turboProgressChanged();
     void turboTargetChanged();
     void noticesChanged();
+    void budgetChanged();
 
 private:
     void initValves();
@@ -248,6 +267,9 @@ private:
     int    m_forevacHeldSec    = 0;
     int    m_forevacElapsedSec = 0;
 
+    int         m_budgetTotalSec     = 0;
+    int         m_budgetElapsedSec   = 0;
+    int         m_budgetRemainingSec = 0;
     QString     m_finishReason;
     QStringList m_skippedStages;          // причины пропуска этапов за прогон
     QStringList m_warnings;               // предупреждения без остановки режима
