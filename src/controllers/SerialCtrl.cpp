@@ -131,7 +131,6 @@ void VacuumController::readData(){
         threshold  = 0;          // счётчик мусора сбрасывается удачным кадром,
                                  // иначе 4 плохих кадра за всю сессию глушат
                                  // датчик навсегда
-        qDebug() << "Vacuum:" << m_lastData;
     }
     else {
         if (++threshold > 3) {
@@ -200,7 +199,18 @@ void TurboVacuumController::requestData(){
 }
 
 // Один цикл опроса: запрос → ACK → enquiry → строка с показанием.
+//
+// Здесь же сторож молчания. Кадр приходит по readyRead, поэтому «датчик замолк»
+// не выражается ничем, кроме отсутствия события: без счётчика последнее
+// показание навсегда осталось бы Valid, и рецепт держал бы К179 открытым по
+// давно протухшему числу.
 void TurboVacuumController::processEvents(){
+    if(m_quality != Quality::NoResponse && ++m_silentPolls >= kStalePolls){
+        if(m_silentPolls == kDeadPolls)
+            qWarning() << "ДВ302: нет кадров" << kDeadPolls << "опросов подряд";
+        m_quality = (m_silentPolls >= kDeadPolls) ? Quality::NoResponse
+                                                  : Quality::Stale;
+    }
     if(isEnquiry)
         requestRepetitive();    // ACK уже получен — забираем данные
     else
@@ -208,7 +218,8 @@ void TurboVacuumController::processEvents(){
 }
 
 void TurboVacuumController::startReading(){
-    threshold = 0;
+    threshold     = 0;
+    m_silentPolls = 0;
     m_quality = Quality::NoResponse;
     isEnquiry = false;
     m_timer->start(1000);
@@ -258,24 +269,69 @@ void TurboVacuumController::readData(){
     }
     // requestArray value read from single gauge
     const QByteArray data = m_serial->readLine();
-    // const QString responce = QString::fromLocal8Bit(data);
-    double value = 0;
-    if(data.startsWith('2')){
-        // 2 -> overrange
-        value = 761; // torr   
+    if(data.isEmpty()){
+        rejectFrame(QStringLiteral("пустой кадр"), true);
+        return;
     }
-    else if(data.startsWith('1')){
-        // 1 -> underrange
-        value = 1e-8; // torr ?
+    // Кадр: "<статус>,<знак><мантисса>E<знак><порядок>", напр. "0,+1.5000E+00".
+    // Статус — готовый признак диапазона, ради него и разбирается префикс.
+    switch(data.at(0)){
+    case '2':                          // over range — штатная фаза откачки
+        lastData  = 761;               // torr
+        m_quality = Quality::OverRange;
+        break;
+    case '1':                          // under range
+        lastData  = 1e-8;              // torr ?
+        m_quality = Quality::UnderRange;
+        break;
+    case '0': {                        // measurement OK
+        // Число берём по запятой, а не по фиксированному смещению: в кадре без
+        // знака мантиссы срез mid(3,10) съедал первую цифру и давал 0.5 вместо
+        // 1.5 — ошибку в 3 раза, причём молча.
+        const int comma = data.indexOf(',');
+        bool ok = false;
+        const double value = comma < 0 ? 0.0
+                                       : data.mid(comma + 1).trimmed().toDouble(&ok);
+        if(!ok){
+            rejectFrame(QStringLiteral("статус 0, мантисса не разобрана"), true);
+            return;
+        }
+        lastData  = value;
+        m_quality = Quality::Valid;
+        break;
     }
-    else if(data.startsWith('0')){
-        // 0 -> measurement OK
-        value = data.mid(3,10).toDouble(); // ok?
+    case '3': case '4': case '5': case '6':
+        // 3 — отказ датчика, 4 — датчик выключен, 5 — датчика нет,
+        // 6 — ошибка идентификации. Прибор ОТВЕТИЛ, неисправен сам датчик,
+        // поэтому опрос не глушим: оператор включит датчик — качество вернётся
+        // само. Иначе выключенный на старте ДВ302 умирал бы на всю сессию.
+        rejectFrame(QStringLiteral("датчик сообщает статус %1")
+                        .arg(QChar::fromLatin1(data.at(0))), false);
+        return;
+    default:
+        rejectFrame(QStringLiteral("нераспознанный ответ %1")
+                        .arg(QString::fromLatin1(data.left(16))), true);
+        return;
     }
-    else{
-        qDebug() << "Upredicted vacuum responce";
-    }
-    lastData = value;
+    // Кадр разобран: сбрасываем счётчик мусора и сторожа молчания, иначе
+    // редкий брак за всю сессию заглушил бы живой датчик.
+    threshold     = 0;
+    m_silentPolls = 0;
+}
+
+// Кадр не годится. Показание НЕ трогаем: обнулять нельзя — 0 Па меньше любого
+// порога вакуума, и мёртвый датчик читался бы как достигнутая цель откачки.
+// Недостоверность выражаем качеством.
+//
+// garbage = кадр не по протоколу (порт не тот, скорость не та): 4 подряд —
+// и опрос глушим, чинить нужно снаружи. Осмысленный кадр об отказе датчика
+// сюда приходит с garbage = false и опрос не останавливает.
+void TurboVacuumController::rejectFrame(const QString &reason, bool garbage){
+    qWarning() << "ДВ302: кадр отвергнут —" << reason;
+    m_quality     = Quality::NoResponse;
+    m_silentPolls = 0;                  // прибор ответил — молчания нет
+    if(garbage && ++threshold > 3)
+        shuttingOff();
 }
 
 double TurboVacuumController::getData() const{

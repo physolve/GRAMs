@@ -110,7 +110,7 @@ void Security::setRuleOfThreeValves(const QStringList &ruleOfThreeList){
     // default-конструирует ValveGraph с m_selfName == "unknown". Дальше
     // applyGraphMask делает `if(!valveMap[m_selfName]) return false;`, а
     // valveMap["unknown"] не существует и всегда false — то есть открыть такой
-    // клапан было НЕВОЗМОЖНО. Под это попадали SL1 (К179, турбонасос) и SL2
+    // клапан было НЕВОЗМОЖНО. Под это попадали SL2 (К179, турбонасос) и SL1
     // (К192): в contradictionValves профиля их нет, они приходят только через
     // twoOfThree. Ф3 «второй тракт» из-за этого не могла открыть К179.
     for(const QString& name : ruleOfThreeList){

@@ -21862,7 +21862,10 @@ void QCPGraph::getOptimizedScatterData(QVector<QCPGraphData> *scatterData, QCPGr
         {
           // determine value pixel span and add as many points in interval to maintain certain vertical data density (this is specific to scatter plot):
           double valuePixelSpan = qAbs(valueAxis->coordToPixel(minValue)-valueAxis->coordToPixel(maxValue));
-          int dataModulo = qMax(1, qRound(intervalDataCount/(valuePixelSpan/4.0))); // approximately every 4 value pixels one data point on average
+          // GRAMs patch: constant data in one key-pixel gives valuePixelSpan == 0 -> division by
+          // zero -> qRound(inf), which asserts in Qt >= 6.8 (qnumeric.h qCheckedFPConversionToInteger).
+          // Zero span means every point maps to the same value pixel, so keep only the representative ones.
+          int dataModulo = (valuePixelSpan > 0 && qIsFinite(valuePixelSpan)) ? qMax(1, qRound(intervalDataCount/(valuePixelSpan/4.0))) : intervalDataCount;
           QCPGraphDataContainer::const_iterator intervalIt = currentIntervalStart;
           int c = 0;
           while (intervalIt != it)
@@ -21905,7 +21908,10 @@ void QCPGraph::getOptimizedScatterData(QVector<QCPGraphData> *scatterData, QCPGr
     {
       // determine value pixel span and add as many points in interval to maintain certain vertical data density (this is specific to scatter plot):
       double valuePixelSpan = qAbs(valueAxis->coordToPixel(minValue)-valueAxis->coordToPixel(maxValue));
-      int dataModulo = qMax(1, qRound(intervalDataCount/(valuePixelSpan/4.0))); // approximately every 4 value pixels one data point on average
+      // GRAMs patch: constant data in one key-pixel gives valuePixelSpan == 0 -> division by
+      // zero -> qRound(inf), which asserts in Qt >= 6.8 (qnumeric.h qCheckedFPConversionToInteger).
+      // Zero span means every point maps to the same value pixel, so keep only the representative ones.
+      int dataModulo = (valuePixelSpan > 0 && qIsFinite(valuePixelSpan)) ? qMax(1, qRound(intervalDataCount/(valuePixelSpan/4.0))) : intervalDataCount;
       QCPGraphDataContainer::const_iterator intervalIt = currentIntervalStart;
       int intervalItIndex = int(intervalIt-mDataContainer->constBegin());
       int c = 0;

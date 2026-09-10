@@ -67,8 +67,8 @@ private:
 // enquiry/acknowledgement, ответ с префиксом состояния. Отсюда готовый признак
 // over range (REQ-081) — префикс '2', и under range — префикс '1'.
 //
-// Топология: магистраль → AR6/К176 (форвакуум) и SL1/К179 (турбо) → ДВ302 →
-// SL2/К192 (выход второго тракта).
+// Топология: магистраль → AR6/К176 (форвакуум) и SL2/К179 (турбо) → ДВ302 →
+// SL1/К192 (выход второго тракта).
 //
 // В отличие от прежней схемы опрашивает себя сам, как VacuumController: период
 // опроса не должен зависеть от такта softTimer приложения.
@@ -93,6 +93,7 @@ private slots:
     void readData() override;
     void processEvents();
 private:
+    void rejectFrame(const QString &reason, bool garbage);
     QTimer* m_timer;
     QString m_bufferData;
     QByteArray requestArray;
@@ -110,4 +111,9 @@ private:
     bool isEnquiry;
     double lastData;
     Quality m_quality = Quality::NoResponse;   // до первого кадра ответа нет
+    // Опросов подряд без разобранного кадра. Растёт в processEvents (такт 1 с),
+    // обнуляется каждым удачным кадром.
+    int m_silentPolls = 0;
+    static constexpr int kStalePolls = 3;      // 3 с молчания → Stale
+    static constexpr int kDeadPolls  = 6;      // 6 с молчания → NoResponse
 };
