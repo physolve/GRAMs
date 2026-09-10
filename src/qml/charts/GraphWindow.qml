@@ -6,17 +6,28 @@ import Grams.backendSourceSingleton 1.0
 
 Item{
     id: root
+
+    // Оба графика и полоса вкладок стоят на ОДНОЙ сетке полей. Раньше
+    // каждый элемент считал ширину по-своему (parent.width - 10,
+    // parent.width - 15, plus свой rightMargin у StackLayout), и правые края
+    // расходились на несколько пикселей — заметно тем сильнее, чем уже
+    // панель.
+    readonly property int gutter: 5
+
     Control{
         id: mainChart
-        x: 5
-        y: 5
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: root.gutter
         topPadding: 0
         topInset: -2
         leftInset: -2
-        rightInset: -6
-        bottomInset: -6
-        width: parent.width - 10
-        height: 360
+        rightInset: -2
+        bottomInset: -2
+        // Доля, а не фиксированные 360: иначе на низком окне второму
+        // графику места не остаётся вовсе.
+        height: Math.max(220, (root.height - barCharts.height - 4 * root.gutter) * 0.5)
         contentItem: Grams.mainPlot
         background: Rectangle {
             color:"transparent"; border.color: "#257D97"; border.width: 2; radius: 5
@@ -25,45 +36,49 @@ Item{
 
     TabBar {
         id: barCharts
-        width: parent.width
-        anchors.topMargin: 5
         anchors.top: mainChart.bottom
+        anchors.topMargin: root.gutter
         anchors.left: parent.left
-        //anchors.right: parent.right
-        //height: 100
+        anchors.right: parent.right
+        anchors.leftMargin: root.gutter
+        anchors.rightMargin: root.gutter
         Repeater{
             id: barChartsRepeater
-            model: Grams.chartNames//["График 1", "График 2"] // "График А", "Натекание", "Измерение", 
+            model: Grams.chartNames
             TabButton{
                 text: modelData
-                width: Math.max(120, barCharts.width/barChartsRepeater.count) // /4
+                // Кнопки делят полосу поровну, но не уже читаемого минимума.
+                // Ширина берётся от КОНТЕЙНЕРА, а не от barCharts: TabBar
+                // считает свой implicitWidth по содержимому, и ссылка на его
+                // width из делегата замыкает привязку саму на себя.
+                width: Math.max(120, (root.width - 2 * root.gutter)
+                                     / Math.max(1, barChartsRepeater.count))
                 font.pointSize: 12
             }
         }
     }
+
     StackLayout {
         id: layoutMain
-        anchors.topMargin: 5
-        anchors.rightMargin: 5
-        anchors.bottomMargin: 80
         anchors.top: barCharts.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
+        anchors.margins: root.gutter
         currentIndex: barCharts.currentIndex
         Repeater{
             id: chartsRepeater
             model: Grams.graphs
             delegate: Control{
                 id: chartView
-                x: 5
-                y: 5
-                topInset: -6
-                leftInset: -6
-                rightInset: -6
-                bottomInset: -6
-                width: parent.width - 15
-                height: 320
+                // Геометрией управляет StackLayout — свои x/y/width/height
+                // здесь боролись бы с ним и давали тот самый сдвиг.
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                topInset: -2
+                leftInset: -2
+                rightInset: -2
+                bottomInset: -2
                 contentItem: modelData
                 background: Rectangle {
                     color:"transparent"; border.color: "#257D97"; border.width: 2; radius: 5

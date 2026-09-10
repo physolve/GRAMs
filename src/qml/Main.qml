@@ -5,6 +5,7 @@ import QtQuick.Controls.Material
 // import QtQuick.Controls.FluentWinUI3
 
 import Grams.backendSourceSingleton 1.0
+import Grams.regimeTaskTreeSingleton 1.0
 
 //import "mnemo/GRAM300_mnemo/GRAM300_mnemoContent"
 import "mnemo/GRAM50_mnemo/GRAM50_mnemoContent"
@@ -122,9 +123,14 @@ ApplicationWindow {
     RowLayout { //SplitView
         id: grid
         anchors.fill: parent
+        // Левая часть (мнемосхема и очередь) тянется, правая панель — фиксирована.
+        // Раньше было наоборот: левая жёсткие 1310 px, правая fillWidth — и на
+        // широком экране весь избыток ширины уходил в боковую панель, которой
+        // он не нужен, в ущерб мнемосхеме и RunTable.
         Item{
             Layout.fillHeight: true
-            Layout.preferredWidth: 1310
+            Layout.fillWidth: true
+            Layout.minimumWidth: 1000
             TabBar {
                 id: barMneno
                 width: parent.width
@@ -156,6 +162,23 @@ ApplicationWindow {
                     onExpSupply:     sideMenu.setExpSupplyMenu()
                     onUserExperiment: sideMenu.setUserExperimentMenu()
                     onRegimeSettingsRequested: (name, idx) => sideMenu.openRegimePage(name, idx)
+
+                    // Единственная точка, где очередь RunTable встречается с
+                    // исполнителем: RuntableLib о нём не знает и не должен.
+                    regimeRunning:    RegimeTaskTree.running
+                    regimePaused:     RegimeTaskTree.paused
+                    regimeStepLabel:  RegimeTaskTree.vacuumMonitor.currentLabel
+                    // Бюджет прогона — это и есть время строки RunTable
+                    // (max_time), только измеренное рецептом, а не спланированное
+                    // моделью. Пока прогона нет, отдаём -1 — «данных нет», а не ноль.
+                    regimeElapsedSec: RegimeTaskTree.running
+                                      ? RegimeTaskTree.vacuumMonitor.budgetElapsedSec : -1
+                    regimeBudgetSec:  RegimeTaskTree.vacuumMonitor.budgetTotalSec
+
+                    onRegimeStartRequested:  RegimeTaskTree.startAll()
+                    onRegimePauseRequested:  RegimeTaskTree.pause()
+                    onRegimeResumeRequested: RegimeTaskTree.resume()
+                    onRegimeStopRequested:   RegimeTaskTree.stop()
                 }
                 MnemoBase{
                     id: rectangle
@@ -170,9 +193,12 @@ ApplicationWindow {
         }
         SideMenu{
             id: sideMenu
-            Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.minimumWidth: 590
+            // Ширины 480 хватает самой широкой странице панели (графики и
+            // настройка режима); всё, что сверх, шло в пустое место.
+            Layout.preferredWidth: 480
+            Layout.minimumWidth: 420
+            Layout.maximumWidth: 620
         }
     }
     RoundButton{

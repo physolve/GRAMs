@@ -1734,7 +1734,7 @@ TEST(VacuumTree, LeakTestRunsWithBothPumpsClosed)
 
 // ── 11.9–11.11: финальная откачка камеры (REQ-064–073) ───────────────────────
 
-TEST(VacuumTree, FinalPumpingOpensChamberTractAndReachesTurbo)
+TEST(VacuumTree, FinalPumpingOpensChamberTractOnForevacWhenTurboNeverReached)
 {
     Recorder rec;
     VacuumTreeContext ctx = makeTractCtx(rec);
@@ -1751,8 +1751,12 @@ TEST(VacuumTree, FinalPumpingOpensChamberTractAndReachesTurbo)
     EXPECT_TRUE(everOpened(rec, VacuumValve::K151));
     EXPECT_TRUE(everOpened(rec, VacuumValve::K171));
     EXPECT_TRUE(everOpened(rec, VacuumValve::K178));
-    // Цель 0.5 Па лежит ниже гейта 50 Па ⇒ турбо-область (REQ-067/069).
-    EXPECT_TRUE(everOpened(rec, VacuumValve::K179));
+    // Насос 11.10 выбирается по ФАКТУ перехода 12.2, а НЕ по тому, в какой
+    // области лежит цель. Здесь 11.7б изолирована, перехода не было — значит,
+    // турбоклапан не открывается даже при цели 0.5 Па: новый набор гейта в 11.10
+    // не делается (та же причина, по которой его нет после отката в 12.2).
+    EXPECT_FALSE(everOpened(rec, VacuumValve::K179));
+    EXPECT_TRUE(everOpened(rec, VacuumValve::K176));
     // Выход в атмосферу в тракте до камеры недопустим.
     EXPECT_FALSE(everOpened(rec, VacuumValve::K192));
 
@@ -1762,6 +1766,114 @@ TEST(VacuumTree, FinalPumpingOpensChamberTractAndReachesTurbo)
     ASSERT_FALSE(openK151.isEmpty());
     ASSERT_FALSE(openK176.isEmpty());
     EXPECT_LT(openK151.last(), openK176.last());
+}
+
+// Главный сценарий полного прогона: 11.7б выводит установку на турбонасос,
+// и 11.10 обязана качать им же. Открыть тут форвакуумный К176 — значит сорвать
+// набранный вакуум в тот самый момент, ради которого весь режим и идёт.
+TEST(VacuumTree, FinalPumpingStaysOnTurboAfterTransitionInGeneralPumping)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);   // 11.7б сконфигурирована
+
+    // Момент входа в 11.10: всё, что после него, — это финальная откачка.
+    int finalPumpingAt = -1;
+    ctx.onNode = [&](VacuumNode node, NodeState state) {
+        if (node == VacuumNode::FinalPumping && state == NodeState::Running
+            && finalPumpingAt < 0)
+            finalPumpingAt = rec.ops.size();
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    ASSERT_GE(finalPumpingAt, 0);
+
+    bool k179OpenedInFinal = false;
+    bool k176OpenedInFinal = false;
+    for (int i = finalPumpingAt; i < rec.ops.size(); ++i) {
+        if (!rec.ops.at(i).open)
+            continue;
+        if (rec.ops.at(i).name == VacuumValve::K179) k179OpenedInFinal = true;
+        if (rec.ops.at(i).name == VacuumValve::K176) k176OpenedInFinal = true;
+    }
+    EXPECT_TRUE(k179OpenedInFinal);
+    EXPECT_FALSE(k176OpenedInFinal);
+}
+
+// Зеркальный случай: ПОСЛЕ перехода ДВ302 ушёл выше порога возврата —
+// turboFallback вернул установку на форвакуум, и 11.10 обязана пойти за ним,
+// а не открывать К179 по памяти о состоявшемся переходе.
+TEST(VacuumTree, FinalPumpingReturnsToForevacAfterTurboFallback)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTractCtx(rec);
+
+    // ДВ302 валиден и низок, пока К179 закрыт (иначе не наберётся гейт),
+    // и выскакивает за порог возврата, как только на турбонасос перешли.
+    ctx.pressureTurboPa = [&rec]() -> Reading {
+        return rec.state.value(VacuumValve::K179, false) ? Reading(200.0) : Reading(1.0);
+    };
+
+    int finalPumpingAt = -1;
+    ctx.onNode = [&](VacuumNode node, NodeState state) {
+        if (node == VacuumNode::FinalPumping && state == NodeState::Running
+            && finalPumpingAt < 0)
+            finalPumpingAt = rec.ops.size();
+    };
+
+    QList<bool> switches;
+    ctx.onTurboSwitched = [&switches](bool toTurbo) { switches.append(toTurbo); };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    EXPECT_TRUE(rec.allClosed());
+    EXPECT_TRUE(pumpsNeverBothOpen(rec));
+    ASSERT_GE(finalPumpingAt, 0);
+    // Переход был, и откат за ним тоже.
+    ASSERT_GE(switches.size(), 2);
+    EXPECT_TRUE(switches.at(0));
+    EXPECT_FALSE(switches.at(1));
+
+    bool k179OpenedInFinal = false;
+    bool k176OpenedInFinal = false;
+    for (int i = finalPumpingAt; i < rec.ops.size(); ++i) {
+        if (!rec.ops.at(i).open)
+            continue;
+        if (rec.ops.at(i).name == VacuumValve::K179) k179OpenedInFinal = true;
+        if (rec.ops.at(i).name == VacuumValve::K176) k176OpenedInFinal = true;
+    }
+    EXPECT_FALSE(k179OpenedInFinal);
+    EXPECT_TRUE(k176OpenedInFinal);
+}
+
+// Предел прогресса называет сам рецепт, и для турбо-откачки это ЕЁ
+// длительность, а не потолок гейта turboTimeoutSec. Иначе полоса в UI идёт
+// к 10 минутам, а этап заканчивается на 5 — ровно то, что видел оператор.
+TEST(VacuumTree, TurboProgressReportsStageOwnLimitNotGateTimeout)
+{
+    Recorder rec;
+    VacuumTreeContext ctx = makeTurboCtx(rec);
+    ctx.testEvacTimeSec = 3;
+    ctx.turboTimeoutSec = 50;      // потолок гейта заведомо больше
+
+    QList<int> gateLimits;
+    QList<int> pumpingLimits;
+    ctx.onTurboProgress = [&](VacuumNode node, Reading, Reading, int, int, int limit) {
+        if (node == VacuumNode::TurboGate)    gateLimits.append(limit);
+        if (node == VacuumNode::TurboPumping) pumpingLimits.append(limit);
+    };
+
+    EXPECT_EQ(runBlocking(buildVacuumRecipe(ctx)), DoneWith::Success);
+    ASSERT_FALSE(gateLimits.isEmpty());
+    ASSERT_FALSE(pumpingLimits.isEmpty());
+    // Гейт меряется требуемым удержанием…
+    for (int v : gateLimits)
+        EXPECT_EQ(v, ctx.turboSwitchHoldSec);
+    // …а откачка — своей длительностью.
+    for (int v : pumpingLimits) {
+        EXPECT_EQ(v, ctx.testEvacTimeSec);
+        EXPECT_NE(v, ctx.turboTimeoutSec);
+    }
 }
 
 TEST(VacuumTree, FinalPumpingStaysOnForevacWhenTargetIsInForevacRange)
@@ -1973,7 +2085,7 @@ TEST(VacuumTree, FinalPumpingRunsOnlyRemainingBudgetNotFullEvacTime)
 
     int maxPumpingElapsed = 0;
     ctx.onTurboProgress = [&maxPumpingElapsed](VacuumNode node, Reading, Reading,
-                                               int, int elapsed) {
+                                               int, int elapsed, int) {
         if (node == VacuumNode::TurboPumping || node == VacuumNode::FinalPumping)
             maxPumpingElapsed = qMax(maxPumpingElapsed, elapsed);
     };

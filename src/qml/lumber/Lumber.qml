@@ -17,6 +17,18 @@ Item {
     signal userExperiment()
     // Forwarded from RunTable when user clicks a regime name button.
     signal regimeSettingsRequested(string regimeName, int regimeIndex)
+    // Управление прогоном с RunTable. Lumber только пробрасывает их выше:
+    // с RegimeTaskTree работает Main.qml, где собраны все связи с бэкендом.
+    signal regimeStartRequested()
+    signal regimePauseRequested()
+    signal regimeResumeRequested()
+    signal regimeStopRequested()
+    // Живое состояние идущего режима — сверху вниз, до RunTable.
+    property bool   regimeRunning:    false
+    property bool   regimePaused:     false
+    property string regimeStepLabel:  ""
+    property int    regimeElapsedSec: -1
+    property int    regimeBudgetSec:  -1
     Rectangle{
         id: mS
         x: 5
@@ -338,7 +350,16 @@ Item {
         RunTable {
             id: runTable
             x: 20
+            regimeRunning:    lumber.regimeRunning
+            regimePaused:     lumber.regimePaused
+            regimeStepLabel:  lumber.regimeStepLabel
+            regimeElapsedSec: lumber.regimeElapsedSec
+            regimeBudgetSec:  lumber.regimeBudgetSec
             onRegimeSettingsRequested: (name, idx) => lumber.regimeSettingsRequested(name, idx)
+            onStartRequested:  lumber.regimeStartRequested()
+            onPauseRequested:  lumber.regimePauseRequested()
+            onResumeRequested: lumber.regimeResumeRequested()
+            onStopRequested:   lumber.regimeStopRequested()
         }
         // Rectangle{
         //     id: expTool

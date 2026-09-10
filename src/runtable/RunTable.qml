@@ -15,6 +15,26 @@ Item {
     // Emitted when user clicks a regime name button in column 0.
     // regimeIndex is the row index in RegimeManager.model.
     signal regimeSettingsRequested(string regimeName, int regimeIndex)
+
+    // ── Управление прогоном ───────────────────────────────────────────
+    //
+    // Очередь режимов живёт здесь, значит и кнопки её запуска тоже. Но сам
+    // RuntableLib остаётся самодостаточным модулем: он линкуется только с
+    // Qt6::Core/Qml и про RegimeTaskTree не знает. Состояние приходит свойствами,
+    // команды уходят сигналами — их связывает Main.qml.
+    property bool   regimeRunning: false
+    property bool   regimePaused:  false
+    // Текущий шаг идущего режима (метка рецепта) и его РЕАЛЬНОЕ время.
+    // Модель знает только плановое время строки; что происходит на самом деле,
+    // известно только монитору рецепта.
+    property string regimeStepLabel:  ""
+    property int    regimeElapsedSec: -1     // -1 = данных нет
+    property int    regimeBudgetSec:  -1
+
+    signal startRequested()
+    signal pauseRequested()
+    signal resumeRequested()
+    signal stopRequested()
     // title: qsTr("ProtoTable App") + (RegimeManager.dirty ? " *" : "")
 
     // onClosing: function(close) {
@@ -234,11 +254,63 @@ Item {
         y: 240
         width: 650
         height: 130
+        regimeStepLabel:  runTable.regimeStepLabel
+        regimeElapsedSec: runTable.regimeElapsedSec
+        regimeBudgetSec:  runTable.regimeBudgetSec
+        regimeRunning:    runTable.regimeRunning
+    }
+
+    // Старт / пауза / стоп — рядом с очередью, а не на отдельной вкладке:
+    // запускается именно эта очередь, и решение «пускать ли» принимается по тому,
+    // что в ней стоит.
+    Row {
+        id: runControls
+        x: 10
+        y: 376
+        spacing: 4
+
+        Button {
+            id: startBtn
+            width: 46
+            height: 32
+            text: "▶"
+            font.pointSize: 11
+            enabled: !runTable.regimeRunning
+            ToolTip.text: "Запустить все режимы очереди в состоянии «Ожидание»"
+            ToolTip.visible: hovered
+            ToolTip.delay: 400
+            onClicked: runTable.startRequested()
+        }
+        Button {
+            id: pauseBtn
+            width: 46
+            height: 32
+            text: runTable.regimePaused ? "▷" : "⏸"
+            font.pointSize: 11
+            enabled: runTable.regimeRunning
+            ToolTip.text: runTable.regimePaused ? "Продолжить" : "Пауза"
+            ToolTip.visible: hovered
+            ToolTip.delay: 400
+            onClicked: runTable.regimePaused ? runTable.resumeRequested()
+                                             : runTable.pauseRequested()
+        }
+        Button {
+            id: stopBtn
+            width: 46
+            height: 32
+            text: "⏹"
+            font.pointSize: 11
+            enabled: runTable.regimeRunning
+            ToolTip.text: "Остановить прогон"
+            ToolTip.visible: hovered
+            ToolTip.delay: 400
+            onClicked: runTable.stopRequested()
+        }
     }
 
     MenuBar {
         id: menuBar
-        x: 150
+        x: runControls.x + runControls.width + 12
         y: 375
         Menu {
             title: "Файл"

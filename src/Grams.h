@@ -43,6 +43,13 @@ struct guiValsPres{ // sample
     Q_PROPERTY (double tmSK     MEMBER g_tmSK)
     Q_PROPERTY (double tmS      MEMBER g_tmS)
     Q_PROPERTY (double prARV    MEMBER g_prARV)
+    // ДВ302 — вакуумметр турбо-тракта (разд. 12.2). Отдельное поле, а не
+    // второе значение prARV: это разные точки тракта, и на мнемосхеме они
+    // стоят по разные стороны насосных клапанов.
+    Q_PROPERTY (double prVT     MEMBER g_prVT)
+    // Есть ли ДВ302 в профиле вообще. Без этого признака отсутствующий
+    // прибор неотличим от прибора, показывающего ноль.
+    Q_PROPERTY (bool   hasVT    MEMBER g_hasVT)
 public:
     double g_prSH;  // bar
     double g_prSA;  // bar
@@ -53,6 +60,8 @@ public:
     double g_tmSK;  // bar
     double g_tmS;   // bar
     double g_prARV; // bar
+    double g_prVT;  // bar
+    bool   g_hasVT = false;
 };
 
 struct guiValsTemp{ 
@@ -147,9 +156,9 @@ private:
     Valve vAR3; // 2 k114
     Valve vAR4; // 3 k118
     Valve vAR5; // 4 k178
-    Valve vSL2; // 5 k192
+    Valve vSL2; // 5 k179 (турбомолекулярный насос)
     Valve vAR6; // 6 k176
-    Valve vSL1; // 7 k179
+    Valve vSL1; // 7 k192 (выход второго тракта)
     Valve vS4;  // 8 k171
     Valve vS1;  // 9 k131
     Valve vS2;  // 10 k133

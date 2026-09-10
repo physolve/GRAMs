@@ -184,7 +184,7 @@ public:
 
     void setTurboGate(double gatePa, int holdSec, int timeoutSec);
     void onTurboProgress(VacuumNode node, Reading p301, Reading p302,
-                         int heldSec, int elapsedSec);
+                         int heldSec, int elapsedSec, int limitSec);
     void onTurboSwitched(bool toTurbo);
 
     QString finishReason() const { return m_finishReason; }
@@ -287,5 +287,9 @@ private:
     int     m_turboElapsedSec  = 0;
     double  m_turboGatePa      = 10.0;    // порог перехода (REQ-078/080)
     int     m_turboGateHoldSec = 60;      // удержание порога (REQ-080)
-    int     m_turboTimeoutSec  = 600;     // отведённое время турбо-откачки
+    int     m_turboTimeoutSec  = 600;     // потолок НАБОРА гейта (REQ-080)
+    // Предел текущего этапа, названный самим рецептом. Монитор его не
+    // выводит: у гейта это удержание, у откачки — её фактическая
+    // длительность, и вывести второе из порогов профиля нельзя.
+    int     m_turboLimitSec    = 0;
 };

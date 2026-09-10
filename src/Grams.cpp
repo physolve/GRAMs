@@ -305,7 +305,20 @@ void Grams::initCharts(){
     // additional charts
     // addGraph("vaccumChart");
     auto vacuumChart = new BasePlot(); // use Alt unit
-    vacuumChart->setDataPointers(&timeAnalog, &m_vacuumSensor);
+    // ДВ302 идёт вторым графиком на том же поле: этапы 12.2 и 11.10 читаются
+    // только по паре ДВ301/ДВ302 — по одному ДВ301 не видно ни момента
+    // перехода на турбонасос, ни того, что даёт турбо-откачка. Второй датчик
+    // добавляется, ТОЛЬКО если он реально сконфигурирован (vacuumController()
+    // выполняется раньше): пустой график на логарифмической оси мешал бы
+    // масштабированию и врал бы легендой о наличии прибора.
+    if (initSource.hasVacuumTurbo()) {
+        QVector<DataCollection*> vacuumPtrs;
+        vacuumPtrs.append(&m_vacuumSensor);        // ДВ301 — форвакуум
+        vacuumPtrs.append(&m_vacuumSensorTurbo);   // ДВ302 — турбо-тракт
+        vacuumChart->setDataPointers(&timeAnalog, vacuumPtrs);
+    } else {
+        vacuumChart->setDataPointers(&timeAnalog, &m_vacuumSensor);
+    }
     vacuumChart->setPlotColor();
     vacuumChart->initPlot();
     vacuumChart->placeLegend();
@@ -597,6 +610,10 @@ void Grams::guiValsUpdate(){
     m_pressureVals.g_tmSK = tmSK.getCurValue();
     m_pressureVals.g_tmS = tmS.getCurValue();
     m_pressureVals.g_prARV = m_vacuumSensor.getAltUnit(); // bar
+    m_pressureVals.g_hasVT = initSource.hasVacuumTurbo();
+    m_pressureVals.g_prVT  = m_pressureVals.g_hasVT
+                                 ? m_vacuumSensorTurbo.getAltUnit()   // bar
+                                 : 0.0;
     emit guiValsPresChanged();
     m_tempVals.g_tmX = tmX.getCurValue();
     m_tempVals.g_tmY = tmY.getCurValue();

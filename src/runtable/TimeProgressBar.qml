@@ -9,6 +9,17 @@ Rectangle {
     border.color: "#464646"
     color: "#2B2B2B"
     property var model: null
+    // ── Живое состояние идущего режима (извне, через RunTable) ─────────
+    //
+    // Время в модели — ПЛАНОВОЕ (сумма max_time строк). Реальное время
+    // прогона знает только монитор рецепта, и оно может расходиться с планом —
+    // именно поэтому показываются оба, а не одно вместо другого.
+    property string regimeStepLabel:  ""
+    property int    regimeElapsedSec: -1
+    property int    regimeBudgetSec:  -1
+    property bool   regimeRunning:    false
+    readonly property bool hasLiveTime: regimeRunning && regimeElapsedSec >= 0
+
     property int visibleStartTime: 0
     property int visibleEndTime: RegimeManager.getTotalEstimatedTime()
     property real timelineScale: 1.0  // Scale factor for timeline width
@@ -56,8 +67,8 @@ Rectangle {
             // Update start time field
             startTimeField.text = formatTime(root.visibleStartTime)
             
-            // Update time label
-            timeLabel.text = formatTime(RegimeManager.getTotalElapsedTime()) + " / " + formatTime(totalTime)
+            // Метка времени теперь на привязке — присваивать её здесь нельзя:
+            // императивное присваивание разорвало бы её, и живое время замерзло.
             
             // Update visible regimes
             RegimeManager.updateVisibleRegimes(root.visibleStartTime, root.visibleEndTime)
@@ -247,6 +258,20 @@ Rectangle {
                                 
                                 tooltip += `\nДлительность: ${formatTime(model.maxTime)}\nСостояние: ${getStateName(model.state)}`
                                 
+                                // Текущий шаг рецепта и реальное время — только у той строки,
+                                // которая идёт сейчас: у остальных это было бы чужое состояние.
+                                if (model.state === 2) {
+                                    if (root.regimeStepLabel.length > 0)
+                                        tooltip += `
+Шаг: ${root.regimeStepLabel}`
+                                    if (root.regimeElapsedSec >= 0) {
+                                        tooltip += `
+Фактическое время: ${formatTime(root.regimeElapsedSec)}`
+                                        if (root.regimeBudgetSec > 0)
+                                            tooltip += ` / ${formatTime(root.regimeBudgetSec)}`
+                                    }
+                                }
+
                                 // Add progress information
                                 if (model.conditionTime > 0) {
                                     if (model.conditionCompleted) {
@@ -298,14 +323,46 @@ Rectangle {
     }
 
     // Time label below the timeline
-    Label {
-        id: timeLabel
+    // План очереди слева, реальное время и текущий шаг — справа. Два числа
+    // рядом отвечают на разные вопросы: «сколько всего запланировано» и
+    // «сколько уже идёт то, что идёт сейчас».
+    Row {
+        id: timeRow
         y: 55
-        width: parent.width
-        // color: "white"
-        text: formatTime(RegimeManager.getTotalElapsedTime()) + " / " + formatTime(RegimeManager.getTotalEstimatedTime())
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+        x: 10
+        width: parent.width - 20
+        spacing: 14
+        Label {
+            id: timeLabel
+            text: formatTime(RegimeManager.getTotalElapsedTime()) + " / "
+                  + formatTime(RegimeManager.getTotalEstimatedTime())
+            verticalAlignment: Text.AlignVCenter
+        }
+        Rectangle {
+            visible: root.hasLiveTime
+            width: 1
+            height: 16
+            color: "#6A6A6A"
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        Label {
+            visible: root.hasLiveTime
+            font.family: "Consolas"
+            font.bold: true
+            color: "#3399ff"
+            text: root.regimeBudgetSec > 0
+                  ? formatTime(root.regimeElapsedSec) + " / " + formatTime(root.regimeBudgetSec)
+                  : formatTime(root.regimeElapsedSec)
+            verticalAlignment: Text.AlignVCenter
+        }
+        Label {
+            visible: root.hasLiveTime && root.regimeStepLabel.length > 0
+            text: root.regimeStepLabel
+            elide: Text.ElideRight
+            width: Math.max(0, timeRow.width - x)
+            color: "#ABDBDD"
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     // Time range controls

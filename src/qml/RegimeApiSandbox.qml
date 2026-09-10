@@ -118,17 +118,6 @@ Item {
         }
     }
 
-    // ── Опции запуска (пушатся в C++ на «Старт») ──────────────────────────────
-    property bool skipRK10:    false
-    property bool skipRK50:    false
-    property bool skipRK300:   false
-    property bool secondTract: false
-    property bool pumpCheck:   true   // dP/dt-watchdog после открытия К176
-    property int  repeats:     1
-    // Тракт остаётся открытым после успешного прогона — турбонасос качает дальше.
-    // Применяется сразу, в том числе во время идущего режима (см. Chk ниже).
-    property bool continuousPumping: false
-
     // ── Параметры цепочки «Напуск → Натекание» ───────────────────────────────
     // Это параметры ПРОГОНА (меняются от прогона к прогону и задают результат),
     // поэтому им место в интерфейсе. Пороги гейтов цепочки сюда не выносятся —
@@ -140,15 +129,19 @@ Item {
     property int    leakageDurationSec: 60
     property real   leakageTargetDeltaBar: 0.0
 
+    // Параметры цепочки принимаются набором, поэтому любое изменение
+    // отправляет весь набор целиком. Раньше это делала кнопка «Старт»;
+    // теперь старт на RunTable и про эту вкладку не знает.
+    function pushSupply() {
+        RegimeTaskTree.setSupplyParams(supplyPort, supplyOpenTimeSec * 1000, supplyLimitBar)
+    }
+    function pushLeakage() {
+        RegimeTaskTree.setLeakageParams(leakageValve, leakageDurationSec, leakageTargetDeltaBar)
+    }
+
     // Длительности зафиксированы в C++ (VacuumTreeContext) и из UI не правятся:
     // шаг 3 с, сброс К118 10 с, «мёртвая зона» dP/dt 30 с.
     readonly property string fixedTimings: "шаг 3 с · сброс К118 10 с · dP/dt через 30 с"
-
-    // Цель форвакуума 11.5–11.7 (ТЗ REQ-022). targetVacPa вводится текстом, а не
-    // SpinBox: диапазон 1e-4…1e5 Па охватывает пять порядков.
-    property real targetVacPa:  40.0
-    property int  holdSec:      60
-    property int  foreVacTimeoutSec: 300
 
     // мм:сс для длительностей этапов (турбо-откачка идёт минутами).
     function fmtSec(v) {
@@ -193,14 +186,7 @@ Item {
         }
     }
 
-    // Компактные варианты контролов: единый мелкий шрифт и минимальные отступы,
-    // чтобы вся панель настроек умещалась в две строки.
-    component Chk : CheckBox {
-        padding: 2
-        font.pointSize: 9
-        ToolTip.visible: hovered && ToolTip.text.length > 0
-        ToolTip.delay: 500
-    }
+    // Компактные варианты контролов: единый мелкий шрифт и минимальные отступы.
     component Num : SpinBox {
         font.pointSize: 9
         padding: 2
@@ -226,7 +212,9 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 Label {
-                    text: "Развёртка рецепта режима"
+                    // Имя вкладки говорит, что это отладочный просмотр, а не рабочий
+                    // экран: настройки и запуск живут в других местах.
+                    text: "Дебаг: развёртка рецепта режима"
                     color: root.cText
                     font.pointSize: 11
                     font.bold: true
@@ -241,168 +229,34 @@ Item {
                 }
             }
 
-            // ── Вакуум: опции запуска + управление ────────────────────────────
+            // ── Живое состояние насосов и датчиков ───────────────────────
             //
-            // Только вакуумные параметры. Напуск и натекание живут в своей
-            // карточке ниже: это логика режимов типа SOAK, а не «Вакуума».
+            // НАСТРОЕК ЗДЕСЬ БОЛЬШЕ НЕТ. Они переехали в RegimeSetup —
+            // страницу, которая открывается по кнопке режима в RunTable и
+            // настраивает конкретную строку очереди; старт/пауза/стоп — на
+            // самой RunTable. Эта вкладка отвечает только на вопрос «что сейчас
+            // происходит», и органы управления в ней только мешали бы: решение
+            // «что запустить» принимается по очереди, а не по развёртке рецепта.
             Card {
-                // Ряд 1 — что откачиваем.
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
-                    Cap { text: "Пропуск C:" }
-                    // Метки в терминах интерфейса C1/C2/C3 (ТЗ REQ-005);
-                    // легаси-имена RK и DO-каналы — в подсказках.
-                    Chk {
-                        text: "C1"; ToolTip.text: "RK300 / S3 (К135)"
-                        checked: root.skipRK300; onToggled: root.skipRK300 = checked
-                    }
-                    Chk {
-                        text: "C2"; ToolTip.text: "RK50 / S2 (К133)"
-                        checked: root.skipRK50;  onToggled: root.skipRK50 = checked
-                    }
-                    Chk {
-                        text: "C3"; ToolTip.text: "RK10 / S1 (К131)"
-                        checked: root.skipRK10;  onToggled: root.skipRK10 = checked
-                    }
-                    Rectangle {
-                        implicitWidth: 1; Layout.preferredHeight: 18
-                        color: root.cBorder; opacity: 0.4
-                    }
-                    Chk {
-                        // Ф3 под вопросом целиком: фаза открывает К192 (SL1,
-                        // выход второго тракта в атмосферу) и следом К179
-                        // (SL2, турбонасос). Физический смысл требует
-                        // подтверждения схемой — до него фаза выключена по
-                        // умолчанию (docs/regimes/vacuum.md §9 п. 0б).
-                        text: "2-й тракт ⚠"
-                        ToolTip.text: "Ф3: К192 (выход в атмосферу) → К179 (турбонасос), "
-                                    + "s20–s24. ТРЕБУЕТ ПОДТВЕРЖДЕНИЯ СХЕМОЙ: "
-                                    + "турбонасос через открытый выход тракта"
-                        checked: root.secondTract; onToggled: root.secondTract = checked
-                    }
-                    Chk {
-                        text: "dP/dt"; ToolTip.text: "Проверка скорости откачки после открытия К176"
-                        checked: root.pumpCheck; onToggled: root.pumpCheck = checked
-                    }
-                    // Турбо-тракт (разд. 12.2) — обязательная часть режима,
-                    // выбора в интерфейсе нет.
-                    Chk {
-                        text: "непрерывная откачка"
-                        ToolTip.text: "После успешного прогона оставить тракт открытым "
-                                    + "(камера E/F, эталон B, бочка) на турбонасосе; "
-                                    + "форвакуумный К176 закрыт. Меняется и на ходу"
-                        checked: root.continuousPumping
-                        onToggled: {
-                            root.continuousPumping = checked
-                            // Применяется немедленно: хвост рецепта выполняется
-                            // в самом конце прогона, и решение, принятое уже во
-                            // время режима, обязано до него дойти.
-                            RegimeTaskTree.setVacuumContinuousPumping(checked)
-                        }
+                    Label {
+                        text: "Насосы и датчики"
+                        color: root.cBorder
+                        font.bold: true
+                        font.pointSize: 10
                     }
                     Item { Layout.fillWidth: true }
-                    Cap { text: "Повторы:" }
-                    Num { from: 1; to: 99; value: root.repeats; onValueModified: root.repeats = value }
-                }
-
-                // Ряд 2 — цель форвакуума 11.5–11.7 (ТЗ REQ-022). targetVacPa
-                // вводится текстом, а не SpinBox: диапазон 1e-4…1e5 Па.
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 6
-                    Cap { text: "Форвакуум до:" }
-                    TextField {
-                        id: targetField
-                        Layout.preferredWidth: 76
-                        text: root.targetVacPa
-                        font.pointSize: 9
-                        font.family: "Consolas"
-                        horizontalAlignment: TextInput.AlignRight
-                        validator: DoubleValidator { bottom: 0.0001; top: 100000; notation: DoubleValidator.ScientificNotation }
-                        onEditingFinished: {
-                            var v = parseFloat(text)
-                            if (!isNaN(v) && v > 0) root.targetVacPa = v
-                            else text = root.targetVacPa
-                        }
-                    }
-                    Cap { text: "Па (ДВ301), удержать, с" }
-                    Num {
-                        from: 1; to: 3600; stepSize: 5
-                        value: root.holdSec; onValueModified: root.holdSec = value
-                    }
-                    Cap { text: "таймаут, с" }
-                    Num {
-                        from: 10; to: 7200; stepSize: 30
-                        value: root.foreVacTimeoutSec
-                        onValueModified: root.foreVacTimeoutSec = value
-                    }
                     Button {
-                        text: "⟲"
+                        text: "⟲ Сброс развёртки"
+                        font.pointSize: 9
                         flat: true
-                        font.pointSize: 9
-                        ToolTip.text: "Значения по умолчанию: 40 Па / 60 с / 300 с"
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 500
-                        onClicked: {
-                            root.targetVacPa = 40.0
-                            root.holdSec = 60
-                            root.foreVacTimeoutSec = 300
-                            targetField.text = root.targetVacPa
-                        }
-                    }
-                    Item { Layout.fillWidth: true }
-                }
-
-                // Ряд 3 — управление прогоном. Длительности шагов не настраиваются:
-                // они зафиксированы в VacuumTreeContext, здесь только напоминание.
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 6
-                    Button {
-                        text: "▶ Старт"
-                        font.pointSize: 9
-                        enabled: !RegimeTaskTree.running
-                        onClicked: {
-                            RegimeTaskTree.setVacuumOptions(root.skipRK10, root.skipRK50,
-                                                            root.skipRK300, root.secondTract)
-                            RegimeTaskTree.setVacuumForevacTarget(root.targetVacPa,
-                                                                  root.holdSec,
-                                                                  root.foreVacTimeoutSec)
-                            RegimeTaskTree.setVacuumPumpCheck(root.pumpCheck)
-                            RegimeTaskTree.setVacuumContinuousPumping(root.continuousPumping)
-                            // Цепочка: параметры применяются к режимам
-                            // «Напуск» и «Натекание» из очереди RunTable.
-                            RegimeTaskTree.setSupplyParams(root.supplyPort,
-                                                           root.supplyOpenTimeSec * 1000,
-                                                           root.supplyLimitBar)
-                            RegimeTaskTree.setLeakageParams(root.leakageValve,
-                                                            root.leakageDurationSec,
-                                                            root.leakageTargetDeltaBar)
-                            RegimeTaskTree.startAll()
-                        }
-                    }
-                    Button {
-                        text: RegimeTaskTree.paused ? "▷ Резюм" : "⏸ Пауза"
-                        font.pointSize: 9
-                        enabled: RegimeTaskTree.running
-                        onClicked: RegimeTaskTree.paused ? RegimeTaskTree.resume()
-                                                         : RegimeTaskTree.pause()
-                    }
-                    Button {
-                        text: "⏹ Стоп"
-                        font.pointSize: 9
-                        enabled: RegimeTaskTree.running
-                        onClicked: RegimeTaskTree.stop()
-                    }
-                    Button {
-                        text: "⟲ Сброс"
-                        font.pointSize: 9
+                        // Чисто отладочное действие: гасит состояние узлов прошлого
+                        // прогона, чтобы следующий читался с чистого листа.
                         enabled: !RegimeTaskTree.running
                         onClicked: root.mon.reset()
                     }
                     Cap { text: root.fixedTimings; font.pointSize: 8 }
-                    Item { Layout.fillWidth: true }
                     Label {
                         text: RegimeTaskTree.running
                               ? (RegimeTaskTree.paused ? "на паузе" : "выполняется")
@@ -412,6 +266,7 @@ Item {
                         font.bold: true
                     }
                 }
+
 
                 // ── Турбо-этап 12.2: обязательная индикация ────────────────────
                 //
@@ -487,38 +342,44 @@ Item {
 
             }
 
-            // ── Напуск и натекание — ОТДЕЛЬНАЯ секция, не часть «Вакуума» ──────
+            // ── SOAK (дебаг): напуск и натекание ──────────────────────────
             //
-            // Напуск газа и натекание в камеру — логика режимов типа SOAK, где
-            // после откачки идёт напуск, а затем натекание. В настройках вакуума
-            // им не место: там остаются только вакуумные параметры.
+            // Напуск газа и натекание в камеру — логика SOAK: после откачки
+            // идёт напуск, затем выдержка с контролем натекания. Ни в настройках
+            // «Вакуума», ни на рабочем экране им места нет: воркера SOAK ещё нет,
+            // и пока это отладочный стенд для двух его будущих шагов, а не
+            // готовая настройка режима. Место такого стенда — отладочная
+            // вкладка, рядом с развёрткой рецепта.
             //
-            // ЗАДЕЛ ПОД SOAK: обе секции ниже — готовая основа его настроек.
-            // Когда появится воркер SOAK, эта карточка переезжает в него целиком
-            // вместе с обработчиками; переносить элементы второй раз не придётся.
-            // Сами рецепты (SupplyTaskTree, LeakageTaskTree), их регистрация в
-            // RegimeTaskTree::buildRegimeGroup() и пункты меню «Добавить» в
-            // RunTable.qml не затронуты — это перенос элементов интерфейса, а не
-            // удаление функциональности. Ручные страницы PInlet.qml и
-            // LeakageAdjust.qml остаются как есть.
+            // ЗАДЕЛ ПОД SOAK: когда появится его воркер, карточка переезжает
+            // в RegimeSetup целиком вместе с обработчиками — переносить элементы
+            // второй раз не придётся. Сами рецепты (SupplyTaskTree,
+            // LeakageTaskTree), их регистрация в RegimeTaskTree::buildRegimeGroup() и
+            // пункты меню «Добавить» в RunTable.qml не затронуты — это перенос
+            // элементов интерфейса, а не удаление функциональности. Ручные
+            // страницы PInlet.qml и LeakageAdjust.qml остаются как есть.
             Card {
                 RowLayout {
                     Layout.fillWidth: true
                     Label {
-                        text: "Напуск и натекание"
+                        text: "SOAK (дебаг): напуск и натекание"
                         color: root.cBorder
                         font.bold: true
                     }
                     Item { Layout.fillWidth: true }
                     Cap {
-                        text: "режимы очереди RunTable · применяются по «Старт»"
+                        text: "режимы очереди RunTable · применяются сразу"
                     }
                 }
 
                 // Режимы добавляются в очередь через меню «Добавить» в RunTable;
-                // здесь задаются их параметры прогона. Гейты цепочки (тракт
+                // здесь задаются параметры их прогона. Гейты цепочки (тракт
                 // откачан, накопитель заряжен) проверяются рецептами и в UI не
                 // настраиваются.
+                //
+                // Параметры уходят в C++ СРАЗУ, в обработчиках полей: кнопки
+                // «Старт» здесь больше нет (она на RunTable), и пушить их на ней
+                // было бы некому.
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
@@ -527,13 +388,13 @@ Item {
                     TextField {
                         Layout.preferredWidth: 64
                         text: root.supplyPort
-                        onEditingFinished: root.supplyPort = text
+                        onEditingFinished: { root.supplyPort = text; root.pushSupply() }
                     }
                     Cap { text: "время, с" }
                     Num {
                         from: 1; to: 3600
                         value: root.supplyOpenTimeSec
-                        onValueModified: root.supplyOpenTimeSec = value
+                        onValueModified: { root.supplyOpenTimeSec = value; root.pushSupply() }
                     }
                     Cap { text: "до, бар" }
                     TextField {
@@ -544,6 +405,7 @@ Item {
                             if (!isNaN(v) && v > 0)
                                 root.supplyLimitBar = v
                             text = root.supplyLimitBar
+                            root.pushSupply()
                         }
                     }
                     Item { Layout.fillWidth: true }
@@ -557,13 +419,13 @@ Item {
                     TextField {
                         Layout.preferredWidth: 64
                         text: root.leakageValve
-                        onEditingFinished: root.leakageValve = text
+                        onEditingFinished: { root.leakageValve = text; root.pushLeakage() }
                     }
                     Cap { text: "длительность, с" }
                     Num {
                         from: 1; to: 36000
                         value: root.leakageDurationSec
-                        onValueModified: root.leakageDurationSec = value
+                        onValueModified: { root.leakageDurationSec = value; root.pushLeakage() }
                     }
                     Cap { text: "или Δp, бар" }
                     TextField {
@@ -576,6 +438,7 @@ Item {
                             if (!isNaN(v) && v >= 0)
                                 root.leakageTargetDeltaBar = v
                             text = root.leakageTargetDeltaBar
+                            root.pushLeakage()
                         }
                     }
                     Item { Layout.fillWidth: true }

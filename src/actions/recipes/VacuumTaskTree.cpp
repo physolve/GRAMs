@@ -1016,8 +1016,14 @@ ExecutableItem openTurboValve(const Storage<VacuumRunState>& st,
         if (!ok)
             return false;
         st->k179Open = true;
-        if (requireConfirm && ctx.onTurboSwitched)
-            ctx.onTurboSwitched(true);
+        // requireConfirm отличает настоящий переход 12.2 от служебного открытия
+        // К179 внутри Ф3: только первый делает установку «турбомолекулярной» и
+        // потому решает выбор насоса в 11.10.
+        if (requireConfirm) {
+            st->turboReached = true;
+            if (ctx.onTurboSwitched)
+                ctx.onTurboSwitched(true);
+        }
         return true;
     });
 }
@@ -1037,6 +1043,10 @@ ExecutableItem turboFallback(const Storage<VacuumRunState>& st,
         }
         if (ctx.setValve && ctx.setValve(true, VacuumValve::K176))
             st->k176Open = true;
+        // Установка вернулась на форвакуум — и финальная откачка 11.10 пойдёт
+        // им же. Повторной попытки перехода в этом повторе не будет (см.
+        // «НЕ РЕАЛИЗОВАНО СОЗНАТЕЛЬНО» выше).
+        st->turboReached = false;
         if (ctx.onTurboSwitched)
             ctx.onTurboSwitched(false);
         return true;
@@ -1147,12 +1157,14 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
                 ctx.turboSwitchHoldSec, ctx.turboTimeoutSec,
                 [ctx](int held, int elapsed) {
                     if (ctx.onTurboProgress)
+                        // Предел гейта — требуемое удержание, а не таймаут:
+                        // полоса показывает набор условия перехода.
                         ctx.onTurboProgress(VacuumNode::TurboGate,
                                             ctx.pressureVacPa   ? ctx.pressureVacPa()
                                                                 : Reading(0.0, Quality::NoResponse),
                                             ctx.pressureTurboPa ? ctx.pressureTurboPa()
                                                                 : Reading(0.0, Quality::NoResponse),
-                                            held, elapsed);
+                                            held, elapsed, ctx.turboSwitchHoldSec);
                 },
                 [ctx] {
                     if (!ctx.onFailure)
@@ -1204,10 +1216,13 @@ ExecutableItem buildPumpDownProcedure(const Storage<VacuumRunState>& st,
                                              ? ctx.pressureTurboPa()
                                              : Reading(0.0, Quality::NoResponse);
                     if (ctx.onTurboProgress)
+                        // Предел — фактическая длительность ЭТОЙ откачки
+                        // (testEvacTimeSec или остаток бюджета), не потолок
+                        // гейта turboTimeoutSec.
                         ctx.onTurboProgress(VacuumNode::TurboPumping,
                                             ctx.pressureVacPa ? ctx.pressureVacPa()
                                                               : Reading(0.0, Quality::NoResponse),
-                                            p302, 0, elapsed);
+                                            p302, 0, elapsed, *pumpingSecLive);
                     // Порог возврата — по достоверному показанию. Недостоверное
                     // не повод откатываться: этим занимается overRangeGuard.
                     if (p302.isValid() && p302.value >= ctx.turboReturnPressurePa) {
@@ -1508,24 +1523,40 @@ ExecutableItem buildLeakTest(const Storage<VacuumRunState>& st,
 //
 // REQ-067: если targetVAC лежит в форвакуумной области (≥ порога перехода),
 // переход на К179 не обязателен — качаем через К176 и контролируем ДВ301.
-// Иначе идёт полная PumpDownProcedure с контролем по ДВ302 (REQ-069).
+//
+// ВЫБОР НАСОСА 11.10 — ПО ФАКТУ, А НЕ ПО ЦЕЛИ.
+// Раньше насос выбирался статически по targetVacuumPa: цель в форвакуумной
+// области → К176, иначе → полная PumpDownProcedure с новым набором гейта. Оба
+// исхода неверны, когда переход 12.2 уже состоялся: первый открывал бы
+// форвакуумный клапан на установке, которая уже вышла в турбомолекулярный
+// режим, второй заново набирал бы гейт, который заведомо набран.
+//
+// Правило теперь одно и читается из состояния повтора:
+//   st->turboReached  → К179 напрямую (К176 не открывается), контроль ДВ302;
+//   иначе             → К176, контроль ДВ301 (REQ-067).
+// Второй случай — это либо «12.2 не выполнялась» (нет ДВ302 / выключен тракт),
+// либо «был откат на форвакуум после 12.2»: turboFallback сбрасывает флаг.
+// Повторного набора гейта в 11.10 нет намеренно — по той же причине, по
+// которой его нет после отката в самой 12.2.
+//
+// Отсюда же следует, что датчик контроля цели (REQ-069) выбирается в момент
+// выполнения этапа, а не на сборке рецепта: до старта неизвестно, на каком
+// насосе установка окажется к 11.10.
 ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
                                  const VacuumTreeContext& ctx)
 {
     const bool configured = !ctx.finalPumpingValves.isEmpty();
-    // Выбор области и, вместе с ним, выбор датчика контроля (REQ-069).
-    const bool foreVacArea = ctx.targetVacuumPa >= ctx.turboSwitchPressurePa;
-    const std::function<Reading()> targetSeam =
-        foreVacArea ? ctx.pressureVacPa : ctx.pressureTurboPa;
-    const QString targetSensor = foreVacArea ? QStringLiteral("ДВ301")
-                                             : QStringLiteral("ДВ302");
 
-    PumpDownOptions opts;
-    // Длительность откачки берётся НЕ здесь: остаток бюджета известен только в
-    // момент входа в этап, а рецепт собирается один раз до старта. -1 означает
-    // «спросить бюджет при выполнении» (см. PumpDownOptions::pumpingSec).
-    opts.pumpingSec = -1;
-    opts.closePumps = false;             // закрытие — задача 11.11 ниже
+    // Решается в onGroupSetup этапа откачки; лямбды ниже делят один флаг.
+    auto useTurbo = std::make_shared<bool>(false);
+    auto readTarget = [ctx, useTurbo]() -> Reading {
+        const std::function<Reading()>& seam = *useTurbo ? ctx.pressureTurboPa
+                                                         : ctx.pressureVacPa;
+        return seam ? seam() : Reading(0.0, Quality::NoResponse);
+    };
+    auto targetSensorName = [useTurbo]() -> QString {
+        return *useTurbo ? QStringLiteral("ДВ302") : QStringLiteral("ДВ301");
+    };
 
     GroupItems items { sequential };
 
@@ -1576,9 +1607,14 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
     // должно: цель проверяется по нужному датчику, причина завершения пишется
     // явно, и управление уходит в закрытие по 11.11.
     GroupItems pumping { sequential };
-    pumping << onGroupSetup([ctx, foreVacArea, targetSensor]() -> SetupResult {
+    // Длительность этапа известна только здесь: остаток бюджета живёт до
+    // первого тика, а рецепт собран задолго до старта.
+    auto plannedSec = std::make_shared<int>(0);
+    pumping << onGroupSetup([st, ctx, useTurbo, targetSensorName, plannedSec]() -> SetupResult {
+        // Насос выбирается ЗДЕСЬ, по факту состоявшегося перехода 12.2.
+        *useTurbo = st->turboReached;
         const int remaining = ctx.budget ? ctx.budget->remaining() : ctx.evacTimeSec;
-        const int planned   = budgetClamp(ctx, ctx.evacTimeSec);
+        *plannedSec         = budgetClamp(ctx, ctx.evacTimeSec);
         if (ctx.onNode)  ctx.onNode(VacuumNode::FinalPumping, NodeState::Running);
         if (remaining <= 0) {
             if (ctx.onFailure)
@@ -1589,51 +1625,64 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
             return SetupResult::StopWithSuccess;   // 11.11 отработает в onGroupDone
         }
         if (ctx.onLabel)
-            ctx.onLabel(QStringLiteral("11.10: финальная откачка камеры — %1 с "
-                                       "(остаток бюджета), цель %2 Па по %3 (%4 область)")
-                            .arg(planned)
+            ctx.onLabel(QStringLiteral("11.10: финальная откачка камеры %1 — %2 с "
+                                       "(остаток бюджета), цель %3 Па по %4")
+                            .arg(*useTurbo
+                                     ? QStringLiteral("турбонасосом (К179)")
+                                     : QStringLiteral("форвакуумом (К176)"))
+                            .arg(*plannedSec)
                             .arg(ctx.targetVacuumPa)
-                            .arg(targetSensor)
-                            .arg(foreVacArea ? QStringLiteral("форвакуумная")
-                                             : QStringLiteral("турбомолекулярная")));
+                            .arg(targetSensorName()));
         return SetupResult::Continue;
     });
 
-    if (foreVacArea) {
-        // REQ-067: турбо не обязателен. Открываем К176 и качаем отведённое
-        // время; гейт перехода не набирается вовсе — К179 не открывается.
-        pumping << Group {
-            sequential,
-            onGroupSetup([st, ctx]() -> SetupResult {
-                if (!ctx.setValve || !ctx.setValve(true, VacuumValve::K176)) {
-                    if (ctx.onFailure)
-                        ctx.onFailure(QStringLiteral("11.10: К176 (форвакуумный насос) "
-                                                     "не открылся"));
-                    return SetupResult::StopWithError;
-                }
-                st->k176Open = true;
+    pumping << Group {
+        sequential,
+        onGroupSetup([st, ctx, useTurbo]() -> SetupResult {
+            if (*useTurbo) {
+                // Установка уже вышла на турбонасос в 12.2. К179 открывается
+                // напрямую, БЕЗ повторного набора гейта; connectTurboPump всё
+                // равно проверит и подтвердит, что К176 закрыт (REQ-008/082),
+                // так что интерлок здесь не обходится.
+                bool k176Open = st->k176Open;
+                const bool ok = connectTurboPump(ctx, /*requireConfirm=*/true, &k176Open);
+                st->k176Open = k176Open;
+                if (!ok)
+                    return SetupResult::StopWithError;   // причина уже названа
+                st->k179Open = true;
+                if (ctx.onTurboSwitched)
+                    ctx.onTurboSwitched(true);
                 return SetupResult::Continue;
-            }),
-            TickerTask([ctx](PausableTicker& t) {
-                t.intervalMs = ctx.tickIntervalMs;
-                t.pauseBus   = ctx.pauseBus;
-                const int evac = budgetClamp(ctx, ctx.evacTimeSec);
-                t.isComplete = [ctx, evac](int elapsed) {
-                    const bool outOfBudget = budgetTick(ctx);
-                    if (ctx.onTurboProgress)
-                        ctx.onTurboProgress(VacuumNode::FinalPumping,
-                                            ctx.pressureVacPa ? ctx.pressureVacPa()
-                                                              : Reading(0.0, Quality::NoResponse),
-                                            ctx.pressureTurboPa ? ctx.pressureTurboPa()
-                                                                : Reading(0.0, Quality::NoResponse),
-                                            0, elapsed);
-                    return elapsed >= evac || outOfBudget;
-                };
-            })
-        };
-    } else {
-        pumping << buildPumpDownProcedure(st, ctx, opts);
-    }
+            }
+            // Турбо не достигнут (12.2 не выполнялась либо был откат) —
+            // качаем форвакуумом, контроль по ДВ301 (REQ-067).
+            if (!ctx.setValve || !ctx.setValve(true, VacuumValve::K176)) {
+                if (ctx.onFailure)
+                    ctx.onFailure(QStringLiteral("11.10: К176 (форвакуумный насос) "
+                                                 "не открылся"));
+                return SetupResult::StopWithError;
+            }
+            st->k176Open = true;
+            if (ctx.onTurboSwitched)
+                ctx.onTurboSwitched(false);
+            return SetupResult::Continue;
+        }),
+        TickerTask([ctx, plannedSec](PausableTicker& t) {
+            t.intervalMs = ctx.tickIntervalMs;
+            t.pauseBus   = ctx.pauseBus;
+            t.isComplete = [ctx, plannedSec](int elapsed) {
+                const bool outOfBudget = budgetTick(ctx);
+                if (ctx.onTurboProgress)
+                    ctx.onTurboProgress(VacuumNode::FinalPumping,
+                                        ctx.pressureVacPa ? ctx.pressureVacPa()
+                                                          : Reading(0.0, Quality::NoResponse),
+                                        ctx.pressureTurboPa ? ctx.pressureTurboPa()
+                                                            : Reading(0.0, Quality::NoResponse),
+                                        0, elapsed, *plannedSec);
+                return elapsed >= *plannedSec || outOfBudget;
+            };
+        })
+    };
 
     // ── Оценка результата: достигнут ли targetVAC (REQ-069) ──────────────────
     //
@@ -1642,9 +1691,9 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
     // см. CLAUDE.md и docs/regimes/vacuum.md). Недостигнутая цель — не отказ
     // режима, а зафиксированная причина завершения: этап закрывает тракт
     // штатно и сообщает оператору, чего именно не хватило.
-    pumping << QSyncTask([ctx, targetSeam, targetSensor]() -> bool {
-        const Reading r = targetSeam ? targetSeam()
-                                     : Reading(0.0, Quality::NoResponse);
+    pumping << QSyncTask([ctx, readTarget, targetSensorName]() -> bool {
+        const Reading r = readTarget();
+        const QString targetSensor = targetSensorName();
         if (r.isValid() && r.value <= ctx.targetVacuumPa) {
             if (ctx.onLabel)
                 ctx.onLabel(QStringLiteral("11.10: цель достигнута — %1 %2 Па ≤ %3 Па")
@@ -1678,7 +1727,7 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
     items << Group(pumping);
 
     // ── 11.11: финальное закрытие (REQ-070–073) ──────────────────────────────
-    items << onGroupDone([st, ctx, configured, targetSeam, targetSensor](DoneWith w) {
+    items << onGroupDone([st, ctx, configured, readTarget, targetSensorName](DoneWith w) {
         if (!configured)
             return;
         if (ctx.onNode) {
@@ -1700,10 +1749,9 @@ ExecutableItem buildFinalPumping(const Storage<VacuumRunState>& st,
         st->k151Open = false;
         // REQ-072: финальное показание контрольного датчика в журнал.
         if (ctx.onLabel) {
-            const Reading r = targetSeam ? targetSeam()
-                                         : Reading(0.0, Quality::NoResponse);
+            const Reading r = readTarget();
             ctx.onLabel(QStringLiteral("11.11: клапаны закрыты, финальное %1 %2 Па (%3)")
-                            .arg(targetSensor).arg(r.value, 0, 'g', 3)
+                            .arg(targetSensorName()).arg(r.value, 0, 'g', 3)
                             .arg(qualityName(r.quality)));
         }
         if (ctx.onNode)

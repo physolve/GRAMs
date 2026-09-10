@@ -248,5 +248,35 @@ Item {
             y: 659
             value: Grams.guiPres.prARV
         }
+        // ДВ301 и ДВ302 стоят по разные стороны насосных клапанов, и на
+        // мнемосхеме это единственное, что показывает, какой прибор к чему
+        // относится. Поэтому оба подписаны: спутать их — значит спутать
+        // форвакуум с турбо-трактом.
+        Label {
+            x: s_ARV.x + 4
+            y: s_ARV.y - 16
+            text: "ДВ301"
+            font.pixelSize: 13
+            font.bold: true
+            color: "#FAE0CF"
+        }
+        // ДВ302 — второй тракт: К179 (SL2, турбонасос) → ДВ302 → К192 (SL1).
+        // Ставится между ними, как в топологии.
+        SensorWidget {
+            id: s_VT
+            x: 650
+            y: 659
+            visible: Grams.guiPres.hasVT
+            value: Grams.guiPres.prVT
+        }
+        Label {
+            x: s_VT.x + 4
+            y: s_VT.y - 16
+            visible: Grams.guiPres.hasVT
+            text: "ДВ302"
+            font.pixelSize: 13
+            font.bold: true
+            color: "#ABDBDD"
+        }
     }
 }

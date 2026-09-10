@@ -526,9 +526,9 @@ VacuumTreeContext VacuumRegimeWorker::makeContext()
             m_monitor->onForevacDone(node, success);
     };
     ctx.onTurboProgress = [this](VacuumNode node, Reading p301, Reading p302,
-                                 int heldSec, int elapsedSec) {
+                                 int heldSec, int elapsedSec, int limitSec) {
         if (m_monitor)
-            m_monitor->onTurboProgress(node, p301, p302, heldSec, elapsedSec);
+            m_monitor->onTurboProgress(node, p301, p302, heldSec, elapsedSec, limitSec);
     };
     ctx.onTurboSwitched = [this](bool toTurbo) {
         // Переключение насосного клапана — событие журнала в обе стороны

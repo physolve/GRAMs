@@ -41,28 +41,27 @@ Item{
         barMainRepeater.model = ["Тест клапанов"]
         layoutMain.currentIndex = 8
     }
+    function setRegimeSetupMenu(){
+        barMainRepeater.model = ["Настройка режима"]
+        layoutMain.currentIndex = 9
+    }
 
     // Called from Main.qml when a regime button is clicked in RunTable.
-    // Opens the settings page that matches the regime name.
+    //
+    // Настройка РЕЖИМА и ручные страницы — разные вещи. Раньше кнопка
+    // режима вела на ручную «Откачку» (PVacuum) или, для неизвестных
+    // имён, вообще на тест клапанов — ни то, ни другое не настраивает строку
+    // очереди. Теперь открывается RegimeSetup, который настраивает именно ту
+    // строку, по которой нажали. Исключение одно — «Тест клапанов»: у него
+    // есть собственный конструктор последовательности шагов.
     function openRegimePage(name, regimeIndex) {
-        switch (name) {
-        case "Вакуум":
-            setPlayVacuumMenu()
-            break
-        case "Тест клапанов":
+        if (name === "Тест клапанов") {
             setValveTestMenu()
-            break
-        case "Напуск газа":
-            setPlayInletMenu()
-            break
-        case "Автоматическая подача газа":
-            setExpSupplyMenu()
-            break
-        default:
-            // Режим в / Режим г / unknown — open valve test as a fallback editor
-            setValveTestMenu()
-            break
+            return
         }
+        regimeSetup.regimeName = name
+        regimeSetup.regimeIndex = regimeIndex
+        setRegimeSetupMenu()
     }
     TabBar {
         id: barMain
@@ -145,6 +144,11 @@ Item{
         }
         ValveTestSetup {
             id: valveTestSetup
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+        RegimeSetup {
+            id: regimeSetup
             Layout.fillWidth: true
             Layout.fillHeight: true
         }

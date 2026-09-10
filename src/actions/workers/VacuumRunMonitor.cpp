@@ -169,6 +169,7 @@ void VacuumRunMonitor::beginRun(int totalRepeats)
     m_turboNode        = -1;
     m_turboHeldSec     = 0;
     m_turboElapsedSec  = 0;
+    m_turboLimitSec    = 0;
     emit turboProgressChanged();
     emit noticesChanged();
     emit budgetChanged();
@@ -263,6 +264,7 @@ void VacuumRunMonitor::onRunFinished(int repeatsDone, int repeatsError)
     // Прогон закончился — насосных клапанов больше нет под управлением рецепта.
     if (m_turboNode >= 0 || !m_activePump.isEmpty()) {
         m_turboNode = -1;
+        m_turboLimitSec = 0;
         m_activePump.clear();
         emit turboProgressChanged();
     }
@@ -326,7 +328,10 @@ QString VacuumRunMonitor::turboStage() const
 {
     if (m_turboNode == int(VacuumNode::TurboGate))
         return QStringLiteral("gate");
-    if (m_turboNode == int(VacuumNode::TurboPumping))
+    // Финальная откачка камеры 11.10 идёт на том же насосе и показывается той
+    // же полосой: для оператора это продолжение откачки, а не новая сущность.
+    if (m_turboNode == int(VacuumNode::TurboPumping)
+        || m_turboNode == int(VacuumNode::FinalPumping))
         return QStringLiteral("pumping");
     return QString();
 }
@@ -335,24 +340,28 @@ int VacuumRunMonitor::turboProgressSec() const
 {
     if (m_turboNode == int(VacuumNode::TurboGate))
         return m_turboHeldSec;
-    if (m_turboNode == int(VacuumNode::TurboPumping))
-        return m_turboElapsedSec;
-    return 0;
+    return m_turboElapsedSec;
 }
 
 int VacuumRunMonitor::turboProgressMaxSec() const
 {
+    // Предел приходит из рецепта вместе с прогрессом (limitSec). Монитор его
+    // больше не угадывает: подстановка turboTimeoutSec давала полосу на
+    // 10 минут там, где откачка шла отведённые ей 5, и этап «заканчивался
+    // раньше времени» на глазах у оператора.
+    if (m_turboLimitSec > 0)
+        return m_turboLimitSec;
+    // Пока рецепт не отчитался ни разу — прежние значения как запасные.
     if (m_turboNode == int(VacuumNode::TurboGate))
         return qMax(1, m_turboGateHoldSec);
-    if (m_turboNode == int(VacuumNode::TurboPumping))
-        return qMax(1, m_turboTimeoutSec);
     return 1;
 }
 
 void VacuumRunMonitor::onTurboProgress(VacuumNode node, Reading p301, Reading p302,
-                                       int heldSec, int elapsedSec)
+                                       int heldSec, int elapsedSec, int limitSec)
 {
     m_turboNode       = int(node);
+    m_turboLimitSec   = limitSec;
     m_dv301Pa         = p301.value;
     m_dv301Quality    = qualityName(p301.quality);
     m_dv302Pa         = p302.value;
