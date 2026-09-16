@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Grams.regimeTaskTreeSingleton 1.0
-import com.grams.prototable 1.0
+import com.grams.prototable
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  RegimeSetup — настройка ОДНОГО режима из очереди RunTable.
