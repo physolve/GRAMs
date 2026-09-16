@@ -27,6 +27,7 @@ add_executable(SimTests
     test_sim_state_machine.cpp
     test_sim_rpc.cpp
     test_sim_hw.cpp
+    test_sim_options.cpp
 )
 
 find_package(Qt6 REQUIRED COMPONENTS Test Concurrent)

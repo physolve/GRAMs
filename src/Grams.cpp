@@ -13,12 +13,13 @@
 #include <QCommandLineParser>
 #include <QQuickStyle>
 
-Grams::Grams(int &argc, char **argv, const QString &curInitProfile): 
+Grams::Grams(int &argc, char **argv, const QString &curInitProfile, const sim::SimOptions &simOptions): 
     QApplication(argc, argv),
     initSource(),
     dataSource(),
     m_safeModule(), // check
-    softTimer(new QTimer)
+    softTimer(new QTimer),
+    m_simOptions(simOptions)
     /*
     , // unique pointer
     m_testPlot(nullptr)
@@ -26,6 +27,7 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
 {
     initDigitalData();
     initAnalogData();
+    initSimulation();
     advDoController();
     advAiController();
     vacuumController();
@@ -47,7 +49,7 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
     connect(this, &Grams::aboutToQuit, this, &Grams::beforeQuitting);
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
     softTimer->setInterval(500);
-    if(initSource.isInitializeOk()){ // dataSource getGRAMsIntegrity ?
+    if(initSource.isInitializeOk() || simDataActive()){ // dataSource getGRAMsIntegrity ?
         softTimer->start();
     }
     dataSource.startAcquisition();
@@ -128,6 +130,11 @@ void Grams::advDoController(){
     m_valveControl.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
     m_valveControl.setGasStoreValves(initSource.m_storageQuar.m_gasStoreValves);
 
+    if(simDataActive()){
+        // Порядок битов — valveMap профиля, как у платы USB-4750.
+        m_valveControl.setDoPort(m_sim->createValvePort(initSource.m_hardware.m_valves));
+        return;
+    }
     if(!initSource.isInitializeOk())
         return;
     daqParameters parametersDO;
@@ -137,7 +144,7 @@ void Grams::advDoController(){
 }
 
 void Grams::advAiController(){
-    if(!initSource.isInitializeOk())
+    if(!initSource.isInitializeOk() && !simDataActive())
         return;
     QVector<ControllerData*> pressureSensorsList = {&prSH, &prSA, &prRH, &prRA, &prRL, &prSK, &tmSK, &tmS};
     QVector<ControllerData*> tempSensorsList = {&tmX, &tmY, &tmSLittle, &tmSSmall, &tmSLarge, &tmSTube, &tmRTube, &tmF};
@@ -150,11 +157,17 @@ void Grams::advAiController(){
     initSource.getParametersAIpres(parametersAIpres);
     dataSource.setPressurePointers(pressureSensorsList);
     dataSource.setFiltersDataPointers(getFilterPointers());
-    dataSource.initDaqAIpres(parametersAIpres);
+    if(simDataActive())
+        dataSource.setSensorSource(m_sim->createSensorSource());
+    else
+        dataSource.initDaqAIpres(parametersAIpres);
 
     initSource.getParametersAItemp(parametersAItemp);
     dataSource.setTempPointers(tempSensorsList);
-    dataSource.initDaqAItemp(parametersAItemp);
+    if(simDataActive())
+        dataSource.markControllersConnected();
+    else
+        dataSource.initDaqAItemp(parametersAItemp);
 
     guiValsUpdate();
 }
@@ -165,21 +178,23 @@ void Grams::vacuumController(){
     m_vacuumSensorTurbo.m_name = "Вакууметр турбо";
     m_vacuumSensorTurbo.m_type = DataType::Pressure;
 
-    if(!initSource.isInitializeOk())
+    if(!initSource.isInitializeOk() && !simDataActive())
         return;
     
     const auto& parametersVacuum = initSource.getVacuumParameters();
     m_vacuumSensor.setAltUnitCoef(0.001333); // torr to bar
     dataSource.setVacuumPointer(&m_vacuumSensor);
-    dataSource.initSerialVacuum(parametersVacuum);
+    if(!simDataActive())
+        dataSource.initSerialVacuum(parametersVacuum);
 
     // ДВ302 — второй тракт (турбо), раздел 12.2. Опционален: если порт не
     // найден среди реальных, второй вакуумметр просто не опрашивается, и
     // перехода на турбомолекулярный насос не будет — безопасный исход.
-    if(initSource.hasVacuumTurbo()){
+    if(hasVacuumTurbo()){
         m_vacuumSensorTurbo.setAltUnitCoef(0.001333); // torr to bar
         dataSource.setTurboVacuumPointer(&m_vacuumSensorTurbo);
-        dataSource.initSerialTurboVacuum(initSource.getVacuumTurboParameters());
+        if(!simDataActive())
+            dataSource.initSerialTurboVacuum(initSource.getVacuumTurboParameters());
     }
     // update vacuum values
 }
@@ -311,7 +326,7 @@ void Grams::initCharts(){
     // добавляется, ТОЛЬКО если он реально сконфигурирован (vacuumController()
     // выполняется раньше): пустой график на логарифмической оси мешал бы
     // масштабированию и врал бы легендой о наличии прибора.
-    if (initSource.hasVacuumTurbo()) {
+    if (hasVacuumTurbo()) {
         QVector<DataCollection*> vacuumPtrs;
         vacuumPtrs.append(&m_vacuumSensor);        // ДВ301 — форвакуум
         vacuumPtrs.append(&m_vacuumSensorTurbo);   // ДВ302 — турбо-тракт
@@ -372,6 +387,8 @@ void Grams::initGUI(){
     qmlRegisterSingletonInstance("Grams.timeStampSingleton", 1, 0, "TimeStamp", &m_timeStamp);
     qmlRegisterSingletonInstance("Grams.testFieldSingleton", 1, 0, "TestFieldBack", &m_testField);
     qmlRegisterSingletonInstance("Grams.playPressureSingleton", 1, 0, "PlayPressure", &m_playPressure);
+    if(m_sim)
+        qmlRegisterSingletonInstance("Grams.simSingleton", 1, 0, "SimStatus", m_sim->bridge());
     m_engine.load(url);
 }
 /*
@@ -596,6 +613,40 @@ void Grams::initActionHandler(){
     m_regimeTaskTree.setValveNamesForTest(initSource.m_hardware.m_valves);
 }
 
+void Grams::initSimulation(){
+    if(!m_simOptions.error.isEmpty())
+        qWarning() << "Демо-режим не включён:" << m_simOptions.error;
+    if(!m_simOptions.enabled)
+        return;
+
+    sim::CatalogInput input;
+    for(const auto& s : initSource.getPressureSensors())
+        input.pressureCard.append({s.m_sensorName, s.m_A, s.m_B, s.m_R});
+    input.temperatureCard = initSource.getTempSensors();
+    input.valveCodes = initSource.m_hardware.m_valves;
+
+    // Симуляция при подключённом железе запрещена без обходов (SIM_NOT_ALLOWED).
+    const bool allowed = !initSource.hardwareDetected();
+    m_sim = std::make_unique<sim::SimSubsystem>(input, m_simOptions, allowed,
+                                                initSource.hardwareDetectedReason(),
+                                                QCoreApplication::applicationVersion());
+    m_sim->setRegimeProvider([this]() -> QJsonValue {
+        if(!m_regimeTaskTree.isRunning())
+            return QJsonValue::Null;
+        const auto info = m_regimeManager.getRegimeExecutionInfo(m_regimeTaskTree.activeRegimeId());
+        QString step;
+        if(auto *monitor = qobject_cast<VacuumRunMonitor*>(m_regimeTaskTree.vacuumMonitor()); monitor && monitor->running())
+            step = monitor->currentLabel();
+        return QJsonObject{{"name", info.value("name").toString()},
+                           {"step", step.isEmpty() ? QJsonValue(QJsonValue::Null) : QJsonValue(step)}};
+    });
+    m_sim->startRpc();
+    if(allowed)
+        qWarning() << "ДЕМО-РЕЖИМ: показания датчиков и клапаны подменены симуляцией";
+    else
+        qWarning() << "Демо-режим запрошен, но запрещён:" << initSource.hardwareDetectedReason();
+}
+
 void Grams::testActionHandler(){
     m_actionHandler.runInletAction();
 }
@@ -610,7 +661,7 @@ void Grams::guiValsUpdate(){
     m_pressureVals.g_tmSK = tmSK.getCurValue();
     m_pressureVals.g_tmS = tmS.getCurValue();
     m_pressureVals.g_prARV = m_vacuumSensor.getAltUnit(); // bar
-    m_pressureVals.g_hasVT = initSource.hasVacuumTurbo();
+    m_pressureVals.g_hasVT = hasVacuumTurbo();
     m_pressureVals.g_prVT  = m_pressureVals.g_hasVT
                                  ? m_vacuumSensorTurbo.getAltUnit()   // bar
                                  : 0.0;

@@ -1,6 +1,13 @@
 #include "Initialize.h"
 
 #include <QDir>
+#include <QDebug>
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -32,10 +39,16 @@ Initialize::Initialize(QObject *parent, const QString &curInitProfile) :
     //  -_ Advantech device map
     //if(profile advantech!!!)
     QStringList advantechDeviceNames;
-    checkPass = checkPass*AdvantechCtrl::advantechDeviceCheck(advantechDeviceNames);
+    // Без biodaq.dll SDK вызывает функцию по нулевому адресу — сначала
+    // проверяем, что библиотека вообще загружается.
+    m_biodaqAvailable = biodaqAvailable();
+    if(!m_biodaqAvailable)
+        qWarning() << "biodaq.dll не найдена — платы Advantech недоступны";
+    checkPass = checkPass*(m_biodaqAvailable && AdvantechCtrl::advantechDeviceCheck(advantechDeviceNames));
     QStringList serialNames;
     checkPass = checkPass*SerialInfo::serialPortsInfo(serialNames);
     visualRepresentation(profileJson); // setted after gui run
+    detectHardware(advantechDeviceNames, serialNames);   // после разбора профиля: нужны порты
     bool initAdvantech = false, initVacuum = false;
     if(checkPass){
         initAdvantech = advantechCompareProfile(advantechDeviceNames);
@@ -368,6 +381,57 @@ vacuumParameters Initialize::getVacuumTurboParameters() const{
 
 bool Initialize::hasVacuumTurbo() const{
     return m_vacuumTurboFound;
+}
+
+bool Initialize::biodaqAvailable(){
+#if defined(_WIN32)
+    // Та же загрузка, что делает bdaqctrl.h (DNL_Instance); модуль остаётся
+    // загруженным и дальше используется SDK.
+    return LoadLibraryW(L"biodaq.dll") != nullptr;
+#else
+    return true;   // на Linux biodaq линкуется, без неё приложение не соберётся
+#endif
+}
+
+// Железо считается подключённым, если видна плата Advantech из профиля или
+// порт любого вакуумметра из профиля. Это строже, чем !isInitializeOk():
+// при живой плате клапанов и отсутствующем COM-порте демо-режим недопустим.
+void Initialize::detectHardware(const QStringList& advantechDeviceNames, const QStringList& serialNames){
+    QStringList found;
+    // Платы — только модели из профиля (USB-4716/4718/4750). Виртуальные
+    // DemoDevice из DAQNavi ничем не управляют и демо-режим не запрещают.
+    for(const auto& name : advantechDeviceNames){
+        const QString model = name.split(',').value(0);
+        for(const auto& daq : m_daq){
+            if(daq.m_device == model){
+                found << name;
+                break;
+            }
+        }
+    }
+    for(const auto& serial : serialNames){
+        const int sep = serial.lastIndexOf(", ");
+        if(sep < 0)
+            continue;
+        const QString description = serial.left(sep);
+        const QString portName    = serial.mid(sep + 2);
+        for(const auto* gauge : {&m_vacuum, &m_vacuumTurbo}){
+            if(!gauge->m_portName.isEmpty() && gauge->m_portName == portName
+               && gauge->m_description == description)
+                found << QStringLiteral("%1 (%2)").arg(portName, description);
+        }
+    }
+    m_detectedHardware = found;
+}
+
+bool Initialize::hardwareDetected() const{
+    return !m_detectedHardware.isEmpty();
+}
+
+QString Initialize::hardwareDetectedReason() const{
+    if(m_detectedHardware.isEmpty())
+        return {};
+    return QStringLiteral("подключено железо: %1").arg(m_detectedHardware.join(", "));
 }
 
 

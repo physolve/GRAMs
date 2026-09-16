@@ -235,6 +235,10 @@ public:
     vacuumParameters                m_vacuumTurbo;
 
     bool isInitializeOk() const;
+    // Демо-режим разрешён только без железа (docs/sim/README.md).
+    bool hardwareDetected() const;
+    QString hardwareDetectedReason() const;
+    bool isBiodaqAvailable() const { return m_biodaqAvailable; }
 signals:
     // void advantechDeviceMapChanged();
     //void advantechDeviceSettingsChanged();
@@ -247,6 +251,10 @@ private:
     bool advantechCompareProfile(const QStringList& advantechDeviceNames);
     bool serialCompareProfile(const QStringList& serialNames);
     bool m_vacuumTurboFound = false;
+    static bool biodaqAvailable();
+    void detectHardware(const QStringList& advantechDeviceNames, const QStringList& serialNames);
+    bool m_biodaqAvailable = false;
+    QStringList m_detectedHardware;
     QString m_curInitProfile;
     
     QVariantMap m_profileJson;

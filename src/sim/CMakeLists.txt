@@ -32,6 +32,10 @@ qt_add_library(SimCore STATIC
     hw/SimSensorSource.cpp
     hw/SimValveEcho.h
     hw/SimValveEcho.cpp
+    app/SimOptions.h
+    app/SimOptions.cpp
+    app/SimSubsystem.h
+    app/SimSubsystem.cpp
 )
 
 # src/ — ради интерфейсов ISensorSource / IDoPort и SensorQuality.h.

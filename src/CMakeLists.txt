@@ -142,6 +142,7 @@ if (WIN32)
                 # biodaq
                 opengl32
                 RuntableLibplugin
+                SimCore
         Eigen3::Eigen
     )
 else()
@@ -158,5 +159,6 @@ else()
             Qt6::TaskTree
             biodaq
             RuntableLibplugin
+            SimCore
     )
 endif()

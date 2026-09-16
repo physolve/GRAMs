@@ -210,6 +210,16 @@ ApplicationWindow {
         visible: !main.header.visible
         onClicked: main.header.visible = true
     }
+    // Плашка демо-режима поверх всего окна: видна и при свёрнутом header.
+    // Loader — чтобы без --sim модуль Grams.simSingleton не требовался.
+    Loader {
+        active: Grams.simEnabled
+        source: "sim/DemoDataBanner.qml"
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.min(parent.width - 120, 1400)
+        z: 1000
+    }
     footer: Label {
         text: "swipe me up"
         horizontalAlignment: Text.AlignHCenter
