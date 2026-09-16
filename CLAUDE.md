@@ -51,12 +51,14 @@ cmd /c "`"$vcvars`" && cmake --build build --target VacuumTreeTests --parallel"
 .\build\src\actions\tests\VacuumTreeTests.exe  --gtest_filter=*Pumpdown*
 ```
 
-**Тестовые сюиты (GoogleTest, оба через `gtest_discover_tests` → `ctest`):**
+**Тестовые сюиты (GoogleTest, все через `gtest_discover_tests` → `ctest`):**
 
 | Сюита | Расположение | Покрытие | Особенность сборки |
 |---|---|---|---|
 | `ProtoTableTests` | `src/runtable/tests/` | `RegimeManager` (state machine, External Module API), `ProtoTableModel`, расчёты времени | линкует `RuntableLib` + `Qt6::Test/Core/Qml` |
 | `VacuumTreeTests` | `src/actions/tests/` | рецепт «Вакуума» на TaskTree | компилирует `VacuumTaskTree.cpp` напрямую; все швы к железу — через `VacuumTreeContext`, поэтому **не зависит от `ValveControl`/biodaq** (`Qt6::Core` + `Qt6::TaskTree` + `gtest`) |
+| `SimTests` | `src/sim/tests/` | демо-режим: TrackEngine, профиль и коды валидации, машина фаз, JSON-RPC через `QTcpSocket`, обратный перевод единиц, эхо клапанов, флаги | линкует `SimCore` (`/W4 /WX`) + `DataCollection.cpp` |
+| `SimIntegrationTests` | `src/sim/tests/` | рецепт «Вакуума» на эталонных профилях через настоящие `DataAcquisition`/`ValveControl`/`Security` | рабочая папка ctest — корень репозитория (`profile/`); ~30 с |
 
 > Паттерн `cmd /c "\"vcvars64.bat\" && <команда>"` передаёт инициализированное MSVC-окружение в дочерний процесс cmd, а затем выполняет cmake. Переменные среды не просачиваются обратно в PowerShell — это нормально, каждый вызов самодостаточен.
 
@@ -164,6 +166,26 @@ ptr[]   — массивы указателей        — всегда пров
 3. Зарегистрировать имя режима → воркер в `RegimeTaskTree::buildRegimeGroup()`
 4. Добавить режим в `RunTable.qml` меню «Добавить»
 5. Отладка → верификация на LaNi₅ (плато сорбции ~2 бар при 25°C)
+
+## Демо-данные (`--sim`)
+
+Демо-режим подменяет показания датчиков и порт клапанов, режимы работают без
+стенда. Управление — JSON-RPC из gram-db-viewer. Подробности —
+`docs/sim/README.md`; контракт и реальные id — `docs/sim/rpc-contract.md`.
+
+- Запуск: `.\build\src\GRAMs.exe --sim [--sim-rpc-port 8770] [--sim-token T]`
+  (или `GRAMS_SIM=1`, `GRAMS_SIM_RPC_PORT`, `GRAMS_SIM_TOKEN`). Без `--sim`
+  ничего из `src/sim/` не создаётся и порт не открывается. При подключённом
+  железе (`Initialize::hardwareDetected`) управляющие методы отвечают
+  `SIM_NOT_ALLOWED`.
+- Код: `src/sim/` (библиотека `SimCore`) и интерфейсы
+  `src/controllers/ISensorSource.h` / `IDoPort.h`, за которыми живут
+  `RealSensorSource` / `RealDoPort`. Подмена стоит на уровне драйверов
+  `DataAcquisition`. Режимы, `Security` и квартили про демо не знают — **не
+  добавлять в них проверок «это демо?»**.
+- Демо-хранилище: `data/sim/regime_log.db` и PostgreSQL `gramstate_sim`.
+- Проверка: `Push-Location build; ctest -R Sim; Pop-Location`,
+  `tools/sim_rpc_smoke.ps1` против запущенного GRAMs.
 
 ## Important Notes
 

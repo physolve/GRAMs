@@ -19,7 +19,7 @@ SimRpcServer::SimRpcServer(const SimRpcDispatcher *dispatcher, QObject *parent)
                      if (request.headers().contains(name))
                          token = request.headers().value(name).toByteArray();
                      const QJsonObject reply = m_dispatcher->handle(request.body(), token);
-                     return QHttpServerResponse(QByteArrayLiteral("application/json"),
+                     return QHttpServerResponse(QByteArrayLiteral("application/json; charset=utf-8"),
                                                 QJsonDocument(reply).toJson(QJsonDocument::Compact));
                  });
 }

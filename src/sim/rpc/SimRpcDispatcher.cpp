@@ -16,7 +16,8 @@ QJsonObject ok(const QJsonValue &id, const QJsonValue &result)
     return {{"jsonrpc", "2.0"}, {"id", id}, {"result", result}};
 }
 
-QJsonObject fail(const QJsonValue &id, int code, const QString &message, const QJsonValue &data = {})
+QJsonObject fail(const QJsonValue &id, int code, const QString &message,
+                 const QJsonValue &data = QJsonValue(QJsonValue::Undefined))
 {
     QJsonObject err{{"code", code}, {"message", message}};
     if (!data.isUndefined())

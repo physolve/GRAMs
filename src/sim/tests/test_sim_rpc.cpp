@@ -299,3 +299,9 @@ TEST_F(SimRpc, ListensOnLoopbackOnly)
         break;
     }
 }
+
+TEST_F(SimRpc, ErrorWithoutDataOmitsField)
+{
+    const QJsonObject r = call("sim.nope");
+    EXPECT_FALSE(r.value("error").toObject().contains("data"));
+}
