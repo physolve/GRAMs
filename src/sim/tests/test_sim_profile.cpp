@@ -156,3 +156,22 @@ TEST(SimProfile, IssuesToJson)
     EXPECT_EQ(arr[0].toObject().value("code").toString(), "BAD_KIND");
     EXPECT_EQ(arr[0].toObject().value("path").toString(), "phases[0]");
 }
+
+TEST(SimProfile, ReferenceProfilesAreValid)
+{
+    for (const char *file : {"vacuum_fore_turbo.json", "vacuum_leak.json",
+                             "gas_to_accumulator.json", "h2_to_chamber.json"}) {
+        Profile p;
+        const auto r = validateFile(QString::fromLatin1(file), &p);
+        EXPECT_TRUE(r.ok()) << file << "\n" << dump(r.errors);
+        if (std::string(file) == "vacuum_leak.json") {
+            // Натекание намеренное — предупреждение ожидаемо и единственно.
+            EXPECT_EQ(r.warnings.size(), 1) << dump(r.warnings);
+            if (r.warnings.isEmpty()) continue;
+            EXPECT_EQ(r.warnings.first().code, "PRESSURE_RISE_IN_PUMPING");
+            continue;
+        } else {
+            EXPECT_TRUE(r.warnings.isEmpty()) << file << "\n" << dump(r.warnings);
+        }
+    }
+}

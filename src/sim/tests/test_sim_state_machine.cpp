@@ -366,3 +366,49 @@ TEST_F(SimMachine, NoiseIsReproducibleBySeed)
     EXPECT_EQ(first, second);
     EXPECT_NE(first[0], first[1]);
 }
+
+namespace {
+Profile loadReference(const char *file)
+{
+    Profile p;
+    const auto r = parseProfile(readJson(profilePath(QString::fromLatin1(file))).object(), gram50().catalog, &p);
+    EXPECT_TRUE(r.ok()) << file;
+    return p;
+}
+} // namespace
+
+TEST_F(SimMachine, ReferenceGasToAccumulator)
+{
+    startRun(loadReference("gas_to_accumulator.json"));
+    step(1.0, 3);
+    EXPECT_EQ(ctl.currentPhaseId(), "static_empty");
+    ctl.notifyValve("K109", true);
+    step(1.0);
+    EXPECT_EQ(ctl.currentPhaseId(), "gas_inlet");
+    step(1.0, 45);
+    // шум sigmaAbs = 300 Па: середина линейного роста 2000 Па → 5 бар за 90 с
+    EXPECT_NEAR(ctl.value("P.DD311"), 251000, 3000);
+    EXPECT_NEAR(ctl.value("P.DD341"), 250002.5, 1e-6);
+    EXPECT_DOUBLE_EQ(ctl.value("P.DD312"), gram50().catalog.channel("P.DD312")->max);   // ограничен диапазоном
+    ctl.notifyValve("K109", false);
+    step(1.0);
+    EXPECT_EQ(ctl.currentPhaseId(), "static_full");
+    EXPECT_EQ(ctl.history().last().reason, "valve");
+}
+
+TEST_F(SimMachine, ReferenceH2ToChamber)
+{
+    startRun(loadReference("h2_to_chamber.json"));
+    ctl.notifyValve("K151", true);
+    step(1.0);
+    ASSERT_EQ(ctl.currentPhaseId(), "h2_inlet");
+    step(1.0, 120);
+    EXPECT_EQ(ctl.currentPhaseId(), "static_drift");
+    EXPECT_EQ(ctl.history().last().reason, "timeout");
+    EXPECT_NEAR(ctl.value("P.DD331"), 300000, 300000 * 0.02);
+    EXPECT_NEAR(ctl.value("P.DD311"), 700000, 1.0);
+    const double t0 = ctl.value("T.DT358");
+    step(60.0, 60);
+    EXPECT_LT(ctl.value("T.DT358"), t0);   // медленный дрейф к 26 °C
+    EXPECT_NEAR(ctl.value("T.DT358"), 26.0, 1e-9);
+}

@@ -1,0 +1,333 @@
+{
+  "schema": "grams.sim.profile/1",
+  "name": "Вакуум: натекание в турбо-фазе через 60 с",
+  "seed": 42,
+  "initial": {
+    "VAC.DV301": 101325,
+    "VAC.DV302": 101325,
+    "P.DD311": 101325,
+    "P.DD312": 101325,
+    "P.DD331": 101325,
+    "P.DD332": 101325,
+    "P.DD334": 9990,
+    "T.DT358": 25.0
+  },
+  "phases": [
+    {
+      "id": "static_atm",
+      "kind": "static",
+      "zone": "vacuum",
+      "label": "Тракт на атмосфере",
+      "durationSec": null,
+      "tracks": [],
+      "transitions": [
+        {
+          "to": "pump_fore",
+          "on": {
+            "type": "valve",
+            "valve": "K176",
+            "state": "open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pump_fore",
+      "kind": "pumping",
+      "zone": "vacuum",
+      "label": "Форвакуумная откачка (К176)",
+      "durationSec": null,
+      "tracks": [
+        {
+          "channel": "VAC.DV301",
+          "interp": "log",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              20
+            ]
+          ],
+          "noise": {
+            "sigmaRel": 0.01
+          }
+        },
+        {
+          "channel": "VAC.DV302",
+          "interp": "log",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              20
+            ]
+          ]
+        },
+        {
+          "channel": "P.DD311",
+          "interp": "exp",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              2000
+            ]
+          ],
+          "tau": 20
+        },
+        {
+          "channel": "P.DD312",
+          "interp": "exp",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              5
+            ]
+          ],
+          "tau": 20
+        },
+        {
+          "channel": "P.DD331",
+          "interp": "exp",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              2000
+            ]
+          ],
+          "tau": 20
+        },
+        {
+          "channel": "P.DD332",
+          "interp": "exp",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              5
+            ]
+          ],
+          "tau": 20
+        },
+        {
+          "channel": "P.DD334",
+          "interp": "exp",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              5
+            ]
+          ],
+          "tau": 20
+        }
+      ],
+      "transitions": [
+        {
+          "to": "pump_turbo",
+          "on": {
+            "type": "valve",
+            "valve": "K179",
+            "state": "open"
+          }
+        },
+        {
+          "to": "static_fore_hold",
+          "on": {
+            "type": "valve",
+            "valve": "K176",
+            "state": "closed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "static_fore_hold",
+      "kind": "static",
+      "zone": "vacuum",
+      "label": "Форвакуум, насос отсечён",
+      "durationSec": null,
+      "tracks": [],
+      "transitions": [
+        {
+          "to": "pump_fore",
+          "on": {
+            "type": "valve",
+            "valve": "K176",
+            "state": "open"
+          }
+        },
+        {
+          "to": "pump_turbo",
+          "on": {
+            "type": "valve",
+            "valve": "K179",
+            "state": "open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pump_turbo",
+      "kind": "pumping",
+      "zone": "vacuum",
+      "label": "Турбомолекулярная откачка (К179)",
+      "durationSec": 60,
+      "tracks": [
+        {
+          "channel": "VAC.DV302",
+          "interp": "log",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              600,
+              0.005
+            ]
+          ],
+          "noise": {
+            "sigmaRel": 0.01
+          }
+        }
+      ],
+      "transitions": [
+        {
+          "to": "leak_turbo",
+          "on": {
+            "type": "timeout"
+          }
+        },
+        {
+          "to": "static_turbo_hold",
+          "on": {
+            "type": "valve",
+            "valve": "K179",
+            "state": "closed"
+          }
+        },
+        {
+          "to": "pump_fore",
+          "on": {
+            "type": "valve",
+            "valve": "K176",
+            "state": "open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "static_turbo_hold",
+      "kind": "static",
+      "zone": "vacuum",
+      "label": "Турбо-тракт отсечён",
+      "durationSec": null,
+      "tracks": [],
+      "transitions": [
+        {
+          "to": "pump_turbo",
+          "on": {
+            "type": "valve",
+            "valve": "K179",
+            "state": "open"
+          }
+        },
+        {
+          "to": "pump_fore",
+          "on": {
+            "type": "valve",
+            "valve": "K176",
+            "state": "open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "leak_turbo",
+      "kind": "pumping",
+      "zone": "vacuum",
+      "label": "Натекание в турбо-тракте",
+      "durationSec": null,
+      "tracks": [
+        {
+          "channel": "VAC.DV302",
+          "interp": "log",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              30,
+              1
+            ],
+            [
+              120,
+              2000
+            ]
+          ]
+        }
+      ],
+      "transitions": [
+        {
+          "to": "pump_fore",
+          "on": {
+            "type": "valve",
+            "valve": "K176",
+            "state": "open"
+          }
+        },
+        {
+          "to": "static_after_leak",
+          "on": {
+            "type": "valve",
+            "valve": "K179",
+            "state": "closed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "static_after_leak",
+      "kind": "static",
+      "zone": "vacuum",
+      "label": "После отката: турбо отсечён",
+      "durationSec": null,
+      "tracks": [],
+      "transitions": [
+        {
+          "to": "pump_fore",
+          "on": {
+            "type": "valve",
+            "valve": "K176",
+            "state": "open"
+          }
+        }
+      ]
+    }
+  ]
+}

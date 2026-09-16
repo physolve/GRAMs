@@ -1,0 +1,162 @@
+{
+  "schema": "grams.sim.profile/1",
+  "name": "Напуск водорода в камеру",
+  "seed": 11,
+  "initial": {
+    "P.DD331": 2000,
+    "P.DD332": 5,
+    "P.DD334": 5,
+    "P.DD311": 1000000,
+    "T.DT358": 25.0,
+    "T.DT359": 25.0
+  },
+  "phases": [
+    {
+      "id": "static_vacuum",
+      "kind": "static",
+      "zone": "chamber",
+      "label": "Камера откачана",
+      "durationSec": null,
+      "tracks": [],
+      "transitions": [
+        {
+          "to": "h2_inlet",
+          "on": {
+            "type": "valve",
+            "valve": "K151",
+            "state": "open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h2_inlet",
+      "kind": "h2Inlet",
+      "zone": "chamber",
+      "label": "Напуск H₂ через линию E–F (К151)",
+      "durationSec": 120,
+      "tracks": [
+        {
+          "channel": "P.DD331",
+          "interp": "exp",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              120,
+              300000
+            ]
+          ],
+          "tau": 15,
+          "noise": {
+            "sigmaRel": 0.002
+          }
+        },
+        {
+          "channel": "P.DD332",
+          "interp": "exp",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              120,
+              190000
+            ]
+          ],
+          "tau": 15
+        },
+        {
+          "channel": "P.DD311",
+          "interp": "exp",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              120,
+              700000
+            ]
+          ],
+          "tau": 15
+        },
+        {
+          "channel": "T.DT358",
+          "interp": "linear",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              30,
+              31.0
+            ],
+            [
+              120,
+              29.0
+            ]
+          ]
+        }
+      ],
+      "transitions": [
+        {
+          "to": "static_drift",
+          "on": {
+            "type": "valve",
+            "valve": "K151",
+            "state": "closed"
+          }
+        },
+        {
+          "to": "static_drift",
+          "on": {
+            "type": "timeout"
+          }
+        }
+      ]
+    },
+    {
+      "id": "static_drift",
+      "kind": "static",
+      "zone": "chamber",
+      "label": "Равновесие, дрейф температуры",
+      "durationSec": null,
+      "tracks": [
+        {
+          "channel": "T.DT358",
+          "interp": "linear",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              3600,
+              26.0
+            ]
+          ]
+        },
+        {
+          "channel": "T.DT359",
+          "interp": "linear",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              3600,
+              25.5
+            ]
+          ]
+        }
+      ],
+      "transitions": []
+    }
+  ]
+}
