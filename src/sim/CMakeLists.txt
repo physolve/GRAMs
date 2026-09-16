@@ -22,6 +22,10 @@ qt_add_library(SimCore STATIC
     core/SimStates.cpp
     core/SimController.h
     core/SimController.cpp
+    rpc/SimRpcDispatcher.h
+    rpc/SimRpcDispatcher.cpp
+    rpc/SimRpcServer.h
+    rpc/SimRpcServer.cpp
 )
 
 target_include_directories(SimCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
