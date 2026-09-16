@@ -11,6 +11,10 @@ qt_add_library(SimCore STATIC
     core/SimTypes.h
     core/TrackEngine.h
     core/TrackEngine.cpp
+    core/SimProfile.h
+    core/SimProfile.cpp
+    core/SimCatalog.h
+    core/SimCatalog.cpp
 )
 
 target_include_directories(SimCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

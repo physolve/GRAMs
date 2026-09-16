@@ -1,0 +1,1 @@
+{"schema":"grams.sim.profile/1","name":"fixture","phases":[{"id":"a","kind":"h2Inlet","zone":"accumulator","durationSec":10,"tracks":[],"transitions":[{"to":"b","on":{"type":"timeout"}}]},{"id":"b","kind":"static","zone":"chamber","durationSec":null,"tracks":[],"transitions":[]}]}

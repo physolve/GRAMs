@@ -1,0 +1,1 @@
+{"schema":"grams.sim.profile/1","name":"fixture","phases":[{"id":"a","kind":"pumping","zone":"vacuum","durationSec":20,"tracks":[{"channel":"VAC.DV301","interp":"log","keypoints":[[0,1000],[10,10],[20,500]]}],"transitions":[{"to":"b","on":{"type":"timeout"}}]},{"id":"b","kind":"static","zone":"chamber","durationSec":null,"tracks":[],"transitions":[]}]}

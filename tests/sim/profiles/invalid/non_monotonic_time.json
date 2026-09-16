@@ -1,0 +1,1 @@
+{"schema":"grams.sim.profile/1","name":"fixture","phases":[{"id":"a","kind":"static","zone":"chamber","durationSec":10,"tracks":[{"channel":"P.DD331","interp":"linear","keypoints":[[0,1],[10,2],[10,3]]}],"transitions":[{"to":"b","on":{"type":"timeout"}}]},{"id":"b","kind":"static","zone":"chamber","durationSec":null,"tracks":[],"transitions":[]}]}

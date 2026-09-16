@@ -1,0 +1,1 @@
+{"schema":"grams.sim.profile/1","name":"fixture","phases":[{"id":"a","kind":"static","zone":"chamber","durationSec":10,"tracks":[],"transitions":[{"to":"b","on":{"type":"valve","valve":"K999","state":"open"}}]},{"id":"b","kind":"static","zone":"chamber","durationSec":null,"tracks":[],"transitions":[]}]}

@@ -15,6 +15,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(SimTests
     test_main.cpp
     test_track_engine.cpp
+    test_sim_profile.cpp
 )
 
 target_link_libraries(SimTests PRIVATE SimCore gtest)
