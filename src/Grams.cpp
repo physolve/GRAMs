@@ -641,8 +641,15 @@ void Grams::initSimulation(){
                            {"step", step.isEmpty() ? QJsonValue(QJsonValue::Null) : QJsonValue(step)}};
     });
     m_sim->startRpc();
-    if(allowed)
+    if(allowed){
+        // Демо не смешивается с экспериментом (вариант «отдельное хранилище»):
+        // журнал прогонов — data/sim/regime_log.db, состояния объёмов —
+        // база PostgreSQL gramstate_sim (нет базы — работаем без неё, как
+        // и без PostgreSQL вообще). initTimeStamp/initDatabase идут позже.
+        m_regimeTaskTree.setLogDatabasePath(QStringLiteral("data/sim/regime_log.db"));
+        GramStateDB::setDatabaseName(QStringLiteral("gramstate_sim"));
         qWarning() << "ДЕМО-РЕЖИМ: показания датчиков и клапаны подменены симуляцией";
+    }
     else
         qWarning() << "Демо-режим запрошен, но запрещён:" << initSource.hardwareDetectedReason();
 }

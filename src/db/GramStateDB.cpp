@@ -1,11 +1,27 @@
 #include "GramStateDB.h"
 #include <QDateTime>
 
+namespace {
+QString& databaseNameRef()
+{
+    static QString name = QStringLiteral("gramstate");
+    return name;
+}
+}
+
+void GramStateDB::setDatabaseName(const QString& name){
+    databaseNameRef() = name;
+}
+
+QString GramStateDB::databaseName(){
+    return databaseNameRef();
+}
+
 bool GramStateDB::createConnection(QVariantList& initialTimeStamp)
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
     db.setHostName("localhost"); // ?
-    db.setDatabaseName("gramstate");
+    db.setDatabaseName(databaseName());
     db.setUserName("gramapp");
     db.setPassword("fast");
 
@@ -67,7 +83,7 @@ void GramStateDB::setTimeStampDataPointers(const QVector<DataCollection*>& ptr){
 bool GramStateDB::initDatabase(){
     m_gramState = QSqlDatabase::database();
     m_gramState.setHostName("localhost"); // ?
-    m_gramState.setDatabaseName("gramstate");
+    m_gramState.setDatabaseName(databaseName());
     m_gramState.setUserName("gramapp");
     m_gramState.setPassword("fast");
     if (!m_gramState.open()) {
