@@ -1,8 +1,11 @@
 #pragma once
 
 #include <QTimer>
+#include <memory>
 #include "controllers/AdvantechCtrl.h"
 #include "controllers/SerialCtrl.h"
+#include "controllers/ISensorSource.h"
+#include "controllers/RealSensorSource.h"
 #include "FilterView.h"
 #include "Initialize.h" 
 
@@ -33,6 +36,13 @@ public:
     void stopAcquisition();
 
     bool getGRAMsIntegrity();
+
+    // Источник показаний. По умолчанию — железо (RealSensorSource создаётся при
+    // первом init*). Демо-режим ставит свой до инициализации и помечает
+    // карты подключёнными: путь данных выше источника не меняется.
+    void setSensorSource(std::unique_ptr<ISensorSource> source);
+    void markControllersConnected();
+    ISensorSource *sensorSource() const { return m_source.get(); }
 
     // void setValvePointers(const QVector<Valve*>& ptr);
     // bool setValveStates();
@@ -78,18 +88,17 @@ private:
     // valve pointers
     // QVector<Valve*> m_valves;
     
-    AdvantechBuff reqSensorAI;
+    RealSensorSource &real();
+    std::unique_ptr<ISensorSource> m_source;
+    RealSensorSource *m_real = nullptr;   // не владеет; nullptr в демо-режиме
+
     // AI pointers
         // pres
     QVector<ControllerData*> m_pressureSensors;
-    
-    AdvantechAI reqTempAI;
     // AI pointers
         // temp
     QVector<ControllerData*> m_tempSensors;
-    
-    VacuumController reqVacuum;
-    TurboVacuumController reqVacuumTurbo;
+
     DataCollection* m_vacuumSensor = nullptr;
     DataCollection* m_vacuumSensorTurbo = nullptr;
     

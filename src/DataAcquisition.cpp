@@ -24,6 +24,25 @@ DataAcquisition::~DataAcquisition(){
     delete m_acquisitionTimer;
 }
 
+RealSensorSource &DataAcquisition::real(){
+    if(!m_real){
+        auto source = std::make_unique<RealSensorSource>();
+        m_real = source.get();
+        m_source = std::move(source);
+    }
+    return *m_real;
+}
+
+void DataAcquisition::setSensorSource(std::unique_ptr<ISensorSource> source){
+    m_real = nullptr;
+    m_source = std::move(source);
+}
+
+void DataAcquisition::markControllersConnected(){
+    pressureController = m_source != nullptr;
+    temperatureController = m_source != nullptr;
+}
+
 bool DataAcquisition::getGRAMsIntegrity(){
     //auto l_integrity = [](const QList<ControllerConnection> a) { 
     // for(const auto& b:GRAMsIntegrity.values())
@@ -66,6 +85,7 @@ void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
     AdvAIType a(parameter.fullName);
     a.setProfilePath(parameter.m_profile);
     a.setDefaultType(parameter.m_defaultType);
+    auto &reqSensorAI = real().pressureCard();
     reqSensorAI.setInfo(a);
     reqSensorAI.Initialization();
     reqSensorAI.ConfigureDeviceBuff();
@@ -76,13 +96,13 @@ void DataAcquisition::initDaqAIpres(const daqParameters &parameter){
         reqSensorAI.setVolageFilter(i, filterView.getNewFilterParameters());
     } 
     // if ok
-    reqSensorAI.readData();
+    m_source->readPressure();
     // pass to filter
-    const auto &readData = reqSensorAI.getData();
+    const auto &readData = m_source->pressureVolts();
     if(m_filtersData.count() == m_pressureSensors.count()) qDebug() << "Filters to all USB4716 channels";
     for(int i = 0; i < m_pressureSensors.count(); ++i){
         m_pressureSensors[i]->addValue(readData[i], 0);
-        m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
+        m_filtersData[i]->setData(m_source->pressureBuffer(i));
     }
     pressureController = true;
 }
@@ -91,7 +111,9 @@ void DataAcquisition::updateFilter(int chartIndex){
     filterView.readKalman();
     filterView.parseKalman();
     // other filters to update 
-    reqSensorAI.setVolageFilter(0, filterView.getJsonMatrix());
+    if(!m_real)
+        return;   // фильтр живёт в драйвере платы — в демо-режиме его нет
+    m_real->pressureCard().setVolageFilter(0, filterView.getJsonMatrix());
 
     // auto parameters = filterView.getNewFilterParameters();
     // controller->setVolageFilter(0, parameters);
@@ -102,13 +124,14 @@ void DataAcquisition::initDaqAItemp(const daqParameters &parameter){
     AdvAIType a(parameter.fullName);
     a.setProfilePath(parameter.m_profile);
     a.setDefaultType(parameter.m_defaultType);
+    auto &reqTempAI = real().temperatureCard();
     reqTempAI.setInfo(a);
     reqTempAI.Initialization();
     reqTempAI.ConfigureDeviceTemp();
     // if ok
-    reqTempAI.readData();
+    m_source->readTemperature();
     // without filters
-    const auto &readData = reqTempAI.getData();
+    const auto &readData = m_source->temperatures();
     for(int i = 0; i < m_tempSensors.count(); ++i){
         m_tempSensors[i]->addValue(readData[i]);
     }
@@ -125,6 +148,7 @@ void DataAcquisition::initSerialVacuum(const vacuumParameters &parameterVacuum){
     a.parity = QSerialPort::Parity(parameterVacuum.m_parity);
     a.stopBits = QSerialPort::StopBits(parameterVacuum.m_stopBits);
     a.timeout = parameterVacuum.m_timeout;
+    auto &reqVacuum = real().foreGauge();
     reqVacuum.setSerialPortInfo(a);
     if(!reqVacuum.openSerialPort()){
         qWarning() << "ДВ301: порт" << a.portName << "не открылся — опрос не запущен";
@@ -150,6 +174,7 @@ void DataAcquisition::initSerialTurboVacuum(const vacuumParameters &parameterVac
     a.parity      = QSerialPort::Parity(parameterVacuum.m_parity);
     a.stopBits    = QSerialPort::StopBits(parameterVacuum.m_stopBits);
     a.timeout     = parameterVacuum.m_timeout;
+    auto &reqVacuumTurbo = real().turboGauge();
     reqVacuumTurbo.setSerialPortInfo(a);
     if(!reqVacuumTurbo.openSerialPort()){
         qWarning() << "ДВ302: порт" << a.portName << "не открылся — опрос не запущен";
@@ -159,12 +184,14 @@ void DataAcquisition::initSerialTurboVacuum(const vacuumParameters &parameterVac
 }
 
 void DataAcquisition::testVacuumQuery(){
-    reqVacuum.requestData();
+    if(m_real)
+        m_real->foreGauge().requestData();
 }
 
 // Разовый запрос к ДВ302 для пусконаладки — без запуска режима.
 void DataAcquisition::testTurboVacuumQuery(){
-    reqVacuumTurbo.requestData();
+    if(m_real)
+        m_real->turboGauge().requestData();
 }
 
 
@@ -184,24 +211,24 @@ void DataAcquisition::stopAcquisition(){
 }
 
 void DataAcquisition::processEvents(){
-    if(!reqTempAI.isConnected()||!reqSensorAI.isConnected()){
+    if(!m_source || !m_source->isTemperatureConnected() || !m_source->isPressureConnected()){
         qDebug() << "Stopping acquisition...";
         stopAcquisition();
         return;
     }
-    reqTempAI.readData();
+    m_source->readTemperature();
     m_time->addValue(m_elapsedTimer.elapsed()/1000.0);  
-    const auto &readDataPres = reqSensorAI.getData();
+    const auto &readDataPres = m_source->pressureVolts();
     for(int i = 0; i < m_pressureSensors.count(); ++i){
         m_pressureSensors[i]->addValue(readDataPres[i]); // ,0 minimal value
-        m_filtersData[i]->setData(reqSensorAI.getBufferedData(i));
+        m_filtersData[i]->setData(m_source->pressureBuffer(i));
     }
-    const auto &readDataTemp = reqTempAI.getData(); // this data from last read
+    const auto &readDataTemp = m_source->temperatures(); // this data from last read
     for(int i = 0; i < m_tempSensors.count(); ++i){
         m_tempSensors[i]->addValue(readDataTemp[i]);
     }
     if(canReadSlow){
-        reqSensorAI.readData();
+        m_source->readPressure();
     }
     else if(!canReadFast){
         qDebug() << "Set Reading Fast";
@@ -209,9 +236,11 @@ void DataAcquisition::processEvents(){
     }
     
     if(m_vacuumSensor)
-        m_vacuumSensor->addPoint(reqVacuum.getData(), reqVacuum.quality());
+        m_vacuumSensor->addPoint(m_source->gaugeTorr(ISensorSource::Gauge::Fore),
+                                 m_source->gaugeQuality(ISensorSource::Gauge::Fore));
     if(m_vacuumSensorTurbo)
-        m_vacuumSensorTurbo->addPoint(reqVacuumTurbo.getData(), reqVacuumTurbo.quality());
+        m_vacuumSensorTurbo->addPoint(m_source->gaugeTorr(ISensorSource::Gauge::Turbo),
+                                      m_source->gaugeQuality(ISensorSource::Gauge::Turbo));
     
     if(m_leakageMeasure){
         fillLeakageRQ();
@@ -235,7 +264,8 @@ void DataAcquisition::fastBufferRead(){
     if(!canReadFast)
         return;
     // qDebug() << "Reading Fast";
-    reqSensorAI.readData();
+    if(m_source)
+        m_source->readPressure();
 }
 // msecs
 
@@ -247,7 +277,7 @@ void DataAcquisition::setSupplyPressurePtr(FilterData* high, FilterData* low){
 void DataAcquisition::runSupplyAction(){
     QVector<double> filteredReal;
     int index = 0;
-    const auto& filteredVoltage_high = reqSensorAI.getBufferedData(index);
+    const auto& filteredVoltage_high = m_source->pressureBuffer(index);
     const auto& lin_A_high = m_pressureSensors[index]->getLin_A();
     const auto& lin_B_high = m_pressureSensors[index]->getLin_B();
     for(const auto& val : filteredVoltage_high){
@@ -256,7 +286,7 @@ void DataAcquisition::runSupplyAction(){
     m_supplyPressureHigh->addData(filteredReal);
     filteredReal.clear();
     index = 1;
-    const auto& filteredVoltage_low = reqSensorAI.getBufferedData(index);
+    const auto& filteredVoltage_low = m_source->pressureBuffer(index);
     const auto& lin_A_low = m_pressureSensors[index]->getLin_A();
     const auto& lin_B_low = m_pressureSensors[index]->getLin_B();
     for(const auto& val : filteredVoltage_low){
@@ -266,7 +296,7 @@ void DataAcquisition::runSupplyAction(){
 }
 
 bool DataAcquisition::setLeakageMeasure(bool leakageMeasure){
-    if(!reqTempAI.isConnected()||!reqSensorAI.isConnected()){
+    if(!m_source || !m_source->isTemperatureConnected() || !m_source->isPressureConnected()){
         return false;
     }
     m_leakageMeasure = leakageMeasure;
@@ -281,7 +311,7 @@ void DataAcquisition::setLeakagePressurePtr(FilterData* high, FilterData* low){
 void DataAcquisition::fillLeakageRQ(){
     QVector<double> filteredReal;
     int index = 2;
-    const auto& filteredVoltage_high = reqSensorAI.getBufferedData(index);
+    const auto& filteredVoltage_high = m_source->pressureBuffer(index);
     const auto& lin_A_high = m_pressureSensors[index]->getLin_A();
     const auto& lin_B_high = m_pressureSensors[index]->getLin_B();
     for(const auto& val : filteredVoltage_high){
@@ -290,7 +320,7 @@ void DataAcquisition::fillLeakageRQ(){
     m_leakagePressureHigh->addData(filteredReal);
     filteredReal.clear();
     index = 3;
-    const auto& filteredVoltage_low = reqSensorAI.getBufferedData(index);
+    const auto& filteredVoltage_low = m_source->pressureBuffer(index);
     const auto& lin_A_low = m_pressureSensors[index]->getLin_A();
     const auto& lin_B_low = m_pressureSensors[index]->getLin_B();
     for(const auto& val : filteredVoltage_low){
