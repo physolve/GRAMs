@@ -12,15 +12,25 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+# Существующий код GRAMs, нужный тестам «туда-обратно», — отдельной
+# библиотекой: на него не распространяется /WX нового кода.
+add_library(SimTestsGramsData STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../DataCollection.cpp
+)
+target_include_directories(SimTestsGramsData PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+target_link_libraries(SimTestsGramsData PUBLIC Qt6::Core)
+
 add_executable(SimTests
     test_main.cpp
     test_track_engine.cpp
     test_sim_profile.cpp
     test_sim_state_machine.cpp
     test_sim_rpc.cpp
+    test_sim_hw.cpp
 )
 
-target_link_libraries(SimTests PRIVATE SimCore gtest)
+find_package(Qt6 REQUIRED COMPONENTS Test Concurrent)
+target_link_libraries(SimTests PRIVATE SimCore SimTestsGramsData Qt6::Test Qt6::Concurrent gtest)
 
 # Эталонные профили и фикстуры лежат в tests/sim/profiles/ корня репозитория.
 target_compile_definitions(SimTests PRIVATE

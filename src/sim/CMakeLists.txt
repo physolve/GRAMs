@@ -26,9 +26,16 @@ qt_add_library(SimCore STATIC
     rpc/SimRpcDispatcher.cpp
     rpc/SimRpcServer.h
     rpc/SimRpcServer.cpp
+    hw/SensorInverse.h
+    hw/SensorInverse.cpp
+    hw/SimSensorSource.h
+    hw/SimSensorSource.cpp
+    hw/SimValveEcho.h
+    hw/SimValveEcho.cpp
 )
 
-target_include_directories(SimCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# src/ — ради интерфейсов ISensorSource / IDoPort и SensorQuality.h.
+target_include_directories(SimCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 target_link_libraries(SimCore
     PUBLIC
