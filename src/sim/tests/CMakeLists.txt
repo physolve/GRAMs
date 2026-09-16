@@ -16,6 +16,7 @@ add_executable(SimTests
     test_main.cpp
     test_track_engine.cpp
     test_sim_profile.cpp
+    test_sim_state_machine.cpp
 )
 
 target_link_libraries(SimTests PRIVATE SimCore gtest)

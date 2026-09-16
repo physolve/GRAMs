@@ -15,6 +15,13 @@ qt_add_library(SimCore STATIC
     core/SimProfile.cpp
     core/SimCatalog.h
     core/SimCatalog.cpp
+    core/SimClock.h
+    core/SimEvents.h
+    core/SimErrors.h
+    core/SimStates.h
+    core/SimStates.cpp
+    core/SimController.h
+    core/SimController.cpp
 )
 
 target_include_directories(SimCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
