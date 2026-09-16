@@ -1,7 +1,11 @@
 #pragma once
 
 #include "controllers/AdvantechCtrl.h"
-#include "Initialize.h" 
+#include "controllers/IDoPort.h"
+#include "controllers/RealDoPort.h"
+#include "Initialize.h"
+
+#include <memory>
 #include "addon/AddRemoveQuartile.h"
 #include "addon/ReactionQuartile.h"
 #include "db/GramStateDB.h"
@@ -26,7 +30,10 @@ public:
     void setSafeModuleInitialValveState();
     void setGasSupplyValves(const QStringList& gasSupplyValves);
     void setGasStoreValves(const QStringList& gasStoreValves);
-    void initDaqDO(const daqParameters &parameterDO); 
+    void initDaqDO(const daqParameters &parameterDO);
+    // Порт выходов клапанов. initDaqDO ставит плату USB-4750; демо-режим —
+    // эхо записи (sim::SimValveEcho). Security и логика клапанов те же.
+    void setDoPort(std::unique_ptr<IDoPort> port);
     void beginAction();
     void endAction();
     bool isActionInterrupted() const;
@@ -56,7 +63,7 @@ signals:
     void guiValsValveChanged();
 
 private:
-    AdvantechDO reqValveDO;
+    std::unique_ptr<IDoPort> m_doPort;   // nullptr, пока порт не поставлен
     bool valveController;
     bool actionInterrupted;
     // valve pointers

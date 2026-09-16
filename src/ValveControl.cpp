@@ -51,15 +51,22 @@ void ValveControl::setGasStoreValves(const QStringList& gasStoreValves){
 
 void ValveControl::initDaqDO(const daqParameters &parameter){
     // pass real info from Initialize
+    auto port = std::make_unique<RealDoPort>();
     AdvDOType a(parameter.fullName);
     a.setProfilePath(parameter.m_profile);
-    reqValveDO.setInfo(a);
-    reqValveDO.ConfigureDeviceDO();
-    reqValveDO.readData();
+    port->device().setInfo(a);
+    port->device().ConfigureDeviceDO();
+    port->device().readData();
+    setDoPort(std::move(port));
+}
+
+void ValveControl::setDoPort(std::unique_ptr<IDoPort> port){
+    m_doPort = std::move(port);
+    valveNameList.clear();
     // valve objects
-    const auto &readData = reqValveDO.getData();
+    const auto &readData = m_doPort->data();
     // if ok
-    for(int i = 0; i < m_valves.count(); ++i){
+    for(int i = 0; i < m_valves.count() && i < readData.count(); ++i){
         m_valves[i]->setState(readData[i]);
         valveNameList << m_valves[i]->m_name;
     }
@@ -94,7 +101,7 @@ bool ValveControl::sendValveStates(){
         changedState << m_valves[i]->getState();
     }
     // handler to unsuccessful set (true / false)
-    return reqValveDO.setData(changedState);
+    return m_doPort->write(changedState);
 }
 
 // V-02 (REQ-082/084) — см. комментарий в заголовке.
@@ -104,9 +111,9 @@ bool ValveControl::confirmValve(const QString& name, bool expected){
     const int index = valveNameList.indexOf(name);
     if(index == -1)
         return false;
-    if(!reqValveDO.refresh())
+    if(!m_doPort->refresh())
         return false;          // чтение не удалось — не выдаём старые данные за факт
-    const auto &readData = reqValveDO.getData();
+    const auto &readData = m_doPort->data();
     if(index >= readData.count())
         return false;
     const bool actual = readData[index];
