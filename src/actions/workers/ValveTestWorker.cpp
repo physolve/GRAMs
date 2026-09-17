@@ -109,6 +109,18 @@ void ValveTestWorker::closeCurrentStepValves()
     }
 }
 
+// Авария на выдержке: закрыть клапаны шага и завершить повтор с ошибкой.
+// closeCurrentStepValves здесь нельзя: при pauseAfterSec == 0 он сразу ведёт
+// автомат к следующему шагу и открывает его клапаны, а finishRepeat поверх
+// этого запускает второй поток того же автомата.
+void ValveTestWorker::abortCurrentStep()
+{
+    m_timer.stop();
+    closeValves(m_cfg.steps.at(m_currentStep).valveNames);
+    m_state = State::Idle;
+    finishRepeat(false);
+}
+
 void ValveTestWorker::enterStepPauseAfter()
 {
     // Called only if countdown > 0 (entered from tick)
@@ -142,9 +154,7 @@ void ValveTestWorker::tick()
     // Security check while valves are open (dwelling)
     if (m_state == State::StepDwelling) {
         if (!checkSecurity()) {
-            m_timer.stop();
-            closeCurrentStepValves();
-            finishRepeat(false);
+            abortCurrentStep();
             return;
         }
         ++m_dwellElapsed;
@@ -208,6 +218,8 @@ void ValveTestWorker::finishRepeat(bool success)
 
 void ValveTestWorker::finishAllRepeats()
 {
+    m_timer.stop();
+    m_state = State::Idle;
     if (m_cfg.valveControl)
         m_cfg.valveControl->endAction();
 

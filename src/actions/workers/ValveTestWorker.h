@@ -99,6 +99,7 @@ private:
     void openCurrentStepValves();
     void enterStepDwelling();
     void closeCurrentStepValves();
+    void abortCurrentStep();
     void enterStepPauseAfter();
     void advanceToNextStep();
     void enterGlobalPauseAfter();

@@ -305,8 +305,10 @@ TEST(SimValves, ValveTestHoldsValveForWholeDwell)
     EXPECT_FALSE(rig.valves.valveState("AR2"));
 }
 
-// D2: после нарушения автомат продолжает шаги (открывает следующий) и
-// перезапускает повтор; done приходит повторно.
+// D2: после нарушения автомат продолжал шаги (открывал следующий) и
+// перезапускал повтор; done приходил повторно. До D1 нарушение наступало
+// всегда; после D1 его нечем вызвать до D6 (давления в Security) — тест
+// включается в коммите D6 с настоящим порогом.
 TEST(SimValves, DISABLED_ValveTestViolationStopsWithoutOpeningNextStep)
 {
     ValveRig rig;
