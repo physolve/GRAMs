@@ -63,6 +63,8 @@ QStringList StorageQuartile::getUsedVolumes() const{
 
 void StorageQuartile::updateQuartileData(){
     double current_pressure = 0.0;
+    m_pressureSource = m_valves[v_pressure_range]->getState() ? m_pressureList[s_pressure_low]
+                                                              : m_pressureList[s_pressure_high];
     // write smooth transition
     if(m_valves[v_pressure_range]->getState()){
         current_pressure = m_pressureList[s_pressure_low]->getCurValue();

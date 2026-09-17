@@ -31,8 +31,12 @@ public:
     VolumeObject getVolumeByName(const QString& name) const;
     void fillVolumePairs(const QMap<QString,QString>& volumeToValve);
     void addPressureNode(const QString& nodeName, const QString& volA, const QString& volB);
-    QMap<QString, NodePressure> getPressureNodes(); 
+    QMap<QString, NodePressure> getPressureNodes();
+    // Датчик, по которому квартиль взял давление на последнем
+    // updateQuartileData (выбор по клапану диапазона); nullptr до первого вызова.
+    const ControllerData* pressureSource() const { return m_pressureSource; }
 protected:
+    ControllerData* m_pressureSource = nullptr;
     double m_volume;
     QString m_mainVolume;
     QMap<QString, VolumeObject> m_volumeObjects;

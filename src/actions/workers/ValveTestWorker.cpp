@@ -245,11 +245,13 @@ void ValveTestWorker::openValves(const QStringList& names)
 
     for (const QString& name : names) {
         bool ok = m_cfg.valveControl->setValveFromAction(true, name);
-        qDebug() << "ValveTestWorker: open" << name << (ok ? "OK" : "BLOCKED");
+        const QString refusal = ok ? QString() : m_cfg.valveControl->lastRefusal();
+        qDebug() << "ValveTestWorker: open" << name << (ok ? "OK" : "BLOCKED") << refusal;
         if (m_cfg.logger)
             m_cfg.logger->logEvent(m_runId,
                                    ok ? RegimeLogger::kValveOpen : RegimeLogger::kValveBlocked,
-                                   m_currentRepeat, 0, name);
+                                   m_currentRepeat, 0,
+                                   refusal.isEmpty() ? name : name + u' ' + refusal);
     }
 }
 

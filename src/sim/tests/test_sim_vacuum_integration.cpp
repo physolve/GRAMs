@@ -136,9 +136,37 @@ public:
             contradictions.insert(it.key(), it.value().toVariant().toStringList());
         security.setContradictionValves(contradictions);
         security.setRuleOfThreeValves(sec.value("twoOfThree").toVariant().toStringList());
+
+        // Правила давления и диапазоны датчиков — как Grams::initSafeModule.
+        const QJsonObject quars = gram.value("quartiles").toObject();
+        const QJsonObject storage = quars.value("storageQuar").toObject();
+        const QJsonObject reaction = quars.value("reactionQuar").toObject();
+        security.setRangePressureValves(storage.value("v_pressureRange").toString(), "storageQuar",
+                                        storage.value("cond_pressureRange_open").toDouble(),
+                                        storage.value("cond_pressureRange_close").toDouble());
+        security.setRangePressureValves(reaction.value("v_pressureRange").toString(), "reactionQuar",
+                                        reaction.value("cond_pressureRange_open").toDouble(),
+                                        reaction.value("cond_pressureRange_close").toDouble());
+        security.setSafeReleaseValves(quars.value("addRemoveQuar").toObject().value("v_gasRelease").toString(),
+                                      "storageQuar", storage.value("cond_gasRelease").toDouble());
+        security.setPressureStaleTicks(sec.value("pressureStaleTicks").toInt(4));
+        for (const auto &s : input.pressureCard)
+            security.setSensorRange(s.name, 3.8 * s.A + s.B, 20.5 * s.A + s.B);
     }
 
-    void poll() { QMetaObject::invokeMethod(&daq, "processEvents", Qt::DirectConnection); }
+    // Опрос DataAcquisition и такт softEvent: давления квартилей уходят в
+    // Security с тем же выбором датчика, что у StorageQuartile/ReactionQuartile
+    // (квартилей в тесте нет).
+    void poll()
+    {
+        QMetaObject::invokeMethod(&daq, "processEvents", Qt::DirectConnection);
+        const ControllerData *storage = sensor(valves.valveState("S4") ? "DD312" : "DD311");
+        const ControllerData *reaction = sensor(valves.valveState("R4") ? "DD332" : "DD331");
+        QMap<QString, PressureSample> m;
+        m.insert("storageQuar", {storage->m_name, storage->getCurValue(), storage->sampleCount()});
+        m.insert("reactionQuar", {reaction->m_name, reaction->getCurValue(), reaction->sampleCount()});
+        security.setPressureMap(m);
+    }
 
     ControllerData *sensor(const QString &name)
     {

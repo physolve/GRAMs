@@ -2,6 +2,7 @@
 
 #include <QVariant>
 #include <QLoggingCategory>
+#include <QSet>
 
 // grams.security — ответы интерлоков и проверки давления
 // (QT_LOGGING_RULES="grams.security.debug=true").
@@ -62,10 +63,22 @@ struct ReactionToLeakage{
     bool applyPressureMask(bool &rangePressureState, double incomingPressure) const;
 };
 
+// Отсчёт давления квартиля за такт softEvent: датчик-источник, который квартиль
+// выбрал по клапану диапазона, его значение (бар) и счётчик отсчётов датчика
+// (DataCollection::sampleCount) — по нему видно, что показание обновляется.
+struct PressureSample {
+    QString sensor;
+    double bar = 0.0;
+    quint64 seq = 0;
+};
+
 // Замечание проверки давления: какой клапан, почему, по какому квартилю.
 // reason — машинный код для журнала режима:
-//   pressure_range   — клапан диапазона открыт при давлении выше порога закрытия
+//   pressure_range   — клапан диапазона открыт (или открывается) при давлении
+//                      выше порога закрытия
 //   pressure_release — давление достигло порога сброса
+//   pressure_invalid — давление квартиля недостоверно: нет данных, нет нового
+//                      отсчёта дольше N тактов, NaN или вне диапазона датчика
 struct SecurityIssue {
     QString valve;
     QString reason;
@@ -97,24 +110,42 @@ public:
     void setRangePressureValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen, const double &pressureClose);
     void setSafeReleaseValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen);
     
-    // void setValveMap(const QMap<QString, bool> &valveMap);
-    void setPressureMap(const QMap<QString, double> &pressureMap);
-    // Интерлоки для команды sender → state. valveStates — фактические
-    // состояния клапанов (ValveControl::valveStates); Security их не хранит,
-    // поэтому не расходится с платой после старта, отказа записи или readback.
+    // Диапазон датчика, бар. Вне диапазона показание недостоверно.
+    void setSensorRange(const QString &sensor, double minBar, double maxBar);
+    // Сколько тактов setPressureMap подряд показание может не обновляться.
+    void setPressureStaleTicks(int ticks);
+    // Давления квартилей; один вызов — один такт softEvent. Квартиль, которого
+    // нет в вызове, считается не обновлённым на этом такте.
+    void setPressureMap(const QMap<QString, PressureSample> &pressureMap);
+
+    // Интерлоки и правила давления для команды sender → state. valveStates —
+    // фактические состояния клапанов (ValveControl::valveStates); Security их
+    // не хранит, поэтому не расходится с платой после старта, отказа записи
+    // или readback. Открытие клапана с правилом по давлению (S4/R4 — диапазон,
+    // AR4 — сброс) при недостоверном давлении запрещено; S4/R4 выше порога
+    // закрытия тоже. reason — код причины отказа (пусто при разрешении).
     bool checkValveAction(const QString &sender, const bool &state,
-                          const QMap<QString, bool> &valveStates) const;
-    // Проверка давления для идущего режима. valveStates — фактические
-    // состояния клапанов (ValveControl::valveStates). Возвращает только
-    // нарушения и предупреждения; закрытый клапан нарушением не является.
+                          const QMap<QString, bool> &valveStates,
+                          QString *reason = nullptr) const;
+    // Проверка давления для идущего режима. Возвращает только нарушения и
+    // предупреждения; закрытый клапан нарушением не является. Недостоверное
+    // давление у уже открытого клапана — предупреждение (однократно, до
+    // восстановления), клапан не закрывается.
     PressureCheck checkPressure(const QMap<QString, bool> &valveStates) const;
 
 private:
-    // pointers 
-    
-    // current pressure
-    QMap<QString, double> m_pressureQuarMap;
-    mutable bool m_noPressureReported = false;
+    struct QuartilePressure {
+        PressureSample sample;
+        int staleTicks = 0;
+    };
+    // Достоверно ли давление квартиля; why — пояснение для лога.
+    bool pressureOf(const QString &quartile, double *bar, QString *why) const;
+    QString watchedQuartile(const QString &valve) const;
+
+    QMap<QString, QuartilePressure> m_pressure;
+    QMap<QString, QPair<double, double>> m_sensorRange;
+    int m_pressureStaleTicks = 4;
+    mutable QSet<QString> m_invalidReported;   // клапаны, о недостоверности которых уже сообщено
     // pointers
     
     // incoming states (valves)

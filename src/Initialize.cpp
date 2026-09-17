@@ -181,7 +181,10 @@ void Initialize::visualRepresentation(const QJsonObject &profileJson){
     for(const auto& key : safetyQuarsObject.keys()){
         safetyQuars[key] = safetyQuarsObject[key].toVariant().toStringList();
     }
-    m_security = securityParameters{contradictionValves, twoOfThree, safetyQuars};
+    // Сколько тактов softEvent давление квартиля может не обновляться, прежде
+    // чем Security сочтёт его недостоверным.
+    const int pressureStaleTicks = securityObject["pressureStaleTicks"].toInt(4);
+    m_security = securityParameters{contradictionValves, twoOfThree, safetyQuars, pressureStaleTicks};
 
     // Пороги безопасности вакуумного тракта. Секция опциональна: если её нет,
     // остаются ориентиры ТЗ из значений по умолчанию структуры. Каждый ключ

@@ -184,10 +184,12 @@ struct securityParameters{
     Q_PROPERTY (QMap<QString, QStringList>  contradictionValves     MEMBER m_contradictionValves)
     Q_PROPERTY (QStringList                 twoOfThree              MEMBER m_twoOfThree) // first twoOfThree case
     Q_PROPERTY (QMap<QString, QStringList>  safetyQuars             MEMBER m_safetyQuars)
+    Q_PROPERTY (int                         pressureStaleTicks      MEMBER m_pressureStaleTicks)
 public:
     QMap<QString, QStringList>  m_contradictionValves;
     QStringList                 m_twoOfThree;
     QMap<QString, QStringList>  m_safetyQuars;
+    int                         m_pressureStaleTicks = 4;
 };
 
 class Initialize : public QObject

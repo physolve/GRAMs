@@ -16,6 +16,7 @@ void DataCollection::clearPoints(){
 }
 void DataCollection::addPoint(const double &val_y){
     m_y.append(m_curValue = val_y);
+    ++m_samples;
     m_quality = Quality::Valid;
 }
 
@@ -23,7 +24,12 @@ void DataCollection::addPoint(const double &val_y){
 // и рецепт обязан отличать это от достоверного низкого давления.
 void DataCollection::addPoint(const double &val_y, const Quality &quality){
     m_y.append(m_curValue = val_y);
+    ++m_samples;
     m_quality = quality;
+}
+
+quint64 DataCollection::sampleCount() const{
+    return m_samples;
 }
 
 Quality DataCollection::quality() const{

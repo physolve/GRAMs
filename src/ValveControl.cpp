@@ -89,7 +89,7 @@ void ValveControl::setValveState(bool state, int index){ // excluding chamber
     qCDebug(lcValves) << "setValveState (GUI)" << valve->m_name << "индекс" << index
                       << "запрос" << state << "было" << originalState;
     // check pressure!!!
-    bool safe_state = m_safeModule->checkValveAction(valve->m_name, state, valveStates());
+    bool safe_state = m_safeModule->checkValveAction(valve->m_name, state, valveStates(), &m_lastRefusal);
     valve->setState(safe_state);
     if(!sendValveStates()){
         valve->setState(originalState);
@@ -229,7 +229,7 @@ bool ValveControl::setValveFromAction(bool state, const QString& name){
     const bool originalState = valve->getState();
     qCDebug(lcValves) << "setValveFromAction (режим)" << name << "запрос" << state << "было" << originalState;
     // check pressure!!!
-    bool safe_state = m_safeModule->checkValveAction(valve->m_name, state, valveStates());
+    bool safe_state = m_safeModule->checkValveAction(valve->m_name, state, valveStates(), &m_lastRefusal);
     valve->setState(safe_state);
     if(!sendValveStates()){
         valve->setState(originalState);

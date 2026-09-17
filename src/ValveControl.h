@@ -58,6 +58,9 @@ public:
     bool valveState(const QString& name, bool* known = nullptr) const;
     // Состояния всех клапанов реестра (без R5) — вход проверок Security.
     QMap<QString, bool> valveStates() const;
+    // Код причины, по которой Security отклонил последнюю команду (interlock,
+    // pressure_range, pressure_invalid); пусто, если команда разрешена.
+    QString lastRefusal() const { return m_lastRefusal; }
     Q_INVOKABLE void setManualChamberValve(bool state);
     Q_INVOKABLE void setValveState(bool state, int valveId);
     bool sendValveStates();
@@ -78,6 +81,7 @@ private:
     Security* m_safeModule;
 
     QStringList valveNameList;
+    QString m_lastRefusal;
     QStringList m_gasSupplyValves;
     QStringList m_gasStoreValves;
     // add remove pointer

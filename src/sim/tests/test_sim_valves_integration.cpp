@@ -24,6 +24,7 @@
 #include <QEventLoop>
 #include <QTimer>
 
+#include <cmath>
 #include <functional>
 #include <memory>
 
@@ -121,6 +122,27 @@ public:
                                         reaction.value("cond_pressureRange_close").toDouble());
         security.setSafeReleaseValves(quars.value("addRemoveQuar").toObject().value("v_gasRelease").toString(),
                                       "storageQuar", storage.value("cond_gasRelease").toDouble());
+        security.setPressureStaleTicks(sec.value("pressureStaleTicks").toInt(4));
+        for (const auto &s : input.pressureCard)   // как Grams::initSafeModule
+            security.setSensorRange(s.name, 3.8 * s.A + s.B, 20.5 * s.A + s.B);
+    }
+
+    // Давления квартилей, бар, по датчикам: источник выбирается по клапану
+    // диапазона, как StorageQuartile/ReactionQuartile::updateQuartileData.
+    double dd311 = 1.0, dd312 = 1.0, dd331 = 1.0, dd332 = 1.0;
+    quint64 seq = 0;
+
+    // Такт softEvent: newSample == false — датчики не прислали новых отсчётов.
+    void feedPressure(bool newSample = true)
+    {
+        if (newSample)
+            ++seq;
+        QMap<QString, PressureSample> m;
+        m.insert("storageQuar", valves.valveState("S4") ? PressureSample{"DD312", dd312, seq}
+                                                        : PressureSample{"DD311", dd311, seq});
+        m.insert("reactionQuar", valves.valveState("R4") ? PressureSample{"DD332", dd332, seq}
+                                                         : PressureSample{"DD331", dd331, seq});
+        security.setPressureMap(m);
     }
 
     int indexOf(const QString &code) const
@@ -318,40 +340,141 @@ TEST(SimValves, ValveTestHoldsValveForWholeDwell)
 }
 
 // D2: после нарушения автомат продолжал шаги (открывал следующий) и
-// перезапускал повтор; done приходил повторно. До D1 нарушение наступало
-// всегда; после D1 его нечем вызвать до D6 (давления в Security) — тест
-// включается в коммите D6 с настоящим порогом.
-TEST(SimValves, DISABLED_ValveTestViolationStopsWithoutOpeningNextStep)
+// перезапускал повтор; done приходил повторно, клапан следующего шага
+// оставался открытым. Нарушение — настоящее: S4 открыт, давление на DD312
+// поднимается выше порога закрытия 1,8 бар посреди выдержки.
+TEST(SimValves, ValveTestViolationStopsWithoutOpeningNextStep)
 {
     ValveRig rig;
     ValveTestConfig cfg;
-    cfg.steps = {ValveStepConfig{{"AR2"}, 0, 3, 0}, ValveStepConfig{{"R3"}, 0, 3, 0}};
+    cfg.steps = {ValveStepConfig{{"S4"}, 0, 3, 0}, ValveStepConfig{{"R3"}, 0, 3, 0}};
     cfg.valveControl = &rig.valves;
-    cfg.security = &rig.security;   // на текущем коде нарушение наступает всегда
+    cfg.security = &rig.security;
+
+    QTimer softEvent;   // такт Grams::softEvent
+    QObject::connect(&softEvent, &QTimer::timeout, &softEvent, [&] { rig.feedPressure(); });
+    softEvent.start(100);
+    rig.feedPressure();
 
     ValveTestWorker worker;
     worker.setConfig(cfg);
     int doneCount = 0;
-    QObject::connect(&worker, &ValveTestWorker::done, &worker, [&](bool) { ++doneCount; });
-
-    bool r3Opened = false;
+    bool success = true;
     QStringList openAtDone;
-    QObject::connect(&worker, &ValveTestWorker::done, &worker, [&](bool) {
-        if (doneCount == 1)
+    QObject::connect(&worker, &ValveTestWorker::done, &worker, [&](bool ok) {
+        if (++doneCount == 1) {
+            success = ok;
             for (const auto &v : rig.valveObjects)
                 if (v->getState())
                     openAtDone << v->m_name;
+        }
     });
-    worker.start();
-    spin(4000, [] { return false; }, [&] { r3Opened = r3Opened || rig.valves.valveState("R3"); });
 
+    bool s4Opened = false, r3Opened = false;
+    QElapsedTimer t;
+    t.start();
+    worker.start();
+    spin(4500, [] { return false; }, [&] {
+        s4Opened = s4Opened || rig.valves.valveState("S4");
+        r3Opened = r3Opened || rig.valves.valveState("R3");
+        if (t.elapsed() > 1300)
+            rig.dd312 = 1.9;
+    });
+
+    EXPECT_TRUE(s4Opened);
     EXPECT_FALSE(r3Opened) << "после аварии шага 0 открыт клапан шага 1";
     EXPECT_EQ(doneCount, 1);
+    EXPECT_FALSE(success);
     EXPECT_TRUE(openAtDone.isEmpty()) << openAtDone.join(',').toStdString();
     for (const auto &v : rig.valveObjects)
         EXPECT_FALSE(v->getState()) << v->m_name.toStdString();
 }
 
+// ── D6: давления в Security ──────────────────────────────────────────────────
+
+TEST(SimValves, PressureRuleValveRefusedWithoutPressure)
+{
+    ValveRig rig;   // setPressureMap ещё не вызывался
+    for (const char *valve : {"S4", "R4", "AR4"}) {
+        EXPECT_FALSE(rig.valves.setValveFromAction(true, valve)) << valve;
+        EXPECT_EQ(rig.valves.lastRefusal(), "pressure_invalid") << valve;
+    }
+    // Клапаны без правила по давлению не затронуты.
+    EXPECT_TRUE(rig.valves.setValveFromAction(true, "R3"));
+    EXPECT_TRUE(rig.valves.lastRefusal().isEmpty());
+}
+
+TEST(SimValves, RangeValveOpensOnlyBelowClosePressure)
+{
+    ValveRig rig;
+    rig.dd311 = 1.9;   // S4 закрыт — давление квартиля по DD311
+    rig.feedPressure();
+    EXPECT_FALSE(rig.valves.setValveFromAction(true, "S4"));
+    EXPECT_EQ(rig.valves.lastRefusal(), "pressure_range");
+
+    rig.dd311 = 1.0;
+    rig.feedPressure();
+    EXPECT_TRUE(rig.valves.setValveFromAction(true, "S4"));
+    EXPECT_TRUE(rig.valves.setValveFromAction(false, "S4"));   // закрыть можно всегда
+}
+
+TEST(SimValves, StalePressureBecomesInvalidAfterConfiguredTicks)
+{
+    ValveRig rig;
+    rig.feedPressure();
+    for (int i = 0; i < 4; ++i)
+        rig.feedPressure(false);   // 4 такта без нового отсчёта — ещё достоверно
+    EXPECT_TRUE(rig.valves.setValveFromAction(true, "R4"));
+    EXPECT_TRUE(rig.valves.setValveFromAction(false, "R4"));
+
+    rig.feedPressure(false);       // 5-й — нет
+    EXPECT_FALSE(rig.valves.setValveFromAction(true, "R4"));
+    EXPECT_EQ(rig.valves.lastRefusal(), "pressure_invalid");
+
+    rig.feedPressure();            // отсчёт пришёл — снова достоверно
+    EXPECT_TRUE(rig.valves.setValveFromAction(true, "R4"));
+}
+
+TEST(SimValves, NanOrOutOfSensorRangeIsInvalid)
+{
+    ValveRig rig;
+    rig.dd331 = std::nan("");
+    rig.feedPressure();
+    EXPECT_FALSE(rig.valves.setValveFromAction(true, "R4"));
+    EXPECT_EQ(rig.valves.lastRefusal(), "pressure_invalid");
+
+    rig.dd331 = 60.0;   // DD331: 0…50 бар (3,8…20,5 мА → −0,6…51,6 бар)
+    rig.feedPressure();
+    EXPECT_FALSE(rig.valves.setValveFromAction(true, "R4"));
+    EXPECT_EQ(rig.valves.lastRefusal(), "pressure_invalid");
+
+    rig.dd331 = -0.02;  // шум у нуля — в пределах NE43
+    rig.feedPressure();
+    EXPECT_TRUE(rig.valves.setValveFromAction(true, "R4"));
+}
+
+TEST(SimValves, OpenValveWithInvalidPressureWarnsOnceAndStaysOpen)
+{
+    ValveRig rig;
+    rig.feedPressure();
+    ASSERT_TRUE(rig.valves.setValveFromAction(true, "S4"));
+
+    rig.dd312 = std::nan("");
+    rig.feedPressure();
+    PressureCheck first = rig.security.checkPressure(rig.valves.valveStates());
+    EXPECT_TRUE(first.ok());
+    ASSERT_EQ(first.warnings.size(), 1);
+    EXPECT_EQ(first.warnings.first().valve, "S4");
+    EXPECT_EQ(first.warnings.first().reason, "pressure_invalid");
+    EXPECT_TRUE(rig.security.checkPressure(rig.valves.valveStates()).warnings.isEmpty()) << "повтор предупреждения";
+    EXPECT_TRUE(rig.valves.valveState("S4"));
+
+    rig.dd312 = 1.9;    // снова достоверно, но выше порога — нарушение
+    rig.feedPressure();
+    PressureCheck violated = rig.security.checkPressure(rig.valves.valveStates());
+    ASSERT_EQ(violated.violations.size(), 1);
+    EXPECT_EQ(violated.violations.first().reason, "pressure_range");
+}
 // ── e: RegimeWorkerBase (Режим в / г) ────────────────────────────────────────
 
 TEST(SimValves, RegimeExecutionNotAbortedByClosedValves)

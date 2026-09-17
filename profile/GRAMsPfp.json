@@ -180,6 +180,7 @@
                 "SL2":["AR6"]
             },
             "twoOfThree": ["AR5", "SL1", "SL2"],
+            "pressureStaleTicks": 4,
             "safetyQuars" : {
                 "storageQuarSP": ["v_pressureRange", "storageQuar", "cond_pressureRange_close", "cond_pressureRange_open"],
                 "storageQuarSR": ["v_gasRelease", "storageQuar", "cond_gasRelease"],

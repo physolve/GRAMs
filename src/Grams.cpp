@@ -472,6 +472,15 @@ Q_INVOKABLE void Grams::removeGraph(const QString &key)
 
 void Grams::initSafeModule(){
     m_safeModule.setContradictionValves(initSource.m_security.m_contradictionValves);
+    m_safeModule.setPressureStaleTicks(initSource.m_security.m_pressureStaleTicks);
+    // Диапазон датчика давления — по его калибровке p = A·I[мА] + B на
+    // границах NAMUR NE43 (3,8…20,5 мА): шум у нуля и у верхней границы
+    // шкалы не считается выходом за диапазон, обрыв и насыщение — считаются.
+    for(const auto& sensor : initSource.getPressureSensors()){
+        m_safeModule.setSensorRange(sensor.m_sensorName,
+                                    3.8 * sensor.m_A + sensor.m_B,
+                                    20.5 * sensor.m_A + sensor.m_B);
+    }
     m_safeModule.setRuleOfThreeValves(initSource.m_security.m_twoOfThree);
     
     m_safeModule.setRangePressureValves(initSource.m_storageQuar.m_pressureRangeValve,"storageQuar",
@@ -711,6 +720,17 @@ void Grams::softEvent(){
     // additional checks
     m_storageQuartile.updateQuartileData();
     m_reactionQuartile.updateQuartileData();
+    // Давления квартилей для правил Security (S4/R4 — диапазон, AR4 — сброс).
+    // Один вызов — один такт: по счётчику отсчётов Security видит, обновляется
+    // ли показание.
+    QMap<QString, PressureSample> pressures;
+    auto addPressure = [&pressures](const QString& quartile, const ControllerData* source){
+        if(source)
+            pressures.insert(quartile, PressureSample{source->m_name, source->getCurValue(), source->sampleCount()});
+    };
+    addPressure(QStringLiteral("storageQuar"), m_storageQuartile.pressureSource());
+    addPressure(QStringLiteral("reactionQuar"), m_reactionQuartile.pressureSource());
+    m_safeModule.setPressureMap(pressures);
 }
 
 void Grams::chamberSetUp(){
