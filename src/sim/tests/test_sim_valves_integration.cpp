@@ -256,13 +256,18 @@ TEST(SimValves, DISABLED_InterlockSeesValveOpenAtStartup)
     EXPECT_FALSE(rig.valves.valveState("AR2"));
 }
 
-// D8: без порта valveNameList пуст, setValveState падает на QList::at.
-// Тест обрывает процесс целиком — запускать отдельно.
-TEST(SimValves, DISABLED_ManualClickWithoutPortDoesNotCrash)
+// D8: без порта valveNameList пуст — setValveState падал на QList::at и обрывал
+// процесс целиком. При регрессии запускать отдельно:
+// SimIntegrationTests.exe --gtest_filter=SimValves.ManualClickWithoutPort*
+TEST(SimValves, ManualClickWithoutPortDoesNotCrash)
 {
     ValveRig rig(nullptr, false);
     rig.valves.setValveState(true, rig.indexOf("AR2"));
     EXPECT_FALSE(rig.valves.valveState("AR2"));
+    EXPECT_GE(rig.guiChanged, 1);
+
+    rig.valves.setValveState(true, -1);
+    rig.valves.setValveState(true, 16);
 }
 
 // ── d: «Тест клапанов» ───────────────────────────────────────────────────────

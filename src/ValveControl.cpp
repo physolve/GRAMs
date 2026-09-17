@@ -82,6 +82,15 @@ void ValveControl::setDoPort(std::unique_ptr<IDoPort> port){
 
 void ValveControl::setValveState(bool state, int index){ // excluding chamber
     // signal from GUI to change state of object
+    // Индекс приходит из QML. Без порта (нет платы и нет --sim) valveNameList
+    // пуст: команду отклоняем здесь, а не падаем на valveNameList.at().
+    if(index < 0 || index >= m_valves.count() || index >= valveNameList.size()){
+        qCWarning(lcValves) << "setValveState: индекс" << index << "вне реестра (клапанов"
+                            << m_valves.count() << ", порт" << (valveController ? "есть" : "нет")
+                            << ") — отклонено";
+        emit guiValsValveChanged();   // QML возвращается к фактическому состоянию
+        return;
+    }
     Valve *valve = m_valves[index];
     const bool originalState = valve->getState();
     qCDebug(lcValves) << "setValveState (GUI)" << valve->m_name << "индекс" << index
