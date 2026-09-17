@@ -64,6 +64,11 @@ add_library(SimGramsRuntime STATIC
     ${GRAMS_SRC}/lib/kalman.cpp
     ${GRAMS_SRC}/actions/recipes/RecipeCommon.cpp
     ${GRAMS_SRC}/actions/recipes/VacuumTaskTree.cpp
+    # Воркеры с проверкой давления Security: «Тест клапанов» и RegimeWorkerBase.
+    ${GRAMS_SRC}/actions/RegimeLogger.cpp
+    ${GRAMS_SRC}/actions/workers/RegimeWorkers.cpp
+    ${GRAMS_SRC}/actions/workers/ValveTestWorker.cpp
+    ${GRAMS_SRC}/actions/workers/VacuumRunMonitor.cpp
     integration_stubs.cpp
 )
 target_include_directories(SimGramsRuntime PUBLIC ${GRAMS_SRC} ${GRAMS_SRC}/actions)
@@ -74,7 +79,7 @@ else()
 endif()
 target_compile_definitions(SimGramsRuntime PUBLIC QCUSTOMPLOT_USE_OPENGL)
 target_link_libraries(SimGramsRuntime PUBLIC
-    SimTestsGramsData Qt6::Core Qt6::SerialPort Qt6::Sql Qt6::Widgets Qt6::PrintSupport Qt6::OpenGL Qt6::TaskTree Qt6::Quick)
+    SimTestsGramsData RuntableLib Qt6::Core Qt6::Qml Qt6::SerialPort Qt6::Sql Qt6::Widgets Qt6::PrintSupport Qt6::OpenGL Qt6::TaskTree Qt6::Quick)
 if (MSVC)
     target_compile_options(SimGramsRuntime PRIVATE /utf-8)
 endif()
@@ -82,6 +87,7 @@ endif()
 add_executable(SimIntegrationTests
     test_main.cpp
     test_sim_vacuum_integration.cpp
+    test_sim_valves_integration.cpp
 )
 target_link_libraries(SimIntegrationTests PRIVATE SimCore SimGramsRuntime gtest)
 target_compile_definitions(SimIntegrationTests PRIVATE
