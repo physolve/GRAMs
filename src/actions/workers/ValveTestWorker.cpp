@@ -258,17 +258,24 @@ bool ValveTestWorker::checkSecurity()
 {
     if (!m_cfg.security) return true;
 
-    QMap<QString, bool> pressureState = m_cfg.security->checkValvePressure();
-    bool violation = std::any_of(pressureState.cbegin(), pressureState.cend(),
-                                 [](bool ok) { return !ok; });
-    if (violation) {
-        qWarning() << "ValveTestWorker: security violation at step" << m_currentStep;
+    const PressureCheck check = m_cfg.security->checkPressure(
+        m_cfg.valveControl ? m_cfg.valveControl->valveStates() : QMap<QString, bool>{});
+    for (const SecurityIssue& issue : check.warnings) {
+        qWarning() << "ValveTestWorker: предупреждение Security на шаге" << m_currentStep
+                   << issue.toString();
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kWarning,
+                                   m_currentRepeat, m_dwellElapsed, issue.toString());
+    }
+    for (const SecurityIssue& issue : check.violations) {
+        qWarning() << "ValveTestWorker: security violation at step" << m_currentStep
+                   << issue.toString();
         if (m_cfg.logger)
             m_cfg.logger->logEvent(m_runId, RegimeLogger::kSecurityViolation,
                                    m_currentRepeat, m_dwellElapsed,
-                                   QString("step %1").arg(m_currentStep));
+                                   QString("step %1: %2").arg(m_currentStep).arg(issue.toString()));
     }
-    return !violation;
+    return check.ok();
 }
 
 void ValveTestWorker::reportProgress()

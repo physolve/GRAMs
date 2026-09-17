@@ -126,15 +126,23 @@ void RegimeWorkerBase::tick()
 
         // ── Security check ────────────────────────────────────────────────────
         if (m_cfg.security) {
-            QMap<QString, bool> pressureState = m_cfg.security->checkValvePressure();
-            bool violation = std::any_of(pressureState.cbegin(), pressureState.cend(),
-                                         [](bool ok) { return !ok; });
-            if (violation) {
+            const PressureCheck check = m_cfg.security->checkPressure(
+                m_cfg.valveControl ? m_cfg.valveControl->valveStates() : QMap<QString, bool>{});
+            for (const SecurityIssue& issue : check.warnings) {
+                qWarning() << "[Regime" << m_cfg.regimeId << "] Security:" << issue.toString();
+                if (m_cfg.logger)
+                    m_cfg.logger->logEvent(m_runId, RegimeLogger::kWarning,
+                                           m_currentRepeat, m_phaseElapsedSec, issue.toString());
+            }
+            if (!check.ok()) {
+                QStringList details;
+                for (const SecurityIssue& issue : check.violations)
+                    details << issue.toString();
                 qWarning() << "[Regime" << m_cfg.regimeId
-                           << "] Security pressure violation — aborting execution";
+                           << "] Security pressure violation — aborting execution:" << details;
                 if (m_cfg.logger)
                     m_cfg.logger->logEvent(m_runId, RegimeLogger::kSecurityViolation,
-                                           m_currentRepeat, m_phaseElapsedSec);
+                                           m_currentRepeat, m_phaseElapsedSec, details.join("; "));
                 m_timer.stop();
                 onExecutionPhaseEnd(false);
                 finishRepeat(false);

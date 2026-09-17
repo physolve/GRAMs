@@ -57,6 +57,8 @@ public:
     // Кэш последней команды (без обращения к железу). known = false, если
     // имени нет в реестре.
     bool valveState(const QString& name, bool* known = nullptr) const;
+    // Состояния всех клапанов реестра (без R5) — вход проверок Security.
+    QMap<QString, bool> valveStates() const;
     Q_INVOKABLE void setManualChamberValve(bool state);
     Q_INVOKABLE void setValveState(bool state, int valveId);
     bool sendValveStates();

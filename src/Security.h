@@ -62,6 +62,27 @@ struct ReactionToLeakage{
     bool applyPressureMask(bool &rangePressureState, double incomingPressure) const;
 };
 
+// Замечание проверки давления: какой клапан, почему, по какому квартилю.
+// reason — машинный код для журнала режима:
+//   pressure_range   — клапан диапазона открыт при давлении выше порога закрытия
+//   pressure_release — давление достигло порога сброса
+struct SecurityIssue {
+    QString valve;
+    QString reason;
+    QString quartile;
+    double pressure = 0.0;
+    double limit = 0.0;
+    QString toString() const;
+};
+
+// Результат проверки давления. violations — режим обязан прервать шаг;
+// warnings — сообщить и продолжать.
+struct PressureCheck {
+    QList<SecurityIssue> violations;
+    QList<SecurityIssue> warnings;
+    bool ok() const { return violations.isEmpty(); }
+};
+
 class Security : public QObject
 {
     Q_OBJECT
@@ -81,7 +102,10 @@ public:
     // void setValveMap(const QMap<QString, bool> &valveMap);
     void setPressureMap(const QMap<QString, double> &pressureMap);
     bool checkValveAction(const QString &sender, const bool &state);
-    QMap<QString, bool> checkValvePressure();
+    // Проверка давления для идущего режима. valveStates — фактические
+    // состояния клапанов (ValveControl::valveStates). Возвращает только
+    // нарушения и предупреждения; закрытый клапан нарушением не является.
+    PressureCheck checkPressure(const QMap<QString, bool> &valveStates) const;
 
 private:
     // current states (valves)
@@ -90,6 +114,7 @@ private:
     
     // current pressure
     QMap<QString, double> m_pressureQuarMap;
+    mutable bool m_noPressureReported = false;
     // pointers
     
     // incoming states (valves)

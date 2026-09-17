@@ -161,6 +161,13 @@ bool ValveControl::valveState(const QString& name, bool* known) const{
     return m_valves[index]->getState();
 }
 
+QMap<QString, bool> ValveControl::valveStates() const{
+    QMap<QString, bool> states;
+    for(const Valve* valve : m_valves)
+        states.insert(valve->m_name, valve->getState());
+    return states;
+}
+
 QVariantMap ValveControl::getGuiValsValve() const{
     QVariantMap valveState;
     for(auto valve : m_valves){

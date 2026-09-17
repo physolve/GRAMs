@@ -196,23 +196,50 @@ bool Security::checkValveAction(const QString &sender, const bool &state){
     return imageState;
 }
 
-QMap<QString, bool> Security::checkValvePressure(){
-    auto buffValveMap = m_valveMap; 
-    for(const auto& valveToRangePressure : m_rangePressureValves.values()){
-        const auto& valveName = valveToRangePressure.m_selfName;
-        const auto& pressureQuartile = valveToRangePressure.m_watchQuartile;
-        buffValveMap[valveName] = valveToRangePressure.applyPressureMask(m_valveMap[valveName], m_pressureQuarMap[pressureQuartile]); // quartileNode! -> upcoming
+QString SecurityIssue::toString() const{
+    return QStringLiteral("%1: %2 (%3 = %4 бар, порог %5)")
+        .arg(valve, reason, quartile).arg(pressure).arg(limit);
+}
+
+PressureCheck Security::checkPressure(const QMap<QString, bool> &valveStates) const{
+    PressureCheck check;
+    // Давления квартилей в Security пока не поступают (setPressureMap не
+    // реализован): без давления правило не оценивается, о чём сообщаем один раз.
+    auto pressureOf = [this](const QString &quartile, double *pressure){
+        const auto it = m_pressureQuarMap.constFind(quartile);
+        if(it == m_pressureQuarMap.cend()){
+            if(!m_noPressureReported){
+                m_noPressureReported = true;
+                qCWarning(lcSecurity) << "checkPressure: нет давления квартиля" << quartile
+                                      << "— правила по давлению не оцениваются";
+            }
+            return false;
+        }
+        *pressure = it.value();
+        return true;
+    };
+
+    for(const auto &rule : m_rangePressureValves){
+        double p = 0.0;
+        if(!valveStates.value(rule.m_selfName) || !pressureOf(rule.m_watchQuartile, &p))
+            continue;
+        // Клапан диапазона открыт: выше порога закрытия он обязан быть закрыт.
+        if(p > rule.m_pressureClose)
+            check.violations << SecurityIssue{rule.m_selfName, QStringLiteral("pressure_range"),
+                                              rule.m_watchQuartile, p, rule.m_pressureClose};
     }
-    for(const auto& valveToSafeRelease : m_safeReleaseValves.values()){
-        auto valveName = valveToSafeRelease.m_selfName;
-        auto pressureQuartile = valveToSafeRelease.m_watchQuartile;
-        buffValveMap[valveName] = valveToSafeRelease.applyPressureMask(m_pressureQuarMap[pressureQuartile]); // quartileNode!
+    for(const auto &rule : m_safeReleaseValves){
+        double p = 0.0;
+        if(!pressureOf(rule.m_watchQuartile, &p))
+            continue;
+        if(p >= rule.m_gasMax)
+            check.violations << SecurityIssue{rule.m_selfName, QStringLiteral("pressure_release"),
+                                              rule.m_watchQuartile, p, rule.m_gasMax};
     }
-    QStringList falseKeys;
-    for (auto it = buffValveMap.cbegin(); it != buffValveMap.cend(); ++it)
-        if (!it.value())
-            falseKeys << it.key();
-    qCDebug(lcSecurity) << "checkValvePressure: давления" << m_pressureQuarMap
-                        << "false у" << falseKeys;
-    return buffValveMap;
+
+    for(const auto &issue : check.violations)
+        qCWarning(lcSecurity) << "checkPressure: нарушение" << issue.toString();
+    qCDebug(lcSecurity) << "checkPressure: давления" << m_pressureQuarMap
+                        << "нарушений" << check.violations.size();
+    return check;
 }

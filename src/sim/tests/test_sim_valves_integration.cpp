@@ -272,9 +272,9 @@ TEST(SimValves, ManualClickWithoutPortDoesNotCrash)
 
 // ── d: «Тест клапанов» ───────────────────────────────────────────────────────
 
-// D1: checkValvePressure отдаёт карту состояний, любой закрытый клапан —
-// «нарушение», шаг закрывается на первом такте выдержки.
-TEST(SimValves, DISABLED_ValveTestHoldsValveForWholeDwell)
+// D1: checkValvePressure отдавал карту состояний, любой закрытый клапан был
+// «нарушением», шаг закрывался на первом такте выдержки.
+TEST(SimValves, ValveTestHoldsValveForWholeDwell)
 {
     ValveRig rig;
     ValveTestConfig cfg;
@@ -340,7 +340,7 @@ TEST(SimValves, DISABLED_ValveTestViolationStopsWithoutOpeningNextStep)
 
 // ── e: RegimeWorkerBase (Режим в / г) ────────────────────────────────────────
 
-TEST(SimValves, DISABLED_RegimeExecutionNotAbortedByClosedValves)
+TEST(SimValves, RegimeExecutionNotAbortedByClosedValves)
 {
     ValveRig rig;
     RegimeWorkerConfig cfg;
@@ -361,17 +361,18 @@ TEST(SimValves, DISABLED_RegimeExecutionNotAbortedByClosedValves)
     EXPECT_TRUE(success) << "Execution прерван «нарушением давления» при закрытых клапанах";
 }
 
-// Прямое доказательство D1 без таймеров: при всех закрытых клапанах и без
-// давлений «нарушений» больше десяти.
-TEST(SimValves, DISABLED_PressureCheckReportsNoViolationWhenIdle)
+// D1 без таймеров: checkValvePressure отдавал карту состояний, и при всех
+// закрытых клапанах «нарушения» были у 14 клапанов. Закрытый клапан — не нарушение.
+TEST(SimValves, PressureCheckReportsNoViolationWhenIdle)
 {
     ValveRig rig;
-    const QMap<QString, bool> map = rig.security.checkValvePressure();
-    QStringList falseKeys;
-    for (auto it = map.cbegin(); it != map.cend(); ++it)
-        if (!it.value())
-            falseKeys << it.key();
-    EXPECT_TRUE(falseKeys.isEmpty()) << falseKeys.join(',').toStdString();
+    const PressureCheck idle = rig.security.checkPressure(rig.valves.valveStates());
+    EXPECT_TRUE(idle.ok());
+    EXPECT_TRUE(idle.violations.isEmpty());
+
+    rig.valves.setValveFromAction(true, "AR2");
+    rig.valves.setValveFromAction(true, "R3");
+    EXPECT_TRUE(rig.security.checkPressure(rig.valves.valveStates()).ok());
 }
 
 // ── f: контракт демо «фронт, не уровень» (S1) ────────────────────────────────
