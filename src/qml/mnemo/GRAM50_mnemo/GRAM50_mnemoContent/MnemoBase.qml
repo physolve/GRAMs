@@ -28,117 +28,117 @@ Item {
             id: k_AR1
             x: 115
             y: 425
-            checked: ValveControl.guiValve["AR1"]
-            onClicked: ValveControl.setValveState(checked, 0) // or name
+            open: ValveControl.guiValve["AR1"]
+            onClicked: ValveControl.setValveState(!open, 0) // or name
         }
 
         ValveButton {
             id: k_AR2
             x: 189
             y: 425
-            checked: ValveControl.guiValve["AR2"]
-            onClicked: ValveControl.setValveState(checked, 1) // or name
+            open: ValveControl.guiValve["AR2"]
+            onClicked: ValveControl.setValveState(!open, 1) // or name
         }
 
         ValveButton {
             id: k_AR3
             x: 261
             y: 425
-            checked: ValveControl.guiValve["AR3"]
-            onClicked: ValveControl.setValveState(checked, 2) // or name
+            open: ValveControl.guiValve["AR3"]
+            onClicked: ValveControl.setValveState(!open, 2) // or name
         }
 
         ValveButton {
             id: k_AR4
             x: 427
             y: 171
-            checked: ValveControl.guiValve["AR4"]
-            onClicked: ValveControl.setValveState(checked, 3) // or name
+            open: ValveControl.guiValve["AR4"]
+            onClicked: ValveControl.setValveState(!open, 3) // or name
         }
         ValveButton {
             id: k_AR5
             x: 427
             y: 425
-            checked: ValveControl.guiValve["AR5"]
-            onClicked: ValveControl.setValveState(checked, 4) // or name
+            open: ValveControl.guiValve["AR5"]
+            onClicked: ValveControl.setValveState(!open, 4) // or name
         }
         ValveButton {
             id: k_AR6
             x: 427
             y: 637
-            checked: ValveControl.guiValve["AR6"]
-            onClicked: ValveControl.setValveState(checked, 6) // or name
+            open: ValveControl.guiValve["AR6"]
+            onClicked: ValveControl.setValveState(!open, 6) // or name
         }
         ValveButton {
             id: k_S1
             x: 315
             y: 308
-            checked: ValveControl.guiValve["S1"]
-            onClicked: ValveControl.setValveState(checked, 9) // or name
+            open: ValveControl.guiValve["S1"]
+            onClicked: ValveControl.setValveState(!open, 9) // or name
         }
 
         ValveButton {
             id: k_S2
             x: 315
             y: 212
-            checked: ValveControl.guiValve["S2"]
-            onClicked: ValveControl.setValveState(checked, 10) // or name
+            open: ValveControl.guiValve["S2"]
+            onClicked: ValveControl.setValveState(!open, 10) // or name
         }
         ValveButton {
             id: k_S3
             x: 315
             y: 109
-            checked: ValveControl.guiValve["S3"]
-            onClicked: ValveControl.setValveState(checked, 11) // or name
+            open: ValveControl.guiValve["S3"]
+            onClicked: ValveControl.setValveState(!open, 11) // or name
         }
         ValveButton {
             id: k_S4
             x: 618
             y: 267
-            checked: ValveControl.guiValve["S4"]
-            onClicked: ValveControl.setValveState(checked, 8) // or name
+            open: ValveControl.guiValve["S4"]
+            onClicked: ValveControl.setValveState(!open, 8) // or name
         }
 
         ValveButton {
             id: k_R1
             x: 818
             y: 365
-            checked: ValveControl.guiValve["R1"]
-            onClicked: ValveControl.setValveState(checked, 12) // or name
+            open: ValveControl.guiValve["R1"]
+            onClicked: ValveControl.setValveState(!open, 12) // or name
         }
 
         ValveButton {
             id: k_R2
             x: 818
             y: 425
-            checked: ValveControl.guiValve["R2"]
-            onClicked: ValveControl.setValveState(checked, 13) // or name
+            open: ValveControl.guiValve["R2"]
+            onClicked: ValveControl.setValveState(!open, 13) // or name
         }
 
         ValveButton {
             id: k_R3
             x: 819
             y: 487
-            checked: ValveControl.guiValve["R3"]
-            onClicked: ValveControl.setValveState(checked, 14) // or name
+            open: ValveControl.guiValve["R3"]
+            onClicked: ValveControl.setValveState(!open, 14) // or name
         }
 
         ValveButton {
             id: k_R4
             x: 995
             y: 308
-            checked: ValveControl.guiValve["R4"]
-            onClicked: ValveControl.setValveState(checked, 15) // or name
+            open: ValveControl.guiValve["R4"]
+            onClicked: ValveControl.setValveState(!open, 15) // or name
         }
 
         ValveButton {
             id: k_R5
             x: 1106
             y: 366
-            checked: ValveControl.guiValve["R5"]
+            open: ValveControl.guiValve["R5"]
             onClicked: {
-                checked ? console.log("Chamber open") : console.log("Chamber close")
-                ValveControl.setManualChamberValve(checked)
+                !open ? console.log("Chamber open") : console.log("Chamber close")
+                ValveControl.setManualChamberValve(!open)
             }
         }
 
@@ -146,16 +146,16 @@ Item {
             id: k_SL1
             x: 819
             y: 592
-            checked: ValveControl.guiValve["SL1"]
-            onClicked: ValveControl.setValveState(checked, 7) // or name
+            open: ValveControl.guiValve["SL1"]
+            onClicked: ValveControl.setValveState(!open, 7) // or name
         }
 
         ValveButton {
             id: k_SL2
             x: 514
             y: 592
-            checked: ValveControl.guiValve["SL2"]
-            onClicked: ValveControl.setValveState(checked, 5) // or name
+            open: ValveControl.guiValve["SL2"]
+            onClicked: ValveControl.setValveState(!open, 5) // or name
         }
 
         SensorWidget {
