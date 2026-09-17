@@ -14,7 +14,7 @@ public:
     bool isExclusion() const;
     void addEachInList(const QStringList &exclusionValveList);
     void addRuleOfThree(const QString &threeNodeOne,const QString &threeNodeTwo);
-    bool applyGraphMask(const QMap<QString, bool> &valveMap);
+    bool applyGraphMask(const QMap<QString, bool> &valveMap) const;
     QString m_selfName;
 
 private:
@@ -88,8 +88,6 @@ class Security : public QObject
     Q_OBJECT
 public:
     explicit Security(QObject *parent = 0); // ?
-    void constructValveMap(const QStringList &valveList);
-    void setInitialState(const QString &sender, const bool &state);
     void setContradictionValves(const QMap<QString, QStringList> &contradictionValves);
     void setRuleOfThreeValves(const QStringList &ruleOfThreeList);
 
@@ -101,15 +99,17 @@ public:
     
     // void setValveMap(const QMap<QString, bool> &valveMap);
     void setPressureMap(const QMap<QString, double> &pressureMap);
-    bool checkValveAction(const QString &sender, const bool &state);
+    // Интерлоки для команды sender → state. valveStates — фактические
+    // состояния клапанов (ValveControl::valveStates); Security их не хранит,
+    // поэтому не расходится с платой после старта, отказа записи или readback.
+    bool checkValveAction(const QString &sender, const bool &state,
+                          const QMap<QString, bool> &valveStates) const;
     // Проверка давления для идущего режима. valveStates — фактические
     // состояния клапанов (ValveControl::valveStates). Возвращает только
     // нарушения и предупреждения; закрытый клапан нарушением не является.
     PressureCheck checkPressure(const QMap<QString, bool> &valveStates) const;
 
 private:
-    // current states (valves)
-    QMap<QString, bool> m_valveMap;
     // pointers 
     
     // current pressure

@@ -42,7 +42,7 @@ bool ValveGraph::maskRuleOfThree(const QMap<QString, bool> &valveMap) const{
         return false;
     return true;
 }
-bool ValveGraph::applyGraphMask(const QMap<QString, bool> &valveMap){
+bool ValveGraph::applyGraphMask(const QMap<QString, bool> &valveMap) const{
     if(!valveMap[m_selfName]) 
         return false;
     bool resultEach = true;
@@ -90,20 +90,6 @@ Security::Security(QObject *parent) :
 {
     qDebug() << "Security class is created";
 
-}
-
-void Security::constructValveMap(const QStringList &valveList){
-    QMap<QString, bool> buffValveMap;
-    for(const auto& valve : valveList){
-        buffValveMap.insert(valve, false);
-    }
-    m_valveMap = buffValveMap;
-    qCDebug(lcSecurity) << "constructValveMap: карта из" << valveList.size() << "клапанов, все закрыты";
-}
-
-void Security::setInitialState(const QString &sender, const bool &state){
-    m_valveMap[sender] = state;
-    qCDebug(lcSecurity) << "setInitialState" << sender << state;
 }
 
 void Security::setContradictionValves(const QMap<QString, QStringList> &contradictionValves){
@@ -163,7 +149,8 @@ void Security::setSafeReleaseValves(const QString &valve, const QString &watchQu
     m_safeReleaseValves.insert(valve, {valve, watchQuartile, pressureOpen});
 }
 
-bool Security::checkValveAction(const QString &sender, const bool &state){
+bool Security::checkValveAction(const QString &sender, const bool &state,
+                                const QMap<QString, bool> &valveStates) const{
     if(m_supplyValves.contains(sender)){
         // checks incoming pressure pre-open
 
@@ -178,18 +165,21 @@ bool Security::checkValveAction(const QString &sender, const bool &state){
     // checks opening pressure-range valve
     //}
 
-    if(!m_contradictionValves.contains(sender)){
+    const auto graph = m_contradictionValves.constFind(sender);
+    if(graph == m_contradictionValves.cend()){
         qCDebug(lcSecurity) << "checkValveAction" << sender << "запрос" << state
-                            << "→" << state << "(нет в интерлоках, карта не обновлена)";
+                            << "→" << state << "(нет в интерлоках)";
         return state;
     }
-    m_valveMap[sender] = state;
-    bool imageState = m_valveMap[sender];
-    imageState = m_contradictionValves[sender].applyGraphMask(m_valveMap);
-    m_valveMap[sender] = imageState;
+    // Проверяется состояние «после команды»: факт остальных клапанов (его
+    // ведёт ValveControl — плата при старте, откат записи, readback) плюс
+    // запрошенное состояние отправителя. Security своей копии не держит.
+    QMap<QString, bool> image = valveStates;
+    image[sender] = state;
+    const bool imageState = graph->applyGraphMask(image);
     if(state && !imageState)
         qCDebug(lcSecurity) << "checkValveAction" << sender << "запрос" << state
-                            << "→ ОТКАЗ, по карте открыты:" << openValves(m_valveMap);
+                            << "→ ОТКАЗ, открыты:" << openValves(valveStates);
     else
         qCDebug(lcSecurity) << "checkValveAction" << sender << "запрос" << state
                             << "→" << imageState;

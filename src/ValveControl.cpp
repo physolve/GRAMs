@@ -37,13 +37,6 @@ void ValveControl::setSafeModule(Security* safeModule){
     m_safeModule = safeModule;
 }
 
-void ValveControl::setSafeModuleInitialValveState(){
-    qCDebug(lcValves) << "setSafeModuleInitialValveState: порт поставлен?" << valveController;
-    for(int i = 0; i < m_valves.count(); i++){
-        m_safeModule->setInitialState(m_valves[i]->m_name, m_valves[i]->getState());
-    }
-}
-
 void ValveControl::setGasSupplyValves(const QStringList& gasSupplyValves){
     m_gasSupplyValves = gasSupplyValves;
 }
@@ -96,7 +89,7 @@ void ValveControl::setValveState(bool state, int index){ // excluding chamber
     qCDebug(lcValves) << "setValveState (GUI)" << valve->m_name << "индекс" << index
                       << "запрос" << state << "было" << originalState;
     // check pressure!!!
-    bool safe_state = m_safeModule->checkValveAction(valve->m_name, state);
+    bool safe_state = m_safeModule->checkValveAction(valve->m_name, state, valveStates());
     valve->setState(safe_state);
     if(!sendValveStates()){
         valve->setState(originalState);
@@ -144,7 +137,7 @@ bool ValveControl::confirmValve(const QString& name, bool expected){
     // иначе интерфейс продолжит показывать желаемое вместо действительного.
     if(m_valves[index]->getState() != actual){
         qCWarning(lcValves) << "confirmValve" << name << "модель" << m_valves[index]->getState()
-                            << "плата" << actual << "— модель приведена к плате (Security не уведомлён)";
+                            << "плата" << actual << "— модель приведена к плате";
         m_valves[index]->setState(actual);
         emit guiValsValveChanged();
     }
@@ -236,7 +229,7 @@ bool ValveControl::setValveFromAction(bool state, const QString& name){
     const bool originalState = valve->getState();
     qCDebug(lcValves) << "setValveFromAction (режим)" << name << "запрос" << state << "было" << originalState;
     // check pressure!!!
-    bool safe_state = m_safeModule->checkValveAction(valve->m_name, state);
+    bool safe_state = m_safeModule->checkValveAction(valve->m_name, state, valveStates());
     valve->setState(safe_state);
     if(!sendValveStates()){
         valve->setState(originalState);

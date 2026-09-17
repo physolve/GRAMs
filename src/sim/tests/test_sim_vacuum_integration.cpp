@@ -123,14 +123,12 @@ public:
         valves.setValvePointers(list);
         valves.setChamberValvePointer(&chamberValve);
         valves.setSafeModule(&security);
-        valves.setSafeModuleInitialValveState();
 
         QStringList ids;
         for (const auto &code : input.valveCodes)
             ids << build.catalog.valveByCode(code)->id;
         valves.setDoPort(std::make_unique<SimValveEcho>(ids, controller.get()));
 
-        security.constructValveMap(input.valveCodes);
         QMap<QString, QStringList> contradictions;
         const QJsonObject sec = gram.value("security").toObject();
         const QJsonObject cv = sec.value("contradictionValves").toObject();

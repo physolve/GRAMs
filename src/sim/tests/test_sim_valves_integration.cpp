@@ -1,13 +1,10 @@
 // Клапаны на демо-данных: щелчок, интерлоки, «Тест клапанов», проверка давления.
 //
 // Путь тот же, что в Grams, и в том же порядке инициализации:
-//   ValveControl::setValvePointers → setSafeModuleInitialValveState → setDoPort
-//   → Grams::initSafeModule (constructValveMap, интерлоки, пороги из профиля).
+//   ValveControl::setValvePointers → setDoPort
+//   → Grams::initSafeModule (интерлоки, пороги из профиля).
 //
-// Тесты с префиксом DISABLED_ воспроизводят найденные дефекты и падают на
-// текущем коде; каждое исправление снимает префикс со своего теста. Прогнать
-// их сейчас: SimIntegrationTests.exe --gtest_also_run_disabled_tests
-// --gtest_filter=SimValves*
+// Каждый тест с пометкой Dn воспроизводил дефект и падал до своего исправления.
 
 #include "test_support.h"
 
@@ -55,6 +52,7 @@ public:
         return true;
     }
     bool refresh() override { return true; }
+    void setBit(int i, bool v) { m_data[i] = v; }   // клапан переключён мимо программы
     QVector<bool> data() override { return m_data; }
 
 private:
@@ -92,8 +90,6 @@ public:
         valves.setValvePointers(list);
         valves.setChamberValvePointer(&chamberValve);
         valves.setSafeModule(&security);
-        // Grams::advDoController: начальные состояния — до установки порта.
-        valves.setSafeModuleInitialValveState();
         if (withPort) {
             if (!port) {
                 QStringList ids;
@@ -107,7 +103,6 @@ public:
 
         // Grams::initSafeModule — вызывается в конструкторе Grams позже порта.
         const QJsonObject gram = gram50Profile();
-        security.constructValveMap(input.valveCodes);
         const QJsonObject sec = gram.value("security").toObject();
         QMap<QString, QStringList> contradictions;
         const QJsonObject cv = sec.value("contradictionValves").toObject();
@@ -228,8 +223,8 @@ TEST(SimValves, InterlockRefusesAR2WhileAR1Open)
     EXPECT_FALSE(rig.controller.isValveOpen("K109"));
 }
 
-// D3: карта Security меняется до записи, откат записи её не возвращает.
-TEST(SimValves, DISABLED_FailedWriteDoesNotPoisonInterlock)
+// D3: карта Security менялась до записи, откат записи её не возвращал.
+TEST(SimValves, FailedWriteDoesNotPoisonInterlock)
 {
     auto port = std::make_unique<FakeDoPort>(QVector<bool>(16, false));
     FakeDoPort *raw = port.get();
@@ -244,8 +239,8 @@ TEST(SimValves, DISABLED_FailedWriteDoesNotPoisonInterlock)
     EXPECT_TRUE(rig.valves.valveState("AR2")) << "AR1 закрыт физически, но Security считает его открытым";
 }
 
-// D4: состояние платы при старте не доходит до Security — интерлок обходится.
-TEST(SimValves, DISABLED_InterlockSeesValveOpenAtStartup)
+// D4: состояние платы при старте не доходило до Security — интерлок обходился.
+TEST(SimValves, InterlockSeesValveOpenAtStartup)
 {
     QVector<bool> board(16, false);
     board[0] = true;   // AR1 открыт с прошлого запуска
@@ -256,6 +251,23 @@ TEST(SimValves, DISABLED_InterlockSeesValveOpenAtStartup)
     EXPECT_FALSE(rig.valves.valveState("AR2"));
 }
 
+// D5: readback (confirmValve) приводил модель к плате, но интерлок продолжал
+// смотреть на свою устаревшую копию.
+TEST(SimValves, InterlockSeesReadbackCorrection)
+{
+    auto port = std::make_unique<FakeDoPort>(QVector<bool>(16, false));
+    FakeDoPort *raw = port.get();
+    ValveRig rig(std::move(port));
+
+    raw->setBit(0, true);   // на плате AR1 открыт, модель думает — закрыт
+    EXPECT_FALSE(rig.valves.confirmValve("AR1", false));
+    ASSERT_TRUE(rig.valves.valveState("AR1"));
+    EXPECT_FALSE(rig.valves.setValveFromAction(true, "AR2"));
+
+    raw->setBit(0, false);
+    EXPECT_TRUE(rig.valves.confirmValve("AR1", false));
+    EXPECT_TRUE(rig.valves.setValveFromAction(true, "AR2"));
+}
 // D8: без порта valveNameList пуст — setValveState падал на QList::at и обрывал
 // процесс целиком. При регрессии запускать отдельно:
 // SimIntegrationTests.exe --gtest_filter=SimValves.ManualClickWithoutPort*

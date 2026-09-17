@@ -126,7 +126,6 @@ void Grams::advDoController(){
     m_valveControl.setReactionQuartile(&m_reactionQuartile);
     m_valveControl.setDatabase(&m_gramStateDB);
     m_valveControl.setSafeModule(&m_safeModule);
-    m_valveControl.setSafeModuleInitialValveState();
     m_valveControl.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
     m_valveControl.setGasStoreValves(initSource.m_storageQuar.m_gasStoreValves);
 
@@ -472,7 +471,6 @@ Q_INVOKABLE void Grams::removeGraph(const QString &key)
 }
 
 void Grams::initSafeModule(){
-    m_safeModule.constructValveMap(initSource.m_hardware.m_valves);
     m_safeModule.setContradictionValves(initSource.m_security.m_contradictionValves);
     m_safeModule.setRuleOfThreeValves(initSource.m_security.m_twoOfThree);
     

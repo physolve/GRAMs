@@ -32,7 +32,6 @@ public:
     void setReactionQuartile(ReactionQuartile* reactionQuartile);
     void setDatabase(GramStateDB* gramStateDB);
     void setSafeModule(Security* safeModule);
-    void setSafeModuleInitialValveState();
     void setGasSupplyValves(const QStringList& gasSupplyValves);
     void setGasStoreValves(const QStringList& gasStoreValves);
     void initDaqDO(const daqParameters &parameterDO);
