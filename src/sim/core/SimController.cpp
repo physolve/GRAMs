@@ -5,6 +5,7 @@
 
 #include <QFinalState>
 #include <QHistoryState>
+#include <QLoggingCategory>
 #include <QJsonArray>
 #include <QRandomGenerator>
 #include <QStateMachine>
@@ -14,6 +15,8 @@
 #include <cmath>
 
 namespace sim {
+
+Q_STATIC_LOGGING_CATEGORY(lcSimValves, "grams.sim.valves")
 
 SimController::SimController(Catalog catalog, ISimClock *clock, QObject *parent)
     : QObject(parent), m_catalog(std::move(catalog)), m_clock(clock)
@@ -72,9 +75,15 @@ void SimController::tick()
 
 void SimController::notifyValve(const QString &valveId, bool open)
 {
-    if (!m_valves.contains(valveId) || m_valves.value(valveId) == open)
+    if (!m_valves.contains(valveId)) {
+        qCWarning(lcSimValves) << "notifyValve: клапана" << valveId << "нет в каталоге";
+        return;
+    }
+    if (m_valves.value(valveId) == open)
         return;
     m_valves[valveId] = open;
+    qCDebug(lcSimValves) << "notifyValve" << valveId << open << "машина" << toWire(m_machineState)
+                         << (m_machineState != Machine::Idle ? "→ SimValveEvent" : "→ без события (Idle)");
     if (m_machineState != Machine::Idle)
         postToMachine(new SimValveEvent(valveId, open));
 }

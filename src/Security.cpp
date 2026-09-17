@@ -2,6 +2,19 @@
 
 #include <QDebug>
 
+Q_LOGGING_CATEGORY(lcSecurity, "grams.security")
+
+namespace {
+QStringList openValves(const QMap<QString, bool> &valveMap)
+{
+    QStringList open;
+    for (auto it = valveMap.cbegin(); it != valveMap.cend(); ++it)
+        if (it.value())
+            open << it.key();
+    return open;
+}
+} // namespace
+
 ValveGraph::ValveGraph(const QString &selfName): m_selfName(selfName), checkEachInList(false), checkRuleOfThree(false) {}
 void ValveGraph::addEachInList(const QStringList &nodeValveList){
     checkEachInList = true;
@@ -85,10 +98,12 @@ void Security::constructValveMap(const QStringList &valveList){
         buffValveMap.insert(valve, false);
     }
     m_valveMap = buffValveMap;
+    qCDebug(lcSecurity) << "constructValveMap: карта из" << valveList.size() << "клапанов, все закрыты";
 }
 
 void Security::setInitialState(const QString &sender, const bool &state){
     m_valveMap[sender] = state;
+    qCDebug(lcSecurity) << "setInitialState" << sender << state;
 }
 
 void Security::setContradictionValves(const QMap<QString, QStringList> &contradictionValves){
@@ -164,12 +179,20 @@ bool Security::checkValveAction(const QString &sender, const bool &state){
     //}
 
     if(!m_contradictionValves.contains(sender)){
+        qCDebug(lcSecurity) << "checkValveAction" << sender << "запрос" << state
+                            << "→" << state << "(нет в интерлоках, карта не обновлена)";
         return state;
     }
     m_valveMap[sender] = state;
     bool imageState = m_valveMap[sender];
     imageState = m_contradictionValves[sender].applyGraphMask(m_valveMap);
     m_valveMap[sender] = imageState;
+    if(state && !imageState)
+        qCDebug(lcSecurity) << "checkValveAction" << sender << "запрос" << state
+                            << "→ ОТКАЗ, по карте открыты:" << openValves(m_valveMap);
+    else
+        qCDebug(lcSecurity) << "checkValveAction" << sender << "запрос" << state
+                            << "→" << imageState;
     return imageState;
 }
 
@@ -185,5 +208,11 @@ QMap<QString, bool> Security::checkValvePressure(){
         auto pressureQuartile = valveToSafeRelease.m_watchQuartile;
         buffValveMap[valveName] = valveToSafeRelease.applyPressureMask(m_pressureQuarMap[pressureQuartile]); // quartileNode!
     }
+    QStringList falseKeys;
+    for (auto it = buffValveMap.cbegin(); it != buffValveMap.cend(); ++it)
+        if (!it.value())
+            falseKeys << it.key();
+    qCDebug(lcSecurity) << "checkValvePressure: давления" << m_pressureQuarMap
+                        << "false у" << falseKeys;
     return buffValveMap;
 }

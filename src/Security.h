@@ -1,6 +1,11 @@
 #pragma once
 
 #include <QVariant>
+#include <QLoggingCategory>
+
+// grams.security — ответы интерлоков и проверки давления
+// (QT_LOGGING_RULES="grams.security.debug=true").
+Q_DECLARE_LOGGING_CATEGORY(lcSecurity)
 
 class ValveGraph{
 public:

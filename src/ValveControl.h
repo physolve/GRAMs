@@ -6,6 +6,11 @@
 #include "Initialize.h"
 
 #include <memory>
+#include <QLoggingCategory>
+
+// grams.valves — путь команды клапана: запрос → Security → порт → GUI
+// (QT_LOGGING_RULES="grams.valves.debug=true").
+Q_DECLARE_LOGGING_CATEGORY(lcValves)
 #include "addon/AddRemoveQuartile.h"
 #include "addon/ReactionQuartile.h"
 #include "db/GramStateDB.h"

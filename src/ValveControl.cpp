@@ -1,5 +1,7 @@
 #include "ValveControl.h"
 
+Q_LOGGING_CATEGORY(lcValves, "grams.valves")
+
 ValveControl::ValveControl(QObject *parent) :
     QObject(parent)
 {
@@ -36,6 +38,7 @@ void ValveControl::setSafeModule(Security* safeModule){
 }
 
 void ValveControl::setSafeModuleInitialValveState(){
+    qCDebug(lcValves) << "setSafeModuleInitialValveState: порт поставлен?" << valveController;
     for(int i = 0; i < m_valves.count(); i++){
         m_safeModule->setInitialState(m_valves[i]->m_name, m_valves[i]->getState());
     }
@@ -70,6 +73,8 @@ void ValveControl::setDoPort(std::unique_ptr<IDoPort> port){
         m_valves[i]->setState(readData[i]);
         valveNameList << m_valves[i]->m_name;
     }
+    qCDebug(lcValves) << "setDoPort: клапанов" << m_valves.count() << "битов порта" << readData.count()
+                      << "valveNameList" << valveNameList.size() << "состояние" << readData;
     valveController = true;
     // compare to data base timestamp
     emit guiValsValveChanged();
@@ -79,29 +84,38 @@ void ValveControl::setValveState(bool state, int index){ // excluding chamber
     // signal from GUI to change state of object
     Valve *valve = m_valves[index];
     const bool originalState = valve->getState();
+    qCDebug(lcValves) << "setValveState (GUI)" << valve->m_name << "индекс" << index
+                      << "запрос" << state << "было" << originalState;
     // check pressure!!!
     bool safe_state = m_safeModule->checkValveAction(valve->m_name, state);
     valve->setState(safe_state);
     if(!sendValveStates()){
         valve->setState(originalState);
+        qCWarning(lcValves) << "setValveState" << valve->m_name << "запись не прошла — откат к" << originalState;
     }
     else if(!actionInterrupted){
         actionInterrupted = true;
     }
+    qCDebug(lcValves) << "setValveState" << valve->m_name << "итог" << valve->getState()
+                      << "valveNameList" << valveNameList.size();
     valveChangeUpdater(valveNameList.at(index), state);
     emit guiValsValveChanged();
 }
 
 bool ValveControl::sendValveStates(){
-    if(!valveController)
+    if(!valveController){
+        qCWarning(lcValves) << "sendValveStates: порт клапанов не поставлен — запись отклонена";
         return false;
+    }
     QVector<bool> changedState;
     // if changedState > 8*portCount!
     for(int i = 0; i < m_valves.count(); ++i){
         changedState << m_valves[i]->getState();
     }
     // handler to unsuccessful set (true / false)
-    return m_doPort->write(changedState);
+    const bool ok = m_doPort->write(changedState);
+    qCDebug(lcValves) << "sendValveStates: маска" << changedState << "write" << ok;
+    return ok;
 }
 
 // V-02 (REQ-082/084) — см. комментарий в заголовке.
@@ -120,6 +134,8 @@ bool ValveControl::confirmValve(const QString& name, bool expected){
     // Расхождение модели и платы — сигнал сам по себе: приводим модель к факту,
     // иначе интерфейс продолжит показывать желаемое вместо действительного.
     if(m_valves[index]->getState() != actual){
+        qCWarning(lcValves) << "confirmValve" << name << "модель" << m_valves[index]->getState()
+                            << "плата" << actual << "— модель приведена к плате (Security не уведомлён)";
         m_valves[index]->setState(actual);
         emit guiValsValveChanged();
     }
@@ -196,16 +212,21 @@ bool ValveControl::setValveFromAction(bool state, const QString& name){
     Valve *valve = nullptr;
     int index = valveNameList.indexOf(name);
     if(index == -1){
+        qCWarning(lcValves) << "setValveFromAction" << name << "нет в valveNameList (размер"
+                            << valveNameList.size() << ") — отклонено";
         return false;
     }
     valve = m_valves[index];
     const bool originalState = valve->getState();
+    qCDebug(lcValves) << "setValveFromAction (режим)" << name << "запрос" << state << "было" << originalState;
     // check pressure!!!
     bool safe_state = m_safeModule->checkValveAction(valve->m_name, state);
     valve->setState(safe_state);
     if(!sendValveStates()){
         valve->setState(originalState);
+        qCWarning(lcValves) << "setValveFromAction" << name << "запись не прошла — откат к" << originalState;
     }
+    qCDebug(lcValves) << "setValveFromAction" << name << "итог" << valve->getState();
     emit guiValsValveChanged();
     valveChangeUpdater(name, state);
     return valve->getState() == state;
