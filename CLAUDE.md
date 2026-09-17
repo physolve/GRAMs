@@ -58,7 +58,7 @@ cmd /c "`"$vcvars`" && cmake --build build --target VacuumTreeTests --parallel"
 | `ProtoTableTests` | `src/runtable/tests/` | `RegimeManager` (state machine, External Module API), `ProtoTableModel`, расчёты времени | линкует `RuntableLib` + `Qt6::Test/Core/Qml` |
 | `VacuumTreeTests` | `src/actions/tests/` | рецепт «Вакуума» на TaskTree | компилирует `VacuumTaskTree.cpp` напрямую; все швы к железу — через `VacuumTreeContext`, поэтому **не зависит от `ValveControl`/biodaq** (`Qt6::Core` + `Qt6::TaskTree` + `gtest`) |
 | `SimTests` | `src/sim/tests/` | демо-режим: TrackEngine, профиль и коды валидации, машина фаз, JSON-RPC через `QTcpSocket`, обратный перевод единиц, эхо клапанов, флаги | линкует `SimCore` (`/W4 /WX`) + `DataCollection.cpp` |
-| `SimIntegrationTests` | `src/sim/tests/` | рецепт «Вакуума» на эталонных профилях через настоящие `DataAcquisition`/`ValveControl`/`Security` | рабочая папка ctest — корень репозитория (`profile/`); ~30 с |
+| `SimIntegrationTests` | `src/sim/tests/` | рецепт «Вакуума» на эталонных профилях через настоящие `DataAcquisition`/`ValveControl`/`Security`; `SimValves` — щелчок → Security → эхо → фаза, интерлоки на фактическом состоянии, «Тест клапанов», `RegimeWorkerBase`, правила давления | рабочая папка ctest — корень репозитория (`profile/`); ~40 с; линкует `RuntableLib` и воркеры |
 
 > Паттерн `cmd /c "\"vcvars64.bat\" && <команда>"` передаёт инициализированное MSVC-окружение в дочерний процесс cmd, а затем выполняет cmake. Переменные среды не просачиваются обратно в PowerShell — это нормально, каждый вызов самодостаточен.
 
@@ -138,9 +138,9 @@ ptr[]   — массивы указателей        — всегда пров
 | Режим | Статус | Доказательство / что осталось |
 |---|---|---|
 | **Вакуум** | **Реализован (код)** — последовательность доведена до камеры: Ф1–Ф3 (s1–s24) + форвакуум 11.5–11.7 + dP/dt-watchdog + турбо-переход 12.2 + **общая откачка 11.7б** + **герметичность 11.8** + **финальная откачка камеры и закрытие 11.9–11.11**; время строки RunTable — бюджет всего прогона — `docs/regimes/vacuum.md` | `recipes/VacuumTaskTree.cpp` рецепт на TaskTree; `buildGeneralPumping:1361` (11.7б, REQ-055–058), `buildLeakTest:1424` (11.8, REQ-059–063, только ДД312), `buildFinalPumping:1545` (11.9–11.11, REQ-064–073, **насос и датчик — по факту перехода 12.2**, `vacuum.md` §7б); `buildPumpDownProcedure:1077` переехала внутрь общей и финальной откачки по REQ-077; `connectTurboPump:968` — единственная точка открытия К179; наборы клапанов и пороги в `profile/GRAMsPfp.json` → `vacuumTract` + `vacuumSafety` (REQ-022/055); `budgetTick:173`/`budgetGate:1336` — бюджет времени (дивергенция, см. ниже); выключатель форвакуума удалён из UI и из кода; **К179 = `SL2`, К192 = `SL1`**, интерлок AR6⇄SL2; **85 тестов `VacuumTreeTests`**, инвариант `pumpsNeverBothOpen` в каждом тесте новых этапов; **верификация на стенде — не выполнялась** |
-| **Режим в** | **Заглушка** — `docs/regimes/regime-b.md` | `RegimeWorkers.cpp:417–441` все 4 метода = `qDebug` + `// TODO` |
+| **Режим в** | **Заглушка** — `docs/regimes/regime-b.md` | `RegimeWorkers.cpp:417–441` все 4 метода = `qDebug` + `// TODO`; база `RegimeWorkerBase` больше не прерывает Execution при закрытых клапанах (D1, тест `SimValves.RegimeExecutionNotAbortedByClosedValves`) |
 | **Режим г** | **Заглушка** — `docs/regimes/regime-g.md` | `RegimeWorkers.cpp:445–465` аналогично Режиму в |
-| **Тест клапанов** | **Реализован (код)** — `docs/regimes/valve-test.md` | `ValveTestWorker.cpp` полная state machine; не верифицирован на железе (Windows) |
+| **Тест клапанов** | **Реализован (код)** — `docs/regimes/valve-test.md` | `ValveTestWorker.cpp` полная state machine; до 17.09.2026 закрывал шаг на первом такте (D1) и после аварии открывал следующий шаг (D2) — исправлено, `abortCurrentStep`; тесты `SimValves.ValveTest*`; не верифицирован на железе (Windows) |
 | **Напуск** | **Реализован (код)** — перенос `legacy/InletAction` на рецепт | `recipes/SupplyTaskTree.cpp` + `workers/ChainWorkers.cpp`; гейт «тракт откачан»; остановка по времени / пределу давления / вето quartile; `SupplyPort` и `AddRemoveQuartile` переиспользуются через швы; **11 тестов `SupplyTree`**; на стенде не проверялось |
 | **Натекание** | **Реализован (код)** — было тумблером, стало прогоном | `recipes/LeakageTaskTree.cpp` + `workers/ChainWorkers.cpp`; гейт «накопитель заряжен, камера откачана»; остановка по длительности / целевому Δp / недостоверному показанию; `GasLeakage` переиспользуется через швы; **9 тестов `LeakageTree`**; на стенде не проверялось. **Открыто:** как физически задаётся «оборот» дозирующего клапана |
 | **Калибровка** | Ожидает | Воркер не создан; узкое место для SYSTEST |
@@ -184,6 +184,9 @@ ptr[]   — массивы указателей        — всегда пров
   `DataAcquisition`. Режимы, `Security` и квартили про демо не знают — **не
   добавлять в них проверок «это демо?»**.
 - Демо-хранилище: `data/sim/regime_log.db` и PostgreSQL `gramstate_sim`.
+- Лог пути клапана: `QT_LOGGING_RULES="grams.valves.debug=true;grams.security.debug=true;grams.sim.valves.debug=true"`
+  (у тестов на Windows ещё `QT_FORCE_STDERR_LOGGING=1`). Переход профиля по
+  клапану — на фронт, не на уровень.
 - Проверка: `Push-Location build; ctest -R Sim; Pop-Location`,
   `tools/sim_rpc_smoke.ps1` против запущенного GRAMs.
 
@@ -223,6 +226,8 @@ DataCollection      — именованный кольцевой буфер, к
 ### Valve control: `ValveControl`
 
 `src/ValveControl.h` — запись состояний DO в `AdvantechDO`. Все записи проходят через `Security` (проверка противоречий, `checkOpenChamber`). Список физических клапанов (`vAR1`…`vR5`) живёт в `Grams.h`.
+
+`Security` **не хранит состояния клапанов**: `checkValveAction(sender, state, valveStates)` получает снимок от `ValveControl::valveStates()` (модель, приведённая к плате через `setDoPort`, откат записи и `confirmValve`). Код отказа отдаёт `ValveControl::lastRefusal()`: `interlock`, `pressure_range` или `pressure_invalid`. Давления квартилей приходят каждый такт `softEvent` через `setPressureMap` (датчик — `Quartile::pressureSource()`, свежесть — `DataCollection::sampleCount()`). Недостоверное давление запрещает открывать S4/R4/AR4; у уже открытого клапана оно даёт только предупреждение. Режимы проверяют давление через `checkPressure(valveStates)`: результат `{violations, warnings}`, закрытый клапан нарушением не является.
 
 ### Pressure domain: Quartile subsystem (`src/addon/`)
 
