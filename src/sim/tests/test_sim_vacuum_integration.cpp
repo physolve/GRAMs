@@ -9,6 +9,7 @@
 // VacuumRegimeWorker::makeContext, поверх настоящих объектов. Время ускорено
 // часами: 1 такт рецепта (10 мс) = 1 с демо-времени. Рецепт не меняется.
 
+#include "soft_event_mirror.h"
 #include "test_support.h"
 
 #include "core/SimController.h"
@@ -154,18 +155,19 @@ public:
             security.setSensorRange(s.name, 3.8 * s.A + s.B, 20.5 * s.A + s.B);
     }
 
-    // Опрос DataAcquisition и такт softEvent: давления квартилей уходят в
-    // Security с тем же выбором датчика, что у StorageQuartile/ReactionQuartile
-    // (квартилей в тесте нет).
+    // Опрос DataAcquisition и такт softEvent (зеркало Grams::softEvent;
+    // квартилей в тесте нет).
     void poll()
     {
         QMetaObject::invokeMethod(&daq, "processEvents", Qt::DirectConnection);
-        const ControllerData *storage = sensor(valves.valveState("S4") ? "DD312" : "DD311");
-        const ControllerData *reaction = sensor(valves.valveState("R4") ? "DD332" : "DD331");
-        QMap<QString, PressureSample> m;
-        m.insert("storageQuar", {storage->m_name, storage->getCurValue(), storage->sampleCount()});
-        m.insert("reactionQuar", {reaction->m_name, reaction->getCurValue(), reaction->sampleCount()});
-        security.setPressureMap(m);
+        softEventSecurity(security, valves, {reading("DD311"), reading("DD312"),
+                                             reading("DD331"), reading("DD332")});
+    }
+
+    SensorReading reading(const QString &name)
+    {
+        const ControllerData *s = sensor(name);
+        return {s->m_name, s->getCurValue(), s->sampleCount()};
     }
 
     ControllerData *sensor(const QString &name)

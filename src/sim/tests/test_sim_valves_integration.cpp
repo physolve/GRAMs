@@ -6,6 +6,7 @@
 //
 // Каждый тест с пометкой Dn воспроизводил дефект и падал до своего исправления.
 
+#include "soft_event_mirror.h"
 #include "test_support.h"
 
 #include "core/SimClock.h"
@@ -137,12 +138,8 @@ public:
     {
         if (newSample)
             ++seq;
-        QMap<QString, PressureSample> m;
-        m.insert("storageQuar", valves.valveState("S4") ? PressureSample{"DD312", dd312, seq}
-                                                        : PressureSample{"DD311", dd311, seq});
-        m.insert("reactionQuar", valves.valveState("R4") ? PressureSample{"DD332", dd332, seq}
-                                                         : PressureSample{"DD331", dd331, seq});
-        security.setPressureMap(m);
+        softEventSecurity(security, valves, {{"DD311", dd311, seq}, {"DD312", dd312, seq},
+                                             {"DD331", dd331, seq}, {"DD332", dd332, seq}});
     }
 
     int indexOf(const QString &code) const

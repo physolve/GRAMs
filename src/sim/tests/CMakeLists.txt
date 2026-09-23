@@ -69,6 +69,12 @@ add_library(SimGramsRuntime STATIC
     ${GRAMS_SRC}/actions/workers/RegimeWorkers.cpp
     ${GRAMS_SRC}/actions/workers/ValveTestWorker.cpp
     ${GRAMS_SRC}/actions/workers/VacuumRunMonitor.cpp
+    # Оркестратор режимов: закрытие клапанов по концу режима и передача
+    # событий Security воркеру проверяются через настоящий RegimeTaskTree.
+    ${GRAMS_SRC}/actions/RegimeTaskTree.cpp
+    ${GRAMS_SRC}/actions/workers/ChainWorkers.cpp
+    ${GRAMS_SRC}/actions/recipes/SupplyTaskTree.cpp
+    ${GRAMS_SRC}/actions/recipes/LeakageTaskTree.cpp
     integration_stubs.cpp
 )
 target_include_directories(SimGramsRuntime PUBLIC ${GRAMS_SRC} ${GRAMS_SRC}/actions)
@@ -88,11 +94,13 @@ add_executable(SimIntegrationTests
     test_main.cpp
     test_sim_vacuum_integration.cpp
     test_sim_valves_integration.cpp
+    test_sim_security_range.cpp
 )
 target_link_libraries(SimIntegrationTests PRIVATE SimCore SimGramsRuntime gtest)
 target_compile_definitions(SimIntegrationTests PRIVATE
     SIM_PROFILES_DIR="${PROJECT_SOURCE_DIR}/../../../tests/sim/profiles"
-    GRAMS_PROFILE_JSON="${PROJECT_SOURCE_DIR}/../../../profile/GRAMsPfp.json")
+    GRAMS_PROFILE_JSON="${PROJECT_SOURCE_DIR}/../../../profile/GRAMsPfp.json"
+    GRAMS_ADDONS_JSON="${PROJECT_SOURCE_DIR}/../../../profile/addons.json")
 if (MSVC)
     target_compile_options(SimIntegrationTests PRIVATE /utf-8)
 endif()

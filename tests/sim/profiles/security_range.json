@@ -1,0 +1,59 @@
+{
+  "schema": "grams.sim.profile/1",
+  "name": "Security: диапазонные клапаны S4/R4 (открытие < 1.6 бар, закрытие > 1.8 бар)",
+  "initial": { "P.DD311": 101325, "P.DD312": 101325, "P.DD331": 101325, "P.DD332": 101325 },
+  "phases": [
+    {
+      "id": "atm", "kind": "static", "zone": "accumulator", "label": "атмосфера, ниже 1.6 бар",
+      "durationSec": null, "tracks": [],
+      "transitions": [ { "to": "rise", "on": { "type": "manual" } } ]
+    },
+    {
+      "id": "rise", "kind": "gasInlet", "zone": "accumulator", "label": "рост до 1.95 бар",
+      "durationSec": 60,
+      "tracks": [
+        { "channel": "P.DD311", "interp": "linear", "keypoints": [[0, "current"], [60, 195000]] },
+        { "channel": "P.DD312", "interp": "linear", "keypoints": [[0, "current"], [60, 195000]] },
+        { "channel": "P.DD331", "interp": "linear", "keypoints": [[0, "current"], [60, 195000]] },
+        { "channel": "P.DD332", "interp": "linear", "keypoints": [[0, "current"], [60, 195000]] }
+      ],
+      "transitions": [ { "to": "high", "on": { "type": "timeout" } } ]
+    },
+    {
+      "id": "high", "kind": "static", "zone": "accumulator", "label": "1.95 бар — выше порога закрытия",
+      "durationSec": null, "tracks": [],
+      "transitions": [ { "to": "hyst", "on": { "type": "manual" } } ]
+    },
+    {
+      "id": "hyst", "kind": "pumping", "zone": "accumulator", "label": "спуск в гистерезис 1.7 бар",
+      "durationSec": 30,
+      "tracks": [
+        { "channel": "P.DD311", "interp": "linear", "keypoints": [[0, "current"], [30, 170000]] },
+        { "channel": "P.DD312", "interp": "linear", "keypoints": [[0, "current"], [30, 170000]] },
+        { "channel": "P.DD331", "interp": "linear", "keypoints": [[0, "current"], [30, 170000]] },
+        { "channel": "P.DD332", "interp": "linear", "keypoints": [[0, "current"], [30, 170000]] }
+      ],
+      "transitions": [ { "to": "hyst_hold", "on": { "type": "timeout" } } ]
+    },
+    {
+      "id": "hyst_hold", "kind": "static", "zone": "accumulator", "label": "1.7 бар — зона гистерезиса",
+      "durationSec": null, "tracks": [],
+      "transitions": [ { "to": "low", "on": { "type": "manual" } } ]
+    },
+    {
+      "id": "low", "kind": "pumping", "zone": "accumulator", "label": "спуск до 1.4 бар",
+      "durationSec": 30,
+      "tracks": [
+        { "channel": "P.DD311", "interp": "linear", "keypoints": [[0, "current"], [30, 140000]] },
+        { "channel": "P.DD312", "interp": "linear", "keypoints": [[0, "current"], [30, 140000]] },
+        { "channel": "P.DD331", "interp": "linear", "keypoints": [[0, "current"], [30, 140000]] },
+        { "channel": "P.DD332", "interp": "linear", "keypoints": [[0, "current"], [30, 140000]] }
+      ],
+      "transitions": [ { "to": "low_hold", "on": { "type": "timeout" } } ]
+    },
+    {
+      "id": "low_hold", "kind": "static", "zone": "accumulator", "label": "1.4 бар — ниже порога открытия",
+      "durationSec": null, "tracks": [], "transitions": []
+    }
+  ]
+}

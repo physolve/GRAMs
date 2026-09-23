@@ -1,0 +1,31 @@
+{
+  "schema": "grams.sim.profile/1",
+  "name": "Security: равновесие через К151 (накопитель 30 бар, реакционная область 0.05 бар)",
+  "initial": { "P.DD311": 3000000, "P.DD312": 101325, "P.DD331": 5000, "P.DD332": 5000 },
+  "phases": [
+    {
+      "id": "charged", "kind": "static", "zone": "chamber",
+      "label": "накопитель заряжен, реакционная область откачана",
+      "durationSec": null, "tracks": [],
+      "transitions": [ { "to": "transfer", "on": { "type": "valve", "valve": "K151", "state": "open" } } ]
+    },
+    {
+      "id": "transfer", "kind": "gasInlet", "zone": "chamber",
+      "label": "перепуск через К151 — выравнивание к ~17.6 бар",
+      "durationSec": 60,
+      "tracks": [
+        { "channel": "P.DD331", "interp": "exp", "tau": 8, "keypoints": [[0, "current"], [60, 1760000]] },
+        { "channel": "P.DD332", "interp": "exp", "tau": 8, "keypoints": [[0, "current"], [60, 200000]] },
+        { "channel": "P.DD311", "interp": "exp", "tau": 8, "keypoints": [[0, "current"], [60, 1760000]] }
+      ],
+      "transitions": [
+        { "to": "equalized", "on": { "type": "valve", "valve": "K151", "state": "closed" } },
+        { "to": "equalized", "on": { "type": "timeout" } }
+      ]
+    },
+    {
+      "id": "equalized", "kind": "static", "zone": "chamber", "label": "равновесие",
+      "durationSec": null, "tracks": [], "transitions": []
+    }
+  ]
+}
