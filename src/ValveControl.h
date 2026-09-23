@@ -64,6 +64,12 @@ public:
     // Код причины, по которой Security отклонил последнюю команду (interlock,
     // pressure_range, pressure_invalid); пусто, если команда разрешена.
     QString lastRefusal() const { return m_lastRefusal; }
+    // Правила Security, которые действуют без команды: клапаны диапазона
+    // (S4/R4), которые Security требует закрыть, закрываются здесь — той же
+    // записью в порт, что и обычная команда, поэтому мнемосхема, Lumber, БД и
+    // демо видят одно и то же. Вызывается на каждом такте softEvent (origin =
+    // "tick"), при старте и из readback. Security клапаны только закрывает.
+    void enforceSecurity(const QString& origin);
     Q_INVOKABLE void setManualChamberValve(bool state);
     Q_INVOKABLE void setValveState(bool state, int valveId);
     bool sendValveStates();
@@ -73,6 +79,11 @@ public:
 
 signals:
     void guiValsValveChanged();
+    // Security закрыл клапан; previous — кто держал его открытым. Режим,
+    // открывший клапан (previous == Regime), обязан узнать об этом (Т3).
+    void securityClosed(const SecurityIssue& issue, ValveSource previous);
+    // Недостоверное показание у открытого клапана — один раз до восстановления.
+    void securityWarning(const SecurityIssue& issue);
 
 private:
     std::unique_ptr<IDoPort> m_doPort;   // nullptr, пока порт не поставлен
@@ -89,6 +100,10 @@ private:
     QMap<QString, ValveSource> m_sources;
     // Итог принятой платой команды: открыт — источник команды, закрыт — None.
     void setSource(const QString& name, bool open, ValveSource commandSource);
+    // Закрыть клапан по требованию Security; false — плата не приняла запись.
+    bool closeBySecurity(const SecurityIssue& issue);
+    // Клапаны, закрыть которые не удалось: о повторных неудачах не сообщаем.
+    QSet<QString> m_securityCloseFailed;
     QStringList m_gasSupplyValves;
     QStringList m_gasStoreValves;
     // add remove pointer

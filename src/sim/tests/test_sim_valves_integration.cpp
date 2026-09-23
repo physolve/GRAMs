@@ -450,27 +450,43 @@ TEST(SimValves, NanOrOutOfSensorRangeIsInvalid)
     EXPECT_TRUE(rig.valves.setValveFromAction(true, "R4"));
 }
 
+// D6 + Т1: недостоверное давление у открытого клапана — одно предупреждение
+// (его выдаёт такт softEvent, режим не нужен), клапан не закрывается.
+// Достоверно выше порога закрытия — нарушение для режима (checkPressure), а
+// на такте Security закрывает клапан сам.
 TEST(SimValves, OpenValveWithInvalidPressureWarnsOnceAndStaysOpen)
 {
     ValveRig rig;
+    QList<SecurityIssue> warnings;
+    QObject::connect(&rig.valves, &ValveControl::securityWarning, &rig.valves,
+                     [&](const SecurityIssue &w) { warnings << w; });
     rig.feedPressure();
     ASSERT_TRUE(rig.valves.setValveFromAction(true, "S4"));
 
     rig.dd312 = std::nan("");
     rig.feedPressure();
-    PressureCheck first = rig.security.checkPressure(rig.valves.valveStates());
-    EXPECT_TRUE(first.ok());
-    ASSERT_EQ(first.warnings.size(), 1);
-    EXPECT_EQ(first.warnings.first().valve, "S4");
-    EXPECT_EQ(first.warnings.first().reason, "pressure_invalid");
+    rig.feedPressure();
+    ASSERT_EQ(warnings.size(), 1);
+    EXPECT_EQ(warnings.first().valve, "S4");
+    EXPECT_EQ(warnings.first().reason, "pressure_invalid");
+    EXPECT_EQ(warnings.first().sensor, "DD312");
     EXPECT_TRUE(rig.security.checkPressure(rig.valves.valveStates()).warnings.isEmpty()) << "повтор предупреждения";
     EXPECT_TRUE(rig.valves.valveState("S4"));
 
-    rig.dd312 = 1.9;    // снова достоверно, но выше порога — нарушение
-    rig.feedPressure();
-    PressureCheck violated = rig.security.checkPressure(rig.valves.valveStates());
+    // Снова достоверно, но выше порога закрытия. Сначала — как видит режим
+    // (давления пришли, такт Security ещё не прошёл).
+    ++rig.seq;
+    QMap<QString, QuartileSnapshot> q;
+    q["storageQuar"].sensors << PressureSample{"DD311", 1.0, rig.seq} << PressureSample{"DD312", 1.9, rig.seq};
+    rig.security.setQuartilePressures(q);
+    const PressureCheck violated = rig.security.checkPressure(rig.valves.valveStates());
     ASSERT_EQ(violated.violations.size(), 1);
     EXPECT_EQ(violated.violations.first().reason, "pressure_range");
+    EXPECT_EQ(violated.violations.first().sensor, "DD312");
+
+    rig.dd312 = 1.9;
+    rig.feedPressure();
+    EXPECT_FALSE(rig.valves.valveState("S4")) << "Security не закрыл S4 выше 1,8 бар";
 }
 // ── e: RegimeWorkerBase (Режим в / г) ────────────────────────────────────────
 

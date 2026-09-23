@@ -722,15 +722,23 @@ void Grams::softEvent(){
     m_reactionQuartile.updateQuartileData();
     // Давления квартилей для правил Security (S4/R4 — диапазон, AR4 — сброс).
     // Один вызов — один такт: по счётчику отсчётов Security видит, обновляется
-    // ли показание.
-    QMap<QString, PressureSample> pressures;
-    auto addPressure = [&pressures](const QString& quartile, const ControllerData* source){
-        if(source)
-            pressures.insert(quartile, PressureSample{source->m_name, source->getCurValue(), source->sampleCount()});
+    // ли показание. Резервуар видят широкодиапазонный датчик всегда и
+    // узкодиапазонный — только при открытом клапане диапазона: за закрытым
+    // клапаном он заперт в своём объёме (D1 за S4, D2 за R4).
+    // Зеркало для тестов — src/sim/tests/soft_event_mirror.h, менять вместе.
+    auto sample = [](const ControllerData& s){
+        return PressureSample{s.m_name, s.getCurValue(), s.sampleCount()};
     };
-    addPressure(QStringLiteral("storageQuar"), m_storageQuartile.pressureSource());
-    addPressure(QStringLiteral("reactionQuar"), m_reactionQuartile.pressureSource());
-    m_safeModule.setPressureMap(pressures);
+    QMap<QString, QuartileSnapshot> quartiles;
+    quartiles[QStringLiteral("storageQuar")].sensors << sample(prSH);
+    if(vS4.getState())
+        quartiles[QStringLiteral("storageQuar")].sensors << sample(prSA);
+    quartiles[QStringLiteral("reactionQuar")].sensors << sample(prRH);
+    if(vR4.getState())
+        quartiles[QStringLiteral("reactionQuar")].sensors << sample(prRA);
+    m_safeModule.setQuartilePressures(quartiles);
+    // Security закрывает S4/R4 сам, на этом же такте, идёт режим или нет.
+    m_valveControl.enforceSecurity(QStringLiteral("tick"));
 }
 
 void Grams::chamberSetUp(){

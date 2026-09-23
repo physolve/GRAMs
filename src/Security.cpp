@@ -159,48 +159,98 @@ void Security::setPressureStaleTicks(int ticks){
     m_pressureStaleTicks = ticks;
 }
 
-void Security::setPressureMap(const QMap<QString, PressureSample> &pressureMap){
-    // Квартиль без отсчёта в этом такте — не обновлён.
-    for(auto it = m_pressure.begin(); it != m_pressure.end(); ++it)
-        if(!pressureMap.contains(it.key()))
-            ++it->staleTicks;
-    for(auto it = pressureMap.cbegin(); it != pressureMap.cend(); ++it){
-        const auto known = m_pressure.find(it.key());
-        if(known == m_pressure.end()){
-            m_pressure.insert(it.key(), {it.value(), 0});
-            continue;
+void Security::setQuartilePressures(const QMap<QString, QuartileSnapshot> &quartiles){
+    QSet<QString> updated;
+    for(auto q = quartiles.cbegin(); q != quartiles.cend(); ++q){
+        QStringList names;
+        for(const PressureSample &sample : q->sensors){
+            names << sample.sensor;
+            updated << sample.sensor;
+            const auto known = m_sensors.find(sample.sensor);
+            if(known == m_sensors.end()){
+                m_sensors.insert(sample.sensor, {sample, 0});
+                continue;
+            }
+            const bool sameReading = known->sample.seq == sample.seq;
+            known->staleTicks = sameReading ? known->staleTicks + 1 : 0;
+            known->sample = sample;
         }
-        const bool sameReading = known->sample.sensor == it.value().sensor
-                                 && known->sample.seq == it.value().seq;
-        known->staleTicks = sameReading ? known->staleTicks + 1 : 0;
-        known->sample = it.value();
+        m_quartileSensors.insert(q.key(), names);
     }
+    // Датчик без отсчёта в этом такте — не обновлён.
+    for(auto it = m_sensors.begin(); it != m_sensors.end(); ++it)
+        if(!updated.contains(it.key()))
+            ++it->staleTicks;
 }
 
-bool Security::pressureOf(const QString &quartile, double *bar, QString *why) const{
-    const auto it = m_pressure.constFind(quartile);
-    if(it == m_pressure.cend()){
-        *why = QStringLiteral("нет данных");
-        return false;
-    }
-    const PressureSample &s = it->sample;
-    *bar = s.bar;
+bool Security::sensorValid(const SensorState &state, QString *why) const{
+    const PressureSample &s = state.sample;
     if(std::isnan(s.bar)){
-        *why = QStringLiteral("%1: NaN").arg(s.sensor);
+        *why = QStringLiteral("NaN");
         return false;
     }
-    if(it->staleTicks > m_pressureStaleTicks){
-        *why = QStringLiteral("%1: нет нового отсчёта %2 тактов (допустимо %3)")
-                   .arg(s.sensor).arg(it->staleTicks).arg(m_pressureStaleTicks);
+    if(state.staleTicks > m_pressureStaleTicks){
+        *why = QStringLiteral("нет нового отсчёта %1 тактов (допустимо %2)")
+                   .arg(state.staleTicks).arg(m_pressureStaleTicks);
         return false;
     }
     const auto range = m_sensorRange.constFind(s.sensor);
     if(range != m_sensorRange.cend() && (s.bar < range->first || s.bar > range->second)){
-        *why = QStringLiteral("%1 = %2 бар вне диапазона датчика [%3; %4]")
-                   .arg(s.sensor).arg(s.bar).arg(range->first).arg(range->second);
+        *why = QStringLiteral("%1 бар вне диапазона датчика [%2; %3]")
+                   .arg(s.bar).arg(range->first).arg(range->second);
         return false;
     }
     return true;
+}
+
+QuartileReading Security::quartilePressure(const QString &quartile) const{
+    QuartileReading r;
+    const QStringList names = m_quartileSensors.value(quartile);
+    if(names.isEmpty()){
+        r.invalid << qMakePair(QString(), QStringLiteral("нет данных"));
+        return r;
+    }
+    for(const QString &name : names){
+        const SensorState state = m_sensors.value(name);
+        QString why;
+        if(!sensorValid(state, &why)){
+            r.invalid << qMakePair(name, why);
+            continue;
+        }
+        if(!r.valid || state.sample.bar > r.bar){
+            r.valid = true;
+            r.bar = state.sample.bar;
+            r.sensor = name;
+        }
+    }
+    return r;
+}
+
+void Security::reportInvalid(const QString &valve, const QString &quartile, const QuartileReading &reading,
+                             double limit, QList<SecurityIssue> *out) const{
+    // Одно предупреждение на клапан за эпизод: пока хоть один датчик его
+    // резервуара недостоверен. Все датчики восстановились — эпизод закончен.
+    if(reading.invalid.isEmpty()){
+        m_invalidReported.remove(valve);
+        return;
+    }
+    if(m_invalidReported.contains(valve))
+        return;
+    m_invalidReported.insert(valve);
+    QStringList sensors, whys;
+    for(const auto &[sensor, why] : reading.invalid){
+        sensors << sensor;
+        whys << (sensor.isEmpty() ? why : sensor + u": " + why);
+    }
+    qCWarning(lcSecurity) << valve << "открыт, показание" << quartile << "недостоверно:"
+                          << whys.join(u"; ") << "— по нему клапан не закрывается";
+    if(out)
+        *out << SecurityIssue{valve, QStringLiteral("pressure_invalid"), quartile, reading.bar, limit,
+                              sensors.join(u','), {}};
+}
+
+void Security::forgetInvalid(const QString &valve) const{
+    m_invalidReported.remove(valve);
 }
 
 QString Security::watchedQuartile(const QString &valve) const{
@@ -225,14 +275,20 @@ bool Security::checkValveAction(const QString &sender, const bool &state,
     // Правила по давлению — только для открытия; закрыть можно всегда.
     const QString quartile = watchedQuartile(sender);
     if(state && !quartile.isEmpty()){
-        double p = 0.0;
-        QString why;
-        if(!pressureOf(quartile, &p, &why))
-            return refuse(QStringLiteral("pressure_invalid"), quartile + u": " + why);
+        const QuartileReading r = quartilePressure(quartile);
+        if(!r.valid){
+            QStringList whys;
+            for(const auto &[sensor, why] : r.invalid)
+                whys << (sensor.isEmpty() ? why : sensor + u": " + why);
+            return refuse(QStringLiteral("pressure_invalid"), quartile + u": " + whys.join(u"; "));
+        }
+        // Гистерезис 1,6–1,8: клапан диапазона открывается только ниже порога
+        // открытия — иначе он закрылся бы автоматически от малейшего роста.
         const auto range = m_rangePressureValves.constFind(sender);
-        if(range != m_rangePressureValves.cend() && p > range->m_pressureClose)
+        if(range != m_rangePressureValves.cend() && r.bar >= range->m_pressureOpen)
             return refuse(QStringLiteral("pressure_range"),
-                          QStringLiteral("%1 = %2 бар > %3").arg(quartile).arg(p).arg(range->m_pressureClose));
+                          QStringLiteral("%1 %2 = %3 бар ≥ порога открытия %4")
+                              .arg(quartile, r.sensor).arg(r.bar).arg(range->m_pressureOpen));
     }
 
     const auto graph = m_contradictionValves.constFind(sender);
@@ -265,56 +321,34 @@ QString toString(ValveSource source){
 }
 
 QString SecurityIssue::toString() const{
+    const QString where = sensor.isEmpty() ? quartile : quartile + u' ' + sensor;
     return QStringLiteral("%1: %2 (%3 = %4 бар, порог %5)")
-        .arg(valve, reason, quartile).arg(pressure).arg(limit);
+        .arg(valve, reason, where).arg(pressure).arg(limit);
 }
 
 PressureCheck Security::checkPressure(const QMap<QString, bool> &valveStates) const{
     PressureCheck check;
-
-    // Недостоверное давление у открытого клапана: не закрываем, сообщаем один
-    // раз до восстановления достоверности.
-    auto invalidOpen = [&](const QString &valve, const QString &quartile, double p, double limit,
-                           const QString &why){
-        if(m_invalidReported.contains(valve))
-            return;
-        m_invalidReported.insert(valve);
-        qCWarning(lcSecurity) << "checkPressure:" << valve << "открыт, давление" << quartile
-                              << "недостоверно:" << why << "— клапан не закрывается";
-        check.warnings << SecurityIssue{valve, QStringLiteral("pressure_invalid"), quartile, p, limit};
-    };
-
     for(const auto &rule : m_rangePressureValves){
         if(!valveStates.value(rule.m_selfName)){
-            m_invalidReported.remove(rule.m_selfName);
+            forgetInvalid(rule.m_selfName);
             continue;
         }
-        double p = 0.0;
-        QString why;
-        if(!pressureOf(rule.m_watchQuartile, &p, &why)){
-            invalidOpen(rule.m_selfName, rule.m_watchQuartile, p, rule.m_pressureClose, why);
-            continue;
-        }
-        m_invalidReported.remove(rule.m_selfName);
+        const QuartileReading r = quartilePressure(rule.m_watchQuartile);
+        reportInvalid(rule.m_selfName, rule.m_watchQuartile, r, rule.m_pressureClose, &check.warnings);
         // Клапан диапазона открыт: выше порога закрытия он обязан быть закрыт.
-        if(p > rule.m_pressureClose)
+        if(r.valid && r.bar > rule.m_pressureClose)
             check.violations << SecurityIssue{rule.m_selfName, QStringLiteral("pressure_range"),
-                                              rule.m_watchQuartile, p, rule.m_pressureClose};
+                                              rule.m_watchQuartile, r.bar, rule.m_pressureClose, r.sensor, {}};
     }
     for(const auto &rule : m_safeReleaseValves){
-        double p = 0.0;
-        QString why;
-        if(!pressureOf(rule.m_watchQuartile, &p, &why)){
-            if(valveStates.value(rule.m_selfName))
-                invalidOpen(rule.m_selfName, rule.m_watchQuartile, p, rule.m_gasMax, why);
-            else
-                m_invalidReported.remove(rule.m_selfName);
-            continue;
-        }
-        m_invalidReported.remove(rule.m_selfName);
-        if(p >= rule.m_gasMax)
+        const QuartileReading r = quartilePressure(rule.m_watchQuartile);
+        if(valveStates.value(rule.m_selfName))
+            reportInvalid(rule.m_selfName, rule.m_watchQuartile, r, rule.m_gasMax, &check.warnings);
+        else
+            forgetInvalid(rule.m_selfName);
+        if(r.valid && r.bar >= rule.m_gasMax)
             check.violations << SecurityIssue{rule.m_selfName, QStringLiteral("pressure_release"),
-                                              rule.m_watchQuartile, p, rule.m_gasMax};
+                                              rule.m_watchQuartile, r.bar, rule.m_gasMax, r.sensor, {}};
     }
 
     for(const auto &issue : check.violations)
@@ -322,4 +356,22 @@ PressureCheck Security::checkPressure(const QMap<QString, bool> &valveStates) co
     qCDebug(lcSecurity) << "checkPressure: нарушений" << check.violations.size()
                         << "предупреждений" << check.warnings.size();
     return check;
+}
+
+QList<SecurityIssue> Security::rangeValveClosures(const QMap<QString, bool> &valveStates,
+                                                  const QString &origin,
+                                                  QList<SecurityIssue> *warnings) const{
+    QList<SecurityIssue> closures;
+    for(const auto &rule : m_rangePressureValves){
+        if(!valveStates.value(rule.m_selfName)){
+            forgetInvalid(rule.m_selfName);
+            continue;
+        }
+        const QuartileReading r = quartilePressure(rule.m_watchQuartile);
+        reportInvalid(rule.m_selfName, rule.m_watchQuartile, r, rule.m_pressureClose, warnings);
+        if(r.valid && r.bar > rule.m_pressureClose)
+            closures << SecurityIssue{rule.m_selfName, QStringLiteral("pressure_range_autoclose"),
+                                      rule.m_watchQuartile, r.bar, rule.m_pressureClose, r.sensor, origin};
+    }
+    return closures;
 }

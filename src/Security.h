@@ -74,28 +74,52 @@ struct ReactionToLeakage{
     bool applyPressureMask(bool &rangePressureState, double incomingPressure) const;
 };
 
-// Отсчёт давления квартиля за такт softEvent: датчик-источник, который квартиль
-// выбрал по клапану диапазона, его значение (бар) и счётчик отсчётов датчика
-// (DataCollection::sampleCount) — по нему видно, что показание обновляется.
+// Отсчёт датчика давления за такт softEvent: имя, значение (бар) и счётчик
+// отсчётов датчика (DataCollection::sampleCount) — по нему видно, что
+// показание обновляется.
 struct PressureSample {
     QString sensor;
     double bar = 0.0;
     quint64 seq = 0;
 };
 
+// Такт softEvent для квартиля: датчики, которые СЕЙЧАС видят его резервуар.
+// Широкодиапазонный датчик (DD311, DD331) видит всегда, узкодиапазонный
+// (DD312, DD332) — только при открытом клапане диапазона: за закрытым он
+// заперт в своём объёме (D1, D2) и показывает не резервуар.
+struct QuartileSnapshot {
+    QList<PressureSample> sensors;
+};
+
+// Давление квартиля: максимум из достоверных показаний датчиков, видящих
+// резервуар. invalid — недостоверные датчики и почему.
+struct QuartileReading {
+    bool valid = false;
+    double bar = 0.0;
+    QString sensor;                              // датчик максимума
+    QList<QPair<QString, QString>> invalid;      // {датчик, почему}
+};
+
 // Замечание проверки давления: какой клапан, почему, по какому квартилю.
-// reason — машинный код для журнала режима:
-//   pressure_range   — клапан диапазона открыт (или открывается) при давлении
-//                      выше порога закрытия
-//   pressure_release — давление достигло порога сброса
-//   pressure_invalid — давление квартиля недостоверно: нет данных, нет нового
-//                      отсчёта дольше N тактов, NaN или вне диапазона датчика
+// reason — машинный код для журнала режима и лога grams.security:
+//   pressure_range           — клапан диапазона открыт (или открывается) при
+//                              давлении выше порога
+//   pressure_range_autoclose — Security сам закрыл клапан диапазона: давление
+//                              резервуара выше порога закрытия
+//   pressure_release         — давление достигло порога сброса
+//   pressure_invalid         — показание датчика недостоверно: нет данных, нет
+//                              нового отсчёта дольше N тактов, NaN или вне
+//                              диапазона датчика
+// origin — где обнаружено: tick (такт softEvent), startup, confirmValve,
+// regime_end, command.
 struct SecurityIssue {
     QString valve;
     QString reason;
     QString quartile;
     double pressure = 0.0;
     double limit = 0.0;
+    QString sensor;
+    QString origin;
     QString toString() const;
 };
 
@@ -123,18 +147,21 @@ public:
     
     // Диапазон датчика, бар. Вне диапазона показание недостоверно.
     void setSensorRange(const QString &sensor, double minBar, double maxBar);
-    // Сколько тактов setPressureMap подряд показание может не обновляться.
+    // Сколько тактов softEvent подряд показание может не обновляться.
     void setPressureStaleTicks(int ticks);
     // Давления квартилей; один вызов — один такт softEvent. Квартиль, которого
-    // нет в вызове, считается не обновлённым на этом такте.
-    void setPressureMap(const QMap<QString, PressureSample> &pressureMap);
+    // нет в вызове, считается не обновлённым на этом такте: его датчики те же,
+    // счётчик «нет нового отсчёта» растёт.
+    void setQuartilePressures(const QMap<QString, QuartileSnapshot> &quartiles);
+    QuartileReading quartilePressure(const QString &quartile) const;
 
     // Интерлоки и правила давления для команды sender → state. valveStates —
     // фактические состояния клапанов (ValveControl::valveStates); Security их
     // не хранит, поэтому не расходится с платой после старта, отказа записи
     // или readback. Открытие клапана с правилом по давлению (S4/R4 — диапазон,
-    // AR4 — сброс) при недостоверном давлении запрещено; S4/R4 выше порога
-    // закрытия тоже. reason — код причины отказа (пусто при разрешении).
+    // AR4 — сброс) при недостоверном давлении запрещено; S4/R4 открываются
+    // только ниже порога открытия (1,6 бар; зона 1,6–1,8 — гистерезис).
+    // reason — код причины отказа (пусто при разрешении).
     bool checkValveAction(const QString &sender, const bool &state,
                           const QMap<QString, bool> &valveStates,
                           QString *reason = nullptr) const;
@@ -144,16 +171,31 @@ public:
     // восстановления), клапан не закрывается.
     PressureCheck checkPressure(const QMap<QString, bool> &valveStates) const;
 
+    // Какие клапаны диапазона (S4/R4) Security закрывает сам — на такте
+    // softEvent, независимо от режима. Открытый клапан, давление резервуара
+    // которого достоверно выше порога закрытия, — pressure_range_autoclose.
+    // Недостоверное показание клапан не закрывает (D6): одно предупреждение в
+    // warnings. Открывать Security не умеет — только закрывать.
+    QList<SecurityIssue> rangeValveClosures(const QMap<QString, bool> &valveStates,
+                                            const QString &origin,
+                                            QList<SecurityIssue> *warnings = nullptr) const;
+
 private:
-    struct QuartilePressure {
+    struct SensorState {
         PressureSample sample;
         int staleTicks = 0;
     };
-    // Достоверно ли давление квартиля; why — пояснение для лога.
-    bool pressureOf(const QString &quartile, double *bar, QString *why) const;
+    // Достоверно ли показание датчика; why — пояснение для лога.
+    bool sensorValid(const SensorState &state, QString *why) const;
     QString watchedQuartile(const QString &valve) const;
+    // Предупредить о недостоверных датчиках клапана один раз за эпизод (до
+    // восстановления всех датчиков); out — куда сложить замечание.
+    void reportInvalid(const QString &valve, const QString &quartile, const QuartileReading &reading,
+                       double limit, QList<SecurityIssue> *out) const;
+    void forgetInvalid(const QString &valve) const;
 
-    QMap<QString, QuartilePressure> m_pressure;
+    QMap<QString, SensorState> m_sensors;            // по имени датчика
+    QMap<QString, QStringList> m_quartileSensors;    // датчики, видящие резервуар
     QMap<QString, QPair<double, double>> m_sensorRange;
     int m_pressureStaleTicks = 4;
     mutable QSet<QString> m_invalidReported;   // клапаны, о недостоверности которых уже сообщено

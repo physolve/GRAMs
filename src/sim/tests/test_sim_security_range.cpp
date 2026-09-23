@@ -425,7 +425,7 @@ RiseResult openAtAtmosphereAndRise(RangeRig &rig)
 
 // ── a: без режима — автозакрытие выше 1,8 бар ────────────────────────────────
 
-TEST_F(SimSecurityRange, DISABLED_ManualOpenClosedAboveThresholdWithoutRegime)
+TEST_F(SimSecurityRange, ManualOpenClosedAboveThresholdWithoutRegime)
 {
     RangeRig rig;
     const RiseResult r = openAtAtmosphereAndRise(rig);
@@ -452,7 +452,7 @@ TEST_F(SimSecurityRange, DISABLED_ManualOpenClosedAboveThresholdWithoutRegime)
 
 // ── b: спуск после автозакрытия — сам не открывается ─────────────────────────
 
-TEST_F(SimSecurityRange, DISABLED_AutoClosedValveStaysClosedWhenPressureFalls)
+TEST_F(SimSecurityRange, AutoClosedValveStaysClosedWhenPressureFalls)
 {
     RangeRig rig;
     const RiseResult r = openAtAtmosphereAndRise(rig);
@@ -482,7 +482,7 @@ TEST_F(SimSecurityRange, DISABLED_AutoClosedValveStaysClosedWhenPressureFalls)
 
 // ── В3: зона гистерезиса 1,6–1,8 — открытие запрещено ───────────────────────
 
-TEST_F(SimSecurityRange, DISABLED_RangeValveRefusedInHysteresisZone)
+TEST_F(SimSecurityRange, RangeValveRefusedInHysteresisZone)
 {
     RangeRig rig;
     for (const char *s : {"DD311", "DD312", "DD331", "DD332"})
@@ -505,7 +505,7 @@ TEST_F(SimSecurityRange, DISABLED_RangeValveRefusedInHysteresisZone)
 
 // ── c: «Тест клапанов» — закрывает Security, одно нарушение, шаг не идёт дальше
 
-TEST_F(SimSecurityRange, DISABLED_ValveTestStepClosedBySecurityOnce)
+TEST_F(SimSecurityRange, ValveTestStepClosedBySecurityOnce)
 {
     RangeRig rig;
     rig.ticks(2);
@@ -601,7 +601,7 @@ TEST_F(SimSecurityRange, StalePressureDoesNotCloseOpenRangeValve)
     EXPECT_TRUE(rig.board("S4"));
 }
 
-TEST_F(SimSecurityRange, DISABLED_StalePressureWarnsOnceWithoutRegime)
+TEST_F(SimSecurityRange, StalePressureWarnsOnceWithoutRegime)
 {
     RangeRig rig;
     rig.ticks(2);
@@ -712,7 +712,7 @@ TEST_F(SimSecurityRange, DISABLED_HighReactionPressureClosesStorageRangeValveOnT
 
 // DD312 вне диапазона (отказ петли), DD311 достоверен и выше порога — S4
 // закрывается по DD311.
-TEST_F(SimSecurityRange, DISABLED_InvalidLowRangeSensorDoesNotHideOverpressure)
+TEST_F(SimSecurityRange, InvalidLowRangeSensorDoesNotHideOverpressure)
 {
     RangeRig rig;
     for (const char *s : {"DD311", "DD312"})

@@ -26,8 +26,11 @@ void ValveTestWorker::start()
     if (m_cfg.logger)
         m_runId = m_cfg.logger->openRun(m_cfg.regimeId, m_cfg.regimeName, m_cfg.totalRepeats);
 
-    if (m_cfg.valveControl)
+    if (m_cfg.valveControl) {
         m_cfg.valveControl->beginAction();
+        connect(m_cfg.valveControl, &ValveControl::securityClosed,
+                this, &ValveTestWorker::onSecurityClosed, Qt::UniqueConnection);
+    }
 
     m_currentRepeat = 0;
     m_repeatsDone   = 0;
@@ -82,9 +85,36 @@ void ValveTestWorker::enterStepPauseBefore()
 void ValveTestWorker::openCurrentStepValves()
 {
     const ValveStepConfig& step = m_cfg.steps.at(m_currentStep);
+    m_commanding = true;
     openValves(step.valveNames);
+    m_commanding = false;
     m_dwellElapsed = 0;
+    if (m_securityAbortPending) {
+        m_securityAbortPending = false;
+        abortCurrentStep();
+        return;
+    }
     enterStepDwelling();
+}
+
+void ValveTestWorker::onSecurityClosed(const SecurityIssue& issue, ValveSource previous)
+{
+    if (previous != ValveSource::Regime)
+        return;
+    if (m_state != State::StepDwelling && !m_commanding)
+        return;
+    if (!m_cfg.steps.at(m_currentStep).valveNames.contains(issue.valve))
+        return;
+    qWarning() << "ValveTestWorker: Security закрыл клапан шага" << m_currentStep << issue.toString();
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kSecurityViolation,
+                               m_currentRepeat, m_dwellElapsed,
+                               QString("step %1: %2").arg(m_currentStep).arg(issue.toString()));
+    if (m_commanding) {
+        m_securityAbortPending = true;
+        return;
+    }
+    abortCurrentStep();
 }
 
 void ValveTestWorker::enterStepDwelling()
@@ -220,8 +250,11 @@ void ValveTestWorker::finishAllRepeats()
 {
     m_timer.stop();
     m_state = State::Idle;
-    if (m_cfg.valveControl)
+    if (m_cfg.valveControl) {
         m_cfg.valveControl->endAction();
+        disconnect(m_cfg.valveControl, &ValveControl::securityClosed,
+                   this, &ValveTestWorker::onSecurityClosed);
+    }
 
     bool ok = (m_repeatsError == 0);
 

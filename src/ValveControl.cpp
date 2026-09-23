@@ -194,6 +194,46 @@ QVariantMap ValveControl::getGuiValsValve() const{
     return valveState;
 }
 
+void ValveControl::enforceSecurity(const QString& origin){
+    if(!valveController || !m_safeModule)
+        return;
+    QList<SecurityIssue> warnings;
+    const QList<SecurityIssue> closures = m_safeModule->rangeValveClosures(valveStates(), origin, &warnings);
+    for(const SecurityIssue& warning : warnings)
+        emit securityWarning(warning);
+    bool changed = false;
+    for(const SecurityIssue& issue : closures)
+        changed = closeBySecurity(issue) || changed;
+    if(changed)
+        emit guiValsValveChanged();
+}
+
+bool ValveControl::closeBySecurity(const SecurityIssue& issue){
+    const int index = valveNameList.indexOf(issue.valve);
+    if(index == -1)
+        return false;
+    Valve* valve = m_valves[index];
+    const ValveSource previous = valveSource(issue.valve);
+    valve->setState(false);
+    if(!sendValveStates()){
+        // Клапан физически открыт: модель остаётся «открыт», попытка — на
+        // следующем такте. Сообщаем один раз, а не каждые 500 мс.
+        valve->setState(true);
+        if(!m_securityCloseFailed.contains(issue.valve)){
+            m_securityCloseFailed.insert(issue.valve);
+            qCCritical(lcSecurity) << "Security: НЕ удалось закрыть" << issue.toString()
+                                   << "— запись в порт не прошла, повтор на следующем такте";
+        }
+        return false;
+    }
+    m_securityCloseFailed.remove(issue.valve);
+    setSource(issue.valve, false, ValveSource::None);
+    qCWarning(lcSecurity) << "Security закрыл" << issue.toString() << "источник" << toString(previous)
+                          << "обнаружено:" << issue.origin;
+    emit securityClosed(issue, previous);
+    return true;
+}
+
 void ValveControl::setManualChamberValve(bool state){
     if(!checkOpenChamber(state))
         return;

@@ -1,13 +1,14 @@
 #pragma once
 
-// Зеркало части Grams::softEvent, которая относится к Security: какие
-// давления уходят в Security на такте и что Security делает с клапанами.
+// Зеркало части Grams, которая относится к Security: какие давления уходят в
+// Security на такте softEvent, что Security делает с клапанами, и как он
+// настраивается в initSafeModule.
 //
 // Grams — это QApplication с платами, графиками и QML; в тест его не поднять.
-// Поэтому интеграционные риги вызывают эту функцию, а она повторяет
-// Grams::softEvent строка в строку. МЕНЯТЬ ТОЛЬКО ВМЕСТЕ С Grams::softEvent
-// (src/Grams.cpp) и в том же коммите — иначе тесты проверяют не то, что
-// работает в приложении.
+// Поэтому интеграционные риги вызывают эти функции, а они повторяют Grams
+// строка в строку. МЕНЯТЬ ТОЛЬКО ВМЕСТЕ С src/Grams.cpp (softEvent,
+// initSafeModule, хвост конструктора) и в том же коммите — иначе тесты
+// проверяют не то, что работает в приложении.
 
 #include "Security.h"
 #include "ValveControl.h"
@@ -71,17 +72,20 @@ inline PressureSample toSample(const SensorReading &r)
     return PressureSample{r.name, r.bar, r.seq};
 }
 
-// Grams::softEvent: квартиль берёт узкодиапазонный датчик, пока открыт его
-// клапан диапазона (StorageQuartile/ReactionQuartile::updateQuartileData),
-// и отдаёт Security один отсчёт на такт.
+// Grams::softEvent: резервуар видят широкодиапазонный датчик всегда и
+// узкодиапазонный — при открытом клапане диапазона; затем Security сам
+// закрывает S4/R4 на этом же такте.
 inline void softEventSecurity(Security &security, ValveControl &valves, const SoftEventInput &in)
 {
-    QMap<QString, PressureSample> pressures;
-    pressures.insert(QStringLiteral("storageQuar"),
-                     toSample(valves.valveState(QStringLiteral("S4")) ? in.dd312 : in.dd311));
-    pressures.insert(QStringLiteral("reactionQuar"),
-                     toSample(valves.valveState(QStringLiteral("R4")) ? in.dd332 : in.dd331));
-    security.setPressureMap(pressures);
+    QMap<QString, QuartileSnapshot> quartiles;
+    quartiles[QStringLiteral("storageQuar")].sensors << toSample(in.dd311);
+    if (valves.valveState(QStringLiteral("S4")))
+        quartiles[QStringLiteral("storageQuar")].sensors << toSample(in.dd312);
+    quartiles[QStringLiteral("reactionQuar")].sensors << toSample(in.dd331);
+    if (valves.valveState(QStringLiteral("R4")))
+        quartiles[QStringLiteral("reactionQuar")].sensors << toSample(in.dd332);
+    security.setQuartilePressures(quartiles);
+    valves.enforceSecurity(QStringLiteral("tick"));
 }
 
 // Хвост конструктора Grams после initSafeModule: сейчас там ничего нет —
