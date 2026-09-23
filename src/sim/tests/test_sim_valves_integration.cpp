@@ -527,3 +527,69 @@ TEST(SimValves, ValveOpenedBeforeRunDoesNotSwitchPhase)
     rig.simTick();
     EXPECT_EQ(rig.controller.currentPhaseId(), "gas_inlet");
 }
+
+// ── g: источник команды (кто держит клапан открытым) ─────────────────────────
+//
+// Правило В2: источник задаёт последняя принятая платой команда открытия,
+// любое закрытие сбрасывает его. Вход правил Security для S4/R4.
+
+TEST(SimValves, SourceFollowsLastAcceptedOpenCommand)
+{
+    ValveRig rig(std::make_unique<FakeDoPort>(QVector<bool>(16, false)));
+    rig.feedPressure();
+    EXPECT_EQ(rig.valves.valveSource("S4"), ValveSource::None);
+
+    rig.valves.setValveState(true, rig.indexOf("S4"));          // щелчок
+    EXPECT_EQ(rig.valves.valveSource("S4"), ValveSource::Manual);
+    rig.valves.setValveFromAction(true, "S4");                  // режим взял открытый
+    EXPECT_EQ(rig.valves.valveSource("S4"), ValveSource::Regime);
+    rig.valves.setValveState(false, rig.indexOf("S4"));         // оператор закрыл
+    EXPECT_EQ(rig.valves.valveSource("S4"), ValveSource::None);
+    rig.valves.setValveState(true, rig.indexOf("S4"));          // и открыл сам
+    EXPECT_EQ(rig.valves.valveSource("S4"), ValveSource::Manual);
+    rig.valves.setValveFromAction(false, "S4");                 // режим закрыл
+    EXPECT_EQ(rig.valves.valveSource("S4"), ValveSource::None);
+
+    const QMap<QString, ValveSource> all = rig.valves.valveSources();
+    EXPECT_EQ(all.size(), 16);
+    for (auto it = all.cbegin(); it != all.cend(); ++it)
+        EXPECT_EQ(it.value(), ValveSource::None) << it.key().toStdString();
+}
+
+TEST(SimValves, RefusedOrFailedCommandDoesNotChangeSource)
+{
+    auto port = std::make_unique<FakeDoPort>(QVector<bool>(16, false));
+    FakeDoPort *raw = port.get();
+    ValveRig rig(std::move(port));
+    rig.dd311 = 1.9;   // выше порога закрытия — S4 не открывается
+    rig.feedPressure();
+
+    rig.valves.setValveState(true, rig.indexOf("S4"));
+    ASSERT_FALSE(rig.valves.valveState("S4"));
+    EXPECT_EQ(rig.valves.valveSource("S4"), ValveSource::None);
+
+    rig.valves.setValveFromAction(true, "AR2");
+    ASSERT_EQ(rig.valves.valveSource("AR2"), ValveSource::Regime);
+    raw->writeOk = false;
+    rig.valves.setValveState(false, rig.indexOf("AR2"));        // плата не приняла
+    EXPECT_TRUE(rig.valves.valveState("AR2"));
+    EXPECT_EQ(rig.valves.valveSource("AR2"), ValveSource::Regime);
+}
+
+TEST(SimValves, SourceIsBoardForValveOpenWithoutCommand)
+{
+    QVector<bool> board(16, false);
+    board[0] = true;   // AR1 открыт с прошлого запуска
+    auto port = std::make_unique<FakeDoPort>(board);
+    FakeDoPort *raw = port.get();
+    ValveRig rig(std::move(port));
+    EXPECT_EQ(rig.valves.valveSource("AR1"), ValveSource::Board);
+    EXPECT_EQ(rig.valves.valveSource("AR2"), ValveSource::None);
+
+    raw->setBit(rig.indexOf("R3"), true);   // readback: открыт мимо программы
+    rig.valves.confirmValve("R3", false);
+    EXPECT_EQ(rig.valves.valveSource("R3"), ValveSource::Board);
+    raw->setBit(rig.indexOf("R3"), false);
+    rig.valves.confirmValve("R3", false);
+    EXPECT_EQ(rig.valves.valveSource("R3"), ValveSource::None);
+}

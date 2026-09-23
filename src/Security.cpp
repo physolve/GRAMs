@@ -254,6 +254,16 @@ bool Security::checkValveAction(const QString &sender, const bool &state,
     return imageState;
 }
 
+QString toString(ValveSource source){
+    switch(source){
+    case ValveSource::None:   return QStringLiteral("none");
+    case ValveSource::Manual: return QStringLiteral("manual");
+    case ValveSource::Regime: return QStringLiteral("regime");
+    case ValveSource::Board:  return QStringLiteral("board");
+    }
+    return QStringLiteral("?");
+}
+
 QString SecurityIssue::toString() const{
     return QStringLiteral("%1: %2 (%3 = %4 бар, порог %5)")
         .arg(valve, reason, quartile).arg(pressure).arg(limit);

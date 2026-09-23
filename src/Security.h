@@ -8,6 +8,17 @@
 // (QT_LOGGING_RULES="grams.security.debug=true").
 Q_DECLARE_LOGGING_CATEGORY(lcSecurity)
 
+// Кто держит клапан открытым. Ведёт ValveControl рядом с состоянием клапана
+// (Security состояний не хранит, решения D3–D5) и отдаёт Security снимком.
+// Источник задаёт последняя команда открытия; любое закрытие сбрасывает его.
+//   None   — клапан закрыт
+//   Manual — открыт оператором (щелчок на мнемосхеме)
+//   Regime — открыт режимом (ValveControl::setValveFromAction)
+//   Board  — открыт на плате без команды программы: так было при старте
+//            или так показал readback (confirmValve)
+enum class ValveSource { None, Manual, Regime, Board };
+QString toString(ValveSource source);
+
 class ValveGraph{
 public:
     ValveGraph(const QString &selfName = "unknown");

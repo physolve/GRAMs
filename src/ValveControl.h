@@ -58,6 +58,9 @@ public:
     bool valveState(const QString& name, bool* known = nullptr) const;
     // Состояния всех клапанов реестра (без R5) — вход проверок Security.
     QMap<QString, bool> valveStates() const;
+    // Кто держит клапан открытым (см. ValveSource) — снимок для Security.
+    ValveSource valveSource(const QString& name) const;
+    QMap<QString, ValveSource> valveSources() const;
     // Код причины, по которой Security отклонил последнюю команду (interlock,
     // pressure_range, pressure_invalid); пусто, если команда разрешена.
     QString lastRefusal() const { return m_lastRefusal; }
@@ -82,6 +85,10 @@ private:
 
     QStringList valveNameList;
     QString m_lastRefusal;
+    // Источник открытия по имени клапана; нет записи — None.
+    QMap<QString, ValveSource> m_sources;
+    // Итог принятой платой команды: открыт — источник команды, закрыт — None.
+    void setSource(const QString& name, bool open, ValveSource commandSource);
     QStringList m_gasSupplyValves;
     QStringList m_gasStoreValves;
     // add remove pointer

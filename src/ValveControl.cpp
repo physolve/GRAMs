@@ -59,12 +59,15 @@ void ValveControl::initDaqDO(const daqParameters &parameter){
 void ValveControl::setDoPort(std::unique_ptr<IDoPort> port){
     m_doPort = std::move(port);
     valveNameList.clear();
+    m_sources.clear();
     // valve objects
     const auto &readData = m_doPort->data();
     // if ok
     for(int i = 0; i < m_valves.count() && i < readData.count(); ++i){
         m_valves[i]->setState(readData[i]);
         valveNameList << m_valves[i]->m_name;
+        // Открыт до запуска программы — команды на него не было.
+        setSource(m_valves[i]->m_name, readData[i], ValveSource::Board);
     }
     qCDebug(lcValves) << "setDoPort: клапанов" << m_valves.count() << "битов порта" << readData.count()
                       << "valveNameList" << valveNameList.size() << "состояние" << readData;
@@ -95,8 +98,10 @@ void ValveControl::setValveState(bool state, int index){ // excluding chamber
         valve->setState(originalState);
         qCWarning(lcValves) << "setValveState" << valve->m_name << "запись не прошла — откат к" << originalState;
     }
-    else if(!actionInterrupted){
-        actionInterrupted = true;
+    else{
+        setSource(valve->m_name, valve->getState(), ValveSource::Manual);
+        if(!actionInterrupted)
+            actionInterrupted = true;
     }
     qCDebug(lcValves) << "setValveState" << valve->m_name << "итог" << valve->getState()
                       << "valveNameList" << valveNameList.size();
@@ -139,6 +144,7 @@ bool ValveControl::confirmValve(const QString& name, bool expected){
         qCWarning(lcValves) << "confirmValve" << name << "модель" << m_valves[index]->getState()
                             << "плата" << actual << "— модель приведена к плате";
         m_valves[index]->setState(actual);
+        setSource(name, actual, ValveSource::Board);
         emit guiValsValveChanged();
     }
     return actual == expected;
@@ -159,6 +165,24 @@ QMap<QString, bool> ValveControl::valveStates() const{
     for(const Valve* valve : m_valves)
         states.insert(valve->m_name, valve->getState());
     return states;
+}
+
+ValveSource ValveControl::valveSource(const QString& name) const{
+    return m_sources.value(name, ValveSource::None);
+}
+
+QMap<QString, ValveSource> ValveControl::valveSources() const{
+    QMap<QString, ValveSource> sources;
+    for(const Valve* valve : m_valves)
+        sources.insert(valve->m_name, valveSource(valve->m_name));
+    return sources;
+}
+
+void ValveControl::setSource(const QString& name, bool open, ValveSource commandSource){
+    const ValveSource source = open ? commandSource : ValveSource::None;
+    if(valveSource(name) != source)
+        qCDebug(lcValves) << "источник" << name << toString(valveSource(name)) << "→" << toString(source);
+    m_sources.insert(name, source);
 }
 
 QVariantMap ValveControl::getGuiValsValve() const{
@@ -235,6 +259,8 @@ bool ValveControl::setValveFromAction(bool state, const QString& name){
         valve->setState(originalState);
         qCWarning(lcValves) << "setValveFromAction" << name << "запись не прошла — откат к" << originalState;
     }
+    else
+        setSource(name, valve->getState(), ValveSource::Regime);
     qCDebug(lcValves) << "setValveFromAction" << name << "итог" << valve->getState();
     emit guiValsValveChanged();
     valveChangeUpdater(name, state);
