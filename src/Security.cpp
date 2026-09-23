@@ -369,11 +369,26 @@ PressureCheck Security::checkPressure(const QMap<QString, bool> &valveStates) co
 }
 
 QList<SecurityIssue> Security::rangeValveClosures(const QMap<QString, bool> &valveStates,
+                                                  const QMap<QString, ValveSource> &sources,
+                                                  bool regimeActive,
                                                   const QString &origin,
                                                   QList<SecurityIssue> *warnings) const{
     QList<SecurityIssue> closures;
     for(const auto &rule : m_rangePressureValves){
         if(!valveStates.value(rule.m_selfName)){
+            forgetInvalid(rule.m_selfName);
+            continue;
+        }
+        // Открытым клапан диапазона держат только оператор и идущий режим.
+        const ValveSource source = sources.value(rule.m_selfName, ValveSource::None);
+        const bool authorized = source == ValveSource::Manual
+                                || (source == ValveSource::Regime && regimeActive);
+        if(!authorized){
+            const QString why = source == ValveSource::Regime
+                                    ? QStringLiteral("открыт режимом, режим не идёт")
+                                    : QStringLiteral("открыт без команды (источник %1)").arg(toString(source));
+            closures << SecurityIssue{rule.m_selfName, QStringLiteral("unauthorized_open"),
+                                      rule.m_watchQuartile, 0.0, rule.m_pressureClose, {}, origin, why};
             forgetInvalid(rule.m_selfName);
             continue;
         }

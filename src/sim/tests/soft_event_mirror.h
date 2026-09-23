@@ -123,12 +123,12 @@ inline void softEventSecurity(Security &security, ValveControl &valves, const So
     valves.enforceSecurity(QStringLiteral("tick"));
 }
 
-// Хвост конструктора Grams после initSafeModule: сейчас там ничего нет —
-// первое, что Security увидит, это первый такт softEvent.
+// Хвост конструктора Grams после initSafeModule: S4/R4, открытые на плате
+// без команды, закрываются сразу.
 inline void gramsStartup(Security &security, ValveControl &valves)
 {
     Q_UNUSED(security);
-    Q_UNUSED(valves);
+    valves.enforceSecurity(QStringLiteral("startup"));
 }
 
 } // namespace simtest

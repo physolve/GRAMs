@@ -266,9 +266,13 @@ public:
         pollTimer.start(kTickMs / 2);
         poll();
 
+        // Рецепт запускается без RegimeTaskTree: «режим идёт» объявляем так
+        // же, как RegimeTaskTree по regimeStarted / regimeFinished.
+        valves.setRegimeActive(true);
         QTaskTree tree(buildVacuumRecipe(makeContext()));
         const DoneWith result = tree.runBlocking();
         pollTimer.stop();
+        valves.setRegimeActive(false);
         return result;
     }
 };

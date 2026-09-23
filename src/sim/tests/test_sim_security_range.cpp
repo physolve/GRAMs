@@ -534,7 +534,7 @@ TEST_F(SimSecurityRange, ValveTestStepClosedBySecurityOnce)
 
 // ── d2: «Тест клапанов» остановлен «Стоп» во время выдержки ──────────────────
 
-TEST_F(SimSecurityRange, DISABLED_StoppedValveTestLeavesRangeValveClosed)
+TEST_F(SimSecurityRange, StoppedValveTestLeavesRangeValveClosed)
 {
     RangeRig rig;
     rig.ticks(2);
@@ -557,7 +557,7 @@ TEST_F(SimSecurityRange, DISABLED_StoppedValveTestLeavesRangeValveClosed)
 
 // ── e: S4 открыт на плате при старте GRAMs ───────────────────────────────────
 
-TEST_F(SimSecurityRange, DISABLED_RangeValveOpenOnBoardAtStartupIsClosed)
+TEST_F(SimSecurityRange, RangeValveOpenOnBoardAtStartupIsClosed)
 {
     const int s4 = gram50Input().valveCodes.indexOf("S4");
     QVector<bool> board(16, false);
@@ -571,7 +571,7 @@ TEST_F(SimSecurityRange, DISABLED_RangeValveOpenOnBoardAtStartupIsClosed)
 
 // ── e2: readback нашёл S4 открытым без команды ───────────────────────────────
 
-TEST_F(SimSecurityRange, DISABLED_ReadbackFindsUncommandedRangeValveOpen)
+TEST_F(SimSecurityRange, ReadbackFindsUncommandedRangeValveOpen)
 {
     auto port = std::make_unique<RecordingPort>(QVector<bool>(16, false));
     RecordingPort *raw = port.get();

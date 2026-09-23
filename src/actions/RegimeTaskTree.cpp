@@ -39,7 +39,19 @@ void RegimeTaskTree::setRegimeManager(RegimeManager* manager)
     { m_manager = manager; }
 
 void RegimeTaskTree::setValveControl(ValveControl* valveControl)
-    { m_valveControl = valveControl; }
+{
+    // Клапан диапазона, открытый режимом, держится только пока режим идёт:
+    // regimeFinished приходит из общего doneFn при успехе, стопе и ошибке.
+    if (m_valveControl)
+        disconnect(this, nullptr, m_valveControl, nullptr);
+    if (valveControl) {
+        connect(this, &RegimeTaskTree::regimeStarted, valveControl,
+                [valveControl] { valveControl->setRegimeActive(true); });
+        connect(this, &RegimeTaskTree::regimeFinished, valveControl,
+                [valveControl] { valveControl->setRegimeActive(false); });
+    }
+    m_valveControl = valveControl;
+}
 
 void RegimeTaskTree::setDataAcquisition(DataAcquisition* dataAcquisition)
     { m_dataAcquisition = dataAcquisition; }

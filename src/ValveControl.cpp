@@ -156,6 +156,23 @@ bool ValveControl::confirmValve(const QString& name, bool expected){
         setSource(name, actual, ValveSource::Board);
         emit guiValsValveChanged();
     }
+    // Клапаны диапазона сверяются с той же прочитанной маской: открытый на
+    // плате без команды S4/R4 закрывается (Т2). Результат confirmValve — только
+    // про запрошенный клапан (REQ-082), закрытие Security его не меняет.
+    bool rangeMismatch = false;
+    for(const QString& range : (m_safeModule ? m_safeModule->rangeValves() : QStringList())){
+        const int i = valveNameList.indexOf(range);
+        if(i == -1 || i == index || i >= readData.count() || m_valves[i]->getState() == readData[i])
+            continue;
+        qCWarning(lcValves) << "confirmValve" << name << ": на плате" << range << readData[i]
+                            << ", модель" << m_valves[i]->getState() << "— модель приведена к плате";
+        m_valves[i]->setState(readData[i]);
+        setSource(range, readData[i], ValveSource::Board);
+        rangeMismatch = true;
+    }
+    if(rangeMismatch)
+        emit guiValsValveChanged();
+    enforceSecurity(QStringLiteral("confirmValve"));
     return actual == expected;
 }
 
@@ -207,7 +224,8 @@ void ValveControl::enforceSecurity(const QString& origin){
     if(!valveController || !m_safeModule)
         return;
     QList<SecurityIssue> warnings;
-    QList<SecurityIssue> closures = m_safeModule->rangeValveClosures(valveStates(), origin, &warnings);
+    QList<SecurityIssue> closures = m_safeModule->rangeValveClosures(valveStates(), valveSources(),
+                                                                     m_regimeActive, origin, &warnings);
     // Прогноз равновесия — для клапанов, которые давление само не закрыло.
     for(const SecurityIssue& issue : m_safeModule->transferClosures(valveStates(), origin, &warnings)){
         const bool already = std::any_of(closures.cbegin(), closures.cend(),
@@ -248,6 +266,15 @@ bool ValveControl::closeBySecurity(const SecurityIssue& issue){
                           << "обнаружено:" << issue.origin;
     emit securityClosed(issue, previous);
     return true;
+}
+
+void ValveControl::setRegimeActive(bool active){
+    if(m_regimeActive == active)
+        return;
+    m_regimeActive = active;
+    qCDebug(lcValves) << "режим" << (active ? "идёт" : "не идёт");
+    if(!active)
+        enforceSecurity(QStringLiteral("regime_end"));
 }
 
 bool ValveControl::prepareTransferOpen(const QString& name){

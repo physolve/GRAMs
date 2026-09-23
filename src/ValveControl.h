@@ -70,6 +70,11 @@ public:
     // демо видят одно и то же. Вызывается на каждом такте softEvent (origin =
     // "tick"), при старте и из readback. Security клапаны только закрывает.
     void enforceSecurity(const QString& origin);
+    // Идёт ли режим (RegimeTaskTree: regimeStarted / regimeFinished). Клапан
+    // диапазона, открытый режимом, держится открытым только пока режим идёт;
+    // конец режима (успех, стоп, ошибка) закрывает его — origin regime_end.
+    void setRegimeActive(bool active);
+    bool isRegimeActive() const { return m_regimeActive; }
     Q_INVOKABLE void setManualChamberValve(bool state);
     Q_INVOKABLE void setValveState(bool state, int valveId);
     bool sendValveStates();
@@ -108,6 +113,7 @@ private:
     bool prepareTransferOpen(const QString& name);
     // Клапаны, закрыть которые не удалось: о повторных неудачах не сообщаем.
     QSet<QString> m_securityCloseFailed;
+    bool m_regimeActive = false;
     QStringList m_gasSupplyValves;
     QStringList m_gasStoreValves;
     // add remove pointer

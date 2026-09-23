@@ -101,6 +101,11 @@ void ValveTestWorker::onSecurityClosed(const SecurityIssue& issue, ValveSource p
 {
     if (previous != ValveSource::Regime)
         return;
+    // Режим уже завершён (стоп, ошибка): закрытие его клапана — уборка, а не
+    // нарушение. Задача воркера в этот момент уже отменена — done() из неё
+    // вложился бы в done-хендлер RegimeTaskTree.
+    if (issue.origin == QLatin1String("regime_end"))
+        return;
     if (m_state != State::StepDwelling && !m_commanding)
         return;
     if (!m_cfg.steps.at(m_currentStep).valveNames.contains(issue.valve))

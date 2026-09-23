@@ -126,6 +126,10 @@ public:
         security.setPressureStaleTicks(sec.value("pressureStaleTicks").toInt(4));
         for (const auto &s : input.pressureCard)   // как Grams::initSafeModule
             security.setSensorRange(s.name, 3.8 * s.A + s.B, 20.5 * s.A + s.B);
+        // Тесты D1–D8 подают команды режима (setValveFromAction, воркеры) без
+        // RegimeTaskTree — режим считается идущим, как между regimeStarted и
+        // regimeFinished. Правило «режим завершился» — в SimSecurityRange.
+        valves.setRegimeActive(true);
     }
 
     // Давления квартилей, бар, по датчикам: источник выбирается по клапану

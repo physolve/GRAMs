@@ -113,6 +113,9 @@ struct QuartileReading {
 //   transfer_equilibrium     — Security закрыл клапан диапазона: давление
 //                              равновесия через перепускной клапан (К151/К153/
 //                              К155) выше порога закрытия
+//   unauthorized_open        — клапан диапазона открыт без права: не
+//                              оператором и не идущим режимом (с прошлого
+//                              запуска, мимо программы, режим завершился)
 //   pressure_release         — давление достигло порога сброса
 //   pressure_invalid         — показание датчика недостоверно: нет данных, нет
 //                              нового отсчёта дольше N тактов, NaN или вне
@@ -185,13 +188,18 @@ public:
     PressureCheck checkPressure(const QMap<QString, bool> &valveStates) const;
 
     // Какие клапаны диапазона (S4/R4) Security закрывает сам — на такте
-    // softEvent, независимо от режима. Открытый клапан, давление резервуара
-    // которого достоверно выше порога закрытия, — pressure_range_autoclose.
-    // Недостоверное показание клапан не закрывает (D6): одно предупреждение в
-    // warnings. Открывать Security не умеет — только закрывать.
+    // softEvent, при старте, по readback и в конце режима. Открытым клапан
+    // диапазона держат только оператор (Manual) и идущий режим (Regime при
+    // regimeActive); иначе — unauthorized_open. Разрешённый клапан, давление
+    // резервуара которого достоверно выше порога закрытия, —
+    // pressure_range_autoclose. Недостоверное показание клапан не закрывает
+    // (D6): одно предупреждение в warnings. Открывать Security не умеет.
     QList<SecurityIssue> rangeValveClosures(const QMap<QString, bool> &valveStates,
+                                            const QMap<QString, ValveSource> &sources,
+                                            bool regimeActive,
                                             const QString &origin,
                                             QList<SecurityIssue> *warnings = nullptr) const;
+    QStringList rangeValves() const { return m_rangePressureValves.keys(); }
     // Прогноз равновесия: открыт клапан диапазона и открыт (в valveStates)
     // перепускной клапан — давление равновесия двух резервуаров по их
     // подключённым объёмам (изотермически: сумма p·V / сумма V) выше порога

@@ -46,6 +46,10 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile, const sim::S
 
     initGUI();
     initSafeModule();
+    // Плата при старте могла отдать S4/R4 открытыми (с прошлого запуска, после
+    // аварийного выхода): команды на них не было — закрыть сразу (Т2).
+    // Зеркало для тестов — src/sim/tests/soft_event_mirror.h (gramsStartup).
+    m_valveControl.enforceSecurity(QStringLiteral("startup"));
     connect(this, &Grams::aboutToQuit, this, &Grams::beforeQuitting);
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
     softTimer->setInterval(500);
