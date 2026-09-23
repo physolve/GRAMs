@@ -1,5 +1,7 @@
 #include "ValveControl.h"
 
+#include <QTime>
+
 #include <algorithm>
 
 Q_LOGGING_CATEGORY(lcValves, "grams.valves")
@@ -233,8 +235,10 @@ void ValveControl::enforceSecurity(const QString& origin){
         if(!already)
             closures << issue;
     }
-    for(const SecurityIssue& warning : warnings)
+    for(const SecurityIssue& warning : warnings){
+        setSecurityMessage(warning);
         emit securityWarning(warning);
+    }
     bool changed = false;
     for(const SecurityIssue& issue : closures)
         changed = closeBySecurity(issue) || changed;
@@ -247,6 +251,10 @@ bool ValveControl::closeBySecurity(const SecurityIssue& issue){
     if(index == -1)
         return false;
     Valve* valve = m_valves[index];
+    // Уже закрыт — например, вложенным закрытием по концу режима, который
+    // завершился из обработчика предыдущего закрытия.
+    if(!valve->getState())
+        return false;
     const ValveSource previous = valveSource(issue.valve);
     valve->setState(false);
     if(!sendValveStates()){
@@ -264,8 +272,35 @@ bool ValveControl::closeBySecurity(const SecurityIssue& issue){
     setSource(issue.valve, false, ValveSource::None);
     qCWarning(lcSecurity) << "Security закрыл" << issue.toString() << "источник" << toString(previous)
                           << "обнаружено:" << issue.origin;
+    setSecurityMessage(issue);
     emit securityClosed(issue, previous);
     return true;
+}
+
+void ValveControl::setSecurityMessage(const SecurityIssue& issue){
+    auto bar = [](double v){ return QString::number(v, 'f', 2); };
+    const QString time = QTime::currentTime().toString(QStringLiteral("HH:mm:ss"));
+    QString text;
+    if(issue.reason == u"pressure_range_autoclose")
+        text = QStringLiteral("Security закрыл %1: давление %2 = %3 бар выше порога %4 бар")
+                   .arg(issue.valve, issue.sensor, bar(issue.pressure), bar(issue.limit));
+    else if(issue.reason == u"transfer_equilibrium")
+        text = QStringLiteral("Security закрыл %1: давление равновесия при перепуске %2 бар выше порога %3 бар (%4)")
+                   .arg(issue.valve, bar(issue.pressure), bar(issue.limit), issue.detail);
+    else if(issue.reason == u"unauthorized_open"){
+        const QString where = issue.origin == u"startup"      ? QStringLiteral("открыт на плате при старте")
+                            : issue.origin == u"confirmValve" ? QStringLiteral("открыт на плате без команды")
+                            : issue.origin == u"regime_end"   ? QStringLiteral("режим, открывший его, завершён")
+                                                              : QStringLiteral("открыт без команды оператора или режима");
+        text = QStringLiteral("Security закрыл %1: %2").arg(issue.valve, where);
+    }
+    else if(issue.reason == u"pressure_invalid")
+        text = QStringLiteral("%1 открыт, давление недостоверно (%2) — клапан не закрыт")
+                   .arg(issue.valve, issue.sensor.isEmpty() ? issue.detail : issue.sensor);
+    else
+        text = issue.toString();
+    m_securityMessage = time + u"  " + text;
+    emit securityMessageChanged();
 }
 
 void ValveControl::setRegimeActive(bool active){

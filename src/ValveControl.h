@@ -22,6 +22,9 @@ class ValveControl : public QObject
 {
     Q_OBJECT
     Q_PROPERTY (QVariantMap guiValve READ getGuiValsValve NOTIFY guiValsValveChanged)
+    // Последнее сообщение Security оператору (строка footer в Main.qml):
+    // автозакрытие S4/R4 и недостоверное давление у открытого клапана.
+    Q_PROPERTY (QString securityMessage READ securityMessage NOTIFY securityMessageChanged)
 public:
     ValveControl(QObject *parent = 0);
     ~ValveControl();
@@ -75,6 +78,7 @@ public:
     // конец режима (успех, стоп, ошибка) закрывает его — origin regime_end.
     void setRegimeActive(bool active);
     bool isRegimeActive() const { return m_regimeActive; }
+    QString securityMessage() const { return m_securityMessage; }
     Q_INVOKABLE void setManualChamberValve(bool state);
     Q_INVOKABLE void setValveState(bool state, int valveId);
     bool sendValveStates();
@@ -89,6 +93,7 @@ signals:
     void securityClosed(const SecurityIssue& issue, ValveSource previous);
     // Недостоверное показание у открытого клапана — один раз до восстановления.
     void securityWarning(const SecurityIssue& issue);
+    void securityMessageChanged();
 
 private:
     std::unique_ptr<IDoPort> m_doPort;   // nullptr, пока порт не поставлен
@@ -114,6 +119,8 @@ private:
     // Клапаны, закрыть которые не удалось: о повторных неудачах не сообщаем.
     QSet<QString> m_securityCloseFailed;
     bool m_regimeActive = false;
+    QString m_securityMessage;
+    void setSecurityMessage(const SecurityIssue& issue);
     QStringList m_gasSupplyValves;
     QStringList m_gasStoreValves;
     // add remove pointer

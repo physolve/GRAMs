@@ -30,6 +30,8 @@ void ValveTestWorker::start()
         m_cfg.valveControl->beginAction();
         connect(m_cfg.valveControl, &ValveControl::securityClosed,
                 this, &ValveTestWorker::onSecurityClosed, Qt::UniqueConnection);
+        connect(m_cfg.valveControl, &ValveControl::securityWarning,
+                this, &ValveTestWorker::onSecurityWarning, Qt::UniqueConnection);
     }
 
     m_currentRepeat = 0;
@@ -95,6 +97,16 @@ void ValveTestWorker::openCurrentStepValves()
         return;
     }
     enterStepDwelling();
+}
+
+void ValveTestWorker::onSecurityWarning(const SecurityIssue& issue)
+{
+    if (m_state == State::Idle)
+        return;
+    qWarning() << "ValveTestWorker: предупреждение Security на шаге" << m_currentStep << issue.toString();
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kWarning,
+                               m_currentRepeat, m_dwellElapsed, issue.toString());
 }
 
 void ValveTestWorker::onSecurityClosed(const SecurityIssue& issue, ValveSource previous)
@@ -259,6 +271,8 @@ void ValveTestWorker::finishAllRepeats()
         m_cfg.valveControl->endAction();
         disconnect(m_cfg.valveControl, &ValveControl::securityClosed,
                    this, &ValveTestWorker::onSecurityClosed);
+        disconnect(m_cfg.valveControl, &ValveControl::securityWarning,
+                   this, &ValveTestWorker::onSecurityWarning);
     }
 
     bool ok = (m_repeatsError == 0);

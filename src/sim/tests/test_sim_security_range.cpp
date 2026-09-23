@@ -740,3 +740,110 @@ TEST_F(SimSecurityRange, TrappedLowRangeSensorDoesNotBlockOpening)
     rig.click("S4");
     EXPECT_TRUE(rig.open("S4")) << rig.valves.lastRefusal().toStdString();
 }
+
+// ── Т3: режим узнаёт, что Security закрыл его клапан ─────────────────────────
+
+namespace {
+class NoopRegimeWorker final : public RegimeWorkerBase {
+public:
+    using RegimeWorkerBase::RegimeWorkerBase;
+};
+} // namespace
+
+// RegimeWorkerBase («Режим в/г» и будущие): аварийное завершение Execution.
+TEST_F(SimSecurityRange, RegimeExecutionAbortedWhenSecurityClosesItsValve)
+{
+    RangeRig rig;
+    rig.ticks(2);
+    RegimeWorkerConfig cfg;
+    cfg.maxTimeSec = 30;
+    cfg.tickIntervalMs = 50;   // Execution — 1,5 с без нарушения
+    cfg.security = &rig.security;
+    cfg.valveControl = &rig.valves;
+    NoopRegimeWorker worker;
+    worker.setConfig(cfg);
+    int doneCount = 0;
+    bool success = true;
+    QObject::connect(&worker, &RegimeWorkerBase::done, &worker, [&](bool ok) { ++doneCount; success = ok; });
+
+    QTimer softEvent;
+    QObject::connect(&softEvent, &QTimer::timeout, &softEvent, [&] { rig.tick(); });
+    softEvent.start(100);
+    rig.valves.setRegimeActive(true);   // как RegimeTaskTree::regimeStarted
+    worker.start();
+    ASSERT_TRUE(rig.valves.setValveFromAction(true, "S4"));
+    for (const char *s : {"DD311", "DD312", "DD331", "DD332"})
+        rig.setBar(s, 1.95);
+    spin(3000, [&] { return doneCount > 0; });
+    softEvent.stop();
+
+    EXPECT_EQ(doneCount, 1);
+    EXPECT_FALSE(success) << "Execution не прерван закрытием клапана режима";
+    EXPECT_FALSE(rig.open("S4"));
+    EXPECT_GE(logCount("pressure_range_autoclose", "S4"), 1) << dumpLog();
+}
+
+// «Вакуум» (решение В7): ошибка прогона с причиной Security, а не отказ
+// readback REQ-082; рецепт не меняется — его отменяет воркер.
+TEST_F(SimSecurityRange, VacuumRunFailsWithSecurityReasonWhenItsValveIsClosed)
+{
+    RangeRig rig;
+    rig.ticks(2);
+    RegimeWorkerConfig cfg;
+    cfg.regimeName = QStringLiteral("Вакуум");
+    cfg.maxTimeSec = 600;
+    cfg.security = &rig.security;
+    cfg.valveControl = &rig.valves;
+    VacuumOptions opts;
+    opts.perActionPauseMs = 0;
+    opts.vacuumGaugeSensor = &rig.dv301;
+    opts.turboGaugeSensor = &rig.dv302;
+    opts.pressureSensorB = rig.sensor("DD311");
+    VacuumRunMonitor monitor;
+    VacuumRegimeWorker worker;
+    worker.setConfig(cfg);
+    worker.setVacuumOptions(opts);
+    worker.setMonitor(&monitor);
+    int doneCount = 0;
+    bool success = true;
+    QObject::connect(&worker, &VacuumRegimeWorker::done, &worker, [&](bool ok) { ++doneCount; success = ok; });
+
+    QTimer softEvent;
+    QObject::connect(&softEvent, &QTimer::timeout, &softEvent, [&] { rig.tick(); });
+    softEvent.start(100);
+    rig.valves.setRegimeActive(true);
+    worker.start();
+    spin(1500, [] { return false; });
+    ASSERT_EQ(doneCount, 0) << "рецепт завершился сам: " << monitor.finishReason().toStdString();
+
+    // Клапан тракта, открытый режимом; давление накопителя выше порога.
+    ASSERT_TRUE(rig.valves.setValveFromAction(true, "S4")) << rig.valves.lastRefusal().toStdString();
+    for (const char *s : {"DD312", "DD331", "DD332"})
+        rig.setBar(s, 1.95);
+    spin(5000, [&] { return doneCount > 0; });
+    softEvent.stop();
+
+    ASSERT_EQ(doneCount, 1);
+    EXPECT_FALSE(success);
+    EXPECT_FALSE(rig.open("S4"));
+    monitor.setFinish(int(RegimeEnums::State::Error), QString());   // как doneFn RegimeTaskTree
+    EXPECT_TRUE(monitor.finishReason().contains(QStringLiteral("Security закрыл S4")))
+        << monitor.finishReason().toStdString();
+    EXPECT_FALSE(monitor.finishReason().contains(QStringLiteral("readback")));
+}
+
+// Т4: сообщение оператору — строка footer (ValveControl.securityMessage).
+TEST_F(SimSecurityRange, OperatorSeesSecurityMessage)
+{
+    RangeRig rig;
+    rig.ticks(2);
+    EXPECT_TRUE(rig.valves.securityMessage().isEmpty());
+    rig.click("S4");
+    rig.setBar("DD312", 1.95);
+    rig.ticks(2);
+    ASSERT_FALSE(rig.open("S4"));
+    const QString msg = rig.valves.securityMessage();
+    EXPECT_TRUE(msg.contains(QStringLiteral("Security закрыл S4"))) << msg.toStdString();
+    EXPECT_TRUE(msg.contains(QStringLiteral("DD312"))) << msg.toStdString();
+    EXPECT_TRUE(msg.contains(QStringLiteral("1.95"))) << msg.toStdString();
+}

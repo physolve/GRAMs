@@ -80,6 +80,8 @@ public slots:
     // клапан текущего шага, открытый этим режимом, — нарушение: одно событие
     // security_violation и авария шага, как при нарушении на такте (D2).
     void onSecurityClosed(const SecurityIssue& issue, ValveSource previous);
+    // Недостоверное давление у открытого клапана — событие warning режима (D6).
+    void onSecurityWarning(const SecurityIssue& issue);
 
 signals:
     void done(bool success);
