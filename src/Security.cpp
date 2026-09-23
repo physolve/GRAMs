@@ -147,6 +147,12 @@ void Security::setRangePressureValves(const QString &valve, const QString &watch
     m_rangePressureValves.insert(valve, {valve, watchQuartile, pressureOpen, pressureClose});
 }
 
+void Security::setTransferValves(const QStringList &valves, const QString &quartileA, const QString &quartileB){
+    m_transferValves = valves;
+    m_transferA = quartileA;
+    m_transferB = quartileB;
+}
+
 void Security::setSafeReleaseValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen){
     m_safeReleaseValves.insert(valve, {valve, watchQuartile, pressureOpen});
 }
@@ -176,6 +182,7 @@ void Security::setQuartilePressures(const QMap<QString, QuartileSnapshot> &quart
             known->sample = sample;
         }
         m_quartileSensors.insert(q.key(), names);
+        m_quartileVolume.insert(q.key(), q->volumeCm3);
     }
     // Датчик без отсчёта в этом такте — не обновлён.
     for(auto it = m_sensors.begin(); it != m_sensors.end(); ++it)
@@ -322,8 +329,11 @@ QString toString(ValveSource source){
 
 QString SecurityIssue::toString() const{
     const QString where = sensor.isEmpty() ? quartile : quartile + u' ' + sensor;
-    return QStringLiteral("%1: %2 (%3 = %4 бар, порог %5)")
-        .arg(valve, reason, where).arg(pressure).arg(limit);
+    QString text = QStringLiteral("%1: %2 (%3 = %4 бар, порог %5)")
+                       .arg(valve, reason, where).arg(pressure).arg(limit);
+    if(!detail.isEmpty())
+        text += QStringLiteral("; ") + detail;
+    return text;
 }
 
 PressureCheck Security::checkPressure(const QMap<QString, bool> &valveStates) const{
@@ -372,6 +382,59 @@ QList<SecurityIssue> Security::rangeValveClosures(const QMap<QString, bool> &val
         if(r.valid && r.bar > rule.m_pressureClose)
             closures << SecurityIssue{rule.m_selfName, QStringLiteral("pressure_range_autoclose"),
                                       rule.m_watchQuartile, r.bar, rule.m_pressureClose, r.sensor, origin};
+    }
+    return closures;
+}
+
+QList<SecurityIssue> Security::transferClosures(const QMap<QString, bool> &valveStates,
+                                                const QString &origin,
+                                                QList<SecurityIssue> *warnings) const{
+    QList<SecurityIssue> closures;
+    QStringList openTransfer;
+    for(const QString &valve : m_transferValves)
+        if(valveStates.value(valve))
+            openTransfer << valve;
+
+    for(const auto &rule : m_rangePressureValves){
+        const QString key = rule.m_selfName + QStringLiteral("/transfer");
+        if(openTransfer.isEmpty() || !valveStates.value(rule.m_selfName)){
+            m_invalidReported.remove(key);
+            continue;
+        }
+        const QString own = rule.m_watchQuartile;
+        const QString other = own == m_transferA ? m_transferB
+                            : own == m_transferB ? m_transferA : QString();
+        if(other.isEmpty())
+            continue;
+        const QuartileReading pOwn = quartilePressure(own);
+        const QuartileReading pOther = quartilePressure(other);
+        const double vOwn = m_quartileVolume.value(own);
+        const double vOther = m_quartileVolume.value(other);
+        if(!pOwn.valid || !pOther.valid || vOwn <= 0.0 || vOther <= 0.0){
+            // Прогноз невозможен — по одной недостоверности не закрываем (D6).
+            if(!m_invalidReported.contains(key)){
+                m_invalidReported.insert(key);
+                qCWarning(lcSecurity) << rule.m_selfName << "и" << openTransfer.join(u',')
+                                      << "открыты, прогноз равновесия невозможен: давление"
+                                      << own << (pOwn.valid ? "есть" : "недостоверно") << "," << other
+                                      << (pOther.valid ? "есть" : "недостоверно") << ", объёмы" << vOwn << vOther
+                                      << "— клапан не закрывается";
+                if(warnings)
+                    *warnings << SecurityIssue{rule.m_selfName, QStringLiteral("pressure_invalid"), other,
+                                               0.0, rule.m_pressureClose, {}, origin,
+                                               QStringLiteral("прогноз через %1").arg(openTransfer.join(u','))};
+            }
+            continue;
+        }
+        m_invalidReported.remove(key);
+        const double pEq = (pOwn.bar * vOwn + pOther.bar * vOther) / (vOwn + vOther);
+        const QString detail = QStringLiteral("через %1: %2 %3 = %4 бар × %5 см³, %6 %7 = %8 бар × %9 см³")
+                                   .arg(openTransfer.join(u','), own, pOwn.sensor).arg(pOwn.bar).arg(vOwn)
+                                   .arg(other, pOther.sensor).arg(pOther.bar).arg(vOther);
+        qCDebug(lcSecurity) << "прогноз равновесия" << rule.m_selfName << pEq << "бар," << detail;
+        if(pEq > rule.m_pressureClose)
+            closures << SecurityIssue{rule.m_selfName, QStringLiteral("transfer_equilibrium"), own, pEq,
+                                      rule.m_pressureClose, pOwn.sensor + u'+' + pOther.sensor, origin, detail};
     }
     return closures;
 }

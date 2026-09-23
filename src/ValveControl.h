@@ -102,6 +102,10 @@ private:
     void setSource(const QString& name, bool open, ValveSource commandSource);
     // Закрыть клапан по требованию Security; false — плата не приняла запись.
     bool closeBySecurity(const SecurityIssue& issue);
+    // Перед открытием перепускного клапана (К151/К153/К155): закрыть клапаны
+    // диапазона, которым прогноз равновесия выше порога, — отдельной записью
+    // до открытия. false — закрыть не удалось, открывать нельзя.
+    bool prepareTransferOpen(const QString& name);
     // Клапаны, закрыть которые не удалось: о повторных неудачах не сообщаем.
     QSet<QString> m_securityCloseFailed;
     QStringList m_gasSupplyValves;

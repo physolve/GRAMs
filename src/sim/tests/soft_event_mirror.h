@@ -14,6 +14,8 @@
 #include "ValveControl.h"
 #include "core/SimCatalog.h"
 
+#include <QFile>
+#include <QJsonDocument>
 #include <QJsonObject>
 #include <QString>
 
@@ -51,6 +53,36 @@ inline void initSafeModuleMirror(Security &security, const QJsonObject &gram,
     security.setGasSupplyValves(quars.value("addRemoveQuar").toObject().value("v_gasSupply")
                                     .toVariant().toStringList());
     security.setGasLeakageValves(reaction.value("v_gasLeakage").toVariant().toStringList());
+    security.setTransferValves(reaction.value("v_gasLeakage").toVariant().toStringList(),
+                               QStringLiteral("storageQuar"), QStringLiteral("reactionQuar"));
+}
+
+// Подключённые объёмы, см³ — как StorageQuartile/ReactionQuartile::getUsedVolumes
+// по profile/addons.json, плюс камера из Grams::chamberSetUp (подключена и
+// открыта при старте): F = 25,405, EF = 26,1327 − 25,7941.
+struct UsedVolumes {
+    double storage = 0.0;
+    double reaction = 0.0;
+};
+
+inline UsedVolumes usedVolumes(const ValveControl &valves)
+{
+    static const QJsonObject addons = [] {
+        QFile f(QStringLiteral(GRAMS_ADDONS_JSON));
+        f.open(QIODevice::ReadOnly);
+        return QJsonDocument::fromJson(f.readAll()).object();
+    }();
+    auto quartile = [&](const char *name, double extra) {
+        const QJsonObject q = addons.value(name).toObject();
+        const QJsonObject volume = q.value("volume").toObject();
+        double sum = volume.value(q.value("mainVolume").toString()).toDouble() + extra;
+        const QJsonObject toValve = q.value("volumeToValve").toObject();
+        for (auto it = toValve.begin(); it != toValve.end(); ++it)
+            if (valves.valveState(it.value().toString()))
+                sum += volume.value(it.key()).toDouble();
+        return sum;
+    };
+    return {quartile("storageQuar", 0.0), quartile("reactionQuar", 25.405 + (26.1327 - 25.7941))};
 }
 
 // Отсчёт датчика давления на такте: имя, бар (ControllerData::getCurValue),
@@ -84,6 +116,9 @@ inline void softEventSecurity(Security &security, ValveControl &valves, const So
     quartiles[QStringLiteral("reactionQuar")].sensors << toSample(in.dd331);
     if (valves.valveState(QStringLiteral("R4")))
         quartiles[QStringLiteral("reactionQuar")].sensors << toSample(in.dd332);
+    const UsedVolumes v = usedVolumes(valves);
+    quartiles[QStringLiteral("storageQuar")].volumeCm3 = v.storage;
+    quartiles[QStringLiteral("reactionQuar")].volumeCm3 = v.reaction;
     security.setQuartilePressures(quartiles);
     valves.enforceSecurity(QStringLiteral("tick"));
 }

@@ -491,6 +491,9 @@ void Grams::initSafeModule(){
         initSource.m_storageQuar.m_gasRelease);
     m_safeModule.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
     m_safeModule.setGasLeakageValves(initSource.m_reactionQuar.m_gasLeakageValves);
+    // Перепуск накопитель ⇄ реакционная область: К153/К155/К151 (R1–R3).
+    m_safeModule.setTransferValves(initSource.m_reactionQuar.m_gasLeakageValves,
+                                   QStringLiteral("storageQuar"), QStringLiteral("reactionQuar"));
 }
 
 void Grams::initTimeStamp(){
@@ -729,6 +732,13 @@ void Grams::softEvent(){
     auto sample = [](const ControllerData& s){
         return PressureSample{s.m_name, s.getCurValue(), s.sampleCount()};
     };
+    // Подключённый объём резервуара — для прогноза равновесия через К15x.
+    auto usedVolume = [](const auto& quartile){
+        double volume = 0.0;
+        for(const QString& name : quartile.getUsedVolumes())
+            volume += quartile.getVolumeByName(name).volume;
+        return volume;
+    };
     QMap<QString, QuartileSnapshot> quartiles;
     quartiles[QStringLiteral("storageQuar")].sensors << sample(prSH);
     if(vS4.getState())
@@ -736,6 +746,8 @@ void Grams::softEvent(){
     quartiles[QStringLiteral("reactionQuar")].sensors << sample(prRH);
     if(vR4.getState())
         quartiles[QStringLiteral("reactionQuar")].sensors << sample(prRA);
+    quartiles[QStringLiteral("storageQuar")].volumeCm3 = usedVolume(m_storageQuartile);
+    quartiles[QStringLiteral("reactionQuar")].volumeCm3 = usedVolume(m_reactionQuartile);
     m_safeModule.setQuartilePressures(quartiles);
     // Security закрывает S4/R4 сам, на этом же такте, идёт режим или нет.
     m_valveControl.enforceSecurity(QStringLiteral("tick"));

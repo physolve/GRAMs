@@ -87,8 +87,12 @@ struct PressureSample {
 // Широкодиапазонный датчик (DD311, DD331) видит всегда, узкодиапазонный
 // (DD312, DD332) — только при открытом клапане диапазона: за закрытым он
 // заперт в своём объёме (D1, D2) и показывает не резервуар.
+// volumeCm3 — объём, подключённый к резервуару сейчас (основной и открытые
+// присоединённые объёмы квартиля), см³; 0 — неизвестен. Нужен прогнозу
+// равновесия через перепускные клапаны.
 struct QuartileSnapshot {
     QList<PressureSample> sensors;
+    double volumeCm3 = 0.0;
 };
 
 // Давление квартиля: максимум из достоверных показаний датчиков, видящих
@@ -106,6 +110,9 @@ struct QuartileReading {
 //                              давлении выше порога
 //   pressure_range_autoclose — Security сам закрыл клапан диапазона: давление
 //                              резервуара выше порога закрытия
+//   transfer_equilibrium     — Security закрыл клапан диапазона: давление
+//                              равновесия через перепускной клапан (К151/К153/
+//                              К155) выше порога закрытия
 //   pressure_release         — давление достигло порога сброса
 //   pressure_invalid         — показание датчика недостоверно: нет данных, нет
 //                              нового отсчёта дольше N тактов, NaN или вне
@@ -120,6 +127,7 @@ struct SecurityIssue {
     double limit = 0.0;
     QString sensor;
     QString origin;
+    QString detail;
     QString toString() const;
 };
 
@@ -143,6 +151,11 @@ public:
     void setGasLeakageValves(const QStringList &gasLeakageList);
     
     void setRangePressureValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen, const double &pressureClose);
+    // Перепускные клапаны между двумя квартилями (R1–R3 = К153/К155/К151 между
+    // накопителем и реакционной областью): по ним Security прогнозирует
+    // давление равновесия для клапанов диапазона обеих сторон.
+    void setTransferValves(const QStringList &valves, const QString &quartileA, const QString &quartileB);
+    bool isTransferValve(const QString &valve) const { return m_transferValves.contains(valve); }
     void setSafeReleaseValves(const QString &valve, const QString &watchQuartile, const double &pressureOpen);
     
     // Диапазон датчика, бар. Вне диапазона показание недостоверно.
@@ -179,6 +192,15 @@ public:
     QList<SecurityIssue> rangeValveClosures(const QMap<QString, bool> &valveStates,
                                             const QString &origin,
                                             QList<SecurityIssue> *warnings = nullptr) const;
+    // Прогноз равновесия: открыт клапан диапазона и открыт (в valveStates)
+    // перепускной клапан — давление равновесия двух резервуаров по их
+    // подключённым объёмам (изотермически: сумма p·V / сумма V) выше порога
+    // закрытия → transfer_equilibrium. Для команды открыть перепускной клапан
+    // вызывающий передаёт состояния «после команды». Недостоверное давление
+    // или неизвестный объём — не закрывать, одно предупреждение (как D6).
+    QList<SecurityIssue> transferClosures(const QMap<QString, bool> &valveStates,
+                                          const QString &origin,
+                                          QList<SecurityIssue> *warnings = nullptr) const;
 
 private:
     struct SensorState {
@@ -196,6 +218,9 @@ private:
 
     QMap<QString, SensorState> m_sensors;            // по имени датчика
     QMap<QString, QStringList> m_quartileSensors;    // датчики, видящие резервуар
+    QMap<QString, double> m_quartileVolume;          // подключённый объём, см³
+    QStringList m_transferValves;
+    QString m_transferA, m_transferB;
     QMap<QString, QPair<double, double>> m_sensorRange;
     int m_pressureStaleTicks = 4;
     mutable QSet<QString> m_invalidReported;   // клапаны, о недостоверности которых уже сообщено

@@ -618,7 +618,7 @@ TEST_F(SimSecurityRange, StalePressureWarnsOnceWithoutRegime)
 
 // R4 открыт, накопитель заряжен: команда открыть R3 (К151) сначала закрывает
 // R4 отдельной записью, затем открывает R3.
-TEST_F(SimSecurityRange, DISABLED_TransferOpenClosesReactionRangeValveFirst)
+TEST_F(SimSecurityRange, TransferOpenClosesReactionRangeValveFirst)
 {
     auto port = std::make_unique<RecordingPort>(QVector<bool>(16, false));
     RecordingPort *raw = port.get();
@@ -656,6 +656,7 @@ TEST_F(SimSecurityRange, TransferBelowLimitKeepsRangeValveOpen)
     for (const char *s : {"DD331", "DD332"})
         rig.setBar(s, 0.05);
     rig.ticks(2);
+    // Оценка сверху: без объёма камеры (EF, F), который pравн только снижает.
     const double pEq = (2.5 * v.B + 0.05 * (v.E + v.D2)) / (v.B + v.E + v.D2);
     ASSERT_LT(pEq, 1.8);
 
@@ -670,7 +671,7 @@ TEST_F(SimSecurityRange, TransferBelowLimitKeepsRangeValveOpen)
 
 // Натекатель R1 (К153) и R4 открыты; накопитель зарядили — R4 закрывается на
 // такте, хотя реакционная область ещё не поднялась.
-TEST_F(SimSecurityRange, DISABLED_ChargedStorageClosesReactionRangeValveOnTick)
+TEST_F(SimSecurityRange, ChargedStorageClosesReactionRangeValveOnTick)
 {
     RangeRig rig;
     rig.setBar("DD311", 1.0);
@@ -691,7 +692,7 @@ TEST_F(SimSecurityRange, DISABLED_ChargedStorageClosesReactionRangeValveOnTick)
 }
 
 // Зеркально: S4 и R3 открыты, давление в реакционной области поднялось.
-TEST_F(SimSecurityRange, DISABLED_HighReactionPressureClosesStorageRangeValveOnTick)
+TEST_F(SimSecurityRange, HighReactionPressureClosesStorageRangeValveOnTick)
 {
     RangeRig rig;
     for (const char *s : {"DD311", "DD312", "DD331"})

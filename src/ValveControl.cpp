@@ -1,5 +1,7 @@
 #include "ValveControl.h"
 
+#include <algorithm>
+
 Q_LOGGING_CATEGORY(lcValves, "grams.valves")
 
 ValveControl::ValveControl(QObject *parent) :
@@ -91,6 +93,13 @@ void ValveControl::setValveState(bool state, int index){ // excluding chamber
     const bool originalState = valve->getState();
     qCDebug(lcValves) << "setValveState (GUI)" << valve->m_name << "индекс" << index
                       << "запрос" << state << "было" << originalState;
+    if(state && !prepareTransferOpen(valve->m_name)){
+        m_lastRefusal = QStringLiteral("transfer_equilibrium");
+        qCWarning(lcValves) << "setValveState" << valve->m_name
+                            << "не открыт: клапан диапазона закрыть не удалось";
+        emit guiValsValveChanged();
+        return;
+    }
     // check pressure!!!
     bool safe_state = m_safeModule->checkValveAction(valve->m_name, state, valveStates(), &m_lastRefusal);
     valve->setState(safe_state);
@@ -198,7 +207,14 @@ void ValveControl::enforceSecurity(const QString& origin){
     if(!valveController || !m_safeModule)
         return;
     QList<SecurityIssue> warnings;
-    const QList<SecurityIssue> closures = m_safeModule->rangeValveClosures(valveStates(), origin, &warnings);
+    QList<SecurityIssue> closures = m_safeModule->rangeValveClosures(valveStates(), origin, &warnings);
+    // Прогноз равновесия — для клапанов, которые давление само не закрыло.
+    for(const SecurityIssue& issue : m_safeModule->transferClosures(valveStates(), origin, &warnings)){
+        const bool already = std::any_of(closures.cbegin(), closures.cend(),
+                                         [&](const SecurityIssue& c){ return c.valve == issue.valve; });
+        if(!already)
+            closures << issue;
+    }
     for(const SecurityIssue& warning : warnings)
         emit securityWarning(warning);
     bool changed = false;
@@ -232,6 +248,25 @@ bool ValveControl::closeBySecurity(const SecurityIssue& issue){
                           << "обнаружено:" << issue.origin;
     emit securityClosed(issue, previous);
     return true;
+}
+
+bool ValveControl::prepareTransferOpen(const QString& name){
+    if(!m_safeModule || !m_safeModule->isTransferValve(name))
+        return true;
+    QMap<QString, bool> image = valveStates();
+    if(image.value(name))
+        return true;           // уже открыт — прогноз ведёт такт softEvent
+    image[name] = true;
+    QList<SecurityIssue> warnings;
+    const QList<SecurityIssue> closures = m_safeModule->transferClosures(image, QStringLiteral("command"), &warnings);
+    for(const SecurityIssue& warning : warnings)
+        emit securityWarning(warning);
+    bool ok = true;
+    for(const SecurityIssue& issue : closures)
+        ok = closeBySecurity(issue) && ok;
+    if(!closures.isEmpty())
+        emit guiValsValveChanged();
+    return ok;
 }
 
 void ValveControl::setManualChamberValve(bool state){
@@ -292,6 +327,13 @@ bool ValveControl::setValveFromAction(bool state, const QString& name){
     valve = m_valves[index];
     const bool originalState = valve->getState();
     qCDebug(lcValves) << "setValveFromAction (режим)" << name << "запрос" << state << "было" << originalState;
+    if(state && !prepareTransferOpen(name)){
+        m_lastRefusal = QStringLiteral("transfer_equilibrium");
+        qCWarning(lcValves) << "setValveFromAction" << name
+                            << "не открыт: клапан диапазона закрыть не удалось";
+        emit guiValsValveChanged();
+        return false;
+    }
     // check pressure!!!
     bool safe_state = m_safeModule->checkValveAction(valve->m_name, state, valveStates(), &m_lastRefusal);
     valve->setState(safe_state);
