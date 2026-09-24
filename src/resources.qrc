@@ -46,6 +46,7 @@
         <file>qml/lumber/regime/CalibrationRegime.qml</file>
 
         <file>qml/Main.qml</file>
+        <file>qml/sim/DemoDataBanner.qml</file>
         <file>qml/SettingsWindow.qml</file>
         <file>qml/SettingsConnections.qml</file>
 

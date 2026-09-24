@@ -161,6 +161,9 @@ public:
     bool isRunning()      const { return m_running; }
     bool isPaused()       const { return m_paused;  }
     int  activeRegimeId() const { return m_activeRegimeId; }
+    // Путь журнала прогонов. По умолчанию data/regime_log.db; демо-режим
+    // переносит журнал в отдельную базу, чтобы не смешивать с экспериментом.
+    bool setLogDatabasePath(const QString& path) { return m_logger.reopen(path); }
 
     // Наблюдатель состояния рецепта «Вакуум» для live-развёртки в QML
     // (RegimeApiSandbox). Позже переедет в RegimeManager.

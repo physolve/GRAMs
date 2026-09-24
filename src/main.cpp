@@ -59,7 +59,12 @@ int main(int argc, char *argv[]) {
     qputenv("QT_FONT_DPI", QByteArray("128")); //96/128 set for High DPI screen
     const auto &curInitProfile = QString("GRAM50");
     
-    Grams app(argc, argv, curInitProfile);
+    QStringList args;
+    for(int i = 0; i < argc; ++i)
+        args << QString::fromLocal8Bit(argv[i]);
+    const auto simOptions = sim::SimOptions::parse(args);
+
+    Grams app(argc, argv, curInitProfile, simOptions);
     int ret;
 
     try{

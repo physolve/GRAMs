@@ -76,6 +76,12 @@ public:
 public slots:
     void onPauseRequested();
     void onResumeRequested();
+    // Security сам закрыл клапан (ValveControl::securityClosed). Если это
+    // клапан текущего шага, открытый этим режимом, — нарушение: одно событие
+    // security_violation и авария шага, как при нарушении на такте (D2).
+    void onSecurityClosed(const SecurityIssue& issue, ValveSource previous);
+    // Недостоверное давление у открытого клапана — событие warning режима (D6).
+    void onSecurityWarning(const SecurityIssue& issue);
 
 signals:
     void done(bool success);
@@ -99,6 +105,7 @@ private:
     void openCurrentStepValves();
     void enterStepDwelling();
     void closeCurrentStepValves();
+    void abortCurrentStep();
     void enterStepPauseAfter();
     void advanceToNextStep();
     void enterGlobalPauseAfter();
@@ -122,4 +129,8 @@ private:
     int     m_repeatsDone     = 0;
     int     m_repeatsError    = 0;
     qint64  m_runId           = -1;
+    // Идёт команда клапанам шага: закрытие Security посреди неё не прерывает
+    // автомат изнутри вызова, а откладывается до её конца.
+    bool    m_commanding      = false;
+    bool    m_securityAbortPending = false;
 };

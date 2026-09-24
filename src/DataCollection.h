@@ -31,6 +31,9 @@ public:
     // Качество последней записанной точки. Для аналоговых каналов Advantech
     // всегда Valid — они не умеют сообщать о недостоверности.
     Quality quality() const;
+    // Сколько точек записано с создания — признак того, что показание
+    // обновляется (Security::setPressureMap).
+    quint64 sampleCount() const;
     QString m_name;
     DataType m_type;
     // alternative unit
@@ -40,6 +43,7 @@ protected:
     double m_curValue;
     double m_altUnitA;
     Quality m_quality = Quality::Valid;
+    quint64 m_samples = 0;
 };
 
 class ControllerData : public DataCollection

@@ -25,6 +25,8 @@ public:
     ~RegimeLogger() override;
 
     bool init(const QString& dbPath = "data/regime_log.db");
+    // Закрыть текущую базу и открыть другую (демо-режим пишет в data/sim/).
+    bool reopen(const QString& dbPath);
     bool isOpen() const;
 
     // ── Run lifecycle ─────────────────────────────────────────────────────────

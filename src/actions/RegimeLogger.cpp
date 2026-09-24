@@ -45,6 +45,16 @@ bool RegimeLogger::init(const QString& dbPath)
     return true;
 }
 
+bool RegimeLogger::reopen(const QString& dbPath)
+{
+    if (m_db.isOpen())
+        m_db.close();
+    m_db = QSqlDatabase();
+    QSqlDatabase::removeDatabase(kConnectionName);
+    m_open = false;
+    return init(dbPath);
+}
+
 bool RegimeLogger::isOpen() const
 {
     return m_open;

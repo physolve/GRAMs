@@ -184,10 +184,12 @@ struct securityParameters{
     Q_PROPERTY (QMap<QString, QStringList>  contradictionValves     MEMBER m_contradictionValves)
     Q_PROPERTY (QStringList                 twoOfThree              MEMBER m_twoOfThree) // first twoOfThree case
     Q_PROPERTY (QMap<QString, QStringList>  safetyQuars             MEMBER m_safetyQuars)
+    Q_PROPERTY (int                         pressureStaleTicks      MEMBER m_pressureStaleTicks)
 public:
     QMap<QString, QStringList>  m_contradictionValves;
     QStringList                 m_twoOfThree;
     QMap<QString, QStringList>  m_safetyQuars;
+    int                         m_pressureStaleTicks = 4;
 };
 
 class Initialize : public QObject
@@ -235,6 +237,10 @@ public:
     vacuumParameters                m_vacuumTurbo;
 
     bool isInitializeOk() const;
+    // Демо-режим разрешён только без железа (docs/sim/README.md).
+    bool hardwareDetected() const;
+    QString hardwareDetectedReason() const;
+    bool isBiodaqAvailable() const { return m_biodaqAvailable; }
 signals:
     // void advantechDeviceMapChanged();
     //void advantechDeviceSettingsChanged();
@@ -247,6 +253,10 @@ private:
     bool advantechCompareProfile(const QStringList& advantechDeviceNames);
     bool serialCompareProfile(const QStringList& serialNames);
     bool m_vacuumTurboFound = false;
+    static bool biodaqAvailable();
+    void detectHardware(const QStringList& advantechDeviceNames, const QStringList& serialNames);
+    bool m_biodaqAvailable = false;
+    QStringList m_detectedHardware;
     QString m_curInitProfile;
     
     QVariantMap m_profileJson;

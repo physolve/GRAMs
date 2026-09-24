@@ -5,7 +5,11 @@ RoundButton {
     id: valve
     width: 34
     height: 34
-    checkable: true
+    // Кнопка только показывает состояние клапана: щелчок не переключает её сам
+    // (иначе рвётся привязка к ValveControl.guiValve и кнопка лжёт после отказа
+    // Security). Родитель задаёт open из бэкенда и в onClicked шлёт !open.
+    checkable: false
+    property bool open: false
     property bool doubleClickState: false
     background: Rectangle {
         anchors.fill: parent
@@ -13,9 +17,9 @@ RoundButton {
         implicitHeight: 34
         radius: 17
         opacity: enabled ? 1 : 0.3
-        color: valve.down ? "#d4d582" : valve.checked ? "#49e92c" : "#aacba4"
+        color: valve.down ? "#d4d582" : valve.open ? "#49e92c" : "#aacba4"
         border.width: 2
-        border.color: valve.down ? "gray" : valve.checked ? "#507750" : "#8a938f"
+        border.color: valve.down ? "gray" : valve.open ? "#507750" : "#8a938f"
         Rectangle {
            id: rectangle
            x: 5
@@ -23,10 +27,10 @@ RoundButton {
            width: 24
            height: 24
            radius: 12
-           border.color: valve.checked ? "#507750" : "#9a9a9a"
+           border.color: valve.open ? "#507750" : "#9a9a9a"
            anchors.verticalCenter: parent.verticalCenter
            anchors.verticalCenterOffset: 0
-           rotation: valve.checked ? 90 : -90
+           rotation: valve.open ? 90 : -90
 
            gradient: Gradient {
                orientation: Gradient.Vertical

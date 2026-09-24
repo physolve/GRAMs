@@ -104,6 +104,8 @@ QStringList ReactionQuartile::getUsedVolumes() const{
 void ReactionQuartile::updateQuartileData(){
     double current_pressure = 0.0;
     // write smooth transition
+    m_pressureSource = m_valves[v_pressure_range]->getState() ? m_pressureList[s_pressure_atm]
+                                                              : m_pressureList[s_pressure_high];
     if(m_valves[v_pressure_range]->getState()){
         current_pressure = m_pressureList[s_pressure_atm]->getCurValue();
     // profile second valve exists?

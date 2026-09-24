@@ -1,0 +1,159 @@
+{
+  "schema": "grams.sim.profile/1",
+  "name": "Напуск газа в аккумуляционный резервуар",
+  "seed": 7,
+  "initial": {
+    "P.DD311": 2000,
+    "P.DD312": 5,
+    "P.DD341": 5,
+    "T.DT341": 24.0
+  },
+  "phases": [
+    {
+      "id": "static_empty",
+      "kind": "static",
+      "zone": "accumulator",
+      "label": "Резервуар откачан",
+      "durationSec": null,
+      "tracks": [],
+      "transitions": [
+        {
+          "to": "gas_inlet",
+          "on": {
+            "type": "valve",
+            "valve": "K109",
+            "state": "open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "gas_inlet",
+      "kind": "gasInlet",
+      "zone": "accumulator",
+      "label": "Напуск через порт 2 (К109)",
+      "durationSec": 120,
+      "tracks": [
+        {
+          "channel": "P.DD311",
+          "interp": "linear",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              500000
+            ],
+            [
+              120,
+              510000
+            ]
+          ],
+          "noise": {
+            "sigmaAbs": 300
+          }
+        },
+        {
+          "channel": "P.DD341",
+          "interp": "linear",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              500000
+            ],
+            [
+              120,
+              510000
+            ]
+          ]
+        },
+        {
+          "channel": "P.DD312",
+          "interp": "linear",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              20,
+              200000
+            ]
+          ]
+        },
+        {
+          "channel": "T.DT341",
+          "interp": "linear",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              90,
+              27.0
+            ],
+            [
+              120,
+              27.5
+            ]
+          ]
+        }
+      ],
+      "transitions": [
+        {
+          "to": "static_full",
+          "on": {
+            "type": "valve",
+            "valve": "K109",
+            "state": "closed"
+          }
+        },
+        {
+          "to": "static_full",
+          "on": {
+            "type": "timeout"
+          }
+        }
+      ]
+    },
+    {
+      "id": "static_full",
+      "kind": "static",
+      "zone": "accumulator",
+      "label": "Резервуар заполнен",
+      "durationSec": null,
+      "tracks": [
+        {
+          "channel": "T.DT341",
+          "interp": "exp",
+          "keypoints": [
+            [
+              0,
+              "current"
+            ],
+            [
+              600,
+              24.5
+            ]
+          ],
+          "tau": 200
+        }
+      ],
+      "transitions": [
+        {
+          "to": "static_empty",
+          "on": {
+            "type": "manual"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import QtQuick.Controls.Material
 
 import Grams.backendSourceSingleton 1.0
 import Grams.regimeTaskTreeSingleton 1.0
+import Grams.valveControlSingleton 1.0
 
 //import "mnemo/GRAM300_mnemo/GRAM300_mnemoContent"
 import "mnemo/GRAM50_mnemo/GRAM50_mnemoContent"
@@ -210,8 +211,25 @@ ApplicationWindow {
         visible: !main.header.visible
         onClicked: main.header.visible = true
     }
+    // Плашка демо-режима поверх всего окна: видна и при свёрнутом header.
+    // Loader — чтобы без --sim модуль Grams.simSingleton не требовался.
+    Loader {
+        active: Grams.simEnabled
+        source: "sim/DemoDataBanner.qml"
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.min(parent.width - 120, 1400)
+        z: 1000
+    }
+    // Строка footer — последнее сообщение Security (автозакрытие S4/R4,
+    // недостоверное давление у открытого клапана); пока сообщений нет —
+    // прежняя подсказка.
     footer: Label {
-        text: "swipe me up"
+        readonly property bool hasSecurityMessage: ValveControl.securityMessage !== ""
+        text: hasSecurityMessage ? ValveControl.securityMessage : "swipe me up"
+        color: hasSecurityMessage ? "#c62828" : palette.windowText
+        font.bold: hasSecurityMessage
+        elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
     }
 }

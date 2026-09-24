@@ -1,0 +1,1 @@
+{"schema":"grams.sim.profile/1","name":"fixture","phases":[{"id":"a","kind":"gasInlet","zone":"accumulator","durationSec":10,"tracks":[{"channel":"P.DD311","interp":"linear","keypoints":[[0,200000],[10,150000]]}],"transitions":[{"to":"b","on":{"type":"timeout"}}]},{"id":"b","kind":"static","zone":"chamber","durationSec":null,"tracks":[],"transitions":[]}]}

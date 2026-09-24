@@ -14,6 +14,10 @@ public:
     explicit GramStateDB();
     virtual ~GramStateDB();
     static bool createConnection(QVariantList& initialTimeStamp);
+    // Имя базы PostgreSQL. Демо-режим переключает на gramstate_sim до
+    // первого подключения, чтобы демо-состояния не попадали в эксперимент.
+    static void setDatabaseName(const QString& name);
+    static QString databaseName();
     bool initDatabase();
     // bool queryTimeStamp();
     // bool writeTimeStamp(const QList<double> &values);

@@ -64,6 +64,11 @@ signals:
 public slots:
     void onPauseRequested();
     void onResumeRequested();
+    // Security сам закрыл клапан, открытый режимом, — нарушение: одно событие
+    // security_violation и аварийное завершение Execution (как нарушение
+    // давления на такте). Закрытие по концу режима (regime_end) — не нарушение.
+    void onSecurityClosed(const SecurityIssue& issue, ValveSource previous);
+    void onSecurityWarning(const SecurityIssue& issue);
 
 protected:
     // Override in concrete workers for regime-specific logic.
@@ -87,6 +92,7 @@ private:
     void enterConditionPhase();
     void enterExecutionPhase();
     void finishRepeat(bool success);
+    void abortExecution(const QString& details);
 
     enum class Phase { Condition, Execution };
 
@@ -190,6 +196,12 @@ public slots:
     // рецепта читает её в момент выполнения (шов continuousPumpingLive), а не
     // берёт снимок со «Старта», поэтому тумблер работает и на ходу.
     void onContinuousPumpingChanged(bool enabled);
+    // Security закрыл клапан тракта, открытый рецептом (К171/К173), — ошибка
+    // прогона (решение В7): событие security_violation, причина в мониторе,
+    // отмена внутреннего дерева — рецепт сам закрывает тракт (REQ-070). Это
+    // не readback-отказ REQ-082: confirmValve возвращает только своё.
+    void onSecurityClosed(const SecurityIssue& issue, ValveSource previous);
+    void onSecurityWarning(const SecurityIssue& issue);
     // Отмена внутреннего дерева. Слот (не обычный метод) — чтобы внешний
     // done-хендлер мог вызвать его ОТЛОЖЕННО через QMetaObject::invokeMethod
     // с Qt::QueuedConnection и не вкладывать отмену внутреннего дерева в чужой
@@ -205,6 +217,7 @@ private:
     VacuumRunMonitor*  m_monitor = nullptr;     // не владеет; живёт в RegimeTaskTree
     QtTaskTree::QTaskTree* m_tree  = nullptr;  // внутреннее дерево (child)
     qint64                 m_runId = -1;       // хендл записи в regime_log.db
+    bool                   m_securityAbort = false;
 };
 
 // ─── Режим в ─────────────────────────────────────────────────────────────────

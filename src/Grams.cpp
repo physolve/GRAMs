@@ -13,12 +13,13 @@
 #include <QCommandLineParser>
 #include <QQuickStyle>
 
-Grams::Grams(int &argc, char **argv, const QString &curInitProfile): 
+Grams::Grams(int &argc, char **argv, const QString &curInitProfile, const sim::SimOptions &simOptions): 
     QApplication(argc, argv),
     initSource(),
     dataSource(),
     m_safeModule(), // check
-    softTimer(new QTimer)
+    softTimer(new QTimer),
+    m_simOptions(simOptions)
     /*
     , // unique pointer
     m_testPlot(nullptr)
@@ -26,6 +27,7 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
 {
     initDigitalData();
     initAnalogData();
+    initSimulation();
     advDoController();
     advAiController();
     vacuumController();
@@ -44,10 +46,14 @@ Grams::Grams(int &argc, char **argv, const QString &curInitProfile):
 
     initGUI();
     initSafeModule();
+    // Плата при старте могла отдать S4/R4 открытыми (с прошлого запуска, после
+    // аварийного выхода): команды на них не было — закрыть сразу (Т2).
+    // Зеркало для тестов — src/sim/tests/soft_event_mirror.h (gramsStartup).
+    m_valveControl.enforceSecurity(QStringLiteral("startup"));
     connect(this, &Grams::aboutToQuit, this, &Grams::beforeQuitting);
     connect(softTimer, &QTimer::timeout, this, &Grams::softEvent);
     softTimer->setInterval(500);
-    if(initSource.isInitializeOk()){ // dataSource getGRAMsIntegrity ?
+    if(initSource.isInitializeOk() || simDataActive()){ // dataSource getGRAMsIntegrity ?
         softTimer->start();
     }
     dataSource.startAcquisition();
@@ -124,10 +130,14 @@ void Grams::advDoController(){
     m_valveControl.setReactionQuartile(&m_reactionQuartile);
     m_valveControl.setDatabase(&m_gramStateDB);
     m_valveControl.setSafeModule(&m_safeModule);
-    m_valveControl.setSafeModuleInitialValveState();
     m_valveControl.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
     m_valveControl.setGasStoreValves(initSource.m_storageQuar.m_gasStoreValves);
 
+    if(simDataActive()){
+        // Порядок битов — valveMap профиля, как у платы USB-4750.
+        m_valveControl.setDoPort(m_sim->createValvePort(initSource.m_hardware.m_valves));
+        return;
+    }
     if(!initSource.isInitializeOk())
         return;
     daqParameters parametersDO;
@@ -137,7 +147,7 @@ void Grams::advDoController(){
 }
 
 void Grams::advAiController(){
-    if(!initSource.isInitializeOk())
+    if(!initSource.isInitializeOk() && !simDataActive())
         return;
     QVector<ControllerData*> pressureSensorsList = {&prSH, &prSA, &prRH, &prRA, &prRL, &prSK, &tmSK, &tmS};
     QVector<ControllerData*> tempSensorsList = {&tmX, &tmY, &tmSLittle, &tmSSmall, &tmSLarge, &tmSTube, &tmRTube, &tmF};
@@ -150,11 +160,17 @@ void Grams::advAiController(){
     initSource.getParametersAIpres(parametersAIpres);
     dataSource.setPressurePointers(pressureSensorsList);
     dataSource.setFiltersDataPointers(getFilterPointers());
-    dataSource.initDaqAIpres(parametersAIpres);
+    if(simDataActive())
+        dataSource.setSensorSource(m_sim->createSensorSource());
+    else
+        dataSource.initDaqAIpres(parametersAIpres);
 
     initSource.getParametersAItemp(parametersAItemp);
     dataSource.setTempPointers(tempSensorsList);
-    dataSource.initDaqAItemp(parametersAItemp);
+    if(simDataActive())
+        dataSource.markControllersConnected();
+    else
+        dataSource.initDaqAItemp(parametersAItemp);
 
     guiValsUpdate();
 }
@@ -165,21 +181,23 @@ void Grams::vacuumController(){
     m_vacuumSensorTurbo.m_name = "Вакууметр турбо";
     m_vacuumSensorTurbo.m_type = DataType::Pressure;
 
-    if(!initSource.isInitializeOk())
+    if(!initSource.isInitializeOk() && !simDataActive())
         return;
     
     const auto& parametersVacuum = initSource.getVacuumParameters();
     m_vacuumSensor.setAltUnitCoef(0.001333); // torr to bar
     dataSource.setVacuumPointer(&m_vacuumSensor);
-    dataSource.initSerialVacuum(parametersVacuum);
+    if(!simDataActive())
+        dataSource.initSerialVacuum(parametersVacuum);
 
     // ДВ302 — второй тракт (турбо), раздел 12.2. Опционален: если порт не
     // найден среди реальных, второй вакуумметр просто не опрашивается, и
     // перехода на турбомолекулярный насос не будет — безопасный исход.
-    if(initSource.hasVacuumTurbo()){
+    if(hasVacuumTurbo()){
         m_vacuumSensorTurbo.setAltUnitCoef(0.001333); // torr to bar
         dataSource.setTurboVacuumPointer(&m_vacuumSensorTurbo);
-        dataSource.initSerialTurboVacuum(initSource.getVacuumTurboParameters());
+        if(!simDataActive())
+            dataSource.initSerialTurboVacuum(initSource.getVacuumTurboParameters());
     }
     // update vacuum values
 }
@@ -311,7 +329,7 @@ void Grams::initCharts(){
     // добавляется, ТОЛЬКО если он реально сконфигурирован (vacuumController()
     // выполняется раньше): пустой график на логарифмической оси мешал бы
     // масштабированию и врал бы легендой о наличии прибора.
-    if (initSource.hasVacuumTurbo()) {
+    if (hasVacuumTurbo()) {
         QVector<DataCollection*> vacuumPtrs;
         vacuumPtrs.append(&m_vacuumSensor);        // ДВ301 — форвакуум
         vacuumPtrs.append(&m_vacuumSensorTurbo);   // ДВ302 — турбо-тракт
@@ -372,6 +390,8 @@ void Grams::initGUI(){
     qmlRegisterSingletonInstance("Grams.timeStampSingleton", 1, 0, "TimeStamp", &m_timeStamp);
     qmlRegisterSingletonInstance("Grams.testFieldSingleton", 1, 0, "TestFieldBack", &m_testField);
     qmlRegisterSingletonInstance("Grams.playPressureSingleton", 1, 0, "PlayPressure", &m_playPressure);
+    if(m_sim)
+        qmlRegisterSingletonInstance("Grams.simSingleton", 1, 0, "SimStatus", m_sim->bridge());
     m_engine.load(url);
 }
 /*
@@ -455,8 +475,16 @@ Q_INVOKABLE void Grams::removeGraph(const QString &key)
 }
 
 void Grams::initSafeModule(){
-    m_safeModule.constructValveMap(initSource.m_hardware.m_valves);
     m_safeModule.setContradictionValves(initSource.m_security.m_contradictionValves);
+    m_safeModule.setPressureStaleTicks(initSource.m_security.m_pressureStaleTicks);
+    // Диапазон датчика давления — по его калибровке p = A·I[мА] + B на
+    // границах NAMUR NE43 (3,8…20,5 мА): шум у нуля и у верхней границы
+    // шкалы не считается выходом за диапазон, обрыв и насыщение — считаются.
+    for(const auto& sensor : initSource.getPressureSensors()){
+        m_safeModule.setSensorRange(sensor.m_sensorName,
+                                    3.8 * sensor.m_A + sensor.m_B,
+                                    20.5 * sensor.m_A + sensor.m_B);
+    }
     m_safeModule.setRuleOfThreeValves(initSource.m_security.m_twoOfThree);
     
     m_safeModule.setRangePressureValves(initSource.m_storageQuar.m_pressureRangeValve,"storageQuar",
@@ -467,6 +495,9 @@ void Grams::initSafeModule(){
         initSource.m_storageQuar.m_gasRelease);
     m_safeModule.setGasSupplyValves(initSource.m_addRemoveQuar.m_gasSupplyValves);
     m_safeModule.setGasLeakageValves(initSource.m_reactionQuar.m_gasLeakageValves);
+    // Перепуск накопитель ⇄ реакционная область: К153/К155/К151 (R1–R3).
+    m_safeModule.setTransferValves(initSource.m_reactionQuar.m_gasLeakageValves,
+                                   QStringLiteral("storageQuar"), QStringLiteral("reactionQuar"));
 }
 
 void Grams::initTimeStamp(){
@@ -596,6 +627,47 @@ void Grams::initActionHandler(){
     m_regimeTaskTree.setValveNamesForTest(initSource.m_hardware.m_valves);
 }
 
+void Grams::initSimulation(){
+    if(!m_simOptions.error.isEmpty())
+        qWarning() << "Демо-режим не включён:" << m_simOptions.error;
+    if(!m_simOptions.enabled)
+        return;
+
+    sim::CatalogInput input;
+    for(const auto& s : initSource.getPressureSensors())
+        input.pressureCard.append({s.m_sensorName, s.m_A, s.m_B, s.m_R});
+    input.temperatureCard = initSource.getTempSensors();
+    input.valveCodes = initSource.m_hardware.m_valves;
+
+    // Симуляция при подключённом железе запрещена без обходов (SIM_NOT_ALLOWED).
+    const bool allowed = !initSource.hardwareDetected();
+    m_sim = std::make_unique<sim::SimSubsystem>(input, m_simOptions, allowed,
+                                                initSource.hardwareDetectedReason(),
+                                                QCoreApplication::applicationVersion());
+    m_sim->setRegimeProvider([this]() -> QJsonValue {
+        if(!m_regimeTaskTree.isRunning())
+            return QJsonValue::Null;
+        const auto info = m_regimeManager.getRegimeExecutionInfo(m_regimeTaskTree.activeRegimeId());
+        QString step;
+        if(auto *monitor = qobject_cast<VacuumRunMonitor*>(m_regimeTaskTree.vacuumMonitor()); monitor && monitor->running())
+            step = monitor->currentLabel();
+        return QJsonObject{{"name", info.value("name").toString()},
+                           {"step", step.isEmpty() ? QJsonValue(QJsonValue::Null) : QJsonValue(step)}};
+    });
+    m_sim->startRpc();
+    if(allowed){
+        // Демо не смешивается с экспериментом (вариант «отдельное хранилище»):
+        // журнал прогонов — data/sim/regime_log.db, состояния объёмов —
+        // база PostgreSQL gramstate_sim (нет базы — работаем без неё, как
+        // и без PostgreSQL вообще). initTimeStamp/initDatabase идут позже.
+        m_regimeTaskTree.setLogDatabasePath(QStringLiteral("data/sim/regime_log.db"));
+        GramStateDB::setDatabaseName(QStringLiteral("gramstate_sim"));
+        qWarning() << "ДЕМО-РЕЖИМ: показания датчиков и клапаны подменены симуляцией";
+    }
+    else
+        qWarning() << "Демо-режим запрошен, но запрещён:" << initSource.hardwareDetectedReason();
+}
+
 void Grams::testActionHandler(){
     m_actionHandler.runInletAction();
 }
@@ -610,7 +682,7 @@ void Grams::guiValsUpdate(){
     m_pressureVals.g_tmSK = tmSK.getCurValue();
     m_pressureVals.g_tmS = tmS.getCurValue();
     m_pressureVals.g_prARV = m_vacuumSensor.getAltUnit(); // bar
-    m_pressureVals.g_hasVT = initSource.hasVacuumTurbo();
+    m_pressureVals.g_hasVT = hasVacuumTurbo();
     m_pressureVals.g_prVT  = m_pressureVals.g_hasVT
                                  ? m_vacuumSensorTurbo.getAltUnit()   // bar
                                  : 0.0;
@@ -655,6 +727,34 @@ void Grams::softEvent(){
     // additional checks
     m_storageQuartile.updateQuartileData();
     m_reactionQuartile.updateQuartileData();
+    // Давления квартилей для правил Security (S4/R4 — диапазон, AR4 — сброс).
+    // Один вызов — один такт: по счётчику отсчётов Security видит, обновляется
+    // ли показание. Резервуар видят широкодиапазонный датчик всегда и
+    // узкодиапазонный — только при открытом клапане диапазона: за закрытым
+    // клапаном он заперт в своём объёме (D1 за S4, D2 за R4).
+    // Зеркало для тестов — src/sim/tests/soft_event_mirror.h, менять вместе.
+    auto sample = [](const ControllerData& s){
+        return PressureSample{s.m_name, s.getCurValue(), s.sampleCount()};
+    };
+    // Подключённый объём резервуара — для прогноза равновесия через К15x.
+    auto usedVolume = [](const auto& quartile){
+        double volume = 0.0;
+        for(const QString& name : quartile.getUsedVolumes())
+            volume += quartile.getVolumeByName(name).volume;
+        return volume;
+    };
+    QMap<QString, QuartileSnapshot> quartiles;
+    quartiles[QStringLiteral("storageQuar")].sensors << sample(prSH);
+    if(vS4.getState())
+        quartiles[QStringLiteral("storageQuar")].sensors << sample(prSA);
+    quartiles[QStringLiteral("reactionQuar")].sensors << sample(prRH);
+    if(vR4.getState())
+        quartiles[QStringLiteral("reactionQuar")].sensors << sample(prRA);
+    quartiles[QStringLiteral("storageQuar")].volumeCm3 = usedVolume(m_storageQuartile);
+    quartiles[QStringLiteral("reactionQuar")].volumeCm3 = usedVolume(m_reactionQuartile);
+    m_safeModule.setQuartilePressures(quartiles);
+    // Security закрывает S4/R4 сам, на этом же такте, идёт режим или нет.
+    m_valveControl.enforceSecurity(QStringLiteral("tick"));
 }
 
 void Grams::chamberSetUp(){

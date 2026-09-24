@@ -30,6 +30,9 @@
 #include "actions/RegimeTaskTree.h"
 #include "runtable/regime.h"
 #include "runtable/regimemanager.h"
+#include "sim/app/SimSubsystem.h"
+
+#include <memory>
 
 struct guiValsPres{ // sample
     Q_GADGET
@@ -95,9 +98,13 @@ class Grams : public QApplication
     Q_PROPERTY(BasePlot* mainPlot MEMBER m_mainPlot CONSTANT)
     Q_PROPERTY(QList<BasePlot*> graphs READ getGraphs NOTIFY graphsChanged)
     Q_PROPERTY(QStringList chartNames READ getChartNames NOTIFY graphsChanged)
+    // Запущен ли GRAMs с --sim: Main.qml подгружает плашку демо-режима.
+    Q_PROPERTY(bool simEnabled READ isSimEnabled CONSTANT)
 
 public:
-    Grams(int &argc, char **argvm, const QString &curInitProfile);
+    Grams(int &argc, char **argvm, const QString &curInitProfile,
+          const sim::SimOptions &simOptions = {});
+    bool isSimEnabled() const { return m_sim != nullptr; }
     ~Grams();
     // Q_INVOKABLE int getFilterPlotPtr(CustomPlotItem* customPlotPointer);
     Q_INVOKABLE void addGraph(const QString &key);
@@ -137,6 +144,10 @@ private:
 
     void initPlayPressure();
     void initActionHandler();
+    // Демо-данные (docs/sim/README.md): только при --sim.
+    void initSimulation();
+    bool simDataActive() const { return m_sim && m_sim->allowed(); }
+    bool hasVacuumTurbo() const { return initSource.hasVacuumTurbo() || simDataActive(); }
     
     void guiValsUpdate();
 
@@ -275,4 +286,7 @@ private:
     RegimeTaskTree   m_regimeTaskTree;
 
     QElapsedTimer m_benchmarkTime;
+
+    sim::SimOptions m_simOptions;
+    std::unique_ptr<sim::SimSubsystem> m_sim;   // nullptr без --sim
 };

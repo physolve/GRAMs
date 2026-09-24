@@ -26,8 +26,13 @@ void ValveTestWorker::start()
     if (m_cfg.logger)
         m_runId = m_cfg.logger->openRun(m_cfg.regimeId, m_cfg.regimeName, m_cfg.totalRepeats);
 
-    if (m_cfg.valveControl)
+    if (m_cfg.valveControl) {
         m_cfg.valveControl->beginAction();
+        connect(m_cfg.valveControl, &ValveControl::securityClosed,
+                this, &ValveTestWorker::onSecurityClosed, Qt::UniqueConnection);
+        connect(m_cfg.valveControl, &ValveControl::securityWarning,
+                this, &ValveTestWorker::onSecurityWarning, Qt::UniqueConnection);
+    }
 
     m_currentRepeat = 0;
     m_repeatsDone   = 0;
@@ -82,9 +87,51 @@ void ValveTestWorker::enterStepPauseBefore()
 void ValveTestWorker::openCurrentStepValves()
 {
     const ValveStepConfig& step = m_cfg.steps.at(m_currentStep);
+    m_commanding = true;
     openValves(step.valveNames);
+    m_commanding = false;
     m_dwellElapsed = 0;
+    if (m_securityAbortPending) {
+        m_securityAbortPending = false;
+        abortCurrentStep();
+        return;
+    }
     enterStepDwelling();
+}
+
+void ValveTestWorker::onSecurityWarning(const SecurityIssue& issue)
+{
+    if (m_state == State::Idle)
+        return;
+    qWarning() << "ValveTestWorker: предупреждение Security на шаге" << m_currentStep << issue.toString();
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kWarning,
+                               m_currentRepeat, m_dwellElapsed, issue.toString());
+}
+
+void ValveTestWorker::onSecurityClosed(const SecurityIssue& issue, ValveSource previous)
+{
+    if (previous != ValveSource::Regime)
+        return;
+    // Режим уже завершён (стоп, ошибка): закрытие его клапана — уборка, а не
+    // нарушение. Задача воркера в этот момент уже отменена — done() из неё
+    // вложился бы в done-хендлер RegimeTaskTree.
+    if (issue.origin == QLatin1String("regime_end"))
+        return;
+    if (m_state != State::StepDwelling && !m_commanding)
+        return;
+    if (!m_cfg.steps.at(m_currentStep).valveNames.contains(issue.valve))
+        return;
+    qWarning() << "ValveTestWorker: Security закрыл клапан шага" << m_currentStep << issue.toString();
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kSecurityViolation,
+                               m_currentRepeat, m_dwellElapsed,
+                               QString("step %1: %2").arg(m_currentStep).arg(issue.toString()));
+    if (m_commanding) {
+        m_securityAbortPending = true;
+        return;
+    }
+    abortCurrentStep();
 }
 
 void ValveTestWorker::enterStepDwelling()
@@ -107,6 +154,18 @@ void ValveTestWorker::closeCurrentStepValves()
     } else {
         m_timer.start(1000);
     }
+}
+
+// Авария на выдержке: закрыть клапаны шага и завершить повтор с ошибкой.
+// closeCurrentStepValves здесь нельзя: при pauseAfterSec == 0 он сразу ведёт
+// автомат к следующему шагу и открывает его клапаны, а finishRepeat поверх
+// этого запускает второй поток того же автомата.
+void ValveTestWorker::abortCurrentStep()
+{
+    m_timer.stop();
+    closeValves(m_cfg.steps.at(m_currentStep).valveNames);
+    m_state = State::Idle;
+    finishRepeat(false);
 }
 
 void ValveTestWorker::enterStepPauseAfter()
@@ -142,9 +201,7 @@ void ValveTestWorker::tick()
     // Security check while valves are open (dwelling)
     if (m_state == State::StepDwelling) {
         if (!checkSecurity()) {
-            m_timer.stop();
-            closeCurrentStepValves();
-            finishRepeat(false);
+            abortCurrentStep();
             return;
         }
         ++m_dwellElapsed;
@@ -208,8 +265,15 @@ void ValveTestWorker::finishRepeat(bool success)
 
 void ValveTestWorker::finishAllRepeats()
 {
-    if (m_cfg.valveControl)
+    m_timer.stop();
+    m_state = State::Idle;
+    if (m_cfg.valveControl) {
         m_cfg.valveControl->endAction();
+        disconnect(m_cfg.valveControl, &ValveControl::securityClosed,
+                   this, &ValveTestWorker::onSecurityClosed);
+        disconnect(m_cfg.valveControl, &ValveControl::securityWarning,
+                   this, &ValveTestWorker::onSecurityWarning);
+    }
 
     bool ok = (m_repeatsError == 0);
 
@@ -233,11 +297,13 @@ void ValveTestWorker::openValves(const QStringList& names)
 
     for (const QString& name : names) {
         bool ok = m_cfg.valveControl->setValveFromAction(true, name);
-        qDebug() << "ValveTestWorker: open" << name << (ok ? "OK" : "BLOCKED");
+        const QString refusal = ok ? QString() : m_cfg.valveControl->lastRefusal();
+        qDebug() << "ValveTestWorker: open" << name << (ok ? "OK" : "BLOCKED") << refusal;
         if (m_cfg.logger)
             m_cfg.logger->logEvent(m_runId,
                                    ok ? RegimeLogger::kValveOpen : RegimeLogger::kValveBlocked,
-                                   m_currentRepeat, 0, name);
+                                   m_currentRepeat, 0,
+                                   refusal.isEmpty() ? name : name + u' ' + refusal);
     }
 }
 
@@ -258,17 +324,24 @@ bool ValveTestWorker::checkSecurity()
 {
     if (!m_cfg.security) return true;
 
-    QMap<QString, bool> pressureState = m_cfg.security->checkValvePressure();
-    bool violation = std::any_of(pressureState.cbegin(), pressureState.cend(),
-                                 [](bool ok) { return !ok; });
-    if (violation) {
-        qWarning() << "ValveTestWorker: security violation at step" << m_currentStep;
+    const PressureCheck check = m_cfg.security->checkPressure(
+        m_cfg.valveControl ? m_cfg.valveControl->valveStates() : QMap<QString, bool>{});
+    for (const SecurityIssue& issue : check.warnings) {
+        qWarning() << "ValveTestWorker: предупреждение Security на шаге" << m_currentStep
+                   << issue.toString();
+        if (m_cfg.logger)
+            m_cfg.logger->logEvent(m_runId, RegimeLogger::kWarning,
+                                   m_currentRepeat, m_dwellElapsed, issue.toString());
+    }
+    for (const SecurityIssue& issue : check.violations) {
+        qWarning() << "ValveTestWorker: security violation at step" << m_currentStep
+                   << issue.toString();
         if (m_cfg.logger)
             m_cfg.logger->logEvent(m_runId, RegimeLogger::kSecurityViolation,
                                    m_currentRepeat, m_dwellElapsed,
-                                   QString("step %1").arg(m_currentStep));
+                                   QString("step %1: %2").arg(m_currentStep).arg(issue.toString()));
     }
-    return !violation;
+    return check.ok();
 }
 
 void ValveTestWorker::reportProgress()

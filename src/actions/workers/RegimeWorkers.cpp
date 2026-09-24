@@ -29,7 +29,45 @@ void RegimeWorkerBase::start()
     if (m_cfg.logger)
         m_runId = m_cfg.logger->openRun(m_cfg.regimeId, m_cfg.regimeName, m_cfg.totalRepeats);
 
+    if (m_cfg.valveControl) {
+        connect(m_cfg.valveControl, &ValveControl::securityClosed,
+                this, &RegimeWorkerBase::onSecurityClosed, Qt::UniqueConnection);
+        connect(m_cfg.valveControl, &ValveControl::securityWarning,
+                this, &RegimeWorkerBase::onSecurityWarning, Qt::UniqueConnection);
+    }
+
     startNextRepeat();
+}
+
+void RegimeWorkerBase::onSecurityClosed(const SecurityIssue& issue, ValveSource previous)
+{
+    if (previous != ValveSource::Regime || issue.origin == QLatin1String("regime_end"))
+        return;
+    if (m_phase != Phase::Execution || !m_timer.isActive())
+        return;
+    abortExecution(issue.toString());
+}
+
+void RegimeWorkerBase::onSecurityWarning(const SecurityIssue& issue)
+{
+    if (!m_timer.isActive() && !m_paused)
+        return;
+    qWarning() << "[Regime" << m_cfg.regimeId << "] Security:" << issue.toString();
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kWarning,
+                               m_currentRepeat, m_phaseElapsedSec, issue.toString());
+}
+
+void RegimeWorkerBase::abortExecution(const QString& details)
+{
+    qWarning() << "[Regime" << m_cfg.regimeId
+               << "] Security pressure violation — aborting execution:" << details;
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kSecurityViolation,
+                               m_currentRepeat, m_phaseElapsedSec, details);
+    m_timer.stop();
+    onExecutionPhaseEnd(false);
+    finishRepeat(false);
 }
 
 // ─── Repeat lifecycle ─────────────────────────────────────────────────────────
@@ -126,18 +164,19 @@ void RegimeWorkerBase::tick()
 
         // ── Security check ────────────────────────────────────────────────────
         if (m_cfg.security) {
-            QMap<QString, bool> pressureState = m_cfg.security->checkValvePressure();
-            bool violation = std::any_of(pressureState.cbegin(), pressureState.cend(),
-                                         [](bool ok) { return !ok; });
-            if (violation) {
-                qWarning() << "[Regime" << m_cfg.regimeId
-                           << "] Security pressure violation — aborting execution";
+            const PressureCheck check = m_cfg.security->checkPressure(
+                m_cfg.valveControl ? m_cfg.valveControl->valveStates() : QMap<QString, bool>{});
+            for (const SecurityIssue& issue : check.warnings) {
+                qWarning() << "[Regime" << m_cfg.regimeId << "] Security:" << issue.toString();
                 if (m_cfg.logger)
-                    m_cfg.logger->logEvent(m_runId, RegimeLogger::kSecurityViolation,
-                                           m_currentRepeat, m_phaseElapsedSec);
-                m_timer.stop();
-                onExecutionPhaseEnd(false);
-                finishRepeat(false);
+                    m_cfg.logger->logEvent(m_runId, RegimeLogger::kWarning,
+                                           m_currentRepeat, m_phaseElapsedSec, issue.toString());
+            }
+            if (!check.ok()) {
+                QStringList details;
+                for (const SecurityIssue& issue : check.violations)
+                    details << issue.toString();
+                abortExecution(details.join("; "));
                 return;
             }
         }
@@ -259,8 +298,14 @@ void VacuumRegimeWorker::start()
     if (m_cfg.logger)
         m_runId = m_cfg.logger->openRun(m_cfg.regimeId, m_cfg.regimeName,
                                         m_cfg.totalRepeats);
-    if (m_cfg.valveControl)
+    if (m_cfg.valveControl) {
         m_cfg.valveControl->beginAction();
+        connect(m_cfg.valveControl, &ValveControl::securityClosed,
+                this, &VacuumRegimeWorker::onSecurityClosed, Qt::UniqueConnection);
+        connect(m_cfg.valveControl, &ValveControl::securityWarning,
+                this, &VacuumRegimeWorker::onSecurityWarning, Qt::UniqueConnection);
+    }
+    m_securityAbort = false;
 
     m_tree = new QtTaskTree::QTaskTree(buildVacuumRecipe(makeContext()), this);
 
@@ -281,6 +326,38 @@ void VacuumRegimeWorker::start()
             });
 
     m_tree->start();
+}
+
+void VacuumRegimeWorker::onSecurityClosed(const SecurityIssue& issue, ValveSource previous)
+{
+    if (previous != ValveSource::Regime || issue.origin == QLatin1String("regime_end"))
+        return;
+    if (!m_tree || !m_tree->isRunning() || m_securityAbort)
+        return;
+    m_securityAbort = true;
+    const QString reason = QStringLiteral("Security закрыл %1: %2").arg(issue.valve, issue.toString());
+    qWarning() << "[Вакуум]" << reason;
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kSecurityViolation, -1, -1, issue.toString());
+    // Отмена — отложенно: закрытие может прийти из шва setValve изнутри
+    // хендлера рецепта (перепуск К15x), вложенная отмена дерева там недопустима.
+    // Внутреннее дерево при отмене закрывает тракт само и отдаёт done(false).
+    QMetaObject::invokeMethod(this, [this, reason] {
+        if (!m_tree || !m_tree->isRunning())
+            return;
+        if (m_monitor)
+            m_monitor->onFailure(reason);
+        m_tree->cancel();
+    }, Qt::QueuedConnection);
+}
+
+void VacuumRegimeWorker::onSecurityWarning(const SecurityIssue& issue)
+{
+    if (!m_tree || !m_tree->isRunning())
+        return;
+    qWarning() << "[Вакуум] Security:" << issue.toString();
+    if (m_cfg.logger)
+        m_cfg.logger->logEvent(m_runId, RegimeLogger::kWarning, -1, -1, issue.toString());
 }
 
 void VacuumRegimeWorker::cancelTree()
